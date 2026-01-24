@@ -1,11 +1,13 @@
 <p align="center">
-  <h1 align="center">RAGnarok-AI</h1>
-  <p align="center">
-    <strong>Local-first RAG evaluation framework for LLM applications</strong>
-  </p>
-  <p align="center">
-    Evaluate, benchmark, and monitor your RAG pipelines — 100% locally, no API keys required.
-  </p>
+  <img src="assets/logo.png" alt="ragnarok-ai logo" width="300">
+</p>
+
+<p align="center">
+  <strong>Local-first RAG evaluation framework for LLM applications</strong>
+</p>
+
+<p align="center">
+  Evaluate, benchmark, and monitor your RAG pipelines — 100% locally, no API keys required.
 </p>
 
 <p align="center">
