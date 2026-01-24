@@ -254,23 +254,27 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Basic CLI
 - [x] CI/CD with GitHub Actions
 
-### v0.2 — Generation Metrics
+### v0.2 — Generation Metrics & Reporting
 - [ ] Qdrant adapter
 - [ ] Faithfulness evaluator
 - [ ] Relevance evaluator
 - [ ] Hallucination detection
-- [ ] HTML report with visualizations
+- [ ] HTML report with drill-down (failed questions, retrieved chunks)
+- [ ] Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
-### v0.3 — Test Generation
+### v0.3 — Test Generation & Golden Sets
 - [ ] Synthetic question generation
 - [ ] Multi-hop question support
 - [ ] Adversarial question generation
 - [ ] Checkpointing system
+- [ ] Golden set support (human-validated, versioned question sets)
+- [ ] Baselines library (configs + expected results on reference datasets)
 
-### v0.4 — Framework Adapters
+### v0.4 — Framework Adapters & Observability
 - [ ] LangChain integration
 - [ ] LangGraph integration
 - [ ] Custom RAG support
+- [ ] OpenTelemetry export for tracing & debugging
 
 ### Future
 - [ ] Production monitoring dashboard
