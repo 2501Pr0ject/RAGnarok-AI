@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+.venv
+venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.egg-info
+dist
+build
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Project
+.github
+tests
+benchmarks
+docs
+examples
+*.md
+!README.md
+.pre-commit-config.yaml
+.python-version
+CLAUDE.md
+
+# Data
+data
+*.json
+*.yaml
+!pyproject.toml
+!docker-compose.yml

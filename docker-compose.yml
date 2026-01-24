@@ -1,0 +1,45 @@
+services:
+  ragnarok:
+    build: .
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - RAGNAROK_OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./data:/data:ro
+    networks:
+      - ragnarok-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-models:/root/.ollama
+    networks:
+      - ragnarok-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 2G
+
+networks:
+  ragnarok-net:
+    driver: bridge
+    internal: true  # No internet access
+
+volumes:
+  ollama-models:
