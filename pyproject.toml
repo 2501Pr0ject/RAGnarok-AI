@@ -45,9 +45,15 @@ langchain = [
     "langchain>=0.1",
     "langchain-community>=0.0.10",
 ]
-all = [
-    "ragnarok-ai[ollama,qdrant,langchain]",
+cli = [
+    "typer>=0.9",
 ]
+all = [
+    "ragnarok-ai[ollama,qdrant,langchain,cli]",
+]
+
+[project.scripts]
+ragnarok = "ragnarok_ai.cli.main:app"
 
 [project.urls]
 Homepage = "https://github.com/2501Pr0ject/ragnarok-ai"
