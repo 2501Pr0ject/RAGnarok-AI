@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">⚡ ragnarok-ai</h1>
+  <h1 align="center">RAGnarok-AI</h1>
   <p align="center">
     <strong>Local-first RAG evaluation framework for LLM applications</strong>
   </p>
@@ -25,7 +25,7 @@
 
 ---
 
-## 🔥 The Problem
+## The Problem
 
 Building RAG systems is easy. **Knowing if they actually work is hard.**
 
@@ -46,7 +46,7 @@ Current evaluation tools are either:
 
 ---
 
-## 💡 The Solution
+## The Solution
 
 **ragnarok-ai** is a lightweight, local-first framework to evaluate RAG pipelines.
 
@@ -86,21 +86,21 @@ results.export("report.html")
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | Feature | Description |
 |---------|-------------|
-| **🏠 100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
-| **⚡ Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
-| **🔌 Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
-| **📊 Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
-| **🧪 Test Generation** | Auto-generate diverse test sets from your knowledge base. |
-| **🚀 CI/CD Ready** | CLI-first design, JSON output, exit codes for pipeline integration. |
-| **🪶 Lightweight** | Minimal dependencies. No torch/transformers in core. |
+| ** 100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
+| ** Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
+| ** Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
+| ** Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
+| ** Test Generation** | Auto-generate diverse test sets from your knowledge base. |
+| ** CI/CD Ready** | CLI-first design, JSON output, exit codes for pipeline integration. |
+| ** Lightweight** | Minimal dependencies. No torch/transformers in core. |
 
 ---
 
-## 🆚 Comparison
+## Comparison
 
 | Feature | ragnarok-ai | Giskard | RAGAS |
 |---------|-------------|---------|-------|
@@ -114,7 +114,7 @@ results.export("report.html")
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -146,7 +146,7 @@ python examples/basic_evaluation.py
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### Using uv (recommended)
 
@@ -178,7 +178,7 @@ pre-commit install
 
 ---
 
-## 🎯 Use Cases
+## Use Cases
 
 ### Continuous RAG Testing in CI/CD
 
@@ -218,7 +218,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ---
 
-## 📊 Metrics
+## Metrics
 
 ### Retrieval Metrics
 - **Precision@K** — Relevant docs in top K results
@@ -238,7 +238,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 ### v0.1 — Foundation (current)
 - [x] Project setup & architecture
@@ -272,7 +272,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 ragnarok-ai/
@@ -291,7 +291,7 @@ ragnarok-ai/
 
 ---
 
-## 🛠️ Development
+## Development
 
 ```bash
 # Setup
@@ -306,11 +306,9 @@ ruff format .             # Format
 mypy src/                 # Type check
 ```
 
-See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
-
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
@@ -322,7 +320,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [AGPL-3.0 License](LICENSE).
 
@@ -330,7 +328,7 @@ This project is licensed under the [AGPL-3.0 License](LICENSE).
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Inspired by the frustrations with existing RAG evaluation tools. Built to be what [Giskard](https://github.com/Giskard-AI/giskard) should have been — fast, local, and developer-friendly.
 
