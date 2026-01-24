@@ -85,19 +85,21 @@ results.summary()
 results.export("report.html")
 ```
 
+> **Note:** This is the target API for v1.0. See the [Roadmap](#-roadmap) for current implementation status.
+
 ---
 
 ## Key Features
 
 | Feature | Description |
 |---------|-------------|
-| ** 100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
-| ** Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
-| ** Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
-| ** Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
-| ** Test Generation** | Auto-generate diverse test sets from your knowledge base. |
-| ** CI/CD Ready** | CLI-first design, JSON output, exit codes for pipeline integration. |
-| ** Lightweight** | Minimal dependencies. No torch/transformers in core. |
+| **100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
+| **Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
+| **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
+| **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
+| **Test Generation** | Auto-generate diverse test sets from your knowledge base. |
+| **CI/CD Ready** | CLI-first design, JSON output, exit codes for pipeline integration. |
+| **Lightweight** | Minimal dependencies. No torch/transformers in core. |
 
 ---
 
@@ -243,13 +245,15 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ### v0.1 — Foundation (current)
 - [x] Project setup & architecture
-- [ ] Core retrieval metrics (precision, recall, MRR)
-- [ ] Ollama adapter
-- [ ] Qdrant adapter
-- [ ] Basic CLI
-- [ ] JSON reporter
+- [x] Core retrieval metrics (precision, recall, MRR, NDCG)
+- [x] Ollama adapter
+- [x] Console reporter
+- [x] JSON reporter
+- [x] Basic CLI
+- [x] CI/CD with GitHub Actions
 
 ### v0.2 — Generation Metrics
+- [ ] Qdrant adapter
 - [ ] Faithfulness evaluator
 - [ ] Relevance evaluator
 - [ ] Hallucination detection
