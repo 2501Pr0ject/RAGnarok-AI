@@ -337,7 +337,7 @@ This project is licensed under the [AGPL-3.0 License](LICENSE).
 
 ## Acknowledgments
 
-Inspired by the frustrations with existing RAG evaluation tools. Built to be what [Giskard](https://github.com/Giskard-AI/giskard) should have been — fast, local, and developer-friendly.
+Built out of frustration with complex evaluation setups. We wanted something that just works — locally, fast, and without API keys.
 
 ---
 
