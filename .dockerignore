@@ -27,11 +27,14 @@ tests
 benchmarks
 docs
 examples
-*.md
-!README.md
 .pre-commit-config.yaml
 .python-version
+
+# Markdown (keep README.md for hatchling)
 CLAUDE.md
+CONTRIBUTING.md
+SECURITY.md
+CODE_OF_CONDUCT.md
 
 # Data
 data
