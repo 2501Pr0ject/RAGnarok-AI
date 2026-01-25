@@ -23,16 +23,13 @@ jobs:
       - name: Set up Python
         run: uv python install 3.10
 
-      - name: Create venv and install pip-audit
-        run: |
-          uv venv
-          uv pip install pip-audit
-
       - name: Export dependencies
         run: uv export --no-hashes --no-emit-project > requirements.txt
 
-      - name: Run pip-audit
-        run: uv run pip-audit --strict --desc -r requirements.txt
+      - name: Audit dependencies
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: requirements.txt
 
   secrets-scan:
     name: Secrets Scan
