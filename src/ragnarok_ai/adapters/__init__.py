@@ -9,7 +9,9 @@ This module provides adapters for external services:
 from __future__ import annotations
 
 from ragnarok_ai.adapters.llm import OllamaLLM
+from ragnarok_ai.adapters.vectorstore import QdrantVectorStore
 
 __all__ = [
     "OllamaLLM",
+    "QdrantVectorStore",
 ]
