@@ -95,9 +95,7 @@ class SyntheticQuestionGenerator:
             )
 
         # Filter documents by minimum length
-        valid_docs = [
-            doc for doc in documents if len(doc.content) >= self.config.min_chunk_length
-        ]
+        valid_docs = [doc for doc in documents if len(doc.content) >= self.config.min_chunk_length]
 
         if not valid_docs:
             return TestSet(
@@ -250,14 +248,11 @@ class SyntheticQuestionGenerator:
 
         # Multi-hop questions typically involve multiple entities or steps
         if "multi_hop" in allowed_types and any(
-            phrase in question_lower
-            for phrase in ["and also", "in addition", "furthermore", "both"]
+            phrase in question_lower for phrase in ["and also", "in addition", "furthermore", "both"]
         ):
             return "multi_hop"
 
-        if "explanatory" in allowed_types and any(
-            word in question_lower for word in ["how", "why", "explain"]
-        ):
+        if "explanatory" in allowed_types and any(word in question_lower for word in ["how", "why", "explain"]):
             return "explanatory"
 
         if "comparative" in allowed_types and any(

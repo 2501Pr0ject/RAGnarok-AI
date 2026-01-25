@@ -198,9 +198,7 @@ class TestSyntheticQuestionGeneratorGenerate:
         assert "no documents provided" in result.description.lower()
 
     @pytest.mark.asyncio
-    async def test_generate_documents_too_short(
-        self, mock_llm: MagicMock, short_document: Document
-    ) -> None:
+    async def test_generate_documents_too_short(self, mock_llm: MagicMock, short_document: Document) -> None:
         """Test generation when all documents are too short."""
         generator = SyntheticQuestionGenerator(mock_llm)
         result = await generator.generate(documents=[short_document])
@@ -208,9 +206,7 @@ class TestSyntheticQuestionGeneratorGenerate:
         assert "no documents met minimum length" in result.description.lower()
 
     @pytest.mark.asyncio
-    async def test_generate_success(
-        self, mock_llm: MagicMock, sample_documents: list[Document]
-    ) -> None:
+    async def test_generate_success(self, mock_llm: MagicMock, sample_documents: list[Document]) -> None:
         """Test successful question generation."""
         # Mock LLM responses
         mock_llm.generate = AsyncMock(
@@ -252,9 +248,7 @@ class TestSyntheticQuestionGeneratorGenerate:
         assert result.name == "generated_testset"
 
     @pytest.mark.asyncio
-    async def test_generate_without_validation(
-        self, mock_llm: MagicMock, sample_documents: list[Document]
-    ) -> None:
+    async def test_generate_without_validation(self, mock_llm: MagicMock, sample_documents: list[Document]) -> None:
         """Test generation without validation."""
         mock_llm.generate = AsyncMock(
             side_effect=[
@@ -278,9 +272,7 @@ class TestSyntheticQuestionGeneratorGenerate:
         assert result.metadata.get("validated") is False
 
     @pytest.mark.asyncio
-    async def test_generate_handles_llm_error(
-        self, mock_llm: MagicMock, sample_documents: list[Document]
-    ) -> None:
+    async def test_generate_handles_llm_error(self, mock_llm: MagicMock, sample_documents: list[Document]) -> None:
         """Test that generation continues when LLM fails for some docs."""
         mock_llm.generate = AsyncMock(
             side_effect=[
@@ -395,9 +387,7 @@ class TestJsonParsing:
 
     def test_parse_json_array_with_text(self) -> None:
         """Test parsing JSON array embedded in text."""
-        result = parse_json_array(
-            'Here are the questions:\n["Q1", "Q2"]\nThat\'s all.'
-        )
+        result = parse_json_array('Here are the questions:\n["Q1", "Q2"]\nThat\'s all.')
         assert result == ["Q1", "Q2"]
 
     def test_parse_json_array_invalid(self) -> None:
@@ -432,9 +422,7 @@ class TestQuestionValidator:
     @pytest.mark.asyncio
     async def test_validate_valid_question(self, mock_llm: MagicMock) -> None:
         """Test validation of a valid question."""
-        mock_llm.generate = AsyncMock(
-            return_value='{"is_valid": true, "reason": "Good question"}'
-        )
+        mock_llm.generate = AsyncMock(return_value='{"is_valid": true, "reason": "Good question"}')
 
         validator = QuestionValidator(mock_llm)
         question = GeneratedQuestion(
@@ -450,9 +438,7 @@ class TestQuestionValidator:
     @pytest.mark.asyncio
     async def test_validate_invalid_question(self, mock_llm: MagicMock) -> None:
         """Test validation of an invalid question."""
-        mock_llm.generate = AsyncMock(
-            return_value='{"is_valid": false, "reason": "Question is ambiguous"}'
-        )
+        mock_llm.generate = AsyncMock(return_value='{"is_valid": false, "reason": "Question is ambiguous"}')
 
         validator = QuestionValidator(mock_llm)
         question = GeneratedQuestion(
@@ -523,10 +509,7 @@ class TestQuestionValidator:
         mock_llm.generate = AsyncMock(return_value='{"is_valid": true}')
 
         validator = QuestionValidator(mock_llm)
-        questions = [
-            GeneratedQuestion(question=f"Q{i}?", answer=f"A{i}", source_doc_id="doc1")
-            for i in range(5)
-        ]
+        questions = [GeneratedQuestion(question=f"Q{i}?", answer=f"A{i}", source_doc_id="doc1") for i in range(5)]
         documents = [Document(id="doc1", content="Some content here." * 10)]
 
         result = await validator.validate_batch(questions, documents, max_questions=2)

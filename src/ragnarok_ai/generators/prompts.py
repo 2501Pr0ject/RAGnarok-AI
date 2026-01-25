@@ -90,9 +90,5 @@ def get_question_types_description(types: list[str]) -> str:
     Returns:
         Formatted description string for the prompt.
     """
-    descriptions = [
-        QUESTION_TYPE_DESCRIPTIONS[t]
-        for t in types
-        if t in QUESTION_TYPE_DESCRIPTIONS
-    ]
+    descriptions = [QUESTION_TYPE_DESCRIPTIONS[t] for t in types if t in QUESTION_TYPE_DESCRIPTIONS]
     return ", ".join(descriptions) if descriptions else "various types"
