@@ -53,6 +53,10 @@ Current evaluation tools are either:
 
 **ragnarok-ai** is a lightweight, local-first framework to evaluate RAG pipelines.
 
+<p align="center">
+  <img src="assets/overview.png" alt="RAGnarok-AI Overview" width="900">
+</p>
+
 ```python
 from ragnarok_ai import evaluate, generate_testset
 
@@ -245,7 +249,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ## Roadmap
 
-### v0.1 — Foundation (current)
+### v0.1 — Foundation
 - [x] Project setup & architecture
 - [x] Core retrieval metrics (precision, recall, MRR, NDCG)
 - [x] Ollama adapter
@@ -254,13 +258,13 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Basic CLI
 - [x] CI/CD with GitHub Actions
 
-### v0.2 — Generation Metrics & Reporting
-- [ ] Qdrant adapter
-- [ ] Faithfulness evaluator
-- [ ] Relevance evaluator
-- [ ] Hallucination detection
-- [ ] HTML report with drill-down (failed questions, retrieved chunks)
-- [ ] Intelligent CI gating (stable metrics fail, LLM judgments warn)
+### v0.2 — Generation Metrics & Reporting (current)
+- [x] Qdrant adapter
+- [x] Faithfulness evaluator
+- [x] Relevance evaluator
+- [x] Hallucination detection
+- [x] HTML report with drill-down (failed questions, retrieved chunks)
+- [x] Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
 ### v0.3 — Test Generation & Golden Sets
 - [ ] Synthetic question generation
@@ -273,7 +277,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 ### v0.4 — Framework Adapters & Observability
 - [ ] LangChain integration
 - [ ] LangGraph integration
-- [ ] Custom RAG support
+- [x] Custom RAG support
 - [ ] OpenTelemetry export for tracing & debugging
 
 ### Future
@@ -283,7 +287,14 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ---
 
-## Project Structure
+## Architecture
+
+<p align="center">
+  <img src="assets/architecture.png" alt="RAGnarok-AI Architecture" width="1000">
+</p>
+
+<details>
+<summary><strong>View project structure</strong></summary>
 
 ```
 ragnarok-ai/
@@ -299,6 +310,8 @@ ragnarok-ai/
 ├── benchmarks/         # Performance benchmarks
 └── docs/               # Documentation
 ```
+
+</details>
 
 ---
 
