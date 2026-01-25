@@ -177,6 +177,9 @@ uv pip install -e ".[qdrant]"      # Qdrant support
 # RAG frameworks
 uv pip install -e ".[langchain]"   # LangChain/LangGraph support
 
+# Observability
+uv pip install -e ".[telemetry]"   # OpenTelemetry tracing
+
 # Everything
 uv pip install -e ".[all]"
 
@@ -275,16 +278,18 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Baselines library (configs + expected results)
 - [x] NovaTech example dataset for quickstart
 
-### v0.4 — Framework Adapters & Observability (current)
-- [ ] LangChain integration
-- [ ] LangGraph integration
+### v0.4 — Framework Adapters & Observability
+- [x] LangChain integration
+- [x] LangGraph integration
 - [x] Custom RAG support
-- [ ] OpenTelemetry export for tracing & debugging
+- [x] OpenTelemetry export for tracing & debugging
 
 ### Future
 - [ ] Production monitoring dashboard
 - [ ] Rust acceleration for hot paths
 - [ ] VS Code extension
+- [ ] LlamaIndex integration
+- [ ] Haystack integration
 
 ---
 
