@@ -1,0 +1,426 @@
+{
+  "name": "novatech_quickstart",
+  "description": "Example dataset featuring NovaTech Cloud Platform documentation for RAG evaluation quickstart",
+  "version": "1.0",
+  "license": "MIT",
+  "documents": [
+    {
+      "id": "api_authentication",
+      "content": "NovaTech API Authentication\n\nAll API requests must include an API key in the Authorization header. Use the format: Authorization: Bearer <your_api_key>. API keys can be generated from the Dashboard under Settings > API Keys. Each key can be scoped to specific permissions: read-only, read-write, or admin. Keys are 64 characters long and start with 'ntk_'. Never expose your API key in client-side code or public repositories."
+    },
+    {
+      "id": "api_rate_limits",
+      "content": "NovaTech API Rate Limits\n\nRate limits vary by subscription plan. Free plan: 100 requests per minute, 1,000 requests per day. Pro plan: 1,000 requests per minute, 100,000 requests per day. Enterprise plan: Custom limits, contact sales. Rate limit headers are included in every response: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset. When exceeded, the API returns HTTP 429 with a Retry-After header."
+    },
+    {
+      "id": "api_endpoints_users",
+      "content": "NovaTech Users API\n\nGET /v1/users - List all users in your organization. Supports pagination with ?page=1&limit=50. GET /v1/users/{id} - Retrieve a specific user by ID. POST /v1/users - Create a new user. Required fields: email, name. Optional: role, department. PUT /v1/users/{id} - Update user details. DELETE /v1/users/{id} - Deactivate a user (soft delete). All endpoints return JSON with a 'data' wrapper."
+    },
+    {
+      "id": "api_endpoints_projects",
+      "content": "NovaTech Projects API\n\nGET /v1/projects - List all projects. Filter by status with ?status=active|archived. GET /v1/projects/{id} - Get project details including members and settings. POST /v1/projects - Create a project. Required: name, owner_id. Optional: description, visibility (private|internal|public). PUT /v1/projects/{id} - Update project. PATCH /v1/projects/{id}/archive - Archive a project. Projects have a unique slug auto-generated from the name."
+    },
+    {
+      "id": "api_webhooks",
+      "content": "NovaTech Webhooks\n\nWebhooks notify your application of events in real-time. Configure webhooks in Dashboard > Settings > Webhooks. Supported events: user.created, user.updated, project.created, project.archived, invoice.paid, invoice.overdue. Each webhook request includes a X-NovaTech-Signature header for verification using HMAC-SHA256. Webhook payloads are JSON with event_type, timestamp, and data fields. Failed deliveries are retried 3 times with exponential backoff."
+    },
+    {
+      "id": "api_errors",
+      "content": "NovaTech API Error Codes\n\nThe API uses standard HTTP status codes. 400 Bad Request: Invalid parameters, check the 'errors' array in response. 401 Unauthorized: Missing or invalid API key. 403 Forbidden: Valid key but insufficient permissions. 404 Not Found: Resource doesn't exist. 409 Conflict: Resource already exists or version conflict. 422 Unprocessable Entity: Validation failed. 429 Too Many Requests: Rate limit exceeded. 500 Internal Server Error: Contact support with the request_id."
+    },
+    {
+      "id": "security_overview",
+      "content": "NovaTech Security Overview\n\nNovaTech is SOC 2 Type II and ISO 27001 certified. All data is encrypted at rest using AES-256 and in transit using TLS 1.3. We maintain a 99.99% uptime SLA. Regular penetration testing is conducted by third-party security firms. Our infrastructure runs on AWS with data centers in US-East, EU-West, and AP-Southeast. Data residency options are available for Enterprise customers."
+    },
+    {
+      "id": "security_2fa",
+      "content": "NovaTech Two-Factor Authentication\n\nTwo-factor authentication (2FA) adds an extra layer of security to your account. To enable 2FA: Navigate to Settings > Security > Two-Factor Authentication. Click 'Enable 2FA' and scan the QR code with an authenticator app (Google Authenticator, Authy, or 1Password). Enter the 6-digit code to confirm. Save your backup codes in a secure location. Organization admins can enforce 2FA for all members under Organization Settings > Security Policies."
+    },
+    {
+      "id": "security_sso",
+      "content": "NovaTech Single Sign-On (SSO)\n\nSSO is available on Enterprise plans. Supported providers: Okta, Azure AD, Google Workspace, OneLogin, and any SAML 2.0 compliant IdP. Configuration: Go to Organization Settings > Authentication > SSO. Enter your IdP metadata URL or upload the XML file. Map user attributes: email (required), name, department. Enable 'Just-in-Time Provisioning' to auto-create users on first login. SSO can be enforced, making password login unavailable."
+    },
+    {
+      "id": "security_audit_logs",
+      "content": "NovaTech Audit Logs\n\nAudit logs track all security-relevant actions in your organization. Available on Pro and Enterprise plans. Logged events include: user logins (success/failure), permission changes, API key creation/revocation, data exports, and admin actions. Access logs via Dashboard > Security > Audit Logs or the API at GET /v1/audit-logs. Logs are retained for 90 days (Pro) or 1 year (Enterprise). Export to CSV or integrate with your SIEM via webhook."
+    },
+    {
+      "id": "security_ip_allowlist",
+      "content": "NovaTech IP Allowlisting\n\nRestrict API access to specific IP addresses or CIDR ranges. Configure under Organization Settings > Security > IP Allowlist. Add individual IPs (e.g., 203.0.113.50) or ranges (e.g., 203.0.113.0/24). The allowlist applies to API requests only; dashboard access uses a separate allowlist. Changes take effect within 5 minutes. Enterprise customers can configure separate allowlists per environment (production, staging)."
+    },
+    {
+      "id": "billing_plans",
+      "content": "NovaTech Subscription Plans\n\nFree: $0/month - Up to 5 users, 1GB storage, community support, 100 API calls/minute. Pro: $49/user/month - Unlimited users, 100GB storage, email support, 1,000 API calls/minute, audit logs, SSO (SAML). Enterprise: Custom pricing - Unlimited storage, dedicated support, custom rate limits, SLA, data residency, advanced security features. All plans include a 14-day free trial with full Pro features."
+    },
+    {
+      "id": "billing_usage",
+      "content": "NovaTech Usage-Based Billing\n\nBeyond your plan's included quota, usage is billed as follows: Additional storage: $0.10/GB/month. API overages: $0.001 per request above limit. Data transfer: First 100GB free, then $0.05/GB. Usage is calculated daily and billed at the end of the billing cycle. Set spending alerts in Dashboard > Billing > Alerts to avoid surprises. Usage details are available in real-time via GET /v1/billing/usage."
+    },
+    {
+      "id": "billing_invoices",
+      "content": "NovaTech Invoices and Payments\n\nInvoices are generated on the 1st of each month and due within 15 days. Payment methods: Credit card (Visa, Mastercard, Amex), ACH bank transfer (US only), wire transfer (Enterprise). Access invoices in Dashboard > Billing > Invoices or via API at GET /v1/billing/invoices. Download PDF invoices for your records. Set up auto-pay to avoid service interruptions. Failed payments trigger email notifications and a 7-day grace period."
+    },
+    {
+      "id": "billing_quotas",
+      "content": "NovaTech Resource Quotas\n\nEach plan includes default quotas. Free: 5 users, 3 projects, 1GB storage. Pro: Unlimited users, 50 projects, 100GB storage. Enterprise: Fully customizable. Check current usage in Dashboard > Settings > Usage or GET /v1/account/quotas. Quota increases are available on Pro (contact support) and included in Enterprise agreements. Approaching quota triggers warning emails at 80% and 95% utilization."
+    },
+    {
+      "id": "troubleshooting_connection",
+      "content": "NovaTech Connection Issues\n\nIf you're unable to connect to the NovaTech API: 1) Verify your API key is correct and not expired. 2) Check your IP is in the allowlist if configured. 3) Ensure you're using HTTPS (HTTP is not supported). 4) Verify the endpoint URL: api.novatech.io/v1/. 5) Check our status page at status.novatech.io for outages. 6) Test with curl: curl -H 'Authorization: Bearer ntk_...' https://api.novatech.io/v1/ping. Common error: using 'api.novatech.com' instead of 'api.novatech.io'."
+    },
+    {
+      "id": "troubleshooting_auth",
+      "content": "NovaTech Authentication Errors\n\nHTTP 401 Unauthorized: Your API key is missing, malformed, or revoked. Verify the header format: 'Authorization: Bearer ntk_yourkey'. Check the key hasn't been revoked in Dashboard > API Keys. HTTP 403 Forbidden: Your key is valid but lacks permission for this action. Review key scopes in the dashboard. Admin endpoints require admin-scoped keys. Contact your organization admin to adjust permissions."
+    },
+    {
+      "id": "troubleshooting_performance",
+      "content": "NovaTech Performance Optimization\n\nSlow API responses? Try these optimizations: 1) Use pagination - don't fetch all records at once. 2) Request only needed fields with ?fields=id,name,email. 3) Enable gzip compression with Accept-Encoding: gzip header. 4) Cache responses client-side using ETag headers. 5) Use bulk endpoints for batch operations: POST /v1/users/bulk. 6) Choose the nearest region: us.api.novatech.io, eu.api.novatech.io. Average response time should be under 200ms."
+    },
+    {
+      "id": "troubleshooting_webhooks",
+      "content": "NovaTech Webhook Troubleshooting\n\nNot receiving webhooks? Check: 1) Webhook URL is publicly accessible (not localhost). 2) Your server returns HTTP 200 within 30 seconds. 3) SSL certificate is valid if using HTTPS. 4) Firewall allows requests from NovaTech IPs: 52.20.0.0/16. View delivery attempts in Dashboard > Webhooks > Logs. Failed webhooks show error details. Test with 'Send Test Event' button. Signature verification: use HMAC-SHA256 with your webhook secret."
+    },
+    {
+      "id": "troubleshooting_data_sync",
+      "content": "NovaTech Data Synchronization Issues\n\nData not appearing or outdated? NovaTech uses eventual consistency with typical propagation under 5 seconds. 1) Use ?refresh=true query parameter to force fresh data (impacts performance). 2) Check for webhook delivery failures that might indicate sync issues. 3) Verify you're querying the correct environment (production vs staging). 4) For bulk imports, check the import job status at GET /v1/jobs/{job_id}. 5) Contact support if inconsistencies persist beyond 1 minute."
+    },
+    {
+      "id": "best_practices_api",
+      "content": "NovaTech API Best Practices\n\nFollow these guidelines for reliable integrations: 1) Always check response status codes before processing data. 2) Implement exponential backoff for retries (start at 1s, max 32s). 3) Use idempotency keys for POST requests to prevent duplicates. 4) Store the request_id from responses for debugging. 5) Subscribe to webhooks instead of polling when possible. 6) Version your integration by specifying API version header: X-API-Version: 2024-01. 7) Monitor your rate limit headers proactively."
+    },
+    {
+      "id": "best_practices_security",
+      "content": "NovaTech Security Best Practices\n\n1) Rotate API keys every 90 days. 2) Use scoped keys with minimum required permissions. 3) Enable 2FA for all team members. 4) Configure IP allowlisting in production. 5) Review audit logs weekly for suspicious activity. 6) Use environment variables for API keys, never hardcode. 7) Implement webhook signature verification. 8) Enable SSO for Enterprise to centralize access control. 9) Set up alerts for failed login attempts. 10) Regularly review user permissions and remove unused accounts."
+    },
+    {
+      "id": "best_practices_architecture",
+      "content": "NovaTech Architecture Recommendations\n\nFor production deployments: 1) Use a message queue (RabbitMQ, SQS) between your app and NovaTech to handle rate limits gracefully. 2) Implement a caching layer (Redis) for frequently accessed data. 3) Set up monitoring and alerting on API errors and latency. 4) Use circuit breakers to prevent cascade failures. 5) Deploy in multiple regions if latency-sensitive. 6) Store webhook events in a database before processing for reliability. 7) Implement request deduplication using idempotency keys."
+    },
+    {
+      "id": "best_practices_testing",
+      "content": "NovaTech Testing Guidelines\n\nNovaTech provides a sandbox environment for testing. Base URL: sandbox.api.novatech.io. Sandbox features: Isolated from production data, same API behavior, pre-populated test data, webhook testing with simulated events. Use sandbox API keys (prefix: ntk_test_). Test scenarios: successful operations, error handling (use magic values like error@test.com), rate limit behavior, webhook delivery. Sandbox rate limits are more lenient for load testing."
+    }
+  ],
+  "queries": [
+    {
+      "id": "q001",
+      "text": "How do I authenticate with the NovaTech API?",
+      "expected_answer": "Include your API key in the Authorization header using the format: Authorization: Bearer <your_api_key>. API keys can be generated from the Dashboard under Settings > API Keys.",
+      "ground_truth_docs": ["api_authentication"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q002",
+      "text": "What is the rate limit for the NovaTech API on the Pro plan?",
+      "expected_answer": "The Pro plan allows 1,000 requests per minute and 100,000 requests per day.",
+      "ground_truth_docs": ["api_rate_limits"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q003",
+      "text": "What HTTP status code is returned when I exceed the rate limit?",
+      "expected_answer": "HTTP 429 Too Many Requests is returned with a Retry-After header indicating when you can retry.",
+      "ground_truth_docs": ["api_rate_limits", "api_errors"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q004",
+      "text": "How do I create a new user via the API?",
+      "expected_answer": "Send a POST request to /v1/users with required fields email and name. Optional fields include role and department.",
+      "ground_truth_docs": ["api_endpoints_users"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q005",
+      "text": "What events can I subscribe to with webhooks?",
+      "expected_answer": "Supported webhook events include: user.created, user.updated, project.created, project.archived, invoice.paid, and invoice.overdue.",
+      "ground_truth_docs": ["api_webhooks"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q006",
+      "text": "How do I verify webhook signatures?",
+      "expected_answer": "Webhook requests include a X-NovaTech-Signature header. Verify it using HMAC-SHA256 with your webhook secret.",
+      "ground_truth_docs": ["api_webhooks"],
+      "category": "api_reference",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q007",
+      "text": "What does HTTP 403 mean when calling the NovaTech API?",
+      "expected_answer": "HTTP 403 Forbidden means your API key is valid but lacks sufficient permissions for the requested action. Review your key scopes in the dashboard.",
+      "ground_truth_docs": ["api_errors", "troubleshooting_auth"],
+      "category": "troubleshooting",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q008",
+      "text": "How do I enable two-factor authentication?",
+      "expected_answer": "Navigate to Settings > Security > Two-Factor Authentication, click 'Enable 2FA', scan the QR code with an authenticator app like Google Authenticator or Authy, and enter the 6-digit code to confirm.",
+      "ground_truth_docs": ["security_2fa"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q009",
+      "text": "What SSO providers does NovaTech support?",
+      "expected_answer": "NovaTech supports Okta, Azure AD, Google Workspace, OneLogin, and any SAML 2.0 compliant identity provider. SSO is available on Enterprise plans.",
+      "ground_truth_docs": ["security_sso"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q010",
+      "text": "How long are audit logs retained?",
+      "expected_answer": "Audit logs are retained for 90 days on Pro plans and 1 year on Enterprise plans.",
+      "ground_truth_docs": ["security_audit_logs"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q011",
+      "text": "How do I restrict API access to specific IP addresses?",
+      "expected_answer": "Configure IP allowlisting under Organization Settings > Security > IP Allowlist. You can add individual IPs or CIDR ranges. Changes take effect within 5 minutes.",
+      "ground_truth_docs": ["security_ip_allowlist"],
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q012",
+      "text": "What certifications does NovaTech have?",
+      "expected_answer": "NovaTech is SOC 2 Type II and ISO 27001 certified.",
+      "ground_truth_docs": ["security_overview"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q013",
+      "text": "What encryption does NovaTech use?",
+      "expected_answer": "All data is encrypted at rest using AES-256 and in transit using TLS 1.3.",
+      "ground_truth_docs": ["security_overview"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q014",
+      "text": "How much does the Pro plan cost?",
+      "expected_answer": "The Pro plan costs $49 per user per month and includes unlimited users, 100GB storage, email support, 1,000 API calls per minute, audit logs, and SSO.",
+      "ground_truth_docs": ["billing_plans"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q015",
+      "text": "What is the cost for additional storage beyond my plan?",
+      "expected_answer": "Additional storage is billed at $0.10 per GB per month.",
+      "ground_truth_docs": ["billing_usage"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q016",
+      "text": "When are invoices generated and when are they due?",
+      "expected_answer": "Invoices are generated on the 1st of each month and are due within 15 days.",
+      "ground_truth_docs": ["billing_invoices"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q017",
+      "text": "What payment methods does NovaTech accept?",
+      "expected_answer": "NovaTech accepts credit cards (Visa, Mastercard, Amex), ACH bank transfer (US only), and wire transfer (Enterprise only).",
+      "ground_truth_docs": ["billing_invoices"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q018",
+      "text": "How many projects can I create on the Free plan?",
+      "expected_answer": "The Free plan allows up to 3 projects.",
+      "ground_truth_docs": ["billing_quotas"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q019",
+      "text": "Why am I getting connection errors to the NovaTech API?",
+      "expected_answer": "Check that: 1) Your API key is correct and not expired, 2) Your IP is in the allowlist if configured, 3) You're using HTTPS, 4) The endpoint URL is api.novatech.io/v1/, 5) Check status.novatech.io for outages. A common error is using 'api.novatech.com' instead of 'api.novatech.io'.",
+      "ground_truth_docs": ["troubleshooting_connection"],
+      "category": "troubleshooting",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q020",
+      "text": "How can I improve API response times?",
+      "expected_answer": "Optimize performance by: using pagination, requesting only needed fields with ?fields= parameter, enabling gzip compression, caching responses using ETag headers, using bulk endpoints for batch operations, and choosing the nearest region. Average response time should be under 200ms.",
+      "ground_truth_docs": ["troubleshooting_performance"],
+      "category": "troubleshooting",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q021",
+      "text": "Why am I not receiving webhooks?",
+      "expected_answer": "Check that: 1) Your webhook URL is publicly accessible, 2) Your server returns HTTP 200 within 30 seconds, 3) Your SSL certificate is valid, 4) Your firewall allows requests from NovaTech IPs (52.20.0.0/16). View delivery attempts in Dashboard > Webhooks > Logs.",
+      "ground_truth_docs": ["troubleshooting_webhooks"],
+      "category": "troubleshooting",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q022",
+      "text": "How do I implement retry logic for the API?",
+      "expected_answer": "Implement exponential backoff for retries, starting at 1 second and increasing to a maximum of 32 seconds. Also use idempotency keys for POST requests to prevent duplicates.",
+      "ground_truth_docs": ["best_practices_api"],
+      "category": "best_practices",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q023",
+      "text": "How often should I rotate API keys?",
+      "expected_answer": "Rotate API keys every 90 days as a security best practice.",
+      "ground_truth_docs": ["best_practices_security"],
+      "category": "best_practices",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q024",
+      "text": "What is the recommended architecture for production deployments?",
+      "expected_answer": "Use a message queue between your app and NovaTech to handle rate limits, implement a caching layer for frequently accessed data, set up monitoring and alerting, use circuit breakers, store webhook events before processing, and implement request deduplication with idempotency keys.",
+      "ground_truth_docs": ["best_practices_architecture"],
+      "category": "best_practices",
+      "difficulty": "hard"
+    },
+    {
+      "id": "q025",
+      "text": "How do I test my NovaTech integration?",
+      "expected_answer": "Use the sandbox environment at sandbox.api.novatech.io with sandbox API keys (prefix: ntk_test_). The sandbox has isolated test data, simulated webhook events, and more lenient rate limits for load testing.",
+      "ground_truth_docs": ["best_practices_testing"],
+      "category": "best_practices",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q026",
+      "text": "What is the API endpoint format for NovaTech?",
+      "expected_answer": "The base API endpoint is api.novatech.io/v1/. Regional endpoints are also available: us.api.novatech.io and eu.api.novatech.io for lower latency.",
+      "ground_truth_docs": ["troubleshooting_connection", "troubleshooting_performance"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q027",
+      "text": "How do I archive a project?",
+      "expected_answer": "Send a PATCH request to /v1/projects/{id}/archive to archive a project.",
+      "ground_truth_docs": ["api_endpoints_projects"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q028",
+      "text": "What happens when a payment fails?",
+      "expected_answer": "Failed payments trigger email notifications and you get a 7-day grace period before any service interruption.",
+      "ground_truth_docs": ["billing_invoices"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q029",
+      "text": "Can organization admins enforce 2FA for all members?",
+      "expected_answer": "Yes, organization admins can enforce 2FA for all members under Organization Settings > Security Policies.",
+      "ground_truth_docs": ["security_2fa"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q030",
+      "text": "What is the uptime SLA for NovaTech?",
+      "expected_answer": "NovaTech maintains a 99.99% uptime SLA.",
+      "ground_truth_docs": ["security_overview"],
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q031",
+      "text": "How do I get real-time notifications about events in my NovaTech account?",
+      "expected_answer": "Configure webhooks in Dashboard > Settings > Webhooks. Webhooks notify your application of events in real-time. Each webhook includes a signature header for verification and payloads contain event_type, timestamp, and data fields.",
+      "ground_truth_docs": ["api_webhooks"],
+      "category": "api_reference",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q032",
+      "text": "What are the storage limits for each NovaTech plan?",
+      "expected_answer": "Free plan: 1GB storage. Pro plan: 100GB storage. Enterprise plan: Unlimited storage.",
+      "ground_truth_docs": ["billing_plans", "billing_quotas"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q033",
+      "text": "How can I export audit logs?",
+      "expected_answer": "Export audit logs to CSV via the Dashboard > Security > Audit Logs, or integrate with your SIEM using webhooks. You can also access logs programmatically via GET /v1/audit-logs.",
+      "ground_truth_docs": ["security_audit_logs"],
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q034",
+      "text": "What format does the NovaTech API return data in?",
+      "expected_answer": "All API endpoints return JSON with a 'data' wrapper.",
+      "ground_truth_docs": ["api_endpoints_users"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q035",
+      "text": "Is there a free trial available?",
+      "expected_answer": "Yes, all plans include a 14-day free trial with full Pro features.",
+      "ground_truth_docs": ["billing_plans"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q036",
+      "text": "How do I set up spending alerts?",
+      "expected_answer": "Set spending alerts in Dashboard > Billing > Alerts to receive notifications and avoid unexpected charges.",
+      "ground_truth_docs": ["billing_usage"],
+      "category": "billing",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q037",
+      "text": "What data centers does NovaTech use?",
+      "expected_answer": "NovaTech's infrastructure runs on AWS with data centers in US-East, EU-West, and AP-Southeast. Data residency options are available for Enterprise customers.",
+      "ground_truth_docs": ["security_overview"],
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q038",
+      "text": "How long does it take for data changes to propagate?",
+      "expected_answer": "NovaTech uses eventual consistency with typical propagation under 5 seconds. Use ?refresh=true to force fresh data if needed, though this impacts performance.",
+      "ground_truth_docs": ["troubleshooting_data_sync"],
+      "category": "troubleshooting",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q039",
+      "text": "What prefix do NovaTech API keys have?",
+      "expected_answer": "Production API keys start with 'ntk_' and are 64 characters long. Sandbox/test keys have the prefix 'ntk_test_'.",
+      "ground_truth_docs": ["api_authentication", "best_practices_testing"],
+      "category": "api_reference",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q040",
+      "text": "How do I monitor my API usage?",
+      "expected_answer": "Check your usage in Dashboard > Settings > Usage or via GET /v1/account/quotas. Real-time billing usage is available at GET /v1/billing/usage. You'll receive warning emails at 80% and 95% quota utilization.",
+      "ground_truth_docs": ["billing_quotas", "billing_usage"],
+      "category": "billing",
+      "difficulty": "medium"
+    }
+  ]
+}
