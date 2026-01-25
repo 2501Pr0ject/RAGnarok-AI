@@ -26,8 +26,11 @@ jobs:
       - name: Export dependencies
         run: uv export --no-hashes --no-emit-project > requirements.txt
 
+      - name: Install pip-audit
+        run: uv pip install pip-audit
+
       - name: Run pip-audit
-        run: uvx pip-audit --strict --desc -r requirements.txt
+        run: uv run pip-audit --strict --desc -r requirements.txt
 
   secrets-scan:
     name: Secrets Scan
