@@ -273,7 +273,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 ### v0.4 — Framework Adapters & Observability
 - [ ] LangChain integration
 - [ ] LangGraph integration
-- [ ] Custom RAG support
+- [x] Custom RAG support
 - [ ] OpenTelemetry export for tracing & debugging
 
 ### Future
