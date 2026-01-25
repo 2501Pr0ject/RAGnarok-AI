@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pydantic import ValidationError
 
 from ragnarok_ai.core.types import Document, TestSet
 from ragnarok_ai.generators import (
@@ -23,7 +23,7 @@ from ragnarok_ai.generators import (
 from ragnarok_ai.generators.parsing import parse_json_array, parse_json_object
 
 if TYPE_CHECKING:
-    from ragnarok_ai.core.protocols import LLMProtocol
+    from pathlib import Path
 
 
 # ============================================================================
@@ -116,7 +116,7 @@ class TestGeneratedQuestion:
             answer="Test",
             source_doc_id="doc1",
         )
-        with pytest.raises(Exception):  # ValidationError for frozen model
+        with pytest.raises(ValidationError):
             question.question = "Modified?"  # type: ignore[misc]
 
 
@@ -154,12 +154,12 @@ class TestGenerationConfig:
 
     def test_validation_num_questions_positive(self) -> None:
         """Test that num_questions must be positive."""
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             GenerationConfig(num_questions=0)
 
     def test_validation_min_chunk_length(self) -> None:
         """Test that min_chunk_length has minimum value."""
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             GenerationConfig(min_chunk_length=5)
 
 
