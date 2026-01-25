@@ -73,9 +73,7 @@ class TestOllamaLLMGenerate:
     @pytest.mark.asyncio
     async def test_generate_empty_response(self) -> None:
         """Empty response field returns empty string."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            return_value=Response(200, json={})
-        )
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={}))
 
         llm = OllamaLLM()
         result = await llm.generate("prompt")
@@ -86,9 +84,7 @@ class TestOllamaLLMGenerate:
     @pytest.mark.asyncio
     async def test_generate_connection_error(self) -> None:
         """Connection error raises LLMConnectionError."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.post("http://localhost:11434/api/generate").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = OllamaLLM()
 
@@ -99,9 +95,7 @@ class TestOllamaLLMGenerate:
     @pytest.mark.asyncio
     async def test_generate_http_error(self) -> None:
         """HTTP error raises LLMConnectionError."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            return_value=Response(500, text="Internal Server Error")
-        )
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(500, text="Internal Server Error"))
 
         llm = OllamaLLM()
 
@@ -163,9 +157,7 @@ class TestOllamaLLMEmbed:
     @pytest.mark.asyncio
     async def test_embed_empty_response(self) -> None:
         """Empty response returns empty list."""
-        respx.post("http://localhost:11434/api/embed").mock(
-            return_value=Response(200, json={"embeddings": []})
-        )
+        respx.post("http://localhost:11434/api/embed").mock(return_value=Response(200, json={"embeddings": []}))
 
         llm = OllamaLLM()
         result = await llm.embed("text")
@@ -176,9 +168,7 @@ class TestOllamaLLMEmbed:
     @pytest.mark.asyncio
     async def test_embed_connection_error(self) -> None:
         """Connection error raises LLMConnectionError."""
-        respx.post("http://localhost:11434/api/embed").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.post("http://localhost:11434/api/embed").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = OllamaLLM()
 
@@ -189,9 +179,7 @@ class TestOllamaLLMEmbed:
     @pytest.mark.asyncio
     async def test_embed_http_error(self) -> None:
         """HTTP error raises LLMConnectionError."""
-        respx.post("http://localhost:11434/api/embed").mock(
-            return_value=Response(404, text="Model not found")
-        )
+        respx.post("http://localhost:11434/api/embed").mock(return_value=Response(404, text="Model not found"))
 
         llm = OllamaLLM()
 
@@ -221,9 +209,7 @@ class TestOllamaLLMIsAvailable:
     @pytest.mark.asyncio
     async def test_is_available_true(self) -> None:
         """Returns True when Ollama responds with 200."""
-        respx.get("http://localhost:11434/api/tags").mock(
-            return_value=Response(200, json={"models": []})
-        )
+        respx.get("http://localhost:11434/api/tags").mock(return_value=Response(200, json={"models": []}))
 
         llm = OllamaLLM()
         result = await llm.is_available()
@@ -234,9 +220,7 @@ class TestOllamaLLMIsAvailable:
     @pytest.mark.asyncio
     async def test_is_available_false_on_error(self) -> None:
         """Returns False when Ollama responds with error."""
-        respx.get("http://localhost:11434/api/tags").mock(
-            return_value=Response(500)
-        )
+        respx.get("http://localhost:11434/api/tags").mock(return_value=Response(500))
 
         llm = OllamaLLM()
         result = await llm.is_available()
@@ -247,9 +231,7 @@ class TestOllamaLLMIsAvailable:
     @pytest.mark.asyncio
     async def test_is_available_false_on_connection_error(self) -> None:
         """Returns False when connection fails."""
-        respx.get("http://localhost:11434/api/tags").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.get("http://localhost:11434/api/tags").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = OllamaLLM()
         result = await llm.is_available()
@@ -297,9 +279,7 @@ class TestOllamaLLMContextManager:
     @pytest.mark.asyncio
     async def test_context_manager_creates_client(self) -> None:
         """Entering context manager creates HTTP client."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            return_value=Response(200, json={"response": "ok"})
-        )
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={"response": "ok"}))
 
         llm = OllamaLLM()
 
@@ -311,9 +291,7 @@ class TestOllamaLLMContextManager:
     @pytest.mark.asyncio
     async def test_context_manager_closes_client(self) -> None:
         """Exiting context manager closes HTTP client."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            return_value=Response(200, json={"response": "ok"})
-        )
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={"response": "ok"}))
 
         llm = OllamaLLM()
 
@@ -326,12 +304,8 @@ class TestOllamaLLMContextManager:
     @pytest.mark.asyncio
     async def test_context_manager_reuses_client(self) -> None:
         """Multiple calls in context manager reuse the same client."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            return_value=Response(200, json={"response": "ok"})
-        )
-        respx.post("http://localhost:11434/api/embed").mock(
-            return_value=Response(200, json={"embeddings": [[0.1]]})
-        )
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={"response": "ok"}))
+        respx.post("http://localhost:11434/api/embed").mock(return_value=Response(200, json={"embeddings": [[0.1]]}))
 
         llm = OllamaLLM()
 
@@ -363,9 +337,7 @@ class TestOllamaLLMContextManager:
     @pytest.mark.asyncio
     async def test_context_manager_returns_self(self) -> None:
         """Context manager returns the OllamaLLM instance."""
-        respx.post("http://localhost:11434/api/generate").mock(
-            return_value=Response(200, json={"response": "ok"})
-        )
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={"response": "ok"}))
 
         llm = OllamaLLM()
 

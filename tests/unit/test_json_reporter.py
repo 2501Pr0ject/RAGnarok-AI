@@ -184,9 +184,7 @@ class TestJSONReporterReportToFile:
             k=10,
         )
 
-    def test_writes_file(
-        self, reporter: JSONReporter, sample_metrics: RetrievalMetrics, tmp_path: Path
-    ) -> None:
+    def test_writes_file(self, reporter: JSONReporter, sample_metrics: RetrievalMetrics, tmp_path: Path) -> None:
         """Report is written to file."""
         output_file = tmp_path / "results.json"
         reporter.report_to_file(sample_metrics, output_file)
@@ -301,9 +299,7 @@ class TestJSONReporterSummary:
         assert data["summary"] is None
         assert data["results"] == []
 
-    def test_summary_with_metadata(
-        self, reporter: JSONReporter, sample_metrics_list: list[RetrievalMetrics]
-    ) -> None:
+    def test_summary_with_metadata(self, reporter: JSONReporter, sample_metrics_list: list[RetrievalMetrics]) -> None:
         """Summary includes metadata when provided."""
         metadata = {"experiment": "test_run_1"}
         json_str = reporter.report_summary(sample_metrics_list, metadata=metadata)

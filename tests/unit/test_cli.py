@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import os
+
 from typer.testing import CliRunner
 
 from ragnarok_ai import __version__
 from ragnarok_ai.cli.main import app
+
+# Disable rich/typer color output to avoid ANSI escape codes in test assertions
+os.environ["NO_COLOR"] = "1"
+os.environ["TERM"] = "dumb"
 
 runner = CliRunner()
 

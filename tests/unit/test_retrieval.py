@@ -88,9 +88,7 @@ class TestPrecisionAtK:
             (["a", "b", "c"], ["d", "e", "f"], 3, 0.0),
         ],
     )
-    def test_parametrized_precision(
-        self, retrieved: list[str], relevant: list[str], k: int, expected: float
-    ) -> None:
+    def test_parametrized_precision(self, retrieved: list[str], relevant: list[str], k: int, expected: float) -> None:
         """Parametrized precision tests."""
         result = precision_at_k(retrieved, relevant, k=k)
 
@@ -156,9 +154,7 @@ class TestRecallAtK:
             (["a", "b", "c", "d"], ["b", "d", "e", "f"], 4, 0.5),
         ],
     )
-    def test_parametrized_recall(
-        self, retrieved: list[str], relevant: list[str], k: int, expected: float
-    ) -> None:
+    def test_parametrized_recall(self, retrieved: list[str], relevant: list[str], k: int, expected: float) -> None:
         """Parametrized recall tests."""
         result = recall_at_k(retrieved, relevant, k=k)
 
@@ -218,9 +214,7 @@ class TestMRR:
             (["a", "b", "c"], ["a", "b", "c"], 1.0),
         ],
     )
-    def test_parametrized_mrr(
-        self, retrieved: list[str], relevant: list[str], expected: float
-    ) -> None:
+    def test_parametrized_mrr(self, retrieved: list[str], relevant: list[str], expected: float) -> None:
         """Parametrized MRR tests."""
         result = mrr(retrieved, relevant)
 
@@ -302,9 +296,7 @@ class TestNDCGAtK:
             (["c", "b", "a"], ["a"], 3, 0.5),  # a at position 3
         ],
     )
-    def test_parametrized_ndcg(
-        self, retrieved: list[str], relevant: list[str], k: int, expected_approx: float
-    ) -> None:
+    def test_parametrized_ndcg(self, retrieved: list[str], relevant: list[str], k: int, expected_approx: float) -> None:
         """Parametrized NDCG tests."""
         result = ndcg_at_k(retrieved, relevant, k=k)
 
