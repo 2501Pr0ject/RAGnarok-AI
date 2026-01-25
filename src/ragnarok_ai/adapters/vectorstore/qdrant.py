@@ -190,9 +190,7 @@ class QdrantVectorStore:
                 doc = Document(
                     id=str(point.id),
                     content=payload.get("content", ""),
-                    metadata={
-                        k: v for k, v in payload.items() if k != "content"
-                    },
+                    metadata={k: v for k, v in payload.items() if k != "content"},
                 )
                 documents.append((doc, point.score))
 

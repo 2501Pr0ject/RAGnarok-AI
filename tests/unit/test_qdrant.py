@@ -93,9 +93,7 @@ class TestQdrantVectorStoreAdd:
     async def test_add_success(self) -> None:
         """Successful add stores documents."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -172,9 +170,7 @@ class TestQdrantVectorStoreSearch:
     async def test_search_success(self) -> None:
         """Successful search returns documents with scores."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_client.search.return_value = [
             MagicMock(
                 id="doc1",
@@ -214,9 +210,7 @@ class TestQdrantVectorStoreSearch:
     async def test_search_empty_results(self) -> None:
         """Empty search results return empty list."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_client.search.return_value = []
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
@@ -241,9 +235,7 @@ class TestQdrantVectorStoreDelete:
     async def test_delete_success(self) -> None:
         """Successful delete removes documents."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
@@ -268,9 +260,7 @@ class TestQdrantVectorStoreCount:
     async def test_count_success(self) -> None:
         """Successful count returns document count."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_client.get_collection.return_value = MagicMock(points_count=42)
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
@@ -288,9 +278,7 @@ class TestQdrantVectorStoreIsAvailable:
     async def test_is_available_true(self) -> None:
         """Returns True when Qdrant responds successfully."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
@@ -352,9 +340,7 @@ class TestQdrantVectorStoreContextManager:
     async def test_context_manager_creates_client(self) -> None:
         """Entering context manager creates Qdrant client."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
@@ -367,9 +353,7 @@ class TestQdrantVectorStoreContextManager:
     async def test_context_manager_closes_client(self) -> None:
         """Exiting context manager closes Qdrant client."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
@@ -384,9 +368,7 @@ class TestQdrantVectorStoreContextManager:
     async def test_context_manager_returns_self(self) -> None:
         """Context manager returns the QdrantVectorStore instance."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
@@ -418,9 +400,7 @@ class TestQdrantVectorStoreCollectionCreation:
     async def test_skips_creation_if_exists(self) -> None:
         """Collection is not created if it already exists."""
         mock_client = AsyncMock()
-        mock_client.get_collections.return_value = _make_collections_response(
-            ["ragnarok_documents"]
-        )
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
