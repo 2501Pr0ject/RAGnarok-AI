@@ -76,13 +76,15 @@ pytest --cov=ragnarok_ai        # Tests with coverage
 
 ### Branching
 
-Create a feature branch from `main`:
+Create a feature branch from `develop`:
 
 ```bash
-git checkout main
-git pull upstream main
+git checkout develop
+git pull upstream develop
 git checkout -b feat/your-feature-name
 ```
+
+> **Note:** We use `develop` for active development. The `main` branch is reserved for stable releases.
 
 **Branch naming conventions:**
 - `feat/xxx` — New features
@@ -95,8 +97,8 @@ git checkout -b feat/your-feature-name
 
 ```bash
 git fetch upstream
-git checkout main
-git merge upstream/main
+git checkout develop
+git merge upstream/develop
 ```
 
 ---
@@ -243,10 +245,10 @@ test(retrieval): add edge cases for empty query handling
 
 ### Before Submitting
 
-1. **Update your branch** with the latest `main`:
+1. **Update your branch** with the latest `develop`:
    ```bash
    git fetch upstream
-   git rebase upstream/main
+   git rebase upstream/develop
    ```
 
 2. **Run all checks**:
@@ -266,7 +268,7 @@ test(retrieval): add edge cases for empty query handling
    git push origin feat/your-feature-name
    ```
 
-2. Open a Pull Request against `main`
+2. Open a Pull Request against `develop`
 
 3. Fill out the PR template with:
    - Description of changes
@@ -284,10 +286,10 @@ test(retrieval): add edge cases for empty query handling
 ### After Merge
 
 - Delete your feature branch
-- Update your local main:
+- Update your local develop:
   ```bash
-  git checkout main
-  git pull upstream main
+  git checkout develop
+  git pull upstream develop
   ```
 
 ---
