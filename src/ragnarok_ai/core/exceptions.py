@@ -53,3 +53,14 @@ class ConfigurationError(RagnarokError):
     Example:
         >>> raise ConfigurationError("Missing required env var: RAGNAROK_OLLAMA_URL")
     """
+
+
+class VectorStoreConnectionError(RagnarokError):
+    """Raised when connection to a vector store fails.
+
+    This exception is raised when the library cannot connect to
+    the configured vector store (e.g., Qdrant, ChromaDB).
+
+    Example:
+        >>> raise VectorStoreConnectionError("Failed to connect to Qdrant at localhost:6333")
+    """
