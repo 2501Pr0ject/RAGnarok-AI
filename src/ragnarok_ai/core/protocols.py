@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from ragnarok_ai.core.types import Document
+    from ragnarok_ai.core.types import Document, RAGResponse
 
 
 @runtime_checkable
@@ -146,5 +146,21 @@ class EvaluatorProtocol(Protocol):
 
         Raises:
             EvaluationError: If evaluation fails.
+        """
+        ...
+
+
+@runtime_checkable
+class RAGProtocol(Protocol):
+    """Protocol for RAG pipeline implementations."""
+
+    async def query(self, question: str) -> RAGResponse:
+        """Execute RAG pipeline and return response with retrieved docs.
+
+        Args:
+            question: The question or query to answer.
+
+        Returns:
+            RAGResponse containing the answer and retrieved documents.
         """
         ...

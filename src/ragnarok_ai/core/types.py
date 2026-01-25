@@ -155,3 +155,11 @@ class RetrievalResult(BaseModel):
     def __len__(self) -> int:
         """Return the number of retrieved documents."""
         return len(self.retrieved_docs)
+
+
+class RAGResponse(BaseModel):
+    """Response from a RAG pipeline query."""
+
+    answer: str = Field(..., description="Generated answer from the RAG pipeline")
+    retrieved_docs: list[Document] = Field(..., description="Retrieved documents")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Optional metadata")
