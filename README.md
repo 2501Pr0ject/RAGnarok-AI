@@ -249,7 +249,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ## Roadmap
 
-### v0.1 — Foundation (current)
+### v0.1 — Foundation
 - [x] Project setup & architecture
 - [x] Core retrieval metrics (precision, recall, MRR, NDCG)
 - [x] Ollama adapter
@@ -258,7 +258,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Basic CLI
 - [x] CI/CD with GitHub Actions
 
-### v0.2 — Generation Metrics & Reporting
+### v0.2 — Generation Metrics & Reporting (current)
 - [x] Qdrant adapter
 - [x] Faithfulness evaluator
 - [x] Relevance evaluator

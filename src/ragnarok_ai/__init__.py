@@ -4,5 +4,5 @@ from __future__ import annotations
 
 from ragnarok_ai.core.evaluate import EvaluationResult, evaluate, evaluate_stream
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["EvaluationResult", "__version__", "evaluate", "evaluate_stream"]
