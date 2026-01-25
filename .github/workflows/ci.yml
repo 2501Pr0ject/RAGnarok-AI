@@ -48,7 +48,7 @@ jobs:
         run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --extra cli --extra ollama
 
       - name: Run mypy
         run: uv run mypy src/
