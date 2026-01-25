@@ -99,7 +99,9 @@ class BaselineComparison(BaseModel):
 
         for m in self.metrics:
             status_icon = "✓" if m.is_better else ("✗" if m.status == "worse" else "=")
-            lines.append(f"  {status_icon} {m.metric_name}: {m.your_value:.3f} ({m.formatted_change} vs {m.baseline_value:.3f})")
+            lines.append(
+                f"  {status_icon} {m.metric_name}: {m.your_value:.3f} ({m.formatted_change} vs {m.baseline_value:.3f})"
+            )
 
         return "\n".join(lines)
 
@@ -205,9 +207,9 @@ def compare(
         # Weight by absolute percent change, normalized
         total_weight = sum(abs(m.percent_change) for m in metric_comparisons)
         if total_weight > 0:
-            overall_score = sum(
-                (1 if m.is_better else -1) * abs(m.percent_change) for m in metric_comparisons
-            ) / total_weight
+            overall_score = (
+                sum((1 if m.is_better else -1) * abs(m.percent_change) for m in metric_comparisons) / total_weight
+            )
         else:
             overall_score = 0.0
     else:
