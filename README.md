@@ -263,7 +263,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Faithfulness evaluator
 - [x] Relevance evaluator
 - [x] Hallucination detection
-- [ ] HTML report with drill-down (failed questions, retrieved chunks)
+- [x] HTML report with drill-down (failed questions, retrieved chunks)
 - [ ] Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
 ### v0.3 — Test Generation & Golden Sets
