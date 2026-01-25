@@ -1,6 +1,6 @@
 [project]
 name = "ragnarok-ai"
-version = "0.1.0"
+version = "0.2.0"
 description = "A local-first RAG evaluation framework for LLM applications"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -22,6 +22,7 @@ classifiers = [
 dependencies = [
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -35,6 +36,7 @@ dev = [
     "respx>=0.20",
     "httpx>=0.27",
     "pip-audit>=2.7",
+    "types-pyyaml>=6.0",
 ]
 ollama = [
     "httpx>=0.27",
@@ -127,6 +129,14 @@ pretty = true
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["qdrant_client", "qdrant_client.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["yaml", "yaml.*"]
+ignore_missing_imports = true
 
 # ============================================================================
 # Pytest Configuration
