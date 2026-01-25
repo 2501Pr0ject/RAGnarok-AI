@@ -53,6 +53,10 @@ Current evaluation tools are either:
 
 **ragnarok-ai** is a lightweight, local-first framework to evaluate RAG pipelines.
 
+<p align="center">
+  <img src="assets/overview.png" alt="RAGnarok-AI Overview" width="900">
+</p>
+
 ```python
 from ragnarok_ai import evaluate, generate_testset
 
@@ -255,8 +259,8 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] CI/CD with GitHub Actions
 
 ### v0.2 — Generation Metrics & Reporting
-- [ ] Qdrant adapter
-- [ ] Faithfulness evaluator
+- [x] Qdrant adapter
+- [x] Faithfulness evaluator
 - [ ] Relevance evaluator
 - [ ] Hallucination detection
 - [ ] HTML report with drill-down (failed questions, retrieved chunks)
@@ -283,7 +287,14 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ---
 
-## Project Structure
+## Architecture
+
+<p align="center">
+  <img src="assets/architecture.png" alt="RAGnarok-AI Architecture" width="1000">
+</p>
+
+<details>
+<summary><strong>View project structure</strong></summary>
 
 ```
 ragnarok-ai/
@@ -299,6 +310,8 @@ ragnarok-ai/
 ├── benchmarks/         # Performance benchmarks
 └── docs/               # Documentation
 ```
+
+</details>
 
 ---
 
