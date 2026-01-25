@@ -5,7 +5,6 @@ asynchronous and synchronous RAG pipelines.
 """
 
 import asyncio
-from typing import Any
 
 from ragnarok_ai import evaluate
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
@@ -37,7 +36,7 @@ class MyAsyncRAG:
 class MySyncRAG:
     """A mock synchronous RAG pipeline wrapped for ragnarok-ai."""
 
-    def _run_sync_query(self, question: str) -> RAGResponse:
+    def _run_sync_query(self, _question: str) -> RAGResponse:
         # Your existing synchronous logic
         return RAGResponse(
             answer="Mars is the red planet.",

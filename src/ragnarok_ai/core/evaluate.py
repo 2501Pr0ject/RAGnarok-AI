@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from ragnarok_ai.core.protocols import RAGProtocol
     from ragnarok_ai.core.types import Query, TestSet
     from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
