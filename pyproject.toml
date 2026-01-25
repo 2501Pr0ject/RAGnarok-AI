@@ -144,6 +144,10 @@ module = ["qdrant_client", "qdrant_client.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = ["langchain_core", "langchain_core.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["yaml", "yaml.*"]
 ignore_missing_imports = true
 
