@@ -142,18 +142,14 @@ class TestConsoleReporterOutput:
         # Average precision: (0.82 + 0.78) / 2 = 0.80
         assert "0.80" in result
 
-    def test_report_summary_empty_list(
-        self, reporter: ConsoleReporter, output: StringIO
-    ) -> None:
+    def test_report_summary_empty_list(self, reporter: ConsoleReporter, output: StringIO) -> None:
         """Summary handles empty list gracefully."""
         reporter.report_summary([])
         result = output.getvalue()
 
         assert "No metrics to report" in result
 
-    def test_print_header(
-        self, reporter: ConsoleReporter, output: StringIO
-    ) -> None:
+    def test_print_header(self, reporter: ConsoleReporter, output: StringIO) -> None:
         """Header prints with decoration."""
         reporter.print_header("Test Header")
         result = output.getvalue()
@@ -161,9 +157,7 @@ class TestConsoleReporterOutput:
         assert "Test Header" in result
         assert "=" in result
 
-    def test_print_success(
-        self, reporter: ConsoleReporter, output: StringIO
-    ) -> None:
+    def test_print_success(self, reporter: ConsoleReporter, output: StringIO) -> None:
         """Success message includes checkmark."""
         reporter.print_success("Operation completed")
         result = output.getvalue()
@@ -171,9 +165,7 @@ class TestConsoleReporterOutput:
         assert "✅" in result
         assert "Operation completed" in result
 
-    def test_print_warning(
-        self, reporter: ConsoleReporter, output: StringIO
-    ) -> None:
+    def test_print_warning(self, reporter: ConsoleReporter, output: StringIO) -> None:
         """Warning message includes warning emoji."""
         reporter.print_warning("Low score detected")
         result = output.getvalue()
@@ -181,9 +173,7 @@ class TestConsoleReporterOutput:
         assert "⚠️" in result
         assert "Low score detected" in result
 
-    def test_print_error(
-        self, reporter: ConsoleReporter, output: StringIO
-    ) -> None:
+    def test_print_error(self, reporter: ConsoleReporter, output: StringIO) -> None:
         """Error message includes X emoji."""
         reporter.print_error("Evaluation failed")
         result = output.getvalue()
@@ -191,9 +181,7 @@ class TestConsoleReporterOutput:
         assert "❌" in result
         assert "Evaluation failed" in result
 
-    def test_print_info(
-        self, reporter: ConsoleReporter, output: StringIO
-    ) -> None:
+    def test_print_info(self, reporter: ConsoleReporter, output: StringIO) -> None:
         """Info message includes info emoji."""
         reporter.print_info("Additional details")
         result = output.getvalue()
