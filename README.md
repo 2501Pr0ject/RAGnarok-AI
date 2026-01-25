@@ -261,7 +261,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 ### v0.2 — Generation Metrics & Reporting
 - [x] Qdrant adapter
 - [x] Faithfulness evaluator
-- [ ] Relevance evaluator
+- [x] Relevance evaluator
 - [ ] Hallucination detection
 - [ ] HTML report with drill-down (failed questions, retrieved chunks)
 - [ ] Intelligent CI gating (stable metrics fail, LLM judgments warn)

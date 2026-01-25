@@ -11,6 +11,10 @@ from ragnarok_ai.evaluators.faithfulness import (
     FaithfulnessEvaluator,
     FaithfulnessResult,
 )
+from ragnarok_ai.evaluators.relevance import (
+    RelevanceEvaluator,
+    RelevanceResult,
+)
 from ragnarok_ai.evaluators.retrieval import (
     RetrievalMetrics,
     evaluate_retrieval,
@@ -24,6 +28,8 @@ __all__ = [
     "ClaimVerification",
     "FaithfulnessEvaluator",
     "FaithfulnessResult",
+    "RelevanceEvaluator",
+    "RelevanceResult",
     "RetrievalMetrics",
     "evaluate_retrieval",
     "mrr",
