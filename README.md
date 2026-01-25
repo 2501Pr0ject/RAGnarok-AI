@@ -258,7 +258,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Basic CLI
 - [x] CI/CD with GitHub Actions
 
-### v0.2 — Generation Metrics & Reporting (current)
+### v0.2 — Generation Metrics & Reporting
 - [x] Qdrant adapter
 - [x] Faithfulness evaluator
 - [x] Relevance evaluator
@@ -267,14 +267,15 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
 ### v0.3 — Test Generation & Golden Sets
-- [ ] Synthetic question generation
-- [ ] Multi-hop question support
-- [ ] Adversarial question generation
-- [ ] Checkpointing system
-- [ ] Golden set support (human-validated, versioned question sets)
-- [ ] Baselines library (configs + expected results on reference datasets)
+- [x] Synthetic question generation
+- [x] Multi-hop question support
+- [x] Adversarial question generation
+- [x] Checkpointing system
+- [x] Golden set support (human-validated, versioned question sets)
+- [x] Baselines library (configs + expected results)
+- [x] NovaTech example dataset for quickstart
 
-### v0.4 — Framework Adapters & Observability
+### v0.4 — Framework Adapters & Observability (current)
 - [ ] LangChain integration
 - [ ] LangGraph integration
 - [x] Custom RAG support
