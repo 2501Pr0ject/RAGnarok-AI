@@ -252,7 +252,11 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ## Roadmap
 
-### v0.1 — Foundation
+### Completed
+
+<details>
+<summary><strong>v0.1 — Foundation</strong></summary>
+
 - [x] Project setup & architecture
 - [x] Core retrieval metrics (precision, recall, MRR, NDCG)
 - [x] Ollama adapter
@@ -261,7 +265,11 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Basic CLI
 - [x] CI/CD with GitHub Actions
 
-### v0.2 — Generation Metrics & Reporting
+</details>
+
+<details>
+<summary><strong>v0.2 — Generation Metrics & Reporting</strong></summary>
+
 - [x] Qdrant adapter
 - [x] Faithfulness evaluator
 - [x] Relevance evaluator
@@ -269,7 +277,11 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] HTML report with drill-down (failed questions, retrieved chunks)
 - [x] Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
-### v0.3 — Test Generation & Golden Sets
+</details>
+
+<details>
+<summary><strong>v0.3 — Test Generation & Golden Sets</strong></summary>
+
 - [x] Synthetic question generation
 - [x] Multi-hop question support
 - [x] Adversarial question generation
@@ -278,18 +290,108 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] Baselines library (configs + expected results)
 - [x] NovaTech example dataset for quickstart
 
-### v0.4 — Framework Adapters & Observability
+</details>
+
+<details>
+<summary><strong>v0.4 — Framework Adapters & Observability</strong></summary>
+
 - [x] LangChain integration
 - [x] LangGraph integration
-- [x] Custom RAG support
+- [x] Custom RAG protocol support
 - [x] OpenTelemetry export for tracing & debugging
 
-### Future
-- [ ] Production monitoring dashboard
-- [ ] Rust acceleration for hot paths
+</details>
+
+### Planned
+
+#### v0.5 — Performance & Scale
+- [ ] Async parallelization (evaluate N queries concurrently)
+- [ ] Result caching (skip re-evaluation of unchanged queries)
+- [ ] Batch processing (1000+ queries efficiently)
+- [ ] Progress callbacks for long evaluations
+
+#### v0.6 — Cloud & Local Adapters
+- [ ] vLLM adapter (local high-performance inference)
+- [ ] OpenAI adapter (optional cloud fallback)
+- [ ] Anthropic adapter
+- [ ] ChromaDB adapter
+- [ ] FAISS adapter (pure local, no server)
+
+#### v0.7 — CI/CD & Plugins
+- [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
+- [ ] Plugin architecture for community adapters
+- [ ] LlamaIndex adapter
+- [ ] DSPy adapter
+- [ ] Adapter contribution guide
+
+#### v0.8 — Comparison & Regression
+- [ ] Comparison mode (side-by-side config comparison)
+- [ ] Regression detection (alert on quality drop)
+- [ ] Benchmark history tracking
+- [ ] Basic Web UI (read-only dashboard)
+
+#### v0.9 — Agent Evaluation
+- [ ] Agent evaluation protocol
+- [ ] Tool-use correctness metrics
+- [ ] Multi-step reasoning evaluation
+- [ ] ReAct pattern support
+- [ ] Trajectory analysis
+
+#### v1.0 — Production Ready
+- [ ] Production monitoring mode
+- [ ] Full Web UI dashboard
+- [ ] Stable public API (no breaking changes)
+- [ ] Comprehensive documentation site
+- [ ] Performance benchmarks published
+
+### Future (Post v1.0)
+
+<details>
+<summary><strong>More Integrations</strong></summary>
+
+- [ ] Haystack adapter
+- [ ] Semantic Kernel adapter
+- [ ] Groq adapter
+- [ ] Mistral API adapter
+- [ ] Together AI adapter
+- [ ] pgvector adapter
+- [ ] Weaviate adapter
+- [ ] Pinecone adapter
+- [ ] Milvus adapter
+
+</details>
+
+<details>
+<summary><strong>Advanced Features</strong></summary>
+
+- [ ] Streaming evaluation
+- [ ] Cost tracking ($ per evaluation)
+- [ ] A/B testing support
+- [ ] Dataset versioning
+- [ ] Fine-tuning recommendations
+- [ ] Multi-modal evaluation (images, audio)
+
+</details>
+
+<details>
+<summary><strong>Developer Experience</strong></summary>
+
 - [ ] VS Code extension
-- [ ] LlamaIndex integration
-- [ ] Haystack integration
+- [ ] Jupyter notebook integration
+- [ ] Interactive CLI (TUI)
+- [ ] Rust acceleration for hot paths
+
+</details>
+
+<details>
+<summary><strong>Enterprise</strong></summary>
+
+- [ ] SSO support
+- [ ] Role-based access control
+- [ ] Audit logging
+- [ ] RAGnarok Cloud (managed service)
+
+</details>
 
 ---
 
@@ -342,9 +444,10 @@ mypy src/                 # Type check
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-**Areas where help is appreciated:**
-- Additional metrics implementations
-- Framework adapters (Haystack, LlamaIndex)
+**Priority areas for contributions:**
+- LLM adapters (vLLM, OpenAI, Anthropic)
+- Vector store adapters (ChromaDB, FAISS, pgvector)
+- Framework adapters (LlamaIndex, DSPy, Haystack)
 - Documentation & examples
 - Performance optimizations
 
