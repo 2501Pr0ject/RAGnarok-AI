@@ -13,6 +13,14 @@ from ragnarok_ai.core.exceptions import (
     LLMConnectionError,
     RagnarokError,
 )
+from ragnarok_ai.core.gating import (
+    GatingConfig,
+    GatingEvaluationResult,
+    GatingEvaluator,
+    GatingResult,
+    MetricCategory,
+    MetricResult,
+)
 from ragnarok_ai.core.protocols import (
     EvaluatorProtocol,
     LLMProtocol,
@@ -30,8 +38,14 @@ __all__ = [
     "Document",
     "EvaluationError",
     "EvaluatorProtocol",
+    "GatingConfig",
+    "GatingEvaluationResult",
+    "GatingEvaluator",
+    "GatingResult",
     "LLMConnectionError",
     "LLMProtocol",
+    "MetricCategory",
+    "MetricResult",
     "Query",
     "RagnarokError",
     "RetrievalResult",
