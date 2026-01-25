@@ -1,8 +1,8 @@
 import pytest
-import anyio
-from ragnarok_ai.core.evaluate import evaluate, EvaluationResult
-from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
+
+from ragnarok_ai.core.evaluate import EvaluationResult, evaluate
 from ragnarok_ai.core.exceptions import EvaluationError
+from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
 
 
 class MockRAG:
@@ -21,7 +21,7 @@ class MockRAG:
         )
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_evaluate_success():
     rag = MockRAG()
     testset = TestSet(
@@ -42,7 +42,7 @@ async def test_evaluate_success():
     assert "recall" in summary
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_evaluate_failure():
     rag = MockRAG()
     testset = TestSet(
@@ -58,7 +58,7 @@ async def test_evaluate_failure():
     assert "fail this query" in str(excinfo.value)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_evaluate_empty_testset():
     rag = MockRAG()
     testset = TestSet(queries=[])
