@@ -14,6 +14,11 @@ from ragnarok_ai.generators.adversarial import (
     ExpectedBehavior,
 )
 from ragnarok_ai.generators.base import QuestionGeneratorProtocol
+from ragnarok_ai.generators.golden import (
+    GoldenQuestion,
+    GoldenSet,
+    GoldenSetDiff,
+)
 from ragnarok_ai.generators.io import load_testset, save_testset
 from ragnarok_ai.generators.models import GeneratedQuestion, GenerationConfig
 from ragnarok_ai.generators.multihop import (
@@ -37,6 +42,9 @@ __all__ = [
     "ExpectedBehavior",
     "GeneratedQuestion",
     "GenerationConfig",
+    "GoldenQuestion",
+    "GoldenSet",
+    "GoldenSetDiff",
     "MultiHopConfig",
     "MultiHopQuestion",
     "MultiHopQuestionGenerator",
