@@ -6,6 +6,11 @@ and configuration used throughout the library.
 
 from __future__ import annotations
 
+from ragnarok_ai.core.checkpoint import (
+    CheckpointData,
+    CheckpointManager,
+    get_default_checkpoint_manager,
+)
 from ragnarok_ai.core.config import Settings
 from ragnarok_ai.core.exceptions import (
     ConfigurationError,
@@ -34,6 +39,8 @@ from ragnarok_ai.core.types import (
 )
 
 __all__ = [
+    "CheckpointData",
+    "CheckpointManager",
     "ConfigurationError",
     "Document",
     "EvaluationError",
@@ -52,4 +59,5 @@ __all__ = [
     "Settings",
     "TestSet",
     "VectorStoreProtocol",
+    "get_default_checkpoint_manager",
 ]
