@@ -6,6 +6,11 @@ including retrieval quality and generation quality metrics.
 
 from __future__ import annotations
 
+from ragnarok_ai.evaluators.faithfulness import (
+    ClaimVerification,
+    FaithfulnessEvaluator,
+    FaithfulnessResult,
+)
 from ragnarok_ai.evaluators.retrieval import (
     RetrievalMetrics,
     evaluate_retrieval,
@@ -16,6 +21,9 @@ from ragnarok_ai.evaluators.retrieval import (
 )
 
 __all__ = [
+    "ClaimVerification",
+    "FaithfulnessEvaluator",
+    "FaithfulnessResult",
     "RetrievalMetrics",
     "evaluate_retrieval",
     "mrr",
