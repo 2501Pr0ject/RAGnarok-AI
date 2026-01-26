@@ -105,9 +105,7 @@ class FAISSVectorStore:
 
                     with metadata_path.open() as f:
                         data = json.load(f)
-                        self._documents = {
-                            int(k): Document(**v) for k, v in data["documents"].items()
-                        }
+                        self._documents = {int(k): Document(**v) for k, v in data["documents"].items()}
                         self._id_to_idx = data["id_to_idx"]
                         self._next_idx = data["next_idx"]
             else:

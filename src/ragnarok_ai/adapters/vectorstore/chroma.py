@@ -196,10 +196,7 @@ class ChromaVectorStore:
             ids = [doc.id for doc in documents]
             embeddings = [doc.metadata["embedding"] for doc in documents]
             contents = [doc.content for doc in documents]
-            metadatas = [
-                {k: v for k, v in doc.metadata.items() if k != "embedding"}
-                for doc in documents
-            ]
+            metadatas = [{k: v for k, v in doc.metadata.items() if k != "embedding"} for doc in documents]
 
             self._collection.upsert(
                 ids=ids,
