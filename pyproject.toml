@@ -66,6 +66,12 @@ langchain = [
 langgraph = [
     "langgraph>=0.1",
 ]
+llamaindex = [
+    "llama-index-core>=0.10",
+]
+dspy = [
+    "dspy-ai>=2.0",
+]
 cli = [
     "typer>=0.9",
 ]
@@ -76,7 +82,7 @@ telemetry = [
     "opentelemetry-exporter-otlp-proto-http>=1.20",
 ]
 all = [
-    "ragnarok-ai[ollama,openai,anthropic,vllm,qdrant,chroma,faiss,langchain,langgraph,cli,telemetry]",
+    "ragnarok-ai[ollama,openai,anthropic,vllm,qdrant,chroma,faiss,langchain,langgraph,llamaindex,dspy,cli,telemetry]",
 ]
 
 [project.scripts]
@@ -193,6 +199,14 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["opentelemetry", "opentelemetry.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["llama_index", "llama_index.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["dspy", "dspy.*"]
 ignore_missing_imports = true
 
 # ============================================================================
