@@ -674,11 +674,7 @@ class ReasoningEfficiencyEvaluator:
             return 1.0
 
         # Base score from optimal comparison (if provided)
-        base_score = (
-            min(1.0, optimal_steps / actual_steps)
-            if optimal_steps is not None and optimal_steps > 0
-            else 1.0
-        )
+        base_score = min(1.0, optimal_steps / actual_steps) if optimal_steps is not None and optimal_steps > 0 else 1.0
 
         # Penalties for inefficiencies
         redundant_penalty = 0.1 * redundant_steps
