@@ -335,13 +335,17 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v0.8 — Comparison & Benchmarking</strong></summary>
 
-#### v0.8 — Comparison & Benchmarking
 - [x] Comparison mode (`compare()` for side-by-side evaluation)
 - [x] Regression detection (alert on quality drop vs baseline)
 - [x] Benchmark history tracking (time-series storage)
-- [ ] Diff reports (what changed between runs)
+- [x] Diff reports (what changed between runs)
+
+</details>
+
+### Planned
 
 #### v0.9 — Agent Evaluation
 - [ ] `AgentProtocol` for agent pipelines
