@@ -302,13 +302,19 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v0.5 — Performance & Scale</strong></summary>
 
-#### v0.5 — Performance & Scale
-- [ ] Async parallelization (evaluate N queries concurrently)
-- [ ] Result caching (skip re-evaluation of unchanged queries)
-- [ ] Batch processing (1000+ queries efficiently)
-- [ ] Progress callbacks for long evaluations
+- [x] Async parallelization (`max_concurrency` parameter)
+- [x] Result caching (`MemoryCache`, `DiskCache`, `CacheProtocol`)
+- [x] Batch processing (`BatchEvaluator` for 1000+ queries)
+- [x] Progress callbacks (sync and async support)
+- [x] Timeout and retry (`timeout`, `max_retries`, `retry_delay`)
+- [x] Cache error handling (graceful degradation)
+
+</details>
+
+### Planned
 
 #### v0.6 — Cloud & Local Adapters
 - [ ] vLLM adapter (local high-performance inference)
