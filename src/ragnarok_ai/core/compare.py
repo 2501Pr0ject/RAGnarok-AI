@@ -74,9 +74,7 @@ class ComparisonProgress:
 
 
 # Type alias for comparison progress callback
-ComparisonProgressCallback = (
-    Callable[[ComparisonProgress], None] | Callable[[ComparisonProgress], Awaitable[None]]
-)
+ComparisonProgressCallback = Callable[[ComparisonProgress], None] | Callable[[ComparisonProgress], Awaitable[None]]
 
 
 @dataclass
@@ -242,9 +240,7 @@ class ComparisonResult:
             value_b = result_b.summary_metrics.get(metric, 0.0)
             diff = value_a - value_b
             pct_change = (
-                (diff / value_b) * 100
-                if value_b != 0
-                else (100.0 if diff > 0 else (-100.0 if diff < 0 else 0.0))
+                (diff / value_b) * 100 if value_b != 0 else (100.0 if diff > 0 else (-100.0 if diff < 0 else 0.0))
             )
 
             higher_is_better = metric not in LOWER_IS_BETTER
@@ -297,8 +293,7 @@ class ComparisonResult:
             },
             "rankings": self.rankings(),
             "winners": {
-                metric: self.winner(metric)
-                for metric in ["precision", "recall", "mrr", "ndcg", "total_latency_ms"]
+                metric: self.winner(metric) for metric in ["precision", "recall", "mrr", "ndcg", "total_latency_ms"]
             },
         }
 
@@ -361,7 +356,9 @@ class ComparisonResult:
         # Results table
         html_parts.append("<h2>Results</h2>")
         html_parts.append("<table>")
-        html_parts.append("<tr><th>Config</th><th>Precision</th><th>Recall</th><th>MRR</th><th>NDCG</th><th>Latency</th><th>k</th></tr>")
+        html_parts.append(
+            "<tr><th>Config</th><th>Precision</th><th>Recall</th><th>MRR</th><th>NDCG</th><th>Latency</th><th>k</th></tr>"
+        )
 
         for name, result in self.results.items():
             m = result.summary_metrics

@@ -149,12 +149,8 @@ class TestTestsetHash:
 
     def test_testset_hash_differs_for_different_testsets(self) -> None:
         """Different testsets produce different hashes."""
-        testset1 = TestSet(
-            queries=[Query(text="Question 1", ground_truth_docs=["doc1"])]
-        )
-        testset2 = TestSet(
-            queries=[Query(text="Question 2", ground_truth_docs=["doc2"])]
-        )
+        testset1 = TestSet(queries=[Query(text="Question 1", ground_truth_docs=["doc1"])])
+        testset2 = TestSet(queries=[Query(text="Question 2", ground_truth_docs=["doc2"])])
 
         hash1 = _compute_testset_hash(testset1)
         hash2 = _compute_testset_hash(testset2)
@@ -297,6 +293,7 @@ class TestComparisonResult:
         assert path.exists()
 
         import json
+
         with path.open() as f:
             data = json.load(f)
 
@@ -315,9 +312,7 @@ class TestComparisonResult:
         assert "baseline" in content
         assert "experiment" in content
 
-    def test_export_unsupported_format_raises(
-        self, sample_comparison_result: ComparisonResult, tmp_path: Any
-    ) -> None:
+    def test_export_unsupported_format_raises(self, sample_comparison_result: ComparisonResult, tmp_path: Any) -> None:
         """export() raises ValueError for unsupported format."""
         path = tmp_path / "comparison.xyz"
 
