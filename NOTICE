@@ -1,0 +1,82 @@
+RAGnarok-AI
+Copyright (c) 2026 Abdelatif Touati
+
+================================================================================
+DUAL LICENSING
+================================================================================
+
+This software is available under two licensing options:
+
+1. OPEN SOURCE LICENSE (AGPL-3.0)
+
+   RAGnarok-AI is free software: you can redistribute it and/or modify it under
+   the terms of the GNU Affero General Public License as published by the Free
+   Software Foundation, either version 3 of the License, or (at your option)
+   any later version.
+
+   This program is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+   FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+   details.
+
+   You should have received a copy of the GNU Affero General Public License
+   along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+   Full license text: LICENSE
+
+2. COMMERCIAL LICENSE
+
+   For organizations that cannot comply with AGPL-3.0 terms, a commercial
+   license is available. The commercial license permits use without copyleft
+   obligations.
+
+   Commercial license details: LICENSE-COMMERCIAL.md
+   Contact: abdel.touati@gmail.com
+
+================================================================================
+INTELLECTUAL PROPERTY
+================================================================================
+
+RAGnarok-AI and all associated intellectual property rights are owned
+exclusively by Abdelatif Touati.
+
+- The RAGnarok-AI name, logo, and branding are proprietary
+- Core source code is owned by Abdelatif Touati
+- Contributions are accepted under the terms of the AGPL-3.0 license
+
+================================================================================
+CONTRIBUTIONS
+================================================================================
+
+By submitting a contribution (pull request, patch, or other modification) to
+this project, you agree that:
+
+1. Your contribution is licensed under AGPL-3.0
+2. You grant Abdelatif Touati the irrevocable right to use, modify, and
+   relicense your contribution under the Commercial License
+3. You have the legal right to make the contribution
+
+This allows the maintainer to offer both open source and commercial versions
+of RAGnarok-AI while accepting community contributions.
+
+================================================================================
+THIRD-PARTY COMPONENTS
+================================================================================
+
+RAGnarok-AI includes or depends on third-party open source components. These
+components are licensed under their respective licenses:
+
+- pydantic: MIT License
+- httpx: BSD License
+- pytest: MIT License
+- ruff: MIT License
+
+See pyproject.toml for the complete list of dependencies.
+
+================================================================================
+CONTACT
+================================================================================
+
+Abdelatif Touati
+Email: abdel.touati@gmail.com
+GitHub: https://github.com/2501Pr0ject/RAGnarok-AI
