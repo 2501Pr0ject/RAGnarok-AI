@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from ragnarok_ai.core.evaluate import EvaluationResult, QueryResult
     from ragnarok_ai.core.protocols import RAGProtocol
     from ragnarok_ai.core.types import Query, TestSet
+    from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +162,6 @@ class BatchEvaluator:
             Aggregated EvaluationResult with all metrics and responses.
         """
         from ragnarok_ai.core.evaluate import EvaluationResult
-        from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
 
         all_metrics: list[RetrievalMetrics] = []
         all_responses: list[str] = []
