@@ -30,11 +30,11 @@ LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (QdrantVectorStore,)
 CLOUD_VECTORSTORE_ADAPTERS: tuple[type, ...] = ()  # Pinecone, Weaviate coming later
 
 __all__ = [
-    "AnthropicLLM",
     "CLOUD_LLM_ADAPTERS",
     "CLOUD_VECTORSTORE_ADAPTERS",
     "LOCAL_LLM_ADAPTERS",
     "LOCAL_VECTORSTORE_ADAPTERS",
+    "AnthropicLLM",
     "LangChainAdapter",
     "LangChainRetrieverAdapter",
     "LangGraphAdapter",
