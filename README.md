@@ -494,9 +494,18 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ## License
 
-This project is licensed under the [AGPL-3.0 License](LICENSE).
+RAGnarok-AI is dual-licensed:
 
-**Why AGPL?** To ensure improvements stay open-source and prevent the "open-core bait-and-switch" model where companies take OSS code and monetize without contributing back.
+| License | Use Case |
+|---------|----------|
+| [AGPL-3.0](LICENSE) | Open source projects, personal use, research |
+| [Commercial](LICENSE-COMMERCIAL.md) | Proprietary software, SaaS, organizations with AGPL restrictions |
+
+**Why dual licensing?**
+- AGPL ensures improvements stay open-source
+- Commercial license enables enterprise adoption without copyleft obligations
+
+For commercial licensing inquiries: abdel.touati@gmail.com
 
 ---
 
