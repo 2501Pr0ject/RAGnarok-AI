@@ -364,11 +364,7 @@ def evaluate_tool_use(
         recall = correct_calls / len(expected_tools) if expected_tools else 1.0
 
         # F1 = harmonic mean of precision and recall
-        f1 = (
-            2 * (precision * recall) / (precision + recall)
-            if precision + recall > 0
-            else 0.0
-        )
+        f1 = 2 * (precision * recall) / (precision + recall) if precision + recall > 0 else 0.0
 
     return ToolUseMetrics(
         total_calls=total,
