@@ -325,24 +325,30 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v0.7 — Framework Adapters</strong></summary>
 
-#### v0.7 — Framework Adapters
-- [ ] LlamaIndex adapter
-- [ ] DSPy adapter
+- [x] LlamaIndex adapter (Retriever, QueryEngine, Index)
+- [x] DSPy adapter (Retrieve, Module, RAG pattern)
+- [x] Custom RAG support via `RAGProtocol`
 - [ ] Adapter contribution guide
 
-#### v0.8 — Comparison & Regression
-- [ ] Comparison mode (side-by-side config comparison)
-- [ ] Regression detection (alert on quality drop)
-- [ ] Benchmark history tracking
+</details>
+
+### Planned
+
+#### v0.8 — Comparison & Benchmarking
+- [ ] Comparison mode (`compare()` for side-by-side evaluation)
+- [ ] Regression detection (alert on quality drop vs baseline)
+- [ ] Benchmark history tracking (time-series storage)
+- [ ] Diff reports (what changed between runs)
 
 #### v0.9 — Agent Evaluation
-- [ ] Agent evaluation protocol
+- [ ] `AgentProtocol` for agent pipelines
 - [ ] Tool-use correctness metrics
 - [ ] Multi-step reasoning evaluation
-- [ ] ReAct pattern support
-- [ ] Trajectory analysis
+- [ ] ReAct/CoT pattern support
+- [ ] Trajectory analysis and visualization
 
 #### v1.0 — Production Ready
 - [ ] PyPI publish (`pip install ragnarok-ai`)
@@ -469,11 +475,11 @@ mypy src/                 # Type check
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 **Priority areas for contributions:**
-- LLM adapters (vLLM, OpenAI, Anthropic)
-- Vector store adapters (ChromaDB, FAISS, pgvector)
-- Framework adapters (LlamaIndex, DSPy, Haystack)
+- Framework adapters (Haystack, Semantic Kernel)
+- Vector store adapters (pgvector, Weaviate, Pinecone)
+- LLM adapters (Groq, Mistral API, Together AI)
+- Agent evaluation features
 - Documentation & examples
-- Performance optimizations
 
 ---
 
