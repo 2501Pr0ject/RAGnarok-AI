@@ -298,29 +298,29 @@ test(retrieval): add edge cases for empty query handling
 
 We welcome contributions in these areas:
 
-### High Priority
+### Adapters
 
-- **Generation metrics**: Faithfulness, relevance, hallucination detection
-- **Test generation**: Synthetic question generation from documents
-- **Checkpointing**: Resume interrupted evaluations
+See **[CONTRIBUTING-ADAPTERS.md](CONTRIBUTING-ADAPTERS.md)** for a detailed guide on creating adapters.
 
-### Framework Adapters
-
-- LangChain integration
-- LangGraph integration
-- LlamaIndex adapter
+**Framework Adapters** (implement `RAGProtocol`):
 - Haystack adapter
+- Semantic Kernel adapter
 
-### Vector Store Adapters
+**LLM Adapters** (implement `LLMProtocol`):
+- Groq adapter
+- Mistral API adapter
+- Together AI adapter
 
-- Qdrant adapter (in progress)
-- ChromaDB adapter
+**Vector Store Adapters** (implement `VectorStoreProtocol`):
+- pgvector adapter
 - Weaviate adapter
+- Pinecone adapter
 
-### Reporters
+### Agent Evaluation (v0.9)
 
-- HTML report with visualizations
-- Markdown reporter
+- AgentProtocol design
+- Tool-use correctness metrics
+- Trajectory analysis
 
 ### Documentation
 
