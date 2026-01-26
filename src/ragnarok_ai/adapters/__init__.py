@@ -18,12 +18,12 @@ from ragnarok_ai.adapters.frameworks import (
     LangGraphAdapter,
     LangGraphStreamAdapter,
 )
-from ragnarok_ai.adapters.llm import OllamaLLM
+from ragnarok_ai.adapters.llm import OllamaLLM, OpenAILLM
 from ragnarok_ai.adapters.vectorstore import QdrantVectorStore
 
 # LLM adapter classification
 LOCAL_LLM_ADAPTERS: tuple[type, ...] = (OllamaLLM,)
-CLOUD_LLM_ADAPTERS: tuple[type, ...] = ()  # OpenAI, Anthropic coming in v0.6
+CLOUD_LLM_ADAPTERS: tuple[type, ...] = (OpenAILLM,)
 
 # VectorStore adapter classification
 LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (QdrantVectorStore,)
@@ -39,5 +39,6 @@ __all__ = [
     "LangGraphAdapter",
     "LangGraphStreamAdapter",
     "OllamaLLM",
+    "OpenAILLM",
     "QdrantVectorStore",
 ]
