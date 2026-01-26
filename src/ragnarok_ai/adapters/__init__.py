@@ -19,14 +19,14 @@ from ragnarok_ai.adapters.frameworks import (
     LangGraphStreamAdapter,
 )
 from ragnarok_ai.adapters.llm import AnthropicLLM, OllamaLLM, OpenAILLM, VLLMAdapter
-from ragnarok_ai.adapters.vectorstore import QdrantVectorStore
+from ragnarok_ai.adapters.vectorstore import ChromaVectorStore, FAISSVectorStore, QdrantVectorStore
 
 # LLM adapter classification
 LOCAL_LLM_ADAPTERS: tuple[type, ...] = (OllamaLLM, VLLMAdapter)
 CLOUD_LLM_ADAPTERS: tuple[type, ...] = (AnthropicLLM, OpenAILLM)
 
 # VectorStore adapter classification
-LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (QdrantVectorStore,)
+LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (ChromaVectorStore, FAISSVectorStore, QdrantVectorStore)
 CLOUD_VECTORSTORE_ADAPTERS: tuple[type, ...] = ()  # Pinecone, Weaviate coming later
 
 __all__ = [
@@ -35,6 +35,8 @@ __all__ = [
     "LOCAL_LLM_ADAPTERS",
     "LOCAL_VECTORSTORE_ADAPTERS",
     "AnthropicLLM",
+    "ChromaVectorStore",
+    "FAISSVectorStore",
     "LangChainAdapter",
     "LangChainRetrieverAdapter",
     "LangGraphAdapter",
