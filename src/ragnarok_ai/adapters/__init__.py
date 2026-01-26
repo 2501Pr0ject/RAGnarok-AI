@@ -12,6 +12,11 @@ Adapter Classification:
 
 from __future__ import annotations
 
+from ragnarok_ai.adapters.agents import (
+    ChainOfThoughtAdapter,
+    ReActAdapter,
+    ReActParser,
+)
 from ragnarok_ai.adapters.frameworks import (
     DSPyModuleAdapter,
     DSPyRAGAdapter,
@@ -41,6 +46,7 @@ __all__ = [
     "LOCAL_LLM_ADAPTERS",
     "LOCAL_VECTORSTORE_ADAPTERS",
     "AnthropicLLM",
+    "ChainOfThoughtAdapter",
     "ChromaVectorStore",
     "DSPyModuleAdapter",
     "DSPyRAGAdapter",
@@ -56,5 +62,7 @@ __all__ = [
     "OllamaLLM",
     "OpenAILLM",
     "QdrantVectorStore",
+    "ReActAdapter",
+    "ReActParser",
     "VLLMAdapter",
 ]
