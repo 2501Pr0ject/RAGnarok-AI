@@ -327,8 +327,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ### Planned
 
-#### v0.7 — CI/CD & Plugins
-- [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
+#### v0.7 — Plugins & Framework Adapters
 - [ ] Plugin architecture for community adapters
 - [ ] LlamaIndex adapter
 - [ ] DSPy adapter
@@ -386,6 +385,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 <details>
 <summary><strong>Developer Experience</strong></summary>
 
+- [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
 - [ ] VS Code extension
 - [ ] Jupyter notebook integration
 - [ ] Interactive CLI (TUI)
