@@ -388,9 +388,7 @@ class TestEvaluateWithCache:
 
         rag = MockRAG()
         cache = MemoryCache()
-        testset = TestSet(
-            queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)]
-        )
+        testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)])
 
         # First evaluation - all calls
         await evaluate(rag, testset, cache=cache, max_concurrency=5)
@@ -506,9 +504,7 @@ class TestCacheWithTimeoutRetry:
         testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
         # First attempt with retries - all fail
-        await evaluate(
-            rag, testset, cache=cache, max_retries=2, retry_delay=0.01, fail_fast=False
-        )
+        await evaluate(rag, testset, cache=cache, max_retries=2, retry_delay=0.01, fail_fast=False)
 
         # Cache should be empty (error not cached)
         assert len(cache) == 0
@@ -526,9 +522,7 @@ class TestCacheWithTimeoutRetry:
         testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
         # First attempt with retries - succeeds on 3rd try
-        result = await evaluate(
-            rag, testset, cache=cache, max_retries=3, retry_delay=0.01
-        )
+        result = await evaluate(rag, testset, cache=cache, max_retries=3, retry_delay=0.01)
 
         # Should have succeeded
         assert len(result.responses) == 1
@@ -577,19 +571,13 @@ class TestCacheWithTimeoutRetry:
 
         rag = MockRAG()
         cache = MemoryCache()
-        testset = TestSet(
-            queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)]
-        )
+        testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)])
 
         # First evaluation with timeout
-        await evaluate(
-            rag, testset, cache=cache, max_concurrency=5, timeout=5.0
-        )
+        await evaluate(rag, testset, cache=cache, max_concurrency=5, timeout=5.0)
         assert rag.call_count == 5
         assert len(cache) == 5
 
         # Second evaluation - all cached
-        await evaluate(
-            rag, testset, cache=cache, max_concurrency=5, timeout=5.0
-        )
+        await evaluate(rag, testset, cache=cache, max_concurrency=5, timeout=5.0)
         assert rag.call_count == 5  # No additional calls

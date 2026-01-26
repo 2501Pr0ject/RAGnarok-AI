@@ -96,12 +96,7 @@ class SlowMockRAG:
 async def test_evaluate_parallel_basic():
     """Test basic parallel evaluation."""
     rag = SlowMockRAG(delay=0.05)
-    testset = TestSet(
-        queries=[
-            Query(text=f"q{i}", ground_truth_docs=["doc_1"])
-            for i in range(5)
-        ]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)])
 
     result = await evaluate(rag, testset, max_concurrency=5)
 
@@ -115,12 +110,7 @@ async def test_evaluate_parallel_faster_than_sequential():
     import time
 
     rag = SlowMockRAG(delay=0.05)
-    testset = TestSet(
-        queries=[
-            Query(text=f"q{i}", ground_truth_docs=["doc_1"])
-            for i in range(4)
-        ]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(4)])
 
     # Sequential
     start = time.perf_counter()
@@ -153,9 +143,7 @@ async def test_evaluate_parallel_preserves_order():
 
     rag = OrderedMockRAG()
     queries = [f"query_{i}" for i in range(10)]
-    testset = TestSet(
-        queries=[Query(text=q, ground_truth_docs=["doc_1"]) for q in queries]
-    )
+    testset = TestSet(queries=[Query(text=q, ground_truth_docs=["doc_1"]) for q in queries])
 
     result = await evaluate(rag, testset, max_concurrency=5)
 
@@ -182,9 +170,7 @@ async def test_evaluate_parallel_with_errors_fail_fast():
             )
 
     rag = FailingRAG()
-    testset = TestSet(
-        queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)])
 
     with pytest.raises(EvaluationError):
         await evaluate(rag, testset, max_concurrency=5, fail_fast=True)
@@ -228,12 +214,7 @@ async def test_evaluate_parallel_with_errors_continue():
 async def test_evaluate_with_progress_callback():
     """Test evaluation with progress callback."""
     rag = MockRAG()
-    testset = TestSet(
-        queries=[
-            Query(text=f"q{i}", ground_truth_docs=["doc_1"])
-            for i in range(3)
-        ]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)])
 
     progress_updates = []
 
@@ -251,12 +232,7 @@ async def test_evaluate_with_progress_callback():
 async def test_evaluate_parallel_with_progress_callback():
     """Test parallel evaluation with progress callback."""
     rag = SlowMockRAG(delay=0.02)
-    testset = TestSet(
-        queries=[
-            Query(text=f"q{i}", ground_truth_docs=["doc_1"])
-            for i in range(5)
-        ]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)])
 
     progress_updates = []
 
@@ -277,9 +253,7 @@ async def test_evaluate_with_async_progress_callback():
     import asyncio
 
     rag = MockRAG()
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     callback_called = False
 
@@ -320,9 +294,7 @@ async def test_evaluate_timeout():
     from ragnarok_ai.core.evaluate import QueryTimeoutError
 
     rag = TimeoutMockRAG(delay=1.0)  # 1 second delay
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     # Set timeout to 0.1s, query takes 1s -> should timeout
     with pytest.raises(EvaluationError) as excinfo:
@@ -335,14 +307,10 @@ async def test_evaluate_timeout():
 async def test_evaluate_timeout_parallel():
     """Test timeout in parallel evaluation."""
     rag = TimeoutMockRAG(delay=1.0)
-    testset = TestSet(
-        queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)])
 
     # With fail_fast=False, should collect errors
-    result = await evaluate(
-        rag, testset, timeout=0.1, max_concurrency=3, fail_fast=False
-    )
+    result = await evaluate(rag, testset, timeout=0.1, max_concurrency=3, fail_fast=False)
 
     # All queries should have timed out
     assert len(result.errors) == 3
@@ -375,14 +343,10 @@ class FailThenSucceedRAG:
 async def test_evaluate_retry_success():
     """Test that retry eventually succeeds after transient failures."""
     rag = FailThenSucceedRAG(fail_count=2)  # Fail 2 times, succeed on 3rd
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     # 3 retries (4 total attempts) should be enough
-    result = await evaluate(
-        rag, testset, max_retries=3, retry_delay=0.01
-    )
+    result = await evaluate(rag, testset, max_retries=3, retry_delay=0.01)
 
     assert len(result.responses) == 1
     assert result.responses[0] == "Answer to q1"
@@ -393,28 +357,20 @@ async def test_evaluate_retry_success():
 async def test_evaluate_retry_exhausted():
     """Test that evaluation fails when all retries are exhausted."""
     rag = FailThenSucceedRAG(fail_count=5)  # Always fails within our retry limit
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     # Only 2 retries (3 total attempts) - not enough
     with pytest.raises(EvaluationError):
-        await evaluate(
-            rag, testset, max_retries=2, retry_delay=0.01, fail_fast=True
-        )
+        await evaluate(rag, testset, max_retries=2, retry_delay=0.01, fail_fast=True)
 
 
 @pytest.mark.asyncio
 async def test_evaluate_retry_parallel():
     """Test retry in parallel evaluation."""
     rag = FailThenSucceedRAG(fail_count=1)  # Fail once, succeed on 2nd
-    testset = TestSet(
-        queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)])
 
-    result = await evaluate(
-        rag, testset, max_retries=2, retry_delay=0.01, max_concurrency=3
-    )
+    result = await evaluate(rag, testset, max_retries=2, retry_delay=0.01, max_concurrency=3)
 
     # All should succeed after retry
     assert len(result.responses) == 3
@@ -460,9 +416,7 @@ class ConcurrencyTrackingRAG:
 async def test_concurrency_limit_respected():
     """Test that max_concurrency limit is respected."""
     rag = ConcurrencyTrackingRAG(delay=0.05)
-    testset = TestSet(
-        queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(10)]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(10)])
 
     # Set max_concurrency to 3
     await evaluate(rag, testset, max_concurrency=3)
@@ -475,9 +429,7 @@ async def test_concurrency_limit_respected():
 async def test_concurrency_limit_allows_full_parallelism():
     """Test that queries run in parallel up to the limit."""
     rag = ConcurrencyTrackingRAG(delay=0.05)
-    testset = TestSet(
-        queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(5)])
 
     # Set max_concurrency to 5 (same as number of queries)
     await evaluate(rag, testset, max_concurrency=5)
@@ -490,9 +442,7 @@ async def test_concurrency_limit_allows_full_parallelism():
 async def test_invalid_concurrency_clamped_to_one():
     """Test that max_concurrency < 1 is clamped to 1."""
     rag = ConcurrencyTrackingRAG(delay=0.01)
-    testset = TestSet(
-        queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)]
-    )
+    testset = TestSet(queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"]) for i in range(3)])
 
     # Invalid values should be clamped to 1 (sequential)
     await evaluate(rag, testset, max_concurrency=0)
@@ -530,12 +480,11 @@ class TimeoutThenSucceedRAG:
 async def test_evaluate_timeout_then_retry_success():
     """Test timeout on first attempt, success on retry."""
     rag = TimeoutThenSucceedRAG()
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     result = await evaluate(
-        rag, testset,
+        rag,
+        testset,
         timeout=0.1,
         max_retries=2,
         retry_delay=0.01,
@@ -550,13 +499,12 @@ async def test_evaluate_timeout_then_retry_success():
 async def test_evaluate_timeout_all_retries_exhausted():
     """Test that all retries timeout."""
     rag = TimeoutMockRAG(delay=10.0)  # Always times out
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     with pytest.raises(EvaluationError) as excinfo:
         await evaluate(
-            rag, testset,
+            rag,
+            testset,
             timeout=0.05,
             max_retries=2,
             retry_delay=0.01,
@@ -601,9 +549,7 @@ async def test_evaluate_continues_on_cache_read_error():
     """Test that evaluation continues when cache.get() raises."""
     rag = MockRAG()
     broken_cache = BrokenCache()
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     # Should not raise, should continue without cache
     result = await evaluate(rag, testset, cache=broken_cache)
@@ -621,9 +567,7 @@ async def test_evaluate_continues_on_cache_write_error():
 
     rag = MockRAG()
     broken_cache = WriteOnlyBrokenCache()
-    testset = TestSet(
-        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
-    )
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
 
     # Should not raise, should continue despite cache write failure
     result = await evaluate(rag, testset, cache=broken_cache)
