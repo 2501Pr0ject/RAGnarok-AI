@@ -97,11 +97,7 @@ class TestOpenAILLMGenerate:
         respx.post("https://api.openai.com/v1/chat/completions").mock(
             return_value=httpx.Response(
                 200,
-                json={
-                    "choices": [
-                        {"message": {"content": "RAG combines retrieval and generation."}}
-                    ]
-                },
+                json={"choices": [{"message": {"content": "RAG combines retrieval and generation."}}]},
             )
         )
 
@@ -200,9 +196,7 @@ class TestOpenAILLMEmbed:
     @respx.mock
     async def test_embed_empty_data(self) -> None:
         """Test embedding with empty data."""
-        respx.post("https://api.openai.com/v1/embeddings").mock(
-            return_value=httpx.Response(200, json={"data": []})
-        )
+        respx.post("https://api.openai.com/v1/embeddings").mock(return_value=httpx.Response(200, json={"data": []}))
 
         llm = OpenAILLM(api_key="sk-test")
         embedding = await llm.embed("Hello world")
@@ -213,9 +207,7 @@ class TestOpenAILLMEmbed:
     @respx.mock
     async def test_embed_connection_error(self) -> None:
         """Test embedding with connection error."""
-        respx.post("https://api.openai.com/v1/embeddings").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.post("https://api.openai.com/v1/embeddings").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = OpenAILLM(api_key="sk-test")
         with pytest.raises(LLMConnectionError, match="Failed to connect"):
@@ -246,9 +238,7 @@ class TestOpenAILLMIsAvailable:
     @respx.mock
     async def test_is_available_true(self) -> None:
         """Test availability when API is reachable."""
-        respx.get("https://api.openai.com/v1/models").mock(
-            return_value=httpx.Response(200, json={"data": []})
-        )
+        respx.get("https://api.openai.com/v1/models").mock(return_value=httpx.Response(200, json={"data": []}))
 
         llm = OpenAILLM(api_key="sk-test")
         assert await llm.is_available() is True
@@ -268,9 +258,7 @@ class TestOpenAILLMIsAvailable:
     @respx.mock
     async def test_is_available_false_on_connection_error(self) -> None:
         """Test availability when connection fails."""
-        respx.get("https://api.openai.com/v1/models").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.get("https://api.openai.com/v1/models").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = OpenAILLM(api_key="sk-test")
         assert await llm.is_available() is False
@@ -289,9 +277,7 @@ class TestOpenAILLMContextManager:
     async def test_context_manager_reuses_client(self) -> None:
         """Test that context manager reuses HTTP client."""
         respx.post("https://api.openai.com/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         async with OpenAILLM(api_key="sk-test") as llm:
@@ -309,9 +295,7 @@ class TestOpenAILLMContextManager:
     async def test_standalone_creates_new_client(self) -> None:
         """Test that standalone usage creates new client per call."""
         respx.post("https://api.openai.com/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         llm = OpenAILLM(api_key="sk-test")
@@ -334,9 +318,7 @@ class TestOpenAILLMHeaders:
     async def test_authorization_header(self) -> None:
         """Test that Authorization header is set correctly."""
         route = respx.post("https://api.openai.com/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         llm = OpenAILLM(api_key="sk-test-key-123")

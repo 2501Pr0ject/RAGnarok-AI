@@ -90,11 +90,7 @@ class TestAnthropicLLMGenerate:
         respx.post("https://api.anthropic.com/v1/messages").mock(
             return_value=httpx.Response(
                 200,
-                json={
-                    "content": [
-                        {"type": "text", "text": "RAG combines retrieval and generation."}
-                    ]
-                },
+                json={"content": [{"type": "text", "text": "RAG combines retrieval and generation."}]},
             )
         )
 
@@ -128,9 +124,7 @@ class TestAnthropicLLMGenerate:
     @respx.mock
     async def test_generate_empty_content(self) -> None:
         """Test generation with empty content."""
-        respx.post("https://api.anthropic.com/v1/messages").mock(
-            return_value=httpx.Response(200, json={"content": []})
-        )
+        respx.post("https://api.anthropic.com/v1/messages").mock(return_value=httpx.Response(200, json={"content": []}))
 
         llm = AnthropicLLM(api_key="sk-ant-test")
         response = await llm.generate("What is RAG?")
@@ -141,9 +135,7 @@ class TestAnthropicLLMGenerate:
     @respx.mock
     async def test_generate_connection_error(self) -> None:
         """Test generation with connection error."""
-        respx.post("https://api.anthropic.com/v1/messages").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.post("https://api.anthropic.com/v1/messages").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = AnthropicLLM(api_key="sk-ant-test")
         with pytest.raises(LLMConnectionError, match="Failed to connect"):
@@ -215,9 +207,7 @@ class TestAnthropicLLMIsAvailable:
     async def test_is_available_true(self) -> None:
         """Test availability when API is reachable."""
         respx.post("https://api.anthropic.com/v1/messages").mock(
-            return_value=httpx.Response(
-                200, json={"content": [{"type": "text", "text": "Hi"}]}
-            )
+            return_value=httpx.Response(200, json={"content": [{"type": "text", "text": "Hi"}]})
         )
 
         llm = AnthropicLLM(api_key="sk-ant-test")
@@ -238,9 +228,7 @@ class TestAnthropicLLMIsAvailable:
     @respx.mock
     async def test_is_available_false_on_connection_error(self) -> None:
         """Test availability when connection fails."""
-        respx.post("https://api.anthropic.com/v1/messages").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.post("https://api.anthropic.com/v1/messages").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = AnthropicLLM(api_key="sk-ant-test")
         assert await llm.is_available() is False
@@ -259,9 +247,7 @@ class TestAnthropicLLMContextManager:
     async def test_context_manager_reuses_client(self) -> None:
         """Test that context manager reuses HTTP client."""
         respx.post("https://api.anthropic.com/v1/messages").mock(
-            return_value=httpx.Response(
-                200, json={"content": [{"type": "text", "text": "Response"}]}
-            )
+            return_value=httpx.Response(200, json={"content": [{"type": "text", "text": "Response"}]})
         )
 
         async with AnthropicLLM(api_key="sk-ant-test") as llm:
@@ -277,9 +263,7 @@ class TestAnthropicLLMContextManager:
     async def test_standalone_creates_new_client(self) -> None:
         """Test that standalone usage creates new client per call."""
         respx.post("https://api.anthropic.com/v1/messages").mock(
-            return_value=httpx.Response(
-                200, json={"content": [{"type": "text", "text": "Response"}]}
-            )
+            return_value=httpx.Response(200, json={"content": [{"type": "text", "text": "Response"}]})
         )
 
         llm = AnthropicLLM(api_key="sk-ant-test")
@@ -301,9 +285,7 @@ class TestAnthropicLLMHeaders:
     async def test_headers(self) -> None:
         """Test that headers are set correctly."""
         route = respx.post("https://api.anthropic.com/v1/messages").mock(
-            return_value=httpx.Response(
-                200, json={"content": [{"type": "text", "text": "Response"}]}
-            )
+            return_value=httpx.Response(200, json={"content": [{"type": "text", "text": "Response"}]})
         )
 
         llm = AnthropicLLM(api_key="sk-ant-test-key-123")

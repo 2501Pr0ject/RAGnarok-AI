@@ -91,11 +91,7 @@ class TestVLLMAdapterGenerate:
         respx.post("http://localhost:8000/v1/chat/completions").mock(
             return_value=httpx.Response(
                 200,
-                json={
-                    "choices": [
-                        {"message": {"content": "RAG combines retrieval and generation."}}
-                    ]
-                },
+                json={"choices": [{"message": {"content": "RAG combines retrieval and generation."}}]},
             )
         )
 
@@ -182,9 +178,7 @@ class TestVLLMAdapterEmbed:
     @respx.mock
     async def test_embed_empty_data(self) -> None:
         """Test embedding with empty data."""
-        respx.post("http://localhost:8000/v1/embeddings").mock(
-            return_value=httpx.Response(200, json={"data": []})
-        )
+        respx.post("http://localhost:8000/v1/embeddings").mock(return_value=httpx.Response(200, json={"data": []}))
 
         llm = VLLMAdapter()
         embedding = await llm.embed("Hello world")
@@ -195,9 +189,7 @@ class TestVLLMAdapterEmbed:
     @respx.mock
     async def test_embed_connection_error(self) -> None:
         """Test embedding with connection error."""
-        respx.post("http://localhost:8000/v1/embeddings").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.post("http://localhost:8000/v1/embeddings").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = VLLMAdapter()
         with pytest.raises(LLMConnectionError, match="Failed to connect"):
@@ -228,9 +220,7 @@ class TestVLLMAdapterIsAvailable:
     @respx.mock
     async def test_is_available_true(self) -> None:
         """Test availability when server is reachable."""
-        respx.get("http://localhost:8000/v1/models").mock(
-            return_value=httpx.Response(200, json={"data": []})
-        )
+        respx.get("http://localhost:8000/v1/models").mock(return_value=httpx.Response(200, json={"data": []}))
 
         llm = VLLMAdapter()
         assert await llm.is_available() is True
@@ -250,9 +240,7 @@ class TestVLLMAdapterIsAvailable:
     @respx.mock
     async def test_is_available_false_on_connection_error(self) -> None:
         """Test availability when connection fails."""
-        respx.get("http://localhost:8000/v1/models").mock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        respx.get("http://localhost:8000/v1/models").mock(side_effect=httpx.ConnectError("Connection refused"))
 
         llm = VLLMAdapter()
         assert await llm.is_available() is False
@@ -271,9 +259,7 @@ class TestVLLMAdapterContextManager:
     async def test_context_manager_reuses_client(self) -> None:
         """Test that context manager reuses HTTP client."""
         respx.post("http://localhost:8000/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         async with VLLMAdapter() as llm:
@@ -289,9 +275,7 @@ class TestVLLMAdapterContextManager:
     async def test_standalone_creates_new_client(self) -> None:
         """Test that standalone usage creates new client per call."""
         respx.post("http://localhost:8000/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         llm = VLLMAdapter()
@@ -313,9 +297,7 @@ class TestVLLMAdapterHeaders:
     async def test_headers_without_api_key(self) -> None:
         """Test headers without API key."""
         route = respx.post("http://localhost:8000/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         llm = VLLMAdapter()
@@ -331,9 +313,7 @@ class TestVLLMAdapterHeaders:
     async def test_headers_with_api_key(self) -> None:
         """Test headers with API key."""
         route = respx.post("http://localhost:8000/v1/chat/completions").mock(
-            return_value=httpx.Response(
-                200, json={"choices": [{"message": {"content": "Response"}}]}
-            )
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "Response"}}]})
         )
 
         llm = VLLMAdapter(api_key="vllm-secret-key")
