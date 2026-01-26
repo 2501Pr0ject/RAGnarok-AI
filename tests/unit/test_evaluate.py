@@ -501,3 +501,131 @@ async def test_invalid_concurrency_clamped_to_one():
     rag._max_concurrent = 0  # Reset
     await evaluate(rag, testset, max_concurrency=-5)
     assert rag._max_concurrent == 1
+
+
+# ============================================================================
+# Timeout + Retry Combined Tests
+# ============================================================================
+
+
+class TimeoutThenSucceedRAG:
+    """Mock RAG that times out on first attempt, then succeeds."""
+
+    def __init__(self) -> None:
+        self._attempts: dict[str, int] = {}
+
+    async def query(self, question: str) -> RAGResponse:
+        import asyncio
+
+        self._attempts[question] = self._attempts.get(question, 0) + 1
+        if self._attempts[question] == 1:
+            await asyncio.sleep(10)  # Will timeout
+        return RAGResponse(
+            answer=f"Answer to {question}",
+            retrieved_docs=[Document(id="doc_1", content="Content")],
+        )
+
+
+@pytest.mark.asyncio
+async def test_evaluate_timeout_then_retry_success():
+    """Test timeout on first attempt, success on retry."""
+    rag = TimeoutThenSucceedRAG()
+    testset = TestSet(
+        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
+    )
+
+    result = await evaluate(
+        rag, testset,
+        timeout=0.1,
+        max_retries=2,
+        retry_delay=0.01,
+    )
+
+    assert len(result.responses) == 1
+    assert result.responses[0] == "Answer to q1"
+    assert rag._attempts["q1"] == 2  # Timeout + success
+
+
+@pytest.mark.asyncio
+async def test_evaluate_timeout_all_retries_exhausted():
+    """Test that all retries timeout."""
+    rag = TimeoutMockRAG(delay=10.0)  # Always times out
+    testset = TestSet(
+        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
+    )
+
+    with pytest.raises(EvaluationError) as excinfo:
+        await evaluate(
+            rag, testset,
+            timeout=0.05,
+            max_retries=2,
+            retry_delay=0.01,
+            fail_fast=True,
+        )
+
+    assert "timed out" in str(excinfo.value).lower()
+
+
+# ============================================================================
+# Cache Error Handling Tests
+# ============================================================================
+
+
+class BrokenCache:
+    """Cache that always raises exceptions."""
+
+    def __init__(self) -> None:
+        self._stats = type("Stats", (), {"hits": 0, "misses": 0, "size": 0})()
+
+    async def get(self, _key: str):
+        raise RuntimeError("Cache read failed")
+
+    async def set(self, _key: str, _result):
+        raise RuntimeError("Cache write failed")
+
+    async def has(self, _key: str) -> bool:
+        return False
+
+    async def delete(self, _key: str) -> None:
+        pass
+
+    async def clear(self) -> None:
+        pass
+
+    def stats(self):
+        return self._stats
+
+
+@pytest.mark.asyncio
+async def test_evaluate_continues_on_cache_read_error():
+    """Test that evaluation continues when cache.get() raises."""
+    rag = MockRAG()
+    broken_cache = BrokenCache()
+    testset = TestSet(
+        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
+    )
+
+    # Should not raise, should continue without cache
+    result = await evaluate(rag, testset, cache=broken_cache)
+
+    assert len(result.responses) == 1
+
+
+@pytest.mark.asyncio
+async def test_evaluate_continues_on_cache_write_error():
+    """Test that evaluation continues when cache.set() raises."""
+
+    class WriteOnlyBrokenCache(BrokenCache):
+        async def get(self, _key: str):
+            return None  # Cache miss, no error
+
+    rag = MockRAG()
+    broken_cache = WriteOnlyBrokenCache()
+    testset = TestSet(
+        queries=[Query(text="q1", ground_truth_docs=["doc_1"])]
+    )
+
+    # Should not raise, should continue despite cache write failure
+    result = await evaluate(rag, testset, cache=broken_cache)
+
+    assert len(result.responses) == 1

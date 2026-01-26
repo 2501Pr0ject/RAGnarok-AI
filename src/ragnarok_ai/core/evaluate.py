@@ -241,9 +241,12 @@ async def _evaluate_parallel(
     retry_delay: float = 1.0,
 ) -> EvaluationResult:
     """Evaluate queries in parallel with concurrency control."""
+    import logging
+
     from ragnarok_ai.cache.base import compute_cache_key
     from ragnarok_ai.telemetry.tracer import NoOpTracer
 
+    logger = logging.getLogger(__name__)
     active_tracer = tracer if tracer is not None else NoOpTracer()
     semaphore = asyncio.Semaphore(max_concurrency)
     total = len(testset.queries)
@@ -264,21 +267,25 @@ async def _evaluate_parallel(
             if cancel_event.is_set():
                 return
 
-            # Check cache first
+            # Check cache first (with error handling)
             if cache is not None:
-                cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
-                cached_result = await cache.get(cache_key)
-                if cached_result is not None:
-                    results[index] = cached_result
-                    async with completed_lock:
-                        completed += 1
-                        current = completed
-                    if on_progress:
-                        info = ProgressInfo(current=current, total=total, query=query, result=cached_result)
-                        callback_result = on_progress(info)
-                        if asyncio.iscoroutine(callback_result):
-                            await callback_result
-                    return
+                try:
+                    cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
+                    cached_result = await cache.get(cache_key)
+                    if cached_result is not None:
+                        results[index] = cached_result
+                        async with completed_lock:
+                            completed += 1
+                            current = completed
+                        if on_progress:
+                            info = ProgressInfo(current=current, total=total, query=query, result=cached_result)
+                            callback_result = on_progress(info)
+                            if asyncio.iscoroutine(callback_result):
+                                await callback_result
+                        return
+                except Exception as e:
+                    logger.warning(f"Cache read error for query {index}: {e}")
+                    # Continue without cache
 
             query_result = await _evaluate_single_query_with_retry(
                 rag_pipeline,
@@ -292,10 +299,13 @@ async def _evaluate_parallel(
             )
             results[index] = query_result
 
-            # Store in cache
+            # Store in cache (with error handling)
             if cache is not None and query_result.error is None:
-                cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
-                await cache.set(cache_key, query_result)
+                try:
+                    cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
+                    await cache.set(cache_key, query_result)
+                except Exception as e:
+                    logger.warning(f"Cache write error for query {index}: {e}")
 
             async with completed_lock:
                 completed += 1
@@ -530,10 +540,13 @@ async def evaluate_stream(
     Raises:
         EvaluationError: If evaluation fails for any query and fail_fast is True.
     """
+    import logging
+
     from ragnarok_ai.cache.base import compute_cache_key
     from ragnarok_ai.core.exceptions import EvaluationError
     from ragnarok_ai.telemetry.tracer import NoOpTracer
 
+    logger = logging.getLogger(__name__)
     active_tracer = tracer if tracer is not None else NoOpTracer()
 
     with active_tracer.start_span(
@@ -544,13 +557,17 @@ async def evaluate_stream(
         },
     ) as eval_span:
         for i, query in enumerate(testset):
-            # Check cache first
+            # Check cache first (with error handling)
             if cache is not None:
-                cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
-                cached_result = await cache.get(cache_key)
-                if cached_result is not None:
-                    yield query, cached_result.metric, cached_result.answer
-                    continue
+                try:
+                    cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
+                    cached_result = await cache.get(cache_key)
+                    if cached_result is not None:
+                        yield query, cached_result.metric, cached_result.answer
+                        continue
+                except Exception as e:
+                    logger.warning(f"Cache read error for query {i}: {e}")
+                    # Continue without cache
 
             result = await _evaluate_single_query_with_retry(
                 rag_pipeline,
@@ -563,10 +580,13 @@ async def evaluate_stream(
                 retry_delay=retry_delay,
             )
 
-            # Store in cache
+            # Store in cache (with error handling)
             if cache is not None and result.error is None:
-                cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
-                await cache.set(cache_key, result)
+                try:
+                    cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
+                    await cache.set(cache_key, result)
+                except Exception as e:
+                    logger.warning(f"Cache write error for query {i}: {e}")
 
             if result.error:
                 if fail_fast:
