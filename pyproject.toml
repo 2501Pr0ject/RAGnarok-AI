@@ -53,6 +53,9 @@ vllm = [
 qdrant = [
     "qdrant-client>=1.7",
 ]
+chroma = [
+    "chromadb>=0.4",
+]
 langchain = [
     "langchain>=0.1",
     "langchain-community>=0.0.10",
@@ -67,7 +70,7 @@ telemetry = [
     "opentelemetry-exporter-otlp-proto-http>=1.20",
 ]
 all = [
-    "ragnarok-ai[ollama,openai,anthropic,vllm,qdrant,langchain,cli,telemetry]",
+    "ragnarok-ai[ollama,openai,anthropic,vllm,qdrant,chroma,langchain,cli,telemetry]",
 ]
 
 [project.scripts]
@@ -156,6 +159,10 @@ disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = ["qdrant_client", "qdrant_client.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["chromadb", "chromadb.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
