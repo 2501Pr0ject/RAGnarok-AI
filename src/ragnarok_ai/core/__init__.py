@@ -11,6 +11,12 @@ from ragnarok_ai.core.checkpoint import (
     CheckpointManager,
     get_default_checkpoint_manager,
 )
+from ragnarok_ai.core.compare import (
+    ComparisonProgress,
+    ComparisonResult,
+    ConfigResult,
+    compare,
+)
 from ragnarok_ai.core.config import Settings
 from ragnarok_ai.core.exceptions import (
     ConfigurationError,
@@ -41,6 +47,9 @@ from ragnarok_ai.core.types import (
 __all__ = [
     "CheckpointData",
     "CheckpointManager",
+    "ComparisonProgress",
+    "ComparisonResult",
+    "ConfigResult",
     "ConfigurationError",
     "Document",
     "EvaluationError",
@@ -59,5 +68,6 @@ __all__ = [
     "Settings",
     "TestSet",
     "VectorStoreProtocol",
+    "compare",
     "get_default_checkpoint_manager",
 ]
