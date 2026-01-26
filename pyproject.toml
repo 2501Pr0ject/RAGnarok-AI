@@ -63,6 +63,9 @@ langchain = [
     "langchain>=0.1",
     "langchain-community>=0.0.10",
 ]
+langgraph = [
+    "langgraph>=0.1",
+]
 cli = [
     "typer>=0.9",
 ]
@@ -73,7 +76,7 @@ telemetry = [
     "opentelemetry-exporter-otlp-proto-http>=1.20",
 ]
 all = [
-    "ragnarok-ai[ollama,openai,anthropic,vllm,qdrant,chroma,faiss,langchain,cli,telemetry]",
+    "ragnarok-ai[ollama,openai,anthropic,vllm,qdrant,chroma,faiss,langchain,langgraph,cli,telemetry]",
 ]
 
 [project.scripts]
