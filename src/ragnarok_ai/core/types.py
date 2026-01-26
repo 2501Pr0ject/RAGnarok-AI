@@ -96,6 +96,8 @@ class TestSet(BaseModel):
         2
     """
 
+    __test__ = False  # Prevent pytest collection warning
+
     queries: list[Query] = Field(..., description="List of queries to evaluate")
     name: str | None = Field(default=None, description="Optional name for the test set")
     description: str | None = Field(default=None, description="Optional description")

@@ -13,10 +13,16 @@ Adapter Classification:
 from __future__ import annotations
 
 from ragnarok_ai.adapters.frameworks import (
+    DSPyModuleAdapter,
+    DSPyRAGAdapter,
+    DSPyRetrieverAdapter,
     LangChainAdapter,
     LangChainRetrieverAdapter,
     LangGraphAdapter,
     LangGraphStreamAdapter,
+    LlamaIndexAdapter,
+    LlamaIndexQueryEngineAdapter,
+    LlamaIndexRetrieverAdapter,
 )
 from ragnarok_ai.adapters.llm import AnthropicLLM, OllamaLLM, OpenAILLM, VLLMAdapter
 from ragnarok_ai.adapters.vectorstore import ChromaVectorStore, FAISSVectorStore, QdrantVectorStore
@@ -36,11 +42,17 @@ __all__ = [
     "LOCAL_VECTORSTORE_ADAPTERS",
     "AnthropicLLM",
     "ChromaVectorStore",
+    "DSPyModuleAdapter",
+    "DSPyRAGAdapter",
+    "DSPyRetrieverAdapter",
     "FAISSVectorStore",
     "LangChainAdapter",
     "LangChainRetrieverAdapter",
     "LangGraphAdapter",
     "LangGraphStreamAdapter",
+    "LlamaIndexAdapter",
+    "LlamaIndexQueryEngineAdapter",
+    "LlamaIndexRetrieverAdapter",
     "OllamaLLM",
     "OpenAILLM",
     "QdrantVectorStore",

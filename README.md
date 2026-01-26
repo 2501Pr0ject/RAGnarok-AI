@@ -314,18 +314,20 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
+<details>
+<summary><strong>v0.6 — Cloud & Local Adapters</strong></summary>
+
+- [x] vLLM adapter (local high-performance inference)
+- [x] OpenAI adapter (optional cloud fallback)
+- [x] Anthropic adapter
+- [x] ChromaDB adapter
+- [x] FAISS adapter (pure local, no server)
+
+</details>
+
 ### Planned
 
-#### v0.6 — Cloud & Local Adapters
-- [ ] vLLM adapter (local high-performance inference)
-- [ ] OpenAI adapter (optional cloud fallback)
-- [ ] Anthropic adapter
-- [ ] ChromaDB adapter
-- [ ] FAISS adapter (pure local, no server)
-
-#### v0.7 — CI/CD & Plugins
-- [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
-- [ ] Plugin architecture for community adapters
+#### v0.7 — Framework Adapters
 - [ ] LlamaIndex adapter
 - [ ] DSPy adapter
 - [ ] Adapter contribution guide
@@ -334,7 +336,6 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [ ] Comparison mode (side-by-side config comparison)
 - [ ] Regression detection (alert on quality drop)
 - [ ] Benchmark history tracking
-- [ ] Basic Web UI (read-only dashboard)
 
 #### v0.9 — Agent Evaluation
 - [ ] Agent evaluation protocol
@@ -344,13 +345,40 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [ ] Trajectory analysis
 
 #### v1.0 — Production Ready
-- [ ] Production monitoring mode
-- [ ] Full Web UI dashboard
+- [ ] PyPI publish (`pip install ragnarok-ai`)
 - [ ] Stable public API (no breaking changes)
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
+- [ ] Production monitoring mode
 
 ### Future (Post v1.0)
+
+<details>
+<summary><strong>Web UI</strong></summary>
+
+- [ ] Basic Web UI (read-only dashboard)
+- [ ] Full Web UI dashboard
+
+</details>
+
+<details>
+<summary><strong>Plugin Architecture</strong></summary>
+
+- [ ] Plugin architecture for community adapters
+- [ ] Entry points system
+
+</details>
+
+<details>
+<summary><strong>Developer Experience</strong></summary>
+
+- [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
+- [ ] VS Code extension
+- [ ] Jupyter notebook integration
+- [ ] Interactive CLI (TUI)
+- [ ] Rust acceleration for hot paths
+
+</details>
 
 <details>
 <summary><strong>More Integrations</strong></summary>
@@ -376,16 +404,6 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [ ] Dataset versioning
 - [ ] Fine-tuning recommendations
 - [ ] Multi-modal evaluation (images, audio)
-
-</details>
-
-<details>
-<summary><strong>Developer Experience</strong></summary>
-
-- [ ] VS Code extension
-- [ ] Jupyter notebook integration
-- [ ] Interactive CLI (TUI)
-- [ ] Rust acceleration for hot paths
 
 </details>
 
