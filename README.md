@@ -314,14 +314,18 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v0.6 — Cloud & Local Adapters</strong></summary>
 
-#### v0.6 — Cloud & Local Adapters
-- [ ] vLLM adapter (local high-performance inference)
-- [ ] OpenAI adapter (optional cloud fallback)
-- [ ] Anthropic adapter
-- [ ] ChromaDB adapter
-- [ ] FAISS adapter (pure local, no server)
+- [x] vLLM adapter (local high-performance inference)
+- [x] OpenAI adapter (optional cloud fallback)
+- [x] Anthropic adapter
+- [x] ChromaDB adapter
+- [x] FAISS adapter (pure local, no server)
+
+</details>
+
+### Planned
 
 #### v0.7 — CI/CD & Plugins
 - [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
