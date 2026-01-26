@@ -34,6 +34,7 @@ class OllamaLLM:
     or standalone for simpler use cases.
 
     Attributes:
+        is_local: Always True - Ollama runs entirely locally.
         base_url: Base URL for Ollama API.
         model: Model name for text generation.
         embed_model: Model name for embeddings.
@@ -49,6 +50,8 @@ class OllamaLLM:
             >>> llm = OllamaLLM(model="mistral")
             >>> response = await llm.generate("What is RAG?")
     """
+
+    is_local: bool = True
 
     def __init__(
         self,

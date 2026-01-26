@@ -33,6 +33,7 @@ class QdrantVectorStore:
     or standalone for simpler use cases.
 
     Attributes:
+        is_local: Always True - Qdrant is self-hosted, no data leaves your network.
         url: URL for Qdrant server.
         api_key: Optional API key for authentication.
         collection_name: Name of the collection to use.
@@ -49,6 +50,8 @@ class QdrantVectorStore:
             >>> store = QdrantVectorStore(vector_size=768)
             >>> await store.add([doc1])
     """
+
+    is_local: bool = True
 
     def __init__(
         self,

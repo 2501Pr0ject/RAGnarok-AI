@@ -19,8 +19,13 @@ class LLMProtocol(Protocol):
     Any class implementing these methods can be used as an LLM provider,
     without needing to inherit from a base class.
 
+    Attributes:
+        is_local: Whether the LLM runs locally (no data leaves the network).
+
     Example:
         >>> class MyLLM:
+        ...     is_local: bool = True
+        ...
         ...     async def generate(self, prompt: str) -> str:
         ...         return "Generated response"
         ...
@@ -28,7 +33,10 @@ class LLMProtocol(Protocol):
         ...         return [0.1, 0.2, 0.3]
         ...
         >>> assert isinstance(MyLLM(), LLMProtocol)
+        >>> assert MyLLM().is_local
     """
+
+    is_local: bool
 
     async def generate(self, prompt: str) -> str:
         """Generate text from a prompt.
@@ -66,8 +74,13 @@ class VectorStoreProtocol(Protocol):
     Any class implementing these methods can be used as a vector store,
     without needing to inherit from a base class.
 
+    Attributes:
+        is_local: Whether the vector store runs locally (no data leaves the network).
+
     Example:
         >>> class MyVectorStore:
+        ...     is_local: bool = True
+        ...
         ...     async def search(
         ...         self, query_embedding: list[float], k: int = 10
         ...     ) -> list[tuple[Document, float]]:
@@ -77,7 +90,10 @@ class VectorStoreProtocol(Protocol):
         ...         pass
         ...
         >>> assert isinstance(MyVectorStore(), VectorStoreProtocol)
+        >>> assert MyVectorStore().is_local
     """
+
+    is_local: bool
 
     async def search(
         self,
