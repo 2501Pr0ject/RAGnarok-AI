@@ -161,8 +161,9 @@ class BatchEvaluator:
             Aggregated EvaluationResult with all metrics and responses.
         """
         from ragnarok_ai.core.evaluate import EvaluationResult
+        from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
 
-        all_metrics: list = []
+        all_metrics: list[RetrievalMetrics] = []
         all_responses: list[str] = []
         all_query_results: list[QueryResult] = []
         all_errors: list[tuple[Query, Exception]] = []
