@@ -331,7 +331,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] LlamaIndex adapter (Retriever, QueryEngine, Index)
 - [x] DSPy adapter (Retrieve, Module, RAG pattern)
 - [x] Custom RAG support via `RAGProtocol`
-- [ ] Adapter contribution guide
+- [x] Adapter contribution guide
 
 </details>
 
