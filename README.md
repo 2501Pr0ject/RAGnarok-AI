@@ -345,14 +345,19 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v0.9 — Agent Evaluation</strong></summary>
 
-#### v0.9 — Agent Evaluation
-- [ ] `AgentProtocol` for agent pipelines
-- [ ] Tool-use correctness metrics
-- [ ] Multi-step reasoning evaluation
-- [ ] ReAct/CoT pattern support
-- [ ] Trajectory analysis and visualization
+- [x] `AgentProtocol` for agent pipelines
+- [x] Tool-use correctness metrics (precision, recall, F1)
+- [x] Multi-step reasoning evaluators (coherence, goal progress, efficiency)
+- [x] ReAct/CoT pattern adapters
+- [x] Trajectory analysis (loops, dead ends, failure detection)
+- [x] Visualization (ASCII, Mermaid, HTML reports)
+
+</details>
+
+### Planned
 
 #### v1.0 — Production Ready
 - [ ] PyPI publish (`pip install ragnarok-ai`)
