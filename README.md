@@ -511,6 +511,19 @@ mypy src/                 # Type check
 
 ---
 
+## Feedback
+
+Your feedback helps improve RAGnarok-AI. Pick the right channel:
+
+| Type | Link |
+|------|------|
+| Bug report | [Report a bug](https://github.com/2501Pr0ject/RAGnarok-AI/issues/new?template=bug_report.yml) |
+| Feedback / UX | [Share feedback](https://github.com/2501Pr0ject/RAGnarok-AI/issues/new?template=feedback.yml) |
+| Feature request | [Request a feature](https://github.com/2501Pr0ject/RAGnarok-AI/issues/new?template=feature_request.yml) |
+| Questions / Ideas | [Discussions](https://github.com/2501Pr0ject/RAGnarok-AI/discussions) |
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
