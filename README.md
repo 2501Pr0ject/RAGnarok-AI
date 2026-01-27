@@ -92,7 +92,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.0 is now available!** Install with `pip install ragnarok-ai`
+> **v1.1 is now available!** Install with `pip install ragnarok-ai`
 
 ---
 
@@ -380,9 +380,20 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
+<details>
+<summary><strong>v1.1 — CLI Complete</strong></summary>
+
+- [x] `ragnarok generate` command (synthetic testset generation)
+- [x] `ragnarok benchmark` command (history tracking, regression detection)
+- [x] Standardized JSON envelope for `--json` output
+- [x] E2E tests for CLI workflow
+- [x] Trusted Publishing (PyPI OIDC)
+
+</details>
+
 ### Planned
 
-#### v1.1+ — Post-launch
+#### v1.2+ — Post-launch
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
 - [ ] Production monitoring mode
