@@ -10,11 +10,14 @@ import json
 import random
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
 from ragnarok_ai import __version__
+
+if TYPE_CHECKING:
+    from ragnarok_ai.core.types import Document
 
 # Create the main Typer app
 app = typer.Typer(
@@ -156,7 +159,7 @@ def _run_demo_evaluation(
     seed: int = 42,
 ) -> None:
     """Run demo evaluation with NovaTech dataset and realistic MockRAG."""
-    from ragnarok_ai.core.types import Document, RAGResponse
+    from ragnarok_ai.core.types import RAGResponse
     from ragnarok_ai.data import load_example_dataset
     from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
 
@@ -333,51 +336,226 @@ def _run_demo_evaluation(
 
 @app.command()
 def generate(
-    docs: Annotated[  # noqa: ARG001
+    docs: Annotated[
         str | None,
         typer.Option(
             "--docs",
             "-d",
-            help="Path to knowledge base documents.",
+            help="Path to documents (JSON file or directory with .txt/.md files).",
         ),
     ] = None,
-    num_questions: Annotated[  # noqa: ARG001
+    demo: Annotated[
+        bool,
+        typer.Option(
+            "--demo",
+            help="Use NovaTech example dataset as document source.",
+        ),
+    ] = False,
+    num_questions: Annotated[
         int,
         typer.Option(
             "--num",
             "-n",
             help="Number of questions to generate.",
         ),
-    ] = 50,
-    output: Annotated[  # noqa: ARG001
-        str | None,
+    ] = 10,
+    output: Annotated[
+        str,
         typer.Option(
             "--output",
             "-o",
             help="Output file path for generated test set.",
         ),
-    ] = None,
+    ] = "testset.json",
+    model: Annotated[
+        str,
+        typer.Option(
+            "--model",
+            "-m",
+            help="Ollama model for generation.",
+        ),
+    ] = "mistral",
+    validate: Annotated[
+        bool,
+        typer.Option(
+            "--validate/--no-validate",
+            help="Validate generated questions for quality.",
+        ),
+    ] = False,
+    ollama_url: Annotated[
+        str,
+        typer.Option(
+            "--ollama-url",
+            help="Ollama API base URL.",
+        ),
+    ] = "http://localhost:11434",
 ) -> None:
-    """Generate a synthetic test set from a knowledge base.
+    """Generate a synthetic test set from documents using Ollama.
 
-    Requires LLM integration. Coming in v1.1.
+    Requires Ollama running locally with a model installed.
 
-    Example:
-        ragnarok generate --docs ./knowledge_base/ --num 100 --output testset.json
+    Examples:
+        ragnarok generate --demo --num 10
+        ragnarok generate --docs ./knowledge/ --num 50 --output testset.json
+        ragnarok generate --docs docs.json --model llama3 --num 20
     """
-    if state["json"]:
-        typer.echo('{"status": "planned", "version": "v1.1", "reason": "Requires LLM integration"}')
+    if not docs and not demo:
+        typer.echo("Error: Either --docs or --demo is required.", err=True)
+        typer.echo("Run 'ragnarok generate --help' for usage.", err=True)
+        raise typer.Exit(1)
+
+    _run_generation(
+        docs_path=docs,
+        demo=demo,
+        num_questions=num_questions,
+        output=output,
+        model=model,
+        validate=validate,
+        ollama_url=ollama_url,
+    )
+
+
+def _run_generation(
+    docs_path: str | None,
+    demo: bool,
+    num_questions: int,
+    output: str,
+    model: str,
+    validate: bool,
+    ollama_url: str,
+) -> None:
+    """Run test set generation."""
+    from ragnarok_ai.generators import SyntheticQuestionGenerator, save_testset
+
+    # Load documents
+    if demo:
+        from ragnarok_ai.data import load_example_dataset
+
+        if not state["json"]:
+            typer.echo()
+            typer.echo("  RAGnarok-AI Test Generation")
+            typer.echo("  " + "=" * 40)
+            typer.echo()
+            typer.echo("  Loading NovaTech example dataset...")
+
+        dataset = load_example_dataset("novatech")
+        documents = dataset.documents
     else:
+        documents = _load_documents(docs_path)
+
+    if not documents:
+        typer.echo("Error: No documents found.", err=True)
+        raise typer.Exit(1)
+
+    if not state["json"]:
+        typer.echo(f"  Documents loaded: {len(documents)}")
+        typer.echo(f"  Model: {model}")
+        typer.echo(f"  Target questions: {num_questions}")
         typer.echo()
-        typer.echo("  [Planned for v1.1]")
-        typer.echo()
-        typer.echo("  Test generation requires LLM integration (Ollama).")
-        typer.echo("  Use the Python API directly:")
-        typer.echo()
-        typer.echo("    from ragnarok_ai.generators import TestSetGenerator")
-        typer.echo("    generator = TestSetGenerator(llm=your_llm)")
-        typer.echo("    testset = await generator.generate(documents)")
-        typer.echo()
+        typer.echo("  Connecting to Ollama...")
+
+    # Check Ollama availability and generate
+    async def run_gen() -> None:
+        from ragnarok_ai.adapters.llm import OllamaLLM
+        from ragnarok_ai.core.exceptions import LLMConnectionError
+
+        try:
+            async with OllamaLLM(base_url=ollama_url, model=model) as llm:
+                if not await llm.is_available():
+                    typer.echo(f"Error: Cannot connect to Ollama at {ollama_url}", err=True)
+                    typer.echo("Make sure Ollama is running: ollama serve", err=True)
+                    raise typer.Exit(1)
+
+                if not state["json"]:
+                    typer.echo("  Ollama connected.")
+                    typer.echo()
+                    typer.echo("  Generating questions (this may take a while)...")
+                    typer.echo()
+
+                generator = SyntheticQuestionGenerator(llm)
+                testset = await generator.generate(
+                    documents=documents,
+                    num_questions=num_questions,
+                    validate=validate,
+                )
+
+                # Save testset
+                save_testset(testset, output)
+
+                # Output results
+                result = {
+                    "status": "success",
+                    "output": output,
+                    "questions_generated": len(testset.queries),
+                    "source_documents": len(documents),
+                    "model": model,
+                    "validated": validate,
+                }
+
+                if state["json"]:
+                    typer.echo(json.dumps(result, indent=2))
+                else:
+                    typer.echo(f"  Generated {len(testset.queries)} questions")
+                    typer.echo(f"  Saved to: {output}")
+                    typer.echo()
+
+        except LLMConnectionError as e:
+            if state["json"]:
+                typer.echo(json.dumps({"status": "error", "error": str(e)}))
+            else:
+                typer.echo(f"Error: {e}", err=True)
+            raise typer.Exit(1) from None
+
+    asyncio.run(run_gen())
+
+
+def _load_documents(path: str | None) -> list[Document]:
+    """Load documents from a JSON file or directory."""
+    from ragnarok_ai.core.types import Document
+
+    if not path:
+        return []
+
+    p = Path(path)
+
+    if not p.exists():
+        typer.echo(f"Error: Path not found: {path}", err=True)
+        raise typer.Exit(1)
+
+    documents: list[Document] = []
+
+    if p.is_file() and p.suffix == ".json":
+        # Load from JSON file
+        data = json.loads(p.read_text())
+        if isinstance(data, list):
+            for i, item in enumerate(data):
+                if isinstance(item, dict):
+                    doc_id = item.get("id", f"doc_{i}")
+                    content = item.get("content", item.get("text", ""))
+                    metadata = item.get("metadata", {})
+                    if content:
+                        documents.append(Document(id=doc_id, content=content, metadata=metadata))
+                elif isinstance(item, str):
+                    documents.append(Document(id=f"doc_{i}", content=item))
+    elif p.is_dir():
+        # Load from directory
+        for file_path in sorted(p.glob("**/*.txt")) + sorted(p.glob("**/*.md")):
+            content = file_path.read_text()
+            if content.strip():
+                doc_id = file_path.stem
+                documents.append(
+                    Document(
+                        id=doc_id,
+                        content=content,
+                        metadata={"source": str(file_path)},
+                    )
+                )
+    else:
+        typer.echo(f"Error: Unsupported file type: {path}", err=True)
+        typer.echo("Use a .json file or a directory with .txt/.md files.", err=True)
+        raise typer.Exit(1)
+
+    return documents
 
 
 @app.command()

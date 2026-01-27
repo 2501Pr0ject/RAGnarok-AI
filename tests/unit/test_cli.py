@@ -98,29 +98,30 @@ class TestEvaluateCommand:
 class TestGenerateCommand:
     """Tests for generate command."""
 
-    def test_generate_placeholder(self) -> None:
-        """Generate command shows planned message."""
+    def test_generate_requires_docs_or_demo(self) -> None:
+        """Generate command requires --docs or --demo."""
         result = runner.invoke(app, ["generate"])
 
-        assert result.exit_code == 0
-        assert "Planned for v1.1" in result.stdout
+        assert result.exit_code == 1
+        assert "Either --docs or --demo is required" in result.output
 
     def test_generate_help(self) -> None:
         """Generate --help shows usage."""
         result = runner.invoke(app, ["generate", "--help"])
 
         assert result.exit_code == 0
-        assert "Generate a synthetic test set" in result.stdout
-        assert "--docs" in result.stdout
-        assert "--num" in result.stdout
+        assert "Generate a synthetic test set" in result.output
+        assert "--docs" in result.output
+        assert "--num" in result.output
+        assert "--demo" in result.output
+        assert "--model" in result.output
 
-    def test_generate_json(self) -> None:
-        """Generate with --json outputs JSON."""
-        result = runner.invoke(app, ["--json", "generate"])
+    def test_generate_invalid_docs_path(self) -> None:
+        """Generate with non-existent docs path shows error."""
+        result = runner.invoke(app, ["generate", "--docs", "/nonexistent/path"])
 
-        assert result.exit_code == 0
-        assert '"status": "planned"' in result.stdout
-        assert '"version": "v1.1"' in result.stdout
+        assert result.exit_code == 1
+        assert "Path not found" in result.output
 
 
 class TestBenchmarkCommand:
