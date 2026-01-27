@@ -359,14 +359,18 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 ### Planned
 
-#### v1.0 — Production Ready
+#### v1.0 — Production Ready (Lean)
 - [ ] PyPI publish (`pip install ragnarok-ai`)
 - [ ] Stable public API (no breaking changes)
+- [ ] README complet + exemples concrets
+- [ ] CHANGELOG.md (v0.1 → v1.0)
+
+#### v1.1+ — Post-launch
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
 - [ ] Production monitoring mode
 
-### Future (Post v1.0)
+### Future
 
 <details>
 <summary><strong>Web UI</strong></summary>
