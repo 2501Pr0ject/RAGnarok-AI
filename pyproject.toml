@@ -1,14 +1,26 @@
 [project]
 name = "ragnarok-ai"
-version = "0.9.0"
-description = "A local-first RAG evaluation framework for LLM applications"
+version = "1.0.0"
+description = "Local-first evaluation framework for RAG pipelines and AI agents"
 readme = "README.md"
-license = "AGPL-3.0-only"
+license = { text = "AGPL-3.0" }
 requires-python = ">=3.10"
-authors = [{ name = "2501Pr0ject" }]
-keywords = ["rag", "llm", "evaluation", "retrieval", "ai", "local"]
+authors = [{ name = "Abdelatif Touati", email = "abdel.touati@gmail.com" }]
+keywords = [
+    "rag",
+    "llm",
+    "evaluation",
+    "agents",
+    "retrieval",
+    "nlp",
+    "ai",
+    "local-first",
+    "benchmarking",
+    "testing",
+    "ollama",
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
@@ -89,9 +101,10 @@ all = [
 ragnarok = "ragnarok_ai.cli.main:app"
 
 [project.urls]
-Homepage = "https://github.com/2501Pr0ject/ragnarok-ai"
-Repository = "https://github.com/2501Pr0ject/ragnarok-ai"
-Issues = "https://github.com/2501Pr0ject/ragnarok-ai/issues"
+Homepage = "https://github.com/2501Pr0ject/RAGnarok-AI"
+Repository = "https://github.com/2501Pr0ject/RAGnarok-AI"
+Documentation = "https://github.com/2501Pr0ject/RAGnarok-AI#readme"
+Issues = "https://github.com/2501Pr0ject/RAGnarok-AI/issues"
 
 [build-system]
 requires = ["hatchling"]

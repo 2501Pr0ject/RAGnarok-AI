@@ -11,6 +11,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/ragnarok-ai/"><img src="https://img.shields.io/pypi/v/ragnarok-ai.svg" alt="PyPI"></a>
   <a href="https://github.com/2501Pr0ject/RAGnarok-AI/actions/workflows/ci.yml"><img src="https://github.com/2501Pr0ject/RAGnarok-AI/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
   <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL--3.0-green.svg" alt="License: AGPL-3.0"></a>
@@ -91,7 +92,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **Note:** This is the target API for v1.0. See the [Roadmap](#-roadmap) for current implementation status.
+> **v1.0 is now available!** Install with `pip install ragnarok-ai`
 
 ---
 
@@ -134,13 +135,13 @@ results.export("report.html")
 ### Install
 
 ```bash
-# Clone
-git clone https://github.com/2501Pr0ject/ragnarok-ai.git
-cd ragnarok-ai
+pip install ragnarok-ai
+```
 
-# Install with uv
-uv venv && source .venv/bin/activate
-uv pip install -e ".[ollama,qdrant]"
+With optional dependencies:
+
+```bash
+pip install ragnarok-ai[ollama,qdrant]
 ```
 
 ### Run your first evaluation
@@ -157,34 +158,43 @@ python examples/basic_evaluation.py
 
 ## Installation
 
-### Using uv (recommended)
+### Using pip
 
 ```bash
-uv venv
-source .venv/bin/activate  # Linux/macOS
-uv pip install -e "."
+pip install ragnarok-ai
 ```
 
 ### Optional dependencies
 
 ```bash
 # LLM providers
-uv pip install -e ".[ollama]"      # Ollama support
+pip install ragnarok-ai[ollama]      # Ollama support
+pip install ragnarok-ai[openai]      # OpenAI support
+pip install ragnarok-ai[anthropic]   # Anthropic support
 
-# Vector stores  
-uv pip install -e ".[qdrant]"      # Qdrant support
+# Vector stores
+pip install ragnarok-ai[qdrant]      # Qdrant support
+pip install ragnarok-ai[chroma]      # ChromaDB support
+pip install ragnarok-ai[faiss]       # FAISS support
 
 # RAG frameworks
-uv pip install -e ".[langchain]"   # LangChain/LangGraph support
+pip install ragnarok-ai[langchain]   # LangChain/LangGraph support
+pip install ragnarok-ai[llamaindex]  # LlamaIndex support
+pip install ragnarok-ai[dspy]        # DSPy support
 
 # Observability
-uv pip install -e ".[telemetry]"   # OpenTelemetry tracing
+pip install ragnarok-ai[telemetry]   # OpenTelemetry tracing
 
 # Everything
-uv pip install -e ".[all]"
+pip install ragnarok-ai[all]
+```
 
-# Development
-uv pip install -e ".[dev]"
+### Development
+
+```bash
+git clone https://github.com/2501Pr0ject/RAGnarok-AI.git
+cd RAGnarok-AI
+pip install -e ".[dev]"
 pre-commit install
 ```
 
@@ -357,13 +367,17 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v1.0 — Production Ready</strong></summary>
 
-#### v1.0 — Production Ready (Lean)
-- [ ] PyPI publish (`pip install ragnarok-ai`)
-- [ ] Stable public API (no breaking changes)
-- [ ] README complet + exemples concrets
+- [x] PyPI publish (`pip install ragnarok-ai`)
+- [x] Stable public API
+- [x] Complete README with examples
 - [ ] CHANGELOG.md (v0.1 → v1.0)
+
+</details>
+
+### Planned
 
 #### v1.1+ — Post-launch
 - [ ] Comprehensive documentation site

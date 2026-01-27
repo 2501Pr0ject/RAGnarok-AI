@@ -110,3 +110,4 @@ docs/
 *.local.yaml
 *.local.toml
 secrets.yaml
+.ragnarok/

@@ -3980,7 +3980,7 @@ wheels = [
 
 [[package]]
 name = "ragnarok-ai"
-version = "0.6.0"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
