@@ -85,7 +85,7 @@ def main(
             is_eager=True,
         ),
     ] = None,
-    json_flag: Annotated[
+    json: Annotated[
         bool,
         typer.Option(
             "--json/--no-json",
@@ -112,7 +112,7 @@ def main(
 
     Evaluate, benchmark, and monitor your RAG pipelines — 100% locally.
     """
-    state["json"] = json_flag or json_output
+    state["json"] = json or json_output
     state["no_color"] = no_color
 
 
