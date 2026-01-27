@@ -1,6 +1,6 @@
 [project]
 name = "ragnarok-ai"
-version = "1.0.0"
+version = "1.0.1"
 description = "Local-first evaluation framework for RAG pipelines and AI agents"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
