@@ -127,26 +127,29 @@ class TestGenerateCommand:
 class TestBenchmarkCommand:
     """Tests for benchmark command."""
 
-    def test_benchmark_placeholder(self) -> None:
-        """Benchmark command shows planned message."""
+    def test_benchmark_requires_option(self) -> None:
+        """Benchmark command requires --demo, --history, or --list."""
         result = runner.invoke(app, ["benchmark"])
 
-        assert result.exit_code == 0
-        assert "Planned for v1.1" in result.stdout
+        assert result.exit_code == 1
+        assert "Specify --demo, --history <config>, or --list" in result.output
 
     def test_benchmark_help(self) -> None:
         """Benchmark --help shows usage."""
         result = runner.invoke(app, ["benchmark", "--help"])
 
         assert result.exit_code == 0
-        assert "Benchmark multiple RAG configurations" in result.stdout
+        assert "Track benchmark history" in result.output
+        assert "--demo" in result.output
+        assert "--history" in result.output
+        assert "--list" in result.output
 
-    def test_benchmark_json(self) -> None:
-        """Benchmark with --json outputs JSON."""
-        result = runner.invoke(app, ["--json", "benchmark"])
+    def test_benchmark_list_empty(self) -> None:
+        """Benchmark --list with no history shows empty message."""
+        result = runner.invoke(app, ["benchmark", "--list", "--storage", "/tmp/nonexistent.json"])
 
         assert result.exit_code == 0
-        assert '"status": "planned"' in result.stdout
+        assert "No benchmark history found" in result.output
 
 
 class TestGlobalOptions:

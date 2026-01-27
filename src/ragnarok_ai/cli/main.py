@@ -10,7 +10,7 @@ import json
 import random
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
@@ -560,40 +560,317 @@ def _load_documents(path: str | None) -> list[Document]:
 
 @app.command()
 def benchmark(
-    configs: Annotated[  # noqa: ARG001
+    demo: Annotated[
+        bool,
+        typer.Option(
+            "--demo",
+            help="Run a demo showing benchmark tracking and regression detection.",
+        ),
+    ] = False,
+    history: Annotated[
         str | None,
         typer.Option(
-            "--configs",
-            "-c",
-            help="Path to benchmark configurations.",
+            "--history",
+            "-H",
+            help="Show history for a specific config name.",
         ),
     ] = None,
-    output: Annotated[  # noqa: ARG001
-        str | None,
+    list_configs: Annotated[
+        bool,
         typer.Option(
-            "--output",
-            "-o",
-            help="Output file path for benchmark results.",
+            "--list",
+            "-l",
+            help="List all recorded configurations.",
         ),
-    ] = None,
+    ] = False,
+    storage: Annotated[
+        str,
+        typer.Option(
+            "--storage",
+            "-s",
+            help="Path to benchmark storage file.",
+        ),
+    ] = ".ragnarok/benchmarks.json",
 ) -> None:
-    """Benchmark multiple RAG configurations.
+    """Track benchmark history and detect regressions.
 
-    Planned for v1.1.
-
-    Example:
-        ragnarok benchmark --configs benchmark.yaml --output comparison.html
+    Examples:
+        ragnarok benchmark --demo
+        ragnarok benchmark --list
+        ragnarok benchmark --history my-rag-config
     """
+    if not demo and not history and not list_configs:
+        typer.echo("Error: Specify --demo, --history <config>, or --list.", err=True)
+        typer.echo("Run 'ragnarok benchmark --help' for usage.", err=True)
+        raise typer.Exit(1)
+
+    if demo:
+        _run_benchmark_demo(storage=storage)
+    elif list_configs:
+        _run_benchmark_list(storage=storage)
+    elif history:
+        _run_benchmark_history(config_name=history, storage=storage)
+
+
+def _run_benchmark_demo(storage: str) -> None:
+    """Run benchmark demo with simulated runs."""
+    from ragnarok_ai.benchmarks import BenchmarkHistory
+    from ragnarok_ai.benchmarks.storage import JSONFileStore
+    from ragnarok_ai.core.evaluate import EvaluationResult, QueryResult
+    from ragnarok_ai.core.types import Query, TestSet
+    from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
+    from ragnarok_ai.regression import RegressionDetector, RegressionThresholds
+
+    if not state["json"]:
+        typer.echo()
+        typer.echo("  RAGnarok-AI Benchmark Demo")
+        typer.echo("  " + "=" * 40)
+        typer.echo()
+        typer.echo("  Simulating 3 benchmark runs over time...")
+        typer.echo()
+
+    # Create test set
+    testset = TestSet(
+        name="demo-testset",
+        queries=[Query(text=f"Question {i}", ground_truth_docs=[f"doc_{i}"]) for i in range(10)],
+    )
+
+    # Simulate 3 runs with different metrics
+    runs: list[dict[str, str | float]] = [
+        {"name": "Run 1 (Baseline)", "precision": 0.72, "recall": 0.68, "mrr": 0.75, "ndcg": 0.70},
+        {"name": "Run 2 (Improved)", "precision": 0.78, "recall": 0.74, "mrr": 0.80, "ndcg": 0.76},
+        {"name": "Run 3 (Regression)", "precision": 0.65, "recall": 0.60, "mrr": 0.68, "ndcg": 0.62},
+    ]
+
+    # Create storage
+    store = JSONFileStore(Path(storage))
+    history = BenchmarkHistory(store=store)
+
+    async def run_demo() -> dict[str, Any]:
+        results_list: list[dict[str, Any]] = []
+
+        for i, run in enumerate(runs):
+            # Create mock evaluation result
+            p, r, m, n = float(run["precision"]), float(run["recall"]), float(run["mrr"]), float(run["ndcg"])
+            metrics = RetrievalMetrics(
+                precision=p,
+                recall=r,
+                mrr=m,
+                ndcg=n,
+                k=10,
+            )
+            query_results = [QueryResult(query=q, metric=metrics, answer="", latency_ms=50.0) for q in testset.queries]
+            eval_result = EvaluationResult(
+                testset=testset,
+                metrics=[metrics] * len(testset.queries),
+                responses=[""] * len(testset.queries),
+                query_results=query_results,
+                total_latency_ms=500.0,
+            )
+
+            # Record benchmark
+            record = await history.record(eval_result, "demo-config", testset)
+
+            if i == 0:
+                await history.set_baseline(record.id)
+
+            avg_score = (p + r + m + n) / 4
+
+            if not state["json"]:
+                status = "→ Set as baseline" if i == 0 else ""
+                typer.echo(f"  {run['name']}")
+                typer.echo(f"    Precision: {p:.2f}  Recall: {r:.2f}")
+                typer.echo(f"    MRR: {m:.2f}       NDCG: {n:.2f}")
+                typer.echo(f"    Average: {avg_score:.2f} {status}")
+                typer.echo()
+
+            results_list.append(
+                {
+                    "run": run["name"],
+                    "metrics": run,
+                    "average": round(avg_score, 4),
+                    "record_id": record.id,
+                }
+            )
+
+        # Detect regression on last run
+        if not state["json"]:
+            typer.echo("  " + "-" * 40)
+            typer.echo("  Regression Detection (Run 3 vs Baseline)")
+            typer.echo("  " + "-" * 40)
+
+        # Create baseline eval result for comparison
+        baseline_metrics = RetrievalMetrics(
+            precision=float(runs[0]["precision"]),
+            recall=float(runs[0]["recall"]),
+            mrr=float(runs[0]["mrr"]),
+            ndcg=float(runs[0]["ndcg"]),
+            k=10,
+        )
+        baseline_query_results = [
+            QueryResult(query=q, metric=baseline_metrics, answer="", latency_ms=50.0) for q in testset.queries
+        ]
+        baseline_eval = EvaluationResult(
+            testset=testset,
+            metrics=[baseline_metrics] * len(testset.queries),
+            responses=[""] * len(testset.queries),
+            query_results=baseline_query_results,
+            total_latency_ms=500.0,
+        )
+
+        # Create current eval result
+        current_metrics = RetrievalMetrics(
+            precision=float(runs[2]["precision"]),
+            recall=float(runs[2]["recall"]),
+            mrr=float(runs[2]["mrr"]),
+            ndcg=float(runs[2]["ndcg"]),
+            k=10,
+        )
+        current_query_results = [
+            QueryResult(query=q, metric=current_metrics, answer="", latency_ms=50.0) for q in testset.queries
+        ]
+        current_eval = EvaluationResult(
+            testset=testset,
+            metrics=[current_metrics] * len(testset.queries),
+            responses=[""] * len(testset.queries),
+            query_results=current_query_results,
+            total_latency_ms=500.0,
+        )
+
+        # Detect regression
+        detector = RegressionDetector(
+            baseline=baseline_eval,
+            thresholds=RegressionThresholds(precision_drop=0.05, recall_drop=0.05),
+        )
+        regression = detector.detect(current_eval)
+
+        regression_data: dict[str, Any] = {
+            "has_regression": regression.has_regressions,
+            "alerts": [],
+        }
+
+        if not state["json"]:
+            if regression.has_regressions:
+                typer.echo("  ⚠ REGRESSION DETECTED:")
+                for alert in regression.alerts:
+                    typer.echo(
+                        f"    - {alert.metric}: {alert.baseline_value:.2f} → "
+                        f"{alert.current_value:.2f} ({alert.change_percent:+.1f}%)"
+                    )
+                    regression_data["alerts"].append(
+                        {
+                            "metric": alert.metric,
+                            "baseline": alert.baseline_value,
+                            "current": alert.current_value,
+                            "change_percent": alert.change_percent,
+                        }
+                    )
+            else:
+                typer.echo("  ✓ No regression detected")
+            typer.echo()
+            typer.echo(f"  Benchmark history saved to: {storage}")
+            typer.echo()
+
+        return {
+            "status": "success",
+            "storage": storage,
+            "runs": results_list,
+            "regression": regression_data,
+        }
+
+    result = asyncio.run(run_demo())
+
     if state["json"]:
-        typer.echo('{"status": "planned", "version": "v1.1"}')
+        typer.echo(json.dumps(result, indent=2))
+
+
+def _run_benchmark_list(storage: str) -> None:
+    """List all recorded configurations."""
+    storage_path = Path(storage)
+
+    if not storage_path.exists():
+        if state["json"]:
+            typer.echo(json.dumps({"status": "empty", "configs": []}))
+        else:
+            typer.echo()
+            typer.echo("  No benchmark history found.")
+            typer.echo("  Run 'ragnarok benchmark --demo' to create sample data.")
+            typer.echo()
+        return
+
+    # Read storage file
+    data = json.loads(storage_path.read_text())
+    records = data.get("records", [])
+
+    # Group by config name
+    configs: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        config_name = record.get("config_name", "unknown")
+        if config_name not in configs:
+            configs[config_name] = []
+        configs[config_name].append(record)
+
+    if state["json"]:
+        result = {
+            "status": "success",
+            "configs": [
+                {"name": name, "runs": len(runs), "latest": runs[0].get("timestamp")} for name, runs in configs.items()
+            ],
+        }
+        typer.echo(json.dumps(result, indent=2))
     else:
         typer.echo()
-        typer.echo("  [Planned for v1.1]")
+        typer.echo("  Recorded Configurations")
+        typer.echo("  " + "-" * 40)
+        if not configs:
+            typer.echo("  (none)")
+        for name, runs in configs.items():
+            latest = runs[0].get("timestamp", "unknown")[:19] if runs else "unknown"
+            baseline_count = sum(1 for r in runs if r.get("is_baseline"))
+            typer.echo(f"  {name}")
+            typer.echo(f"    Runs: {len(runs)}  |  Baseline: {'Yes' if baseline_count else 'No'}  |  Latest: {latest}")
         typer.echo()
-        typer.echo("  Use the Python API for benchmarking:")
+
+
+def _run_benchmark_history(config_name: str, storage: str) -> None:
+    """Show history for a specific config."""
+    storage_path = Path(storage)
+
+    if not storage_path.exists():
+        if state["json"]:
+            typer.echo(json.dumps({"status": "error", "error": "No benchmark history found"}))
+        else:
+            typer.echo(f"Error: No benchmark history found at {storage}", err=True)
+        raise typer.Exit(1)
+
+    # Read storage file
+    data = json.loads(storage_path.read_text())
+    records = [r for r in data.get("records", []) if r.get("config_name") == config_name]
+
+    if not records:
+        if state["json"]:
+            typer.echo(json.dumps({"status": "error", "error": f"No records for config: {config_name}"}))
+        else:
+            typer.echo(f"Error: No records found for config '{config_name}'", err=True)
+        raise typer.Exit(1)
+
+    if state["json"]:
+        typer.echo(json.dumps({"status": "success", "config": config_name, "records": records}, indent=2))
+    else:
         typer.echo()
-        typer.echo("    from ragnarok_ai import compare")
-        typer.echo("    results = await compare([config1, config2], testset)")
+        typer.echo(f"  Benchmark History: {config_name}")
+        typer.echo("  " + "-" * 40)
+        for record in records:
+            timestamp = record.get("timestamp", "unknown")[:19]
+            metrics = record.get("metrics", {})
+            is_baseline = record.get("is_baseline", False)
+            baseline_marker = " [BASELINE]" if is_baseline else ""
+
+            typer.echo(f"  {timestamp}{baseline_marker}")
+            typer.echo(
+                f"    P={metrics.get('precision', 0):.2f}  R={metrics.get('recall', 0):.2f}  "
+                f"MRR={metrics.get('mrr', 0):.2f}  NDCG={metrics.get('ndcg', 0):.2f}"
+            )
         typer.echo()
 
 
