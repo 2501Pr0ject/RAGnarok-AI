@@ -646,6 +646,28 @@ def benchmark(
             help="List all recorded configurations.",
         ),
     ] = False,
+    output: Annotated[
+        str | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output file for benchmark results (JSON).",
+        ),
+    ] = None,
+    fail_under: Annotated[
+        float | None,
+        typer.Option(
+            "--fail-under",
+            help="Fail if average score is below threshold (0.0-1.0).",
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Show what would be benchmarked without executing.",
+        ),
+    ] = False,
     storage: Annotated[
         str,
         typer.Option(
@@ -659,6 +681,7 @@ def benchmark(
 
     Examples:
         ragnarok benchmark --demo
+        ragnarok benchmark --demo --fail-under 0.7
         ragnarok benchmark --list
         ragnarok benchmark --history my-rag-config
     """
@@ -668,14 +691,19 @@ def benchmark(
         raise typer.Exit(1)
 
     if demo:
-        _run_benchmark_demo(storage=storage)
+        _run_benchmark_demo(storage=storage, output=output, fail_under=fail_under, dry_run=dry_run)
     elif list_configs:
         _run_benchmark_list(storage=storage)
     elif history:
         _run_benchmark_history(config_name=history, storage=storage)
 
 
-def _run_benchmark_demo(storage: str) -> None:
+def _run_benchmark_demo(
+    storage: str,
+    output: str | None = None,
+    fail_under: float | None = None,
+    dry_run: bool = False,
+) -> None:
     """Run benchmark demo with simulated runs."""
     from ragnarok_ai.benchmarks import BenchmarkHistory
     from ragnarok_ai.benchmarks.storage import JSONFileStore
@@ -683,6 +711,35 @@ def _run_benchmark_demo(storage: str) -> None:
     from ragnarok_ai.core.types import Query, TestSet
     from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
     from ragnarok_ai.regression import RegressionDetector, RegressionThresholds
+
+    # Dry run - show what would be benchmarked
+    if dry_run:
+        config_info = {
+            "mode": "demo",
+            "configs": [
+                {"name": "Run 1 (Baseline)", "description": "Initial baseline metrics"},
+                {"name": "Run 2 (Improved)", "description": "Improved configuration"},
+                {"name": "Run 3 (Regression)", "description": "Degraded configuration"},
+            ],
+            "storage": storage,
+            "output": output,
+            "fail_under": fail_under,
+        }
+        if state["json"]:
+            typer.echo(json.dumps({"status": "dry_run", **config_info}, indent=2))
+        else:
+            typer.echo()
+            typer.echo("  [DRY RUN] Would benchmark:")
+            typer.echo("    - Run 1 (Baseline): Initial baseline metrics")
+            typer.echo("    - Run 2 (Improved): Improved configuration")
+            typer.echo("    - Run 3 (Regression): Degraded configuration")
+            typer.echo(f"    - Storage: {storage}")
+            if output:
+                typer.echo(f"    - Output: {output}")
+            if fail_under:
+                typer.echo(f"    - Fail under: {fail_under}")
+            typer.echo()
+        return
 
     if not state["json"]:
         typer.echo()
@@ -830,21 +887,65 @@ def _run_benchmark_demo(storage: str) -> None:
                     )
             else:
                 typer.echo("  ✓ No regression detected")
+
+            # Comparison table
+            typer.echo()
+            typer.echo("  " + "-" * 40)
+            typer.echo("  Comparison Table")
+            typer.echo("  " + "-" * 40)
+            typer.echo("  Run                  | P     | R     | MRR   | NDCG  | Avg")
+            typer.echo("  " + "-" * 60)
+            for run_data in results_list:
+                m = run_data["metrics"]
+                name = str(run_data["run"])[:20].ljust(20)
+                typer.echo(
+                    f"  {name} | {m['precision']:.3f} | {m['recall']:.3f} | "
+                    f"{m['mrr']:.3f} | {m['ndcg']:.3f} | {run_data['average']:.3f}"
+                )
             typer.echo()
             typer.echo(f"  Benchmark history saved to: {storage}")
             typer.echo()
 
-        return {
+        # Calculate best and worst
+        best_run = max(results_list, key=lambda x: x["average"])
+        worst_run = min(results_list, key=lambda x: x["average"])
+
+        final_result = {
             "status": "success",
             "storage": storage,
             "runs": results_list,
+            "best": {"run": best_run["run"], "average": best_run["average"]},
+            "worst": {"run": worst_run["run"], "average": worst_run["average"]},
             "regression": regression_data,
         }
 
+        return final_result
+
     result = asyncio.run(run_demo())
+
+    # Handle output file
+    if output:
+        Path(output).write_text(json.dumps(result, indent=2))
+        if not state["json"]:
+            typer.echo(f"  Results saved to: {output}")
+            typer.echo()
+
+    # Handle fail_under threshold
+    exit_code = 0
+    if fail_under is not None:
+        worst_avg = result["worst"]["average"]
+        if worst_avg < fail_under:
+            result["status"] = "fail"
+            result["fail_reason"] = f"Worst run average {worst_avg:.4f} < threshold {fail_under}"
+            exit_code = 1
+            if not state["json"]:
+                typer.echo(f"  FAIL: Worst run average {worst_avg:.4f} < threshold {fail_under}", err=True)
 
     if state["json"]:
         typer.echo(json.dumps(result, indent=2))
+
+    if exit_code != 0:
+        raise typer.Exit(exit_code)
 
 
 def _run_benchmark_list(storage: str) -> None:

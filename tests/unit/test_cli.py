@@ -153,6 +153,8 @@ class TestBenchmarkCommand:
         assert "--demo" in result.output
         assert "--history" in result.output
         assert "--list" in result.output
+        assert "--fail-under" in result.output
+        assert "--dry-run" in result.output
 
     def test_benchmark_list_empty(self) -> None:
         """Benchmark --list with no history shows empty message."""
@@ -160,6 +162,14 @@ class TestBenchmarkCommand:
 
         assert result.exit_code == 0
         assert "No benchmark history found" in result.output
+
+    def test_benchmark_dry_run(self) -> None:
+        """Benchmark --dry-run shows what would be benchmarked."""
+        result = runner.invoke(app, ["benchmark", "--demo", "--dry-run"])
+
+        assert result.exit_code == 0
+        assert "DRY RUN" in result.output
+        assert "Run 1 (Baseline)" in result.output
 
 
 class TestGlobalOptions:
