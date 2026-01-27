@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="ragnarok-ai logo" width="300">
+  <img src="https://raw.githubusercontent.com/2501Pr0ject/RAGnarok-AI/main/assets/logo.png" alt="ragnarok-ai logo" width="300">
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@ Current evaluation tools are either:
 **ragnarok-ai** is a lightweight, local-first framework to evaluate RAG pipelines.
 
 <p align="center">
-  <img src="assets/overview.png" alt="RAGnarok-AI Overview" width="900">
+  <img src="https://raw.githubusercontent.com/2501Pr0ject/RAGnarok-AI/main/assets/overview.png" alt="RAGnarok-AI Overview" width="900">
 </p>
 
 ```python
@@ -455,7 +455,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 ## Architecture
 
 <p align="center">
-  <img src="assets/architecture.png" alt="RAGnarok-AI Architecture" width="1000">
+  <img src="https://raw.githubusercontent.com/2501Pr0ject/RAGnarok-AI/main/assets/architecture.png" alt="RAGnarok-AI Architecture" width="1000">
 </p>
 
 <details>
