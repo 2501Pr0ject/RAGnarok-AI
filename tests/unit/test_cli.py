@@ -115,6 +115,8 @@ class TestGenerateCommand:
         assert "--num" in result.output
         assert "--demo" in result.output
         assert "--model" in result.output
+        assert "--seed" in result.output
+        assert "--dry-run" in result.output
 
     def test_generate_invalid_docs_path(self) -> None:
         """Generate with non-existent docs path shows error."""
@@ -122,6 +124,14 @@ class TestGenerateCommand:
 
         assert result.exit_code == 1
         assert "Path not found" in result.output
+
+    def test_generate_dry_run(self) -> None:
+        """Generate --dry-run shows what would be generated."""
+        result = runner.invoke(app, ["generate", "--demo", "--dry-run", "--seed", "42"])
+
+        assert result.exit_code == 0
+        assert "DRY RUN" in result.output
+        assert "42" in result.output  # seed should be shown
 
 
 class TestBenchmarkCommand:

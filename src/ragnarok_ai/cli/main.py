@@ -375,11 +375,26 @@ def generate(
             help="Ollama model for generation.",
         ),
     ] = "mistral",
+    seed: Annotated[
+        int | None,
+        typer.Option(
+            "--seed",
+            "-s",
+            help="Random seed for reproducibility (auto-generated if not set).",
+        ),
+    ] = None,
     validate: Annotated[
         bool,
         typer.Option(
             "--validate/--no-validate",
             help="Validate generated questions for quality.",
+        ),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Show what would be generated without executing.",
         ),
     ] = False,
     ollama_url: Annotated[
@@ -393,11 +408,12 @@ def generate(
     """Generate a synthetic test set from documents using Ollama.
 
     Requires Ollama running locally with a model installed.
+    Produces testset.json + manifest.json for reproducibility.
 
     Examples:
         ragnarok generate --demo --num 10
         ragnarok generate --docs ./knowledge/ --num 50 --output testset.json
-        ragnarok generate --docs docs.json --model llama3 --num 20
+        ragnarok generate --docs docs.json --model llama3 --seed 42
     """
     if not docs and not demo:
         typer.echo("Error: Either --docs or --demo is required.", err=True)
@@ -410,7 +426,9 @@ def generate(
         num_questions=num_questions,
         output=output,
         model=model,
+        seed=seed,
         validate=validate,
+        dry_run=dry_run,
         ollama_url=ollama_url,
     )
 
@@ -421,11 +439,20 @@ def _run_generation(
     num_questions: int,
     output: str,
     model: str,
+    seed: int | None,
     validate: bool,
+    dry_run: bool,
     ollama_url: str,
 ) -> None:
     """Run test set generation."""
+    from datetime import datetime
+
     from ragnarok_ai.generators import SyntheticQuestionGenerator, save_testset
+
+    # Auto-generate seed if not provided
+    if seed is None:
+        seed = random.randint(0, 2**31 - 1)
+    random.seed(seed)
 
     # Load documents
     if demo:
@@ -440,18 +467,55 @@ def _run_generation(
 
         dataset = load_example_dataset("novatech")
         documents = dataset.documents
+        docs_source = "novatech-demo"
     else:
         documents = _load_documents(docs_path)
+        docs_source = docs_path or "unknown"
 
     if not documents:
         typer.echo("Error: No documents found.", err=True)
         raise typer.Exit(1)
 
+    # Build manifest
+    manifest = {
+        "ragnarok_version": __version__,
+        "generated_at": datetime.now().isoformat(),
+        "seed": seed,
+        "config": {
+            "model": model,
+            "ollama_url": ollama_url,
+            "num_questions": num_questions,
+            "validate": validate,
+            "docs_source": docs_source,
+            "docs_count": len(documents),
+        },
+    }
+
     if not state["json"]:
         typer.echo(f"  Documents loaded: {len(documents)}")
         typer.echo(f"  Model: {model}")
         typer.echo(f"  Target questions: {num_questions}")
+        typer.echo(f"  Seed: {seed}")
         typer.echo()
+
+    # Dry run - show what would happen
+    if dry_run:
+        manifest["status"] = "dry_run"
+        manifest["output"] = output
+        manifest["manifest_output"] = output.replace(".json", "_manifest.json")
+
+        if state["json"]:
+            typer.echo(json.dumps(manifest, indent=2))
+        else:
+            typer.echo("  [DRY RUN] Would generate:")
+            typer.echo(f"    - {num_questions} questions from {len(documents)} documents")
+            typer.echo(f"    - Output: {output}")
+            typer.echo(f"    - Manifest: {manifest['manifest_output']}")
+            typer.echo(f"    - Seed: {seed} (use --seed {seed} to reproduce)")
+            typer.echo()
+        return
+
+    if not state["json"]:
         typer.echo("  Connecting to Ollama...")
 
     # Check Ollama availability and generate
@@ -482,21 +546,20 @@ def _run_generation(
                 # Save testset
                 save_testset(testset, output)
 
-                # Output results
-                result = {
-                    "status": "success",
-                    "output": output,
-                    "questions_generated": len(testset.queries),
-                    "source_documents": len(documents),
-                    "model": model,
-                    "validated": validate,
-                }
+                # Save manifest
+                manifest_path = output.replace(".json", "_manifest.json")
+                manifest["status"] = "success"
+                manifest["output"] = output
+                manifest["questions_generated"] = len(testset.queries)
+                Path(manifest_path).write_text(json.dumps(manifest, indent=2))
 
                 if state["json"]:
-                    typer.echo(json.dumps(result, indent=2))
+                    typer.echo(json.dumps(manifest, indent=2))
                 else:
                     typer.echo(f"  Generated {len(testset.queries)} questions")
-                    typer.echo(f"  Saved to: {output}")
+                    typer.echo(f"  Testset: {output}")
+                    typer.echo(f"  Manifest: {manifest_path}")
+                    typer.echo(f"  Reproduce with: --seed {seed}")
                     typer.echo()
 
         except LLMConnectionError as e:
