@@ -34,6 +34,38 @@ state: dict[str, bool] = {
 }
 
 
+def json_response(
+    command: str,
+    status: str,
+    data: dict[str, Any] | None = None,
+    warnings: list[str] | None = None,
+    errors: list[str] | None = None,
+) -> str:
+    """Create standardized JSON response envelope.
+
+    All CLI commands should use this format for --json output:
+    {
+        "command": "evaluate",
+        "status": "pass|fail|error|dry_run|success",
+        "version": "1.1.0",
+        "data": { ... },
+        "warnings": [],
+        "errors": []
+    }
+    """
+    return json.dumps(
+        {
+            "command": command,
+            "status": status,
+            "version": __version__,
+            "data": data or {},
+            "warnings": warnings or [],
+            "errors": errors or [],
+        },
+        indent=2,
+    )
+
+
 def version_callback(value: bool) -> None:
     """Print version and exit."""
     if value:
@@ -140,16 +172,29 @@ def evaluate(
         ragnarok evaluate --demo --json
     """
     if not demo and not testset:
-        typer.echo("Error: Either --demo or --testset is required.", err=True)
-        typer.echo("Run 'ragnarok evaluate --help' for usage.", err=True)
+        if state["json"]:
+            typer.echo(json_response("evaluate", "error", errors=["Either --demo or --testset is required."]))
+        else:
+            typer.echo("Error: Either --demo or --testset is required.", err=True)
+            typer.echo("Run 'ragnarok evaluate --help' for usage.", err=True)
         raise typer.Exit(1)
 
     if demo:
         _run_demo_evaluation(output=output, fail_under=fail_under, limit=limit, seed=seed)
     else:
-        typer.echo(f"Evaluating with testset: {testset}")
-        typer.echo("Custom testset evaluation coming in next release.")
-        typer.echo("For now, use --demo to see the evaluation flow.")
+        if state["json"]:
+            typer.echo(
+                json_response(
+                    "evaluate",
+                    "error",
+                    errors=["Custom testset evaluation coming in next release. Use --demo for now."],
+                )
+            )
+        else:
+            typer.echo(f"Evaluating with testset: {testset}")
+            typer.echo("Custom testset evaluation coming in next release.")
+            typer.echo("For now, use --demo to see the evaluation flow.")
+        raise typer.Exit(1)
 
 
 def _run_demo_evaluation(
@@ -279,7 +324,7 @@ def _run_demo_evaluation(
     avg_ndcg = sum(m.ndcg for m in metrics_list) / len(metrics_list)
     avg_score = (avg_precision + avg_recall + avg_mrr + avg_ndcg) / 4
 
-    results = {
+    data = {
         "dataset": "novatech",
         "queries_evaluated": len(testset.queries),
         "seed": seed,
@@ -290,19 +335,19 @@ def _run_demo_evaluation(
             "ndcg@10": round(avg_ndcg, 4),
             "average": round(avg_score, 4),
         },
-        "status": "pass",
     }
 
     # Check fail_under threshold
     exit_code = 0
+    status = "pass"
     if fail_under is not None and avg_score < fail_under:
-        results["status"] = "fail"
-        results["fail_reason"] = f"Average score {avg_score:.4f} < threshold {fail_under}"
+        status = "fail"
+        data["fail_reason"] = f"Average score {avg_score:.4f} < threshold {fail_under}"
         exit_code = 1
 
     # Output results
     if state["json"]:
-        typer.echo(json.dumps(results, indent=2))
+        typer.echo(json_response("evaluate", status, data=data))
     else:
         typer.echo()
         typer.echo("  " + "-" * 40)
@@ -323,10 +368,11 @@ def _run_demo_evaluation(
 
         typer.echo()
 
-    # Save to file if requested
+    # Save to file if requested (use flat format for file, envelope for stdout)
     if output:
         output_path = Path(output)
-        output_path.write_text(json.dumps(results, indent=2))
+        file_data = {"status": status, **data}
+        output_path.write_text(json.dumps(file_data, indent=2))
         if not state["json"]:
             typer.echo(f"  Results saved to: {output}")
             typer.echo()
@@ -416,8 +462,11 @@ def generate(
         ragnarok generate --docs docs.json --model llama3 --seed 42
     """
     if not docs and not demo:
-        typer.echo("Error: Either --docs or --demo is required.", err=True)
-        typer.echo("Run 'ragnarok generate --help' for usage.", err=True)
+        if state["json"]:
+            typer.echo(json_response("generate", "error", errors=["Either --docs or --demo is required."]))
+        else:
+            typer.echo("Error: Either --docs or --demo is required.", err=True)
+            typer.echo("Run 'ragnarok generate --help' for usage.", err=True)
         raise typer.Exit(1)
 
     _run_generation(
@@ -500,17 +549,20 @@ def _run_generation(
 
     # Dry run - show what would happen
     if dry_run:
-        manifest["status"] = "dry_run"
-        manifest["output"] = output
-        manifest["manifest_output"] = output.replace(".json", "_manifest.json")
+        data = {
+            "seed": seed,
+            "output": output,
+            "manifest_output": output.replace(".json", "_manifest.json"),
+            "config": manifest["config"],
+        }
 
         if state["json"]:
-            typer.echo(json.dumps(manifest, indent=2))
+            typer.echo(json_response("generate", "dry_run", data=data))
         else:
             typer.echo("  [DRY RUN] Would generate:")
             typer.echo(f"    - {num_questions} questions from {len(documents)} documents")
             typer.echo(f"    - Output: {output}")
-            typer.echo(f"    - Manifest: {manifest['manifest_output']}")
+            typer.echo(f"    - Manifest: {data['manifest_output']}")
             typer.echo(f"    - Seed: {seed} (use --seed {seed} to reproduce)")
             typer.echo()
         return
@@ -554,7 +606,14 @@ def _run_generation(
                 Path(manifest_path).write_text(json.dumps(manifest, indent=2))
 
                 if state["json"]:
-                    typer.echo(json.dumps(manifest, indent=2))
+                    data = {
+                        "seed": seed,
+                        "output": output,
+                        "manifest_output": manifest_path,
+                        "questions_generated": len(testset.queries),
+                        "config": manifest["config"],
+                    }
+                    typer.echo(json_response("generate", "success", data=data))
                 else:
                     typer.echo(f"  Generated {len(testset.queries)} questions")
                     typer.echo(f"  Testset: {output}")
@@ -564,7 +623,7 @@ def _run_generation(
 
         except LLMConnectionError as e:
             if state["json"]:
-                typer.echo(json.dumps({"status": "error", "error": str(e)}))
+                typer.echo(json_response("generate", "error", errors=[str(e)]))
             else:
                 typer.echo(f"Error: {e}", err=True)
             raise typer.Exit(1) from None
@@ -686,8 +745,11 @@ def benchmark(
         ragnarok benchmark --history my-rag-config
     """
     if not demo and not history and not list_configs:
-        typer.echo("Error: Specify --demo, --history <config>, or --list.", err=True)
-        typer.echo("Run 'ragnarok benchmark --help' for usage.", err=True)
+        if state["json"]:
+            typer.echo(json_response("benchmark", "error", errors=["Specify --demo, --history <config>, or --list."]))
+        else:
+            typer.echo("Error: Specify --demo, --history <config>, or --list.", err=True)
+            typer.echo("Run 'ragnarok benchmark --help' for usage.", err=True)
         raise typer.Exit(1)
 
     if demo:
@@ -714,7 +776,7 @@ def _run_benchmark_demo(
 
     # Dry run - show what would be benchmarked
     if dry_run:
-        config_info = {
+        data = {
             "mode": "demo",
             "configs": [
                 {"name": "Run 1 (Baseline)", "description": "Initial baseline metrics"},
@@ -726,7 +788,7 @@ def _run_benchmark_demo(
             "fail_under": fail_under,
         }
         if state["json"]:
-            typer.echo(json.dumps({"status": "dry_run", **config_info}, indent=2))
+            typer.echo(json_response("benchmark", "dry_run", data=data))
         else:
             typer.echo()
             typer.echo("  [DRY RUN] Would benchmark:")
@@ -910,8 +972,7 @@ def _run_benchmark_demo(
         best_run = max(results_list, key=lambda x: x["average"])
         worst_run = min(results_list, key=lambda x: x["average"])
 
-        final_result = {
-            "status": "success",
+        final_data = {
             "storage": storage,
             "runs": results_list,
             "best": {"run": best_run["run"], "average": best_run["average"]},
@@ -919,30 +980,33 @@ def _run_benchmark_demo(
             "regression": regression_data,
         }
 
-        return final_result
+        return final_data
 
-    result = asyncio.run(run_demo())
+    data = asyncio.run(run_demo())
 
-    # Handle output file
+    # Handle output file (use flat format for backward compatibility)
     if output:
-        Path(output).write_text(json.dumps(result, indent=2))
+        file_data = {"status": "success", **data}
+        Path(output).write_text(json.dumps(file_data, indent=2))
         if not state["json"]:
             typer.echo(f"  Results saved to: {output}")
             typer.echo()
 
     # Handle fail_under threshold
     exit_code = 0
+    status = "success"
     if fail_under is not None:
-        worst_avg = result["worst"]["average"]
+        worst_data = data["worst"]
+        worst_avg = float(worst_data["average"]) if isinstance(worst_data, dict) else 0.0
         if worst_avg < fail_under:
-            result["status"] = "fail"
-            result["fail_reason"] = f"Worst run average {worst_avg:.4f} < threshold {fail_under}"
+            status = "fail"
+            data["fail_reason"] = f"Worst run average {worst_avg:.4f} < threshold {fail_under}"
             exit_code = 1
             if not state["json"]:
                 typer.echo(f"  FAIL: Worst run average {worst_avg:.4f} < threshold {fail_under}", err=True)
 
     if state["json"]:
-        typer.echo(json.dumps(result, indent=2))
+        typer.echo(json_response("benchmark", status, data=data))
 
     if exit_code != 0:
         raise typer.Exit(exit_code)
@@ -954,7 +1018,7 @@ def _run_benchmark_list(storage: str) -> None:
 
     if not storage_path.exists():
         if state["json"]:
-            typer.echo(json.dumps({"status": "empty", "configs": []}))
+            typer.echo(json_response("benchmark", "success", data={"configs": []}))
         else:
             typer.echo()
             typer.echo("  No benchmark history found.")
@@ -975,13 +1039,12 @@ def _run_benchmark_list(storage: str) -> None:
         configs[config_name].append(record)
 
     if state["json"]:
-        result = {
-            "status": "success",
+        data = {
             "configs": [
                 {"name": name, "runs": len(runs), "latest": runs[0].get("timestamp")} for name, runs in configs.items()
             ],
         }
-        typer.echo(json.dumps(result, indent=2))
+        typer.echo(json_response("benchmark", "success", data=data))
     else:
         typer.echo()
         typer.echo("  Recorded Configurations")
@@ -1002,7 +1065,7 @@ def _run_benchmark_history(config_name: str, storage: str) -> None:
 
     if not storage_path.exists():
         if state["json"]:
-            typer.echo(json.dumps({"status": "error", "error": "No benchmark history found"}))
+            typer.echo(json_response("benchmark", "error", errors=[f"No benchmark history found at {storage}"]))
         else:
             typer.echo(f"Error: No benchmark history found at {storage}", err=True)
         raise typer.Exit(1)
@@ -1013,13 +1076,13 @@ def _run_benchmark_history(config_name: str, storage: str) -> None:
 
     if not records:
         if state["json"]:
-            typer.echo(json.dumps({"status": "error", "error": f"No records for config: {config_name}"}))
+            typer.echo(json_response("benchmark", "error", errors=[f"No records for config: {config_name}"]))
         else:
             typer.echo(f"Error: No records found for config '{config_name}'", err=True)
         raise typer.Exit(1)
 
     if state["json"]:
-        typer.echo(json.dumps({"status": "success", "config": config_name, "records": records}, indent=2))
+        typer.echo(json_response("benchmark", "success", data={"config": config_name, "records": records}))
     else:
         typer.echo()
         typer.echo(f"  Benchmark History: {config_name}")

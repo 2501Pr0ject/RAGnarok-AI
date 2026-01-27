@@ -5,6 +5,37 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-01-27
+
+### Added
+- **CLI `generate` command**: Generate synthetic test sets from documents
+  - `--docs`: Load documents from JSON file or directory
+  - `--demo`: Use NovaTech demo dataset
+  - `--model`: Select Ollama model (default: llama3.2)
+  - `--seed`: Random seed for reproducibility
+  - `--dry-run`: Preview what would be generated
+  - Outputs `manifest.json` with version, config, timestamp for traceability
+- **CLI `benchmark` command**: Track and compare evaluation runs over time
+  - `--demo`: Run with demo data (3 simulated runs)
+  - `--list`: List all benchmark configurations
+  - `--history <config>`: Show history for a specific config
+  - `--fail-under`: CI gating with minimum score threshold
+  - `--dry-run`: Preview benchmark without running
+  - `--output`: Save results to JSON file
+  - Comparison table with baseline, deltas, and regression alerts
+- **E2E tests**: Full CLI workflow tests (generate → evaluate → benchmark)
+- **Trusted Publishing**: PyPI OIDC-based publishing (no API tokens)
+- **Standardized JSON envelope**: All `--json` output now uses consistent format:
+  - `command`: Command name (evaluate, generate, benchmark)
+  - `status`: pass/fail/error/dry_run/success
+  - `version`: CLI version for traceability
+  - `data`: Command-specific payload
+  - `errors`: Error messages (empty on success)
+
+### Changed
+- Publish workflow now runs tests before publishing
+- Build verification with twine check before upload
+
 ## [1.0.2] - 2025-01-27
 
 ### Added
@@ -147,6 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.1.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v0.9.0...v1.0.0
