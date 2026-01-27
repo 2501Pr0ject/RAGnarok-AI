@@ -147,8 +147,11 @@ pip install ragnarok-ai[ollama,qdrant]
 ### Run your first evaluation
 
 ```bash
-# CLI (coming soon)
-ragnarok evaluate --rag ./my_rag.py --docs ./knowledge_base/ --output report.html
+# CLI demo
+ragnarok evaluate --demo
+
+# With options
+ragnarok evaluate --demo --output results.json --fail-under 0.7
 
 # Or in Python
 python examples/basic_evaluation.py

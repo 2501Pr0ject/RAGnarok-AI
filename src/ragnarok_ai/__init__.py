@@ -6,7 +6,7 @@ from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, B
 from ragnarok_ai.core.compare import ComparisonResult, compare
 from ragnarok_ai.core.evaluate import EvaluationResult, evaluate, evaluate_stream
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __all__ = [
     "BatchConfig",
     "BatchEvaluator",

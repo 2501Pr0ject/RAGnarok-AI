@@ -44,12 +44,13 @@ class TestVersionCommand:
 class TestEvaluateCommand:
     """Tests for evaluate command."""
 
-    def test_evaluate_placeholder(self) -> None:
-        """Evaluate command shows coming soon message."""
+    def test_evaluate_no_args_shows_error(self) -> None:
+        """Evaluate without args shows error."""
         result = runner.invoke(app, ["evaluate"])
 
-        assert result.exit_code == 0
-        assert "Coming Soon" in result.stdout
+        assert result.exit_code == 1
+        # Error message goes to stderr, combined output in result.output
+        assert "Either --demo or --testset is required" in result.output
 
     def test_evaluate_help(self) -> None:
         """Evaluate --help shows usage."""
@@ -57,27 +58,52 @@ class TestEvaluateCommand:
 
         assert result.exit_code == 0
         assert "Evaluate a RAG pipeline" in result.stdout
-        assert "--config" in result.stdout
+        assert "--demo" in result.stdout
+        assert "--testset" in result.stdout
         assert "--output" in result.stdout
+        assert "--fail-under" in result.stdout
 
-    def test_evaluate_json_output(self) -> None:
-        """Evaluate with --json outputs JSON."""
-        result = runner.invoke(app, ["--json", "evaluate"])
+    def test_evaluate_demo(self) -> None:
+        """Evaluate --demo runs demo evaluation."""
+        result = runner.invoke(app, ["evaluate", "--demo", "--limit", "2"])
 
         assert result.exit_code == 0
-        assert "coming_soon" in result.stdout
-        assert "{" in result.stdout
+        assert "RAGnarok-AI Demo Evaluation" in result.stdout
+        assert "Precision@10" in result.stdout
+        assert "Recall@10" in result.stdout
+
+    def test_evaluate_demo_json(self) -> None:
+        """Evaluate --demo with --json outputs JSON."""
+        result = runner.invoke(app, ["--json", "evaluate", "--demo", "--limit", "2"])
+
+        assert result.exit_code == 0
+        assert '"dataset": "novatech"' in result.stdout
+        assert '"precision@10"' in result.stdout
+
+    def test_evaluate_demo_fail_under_pass(self) -> None:
+        """Evaluate --demo --fail-under passes when above threshold."""
+        result = runner.invoke(app, ["evaluate", "--demo", "--limit", "2", "--fail-under", "0.3"])
+
+        assert result.exit_code == 0
+        assert "PASS" in result.stdout
+
+    def test_evaluate_demo_fail_under_fail(self) -> None:
+        """Evaluate --demo --fail-under fails when below threshold."""
+        result = runner.invoke(app, ["evaluate", "--demo", "--limit", "2", "--fail-under", "0.99"])
+
+        assert result.exit_code == 1
+        assert "FAIL" in result.stdout
 
 
 class TestGenerateCommand:
     """Tests for generate command."""
 
     def test_generate_placeholder(self) -> None:
-        """Generate command shows coming soon message."""
+        """Generate command shows planned message."""
         result = runner.invoke(app, ["generate"])
 
         assert result.exit_code == 0
-        assert "Coming Soon" in result.stdout
+        assert "Planned for v1.1" in result.stdout
 
     def test_generate_help(self) -> None:
         """Generate --help shows usage."""
@@ -88,16 +114,24 @@ class TestGenerateCommand:
         assert "--docs" in result.stdout
         assert "--num" in result.stdout
 
+    def test_generate_json(self) -> None:
+        """Generate with --json outputs JSON."""
+        result = runner.invoke(app, ["--json", "generate"])
+
+        assert result.exit_code == 0
+        assert '"status": "planned"' in result.stdout
+        assert '"version": "v1.1"' in result.stdout
+
 
 class TestBenchmarkCommand:
     """Tests for benchmark command."""
 
     def test_benchmark_placeholder(self) -> None:
-        """Benchmark command shows coming soon message."""
+        """Benchmark command shows planned message."""
         result = runner.invoke(app, ["benchmark"])
 
         assert result.exit_code == 0
-        assert "Coming Soon" in result.stdout
+        assert "Planned for v1.1" in result.stdout
 
     def test_benchmark_help(self) -> None:
         """Benchmark --help shows usage."""
@@ -105,6 +139,13 @@ class TestBenchmarkCommand:
 
         assert result.exit_code == 0
         assert "Benchmark multiple RAG configurations" in result.stdout
+
+    def test_benchmark_json(self) -> None:
+        """Benchmark with --json outputs JSON."""
+        result = runner.invoke(app, ["--json", "benchmark"])
+
+        assert result.exit_code == 0
+        assert '"status": "planned"' in result.stdout
 
 
 class TestGlobalOptions:

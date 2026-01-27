@@ -5,6 +5,22 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-01-27
+
+### Added
+- **CLI `evaluate --demo`**: Working demo evaluation with realistic MockRAG
+- **CI extras matrix**: Automated testing for all optional dependencies
+- **STABILITY.md**: SemVer policy and compatibility matrix
+- **Build verification**: Package build + twine check in CI
+
+### Changed
+- Classifier changed from "Production/Stable" to "Beta" (more honest)
+- CLI commands `generate` and `benchmark` now show "Planned for v1.1"
+- Updated README with working CLI examples
+
+### Fixed
+- CLI tests updated to match new behavior
+
 ## [1.0.1] - 2025-01-27
 
 ### Fixed
@@ -131,6 +147,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.0.2]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v0.7.0...v0.8.0

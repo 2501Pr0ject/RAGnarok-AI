@@ -85,3 +85,86 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  extras:
+    name: Extras (${{ matrix.extra }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        extra:
+          - ollama
+          - openai
+          - anthropic
+          - qdrant
+          - chroma
+          - faiss
+          - langchain
+          - llamaindex
+          - dspy
+          - cli
+          - telemetry
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Install with extra
+        run: uv sync --extra ${{ matrix.extra }}
+
+      - name: Test import
+        run: uv run python -c "import ragnarok_ai; print(f'ragnarok_ai {ragnarok_ai.__version__} with [${{ matrix.extra }}] OK')"
+
+  extras-all:
+    name: Extras (all)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Install with all extras
+        run: uv sync --extra all
+
+      - name: Test imports
+        run: |
+          uv run python -c "
+          from ragnarok_ai import __version__
+          from ragnarok_ai.adapters.llm import OllamaLLM, OpenAILLM, AnthropicLLM
+          from ragnarok_ai.adapters.vectorstore import QdrantVectorStore, ChromaVectorStore, FAISSVectorStore
+          print(f'ragnarok_ai {__version__} with [all] OK')
+          "
+
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Build package
+        run: uv build
+
+      - name: Check package with twine
+        run: |
+          uv pip install twine
+          uv run twine check dist/*

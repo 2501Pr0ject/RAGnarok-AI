@@ -1,6 +1,6 @@
 [project]
 name = "ragnarok-ai"
-version = "1.0.1"
+version = "1.0.2"
 description = "Local-first evaluation framework for RAG pipelines and AI agents"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
@@ -20,7 +20,7 @@ keywords = [
     "ollama",
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
