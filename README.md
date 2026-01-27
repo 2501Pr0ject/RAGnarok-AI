@@ -373,7 +373,7 @@ metrics.log_to("./metrics/")  # Time-series storage
 - [x] PyPI publish (`pip install ragnarok-ai`)
 - [x] Stable public API
 - [x] Complete README with examples
-- [ ] CHANGELOG.md (v0.1 → v1.0)
+- [x] CHANGELOG.md (v0.1 → v1.0)
 
 </details>
 
