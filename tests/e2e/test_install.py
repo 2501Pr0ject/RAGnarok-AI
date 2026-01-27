@@ -40,12 +40,12 @@ def check(name: str):
 
 @check("Import: core types")
 def test_import_core_types():
-    from ragnarok_ai.core.types import Document, RAGResponse, TestSet
+    from ragnarok_ai.core.types import Document, RAGResponse, TestSet  # noqa: F401
 
 
 @check("Import: core protocols")
 def test_import_core_protocols():
-    from ragnarok_ai.core.protocols import (
+    from ragnarok_ai.core.protocols import (  # noqa: F401
         EvaluatorProtocol,
         LLMProtocol,
         RAGProtocol,
@@ -55,12 +55,12 @@ def test_import_core_protocols():
 
 @check("Import: core evaluate")
 def test_import_core_evaluate():
-    from ragnarok_ai.core.evaluate import EvaluationResult, evaluate
+    from ragnarok_ai.core.evaluate import EvaluationResult, evaluate  # noqa: F401
 
 
 @check("Import: evaluators")
 def test_import_evaluators():
-    from ragnarok_ai.evaluators import (
+    from ragnarok_ai.evaluators import (  # noqa: F401
         FaithfulnessEvaluator,
         HallucinationDetector,
         RelevanceEvaluator,
@@ -73,52 +73,52 @@ def test_import_evaluators():
 
 @check("Import: generators")
 def test_import_generators():
-    from ragnarok_ai.generators import TestSetGenerator, load_testset, save_testset
+    from ragnarok_ai.generators import TestSetGenerator, load_testset, save_testset  # noqa: F401
 
 
 @check("Import: reporters")
 def test_import_reporters():
-    from ragnarok_ai.reporters import ConsoleReporter, HTMLReporter, JSONReporter
+    from ragnarok_ai.reporters import ConsoleReporter, HTMLReporter, JSONReporter  # noqa: F401
 
 
 @check("Import: cache")
 def test_import_cache():
-    from ragnarok_ai.cache import DiskCache, MemoryCache
+    from ragnarok_ai.cache import DiskCache, MemoryCache  # noqa: F401
 
 
 @check("Import: benchmarks")
 def test_import_benchmarks():
-    from ragnarok_ai.benchmarks import BenchmarkHistory, BenchmarkRecord
+    from ragnarok_ai.benchmarks import BenchmarkHistory, BenchmarkRecord  # noqa: F401
 
 
 @check("Import: baselines compare")
 def test_import_baselines_compare():
-    from ragnarok_ai.baselines.comparison import compare
+    from ragnarok_ai.baselines.comparison import compare  # noqa: F401
 
 
 @check("Import: regression")
 def test_import_regression():
-    from ragnarok_ai.regression import RegressionDetector
+    from ragnarok_ai.regression import RegressionDetector  # noqa: F401
 
 
 @check("Import: diff")
 def test_import_diff():
-    from ragnarok_ai.diff import DiffReport
+    from ragnarok_ai.diff import DiffReport  # noqa: F401
 
 
 @check("Import: agents types")
 def test_import_agents_types():
-    from ragnarok_ai.agents.types import AgentResponse, AgentStep, ToolCall
+    from ragnarok_ai.agents.types import AgentResponse, AgentStep, ToolCall  # noqa: F401
 
 
 @check("Import: agents evaluators")
 def test_import_agents_evaluators():
-    from ragnarok_ai.agents.evaluators import (
+    from ragnarok_ai.agents.evaluators import (  # noqa: F401
         ExpectedToolCall,
         ToolUseMetrics,
         evaluate_tool_use,
     )
-    from ragnarok_ai.agents.evaluators.reasoning import (
+    from ragnarok_ai.agents.evaluators.reasoning import (  # noqa: F401
         GoalProgressEvaluator,
         ReasoningCoherenceEvaluator,
         ReasoningEfficiencyEvaluator,
@@ -127,7 +127,7 @@ def test_import_agents_evaluators():
 
 @check("Import: agents analysis")
 def test_import_agents_analysis():
-    from ragnarok_ai.agents.analysis import (
+    from ragnarok_ai.agents.analysis import (  # noqa: F401
         FailurePoint,
         TrajectoryAnalyzer,
         TrajectorySummary,
@@ -138,7 +138,7 @@ def test_import_agents_analysis():
 
 @check("Import: adapters agents")
 def test_import_adapters_agents():
-    from ragnarok_ai.adapters.agents import (
+    from ragnarok_ai.adapters.agents import (  # noqa: F401
         ChainOfThoughtAdapter,
         ReActAdapter,
         ReActParser,
