@@ -85,11 +85,19 @@ def main(
             is_eager=True,
         ),
     ] = None,
+    json_flag: Annotated[
+        bool,
+        typer.Option(
+            "--json/--no-json",
+            help="Output results in JSON format.",
+        ),
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option(
-            "--json",
-            help="Output results in JSON format.",
+            "--json-output",
+            help="(Deprecated) Alias for --json.",
+            hidden=True,
         ),
     ] = False,
     no_color: Annotated[
@@ -104,7 +112,7 @@ def main(
 
     Evaluate, benchmark, and monitor your RAG pipelines — 100% locally.
     """
-    state["json"] = json_output
+    state["json"] = json_flag or json_output
     state["no_color"] = no_color
 
 
