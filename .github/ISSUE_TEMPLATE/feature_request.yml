@@ -1,0 +1,39 @@
+name: "Feature request"
+description: "Propose an enhancement"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      placeholder: "I need to compare rerankers across configs..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: "Add axis `reranker` to benchmark matrix..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: "I tried X but it doesn't cover Y..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (your view)
+      options:
+        - Nice to have
+        - Important
+        - Blocking my use-case
+    validations:
+      required: true

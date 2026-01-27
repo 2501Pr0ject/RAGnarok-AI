@@ -1,0 +1,77 @@
+name: "Feedback / UX"
+description: "Share how you use RAGnarok-AI and what to improve"
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Collecting feedback to improve CLI, reports, and integrations. Short answers are fine.
+
+  - type: input
+    id: usecase
+    attributes:
+      label: Use-case
+      description: "What are you evaluating?"
+      placeholder: "Internal knowledge base RAG for customer support"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Your stage
+      options:
+        - Exploring / learning
+        - POC / prototype
+        - In production
+        - Auditing / compliance
+    validations:
+      required: true
+
+  - type: textarea
+    id: stack
+    attributes:
+      label: Stack
+      description: "LLM, embeddings, vectordb, framework"
+      placeholder: |
+        LLM: Ollama llama3.1:8b
+        Embeddings: bge-small
+        Vector DB: Qdrant
+        Framework: LangChain
+    validations:
+      required: false
+
+  - type: textarea
+    id: whatworked
+    attributes:
+      label: What worked well?
+      placeholder: "Demo run, JSON output, report readability..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: pain
+    attributes:
+      label: What was painful or confusing?
+      placeholder: "Config fields, metric names, benchmark matrix..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: missing
+    attributes:
+      label: What's missing?
+      description: "Metrics, integrations, reports, CI features..."
+      placeholder: "Reranker evaluation, RBAC tests, markdown export..."
+    validations:
+      required: false
+
+  - type: input
+    id: contact
+    attributes:
+      label: Can I contact you for 10 minutes?
+      description: "Optional - GitHub handle or email"
+      placeholder: "@handle or email"
+    validations:
+      required: false
