@@ -16,6 +16,11 @@ import typer
 
 from ragnarok_ai import __version__
 
+# Exit codes
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1  # Runtime failures, threshold not met
+EXIT_BAD_INPUT = 2  # Invalid arguments, missing files
+
 if TYPE_CHECKING:
     from ragnarok_ai.core.types import Document
 
@@ -28,9 +33,10 @@ app = typer.Typer(
 )
 
 # Global state for options
-state: dict[str, bool] = {
+state: dict[str, Any] = {
     "json": False,
     "no_color": False,
+    "pii_mode": "hash",  # CLI default is hash for safety
 }
 
 
@@ -107,6 +113,14 @@ def main(
             help="Disable colored output.",
         ),
     ] = False,
+    pii_mode: Annotated[
+        str,
+        typer.Option(
+            "--pii-mode",
+            help="PII handling mode: hash (default), redact, or full.",
+            case_sensitive=False,
+        ),
+    ] = "hash",
 ) -> None:
     """ragnarok-ai: Local-first RAG evaluation framework.
 
@@ -114,6 +128,7 @@ def main(
     """
     state["json"] = json or json_output
     state["no_color"] = no_color
+    state["pii_mode"] = pii_mode.lower()
 
 
 @app.command()
@@ -185,7 +200,7 @@ def evaluate(
         else:
             typer.echo("Error: Either --demo or --testset is required.", err=True)
             typer.echo("Run 'ragnarok evaluate --help' for usage.", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     if demo:
         _run_demo_evaluation(output=output, fail_under=fail_under, limit=limit, seed=seed)
@@ -475,7 +490,7 @@ def generate(
         else:
             typer.echo("Error: Either --docs or --demo is required.", err=True)
             typer.echo("Run 'ragnarok generate --help' for usage.", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     _run_generation(
         docs_path=docs,
@@ -650,7 +665,7 @@ def _load_documents(path: str | None) -> list[Document]:
 
     if not p.exists():
         typer.echo(f"Error: Path not found: {path}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     documents: list[Document] = []
 
@@ -683,7 +698,7 @@ def _load_documents(path: str | None) -> list[Document]:
     else:
         typer.echo(f"Error: Unsupported file type: {path}", err=True)
         typer.echo("Use a .json file or a directory with .txt/.md files.", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     return documents
 
@@ -758,7 +773,7 @@ def benchmark(
         else:
             typer.echo("Error: Specify --demo, --history <config>, or --list.", err=True)
             typer.echo("Run 'ragnarok benchmark --help' for usage.", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     if demo:
         _run_benchmark_demo(storage=storage, output=output, fail_under=fail_under, dry_run=dry_run)
@@ -1076,7 +1091,7 @@ def _run_benchmark_history(config_name: str, storage: str) -> None:
             typer.echo(json_response("benchmark", "error", errors=[f"No benchmark history found at {storage}"]))
         else:
             typer.echo(f"Error: No benchmark history found at {storage}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     # Read storage file
     data = json.loads(storage_path.read_text())
@@ -1087,7 +1102,7 @@ def _run_benchmark_history(config_name: str, storage: str) -> None:
             typer.echo(json_response("benchmark", "error", errors=[f"No records for config: {config_name}"]))
         else:
             typer.echo(f"Error: No records found for config '{config_name}'", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     if state["json"]:
         typer.echo(json_response("benchmark", "success", data={"config": config_name, "records": records}))

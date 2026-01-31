@@ -176,11 +176,11 @@ class TestCLIErrorHandling:
         assert result.exit_code == 2
         assert "Invalid value" in result.output or "error" in result.output.lower()
 
-    def test_missing_required_option_exits_with_code_1(self) -> None:
-        """Test that missing required option exits with code 1."""
+    def test_missing_required_option_exits_with_code_2(self) -> None:
+        """Test that missing required option exits with code 2 (bad input)."""
         result = runner.invoke(app, ["evaluate"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input
         assert "Either --demo or --testset is required" in result.output
 
     def test_json_output_on_error(self) -> None:
@@ -189,7 +189,7 @@ class TestCLIErrorHandling:
         result = runner.invoke(app, ["--json", "evaluate"])
 
         # Should return error JSON, not traceback
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input (missing required option)
         data = json.loads(result.output)
         assert data["command"] == "evaluate"
         assert data["status"] == "error"
@@ -200,7 +200,7 @@ class TestCLIErrorHandling:
         """Test benchmark returns valid JSON on error."""
         result = runner.invoke(app, ["--json", "benchmark"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input (missing required option)
         data = json.loads(result.output)
         assert data["status"] == "error"
         assert len(data["errors"]) > 0
@@ -209,7 +209,7 @@ class TestCLIErrorHandling:
         """Test generate returns valid JSON on error."""
         result = runner.invoke(app, ["--json", "generate"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input (missing required option)
         data = json.loads(result.output)
         assert data["status"] == "error"
         assert len(data["errors"]) > 0
