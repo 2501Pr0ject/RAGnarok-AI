@@ -48,7 +48,7 @@ class TestEvaluateCommand:
         """Evaluate without args shows error."""
         result = runner.invoke(app, ["evaluate"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input
         # Error message goes to stderr, combined output in result.output
         assert "Either --demo or --testset is required" in result.output
 
@@ -102,7 +102,7 @@ class TestGenerateCommand:
         """Generate command requires --docs or --demo."""
         result = runner.invoke(app, ["generate"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input
         assert "Either --docs or --demo is required" in result.output
 
     def test_generate_help(self) -> None:
@@ -122,7 +122,7 @@ class TestGenerateCommand:
         """Generate with non-existent docs path shows error."""
         result = runner.invoke(app, ["generate", "--docs", "/nonexistent/path"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input (file not found)
         assert "Path not found" in result.output
 
     def test_generate_dry_run(self) -> None:
@@ -141,7 +141,7 @@ class TestBenchmarkCommand:
         """Benchmark command requires --demo, --history, or --list."""
         result = runner.invoke(app, ["benchmark"])
 
-        assert result.exit_code == 1
+        assert result.exit_code == 2  # Bad input
         assert "Specify --demo, --history <config>, or --list" in result.output
 
     def test_benchmark_help(self) -> None:
@@ -203,3 +203,22 @@ class TestGlobalOptions:
         result = runner.invoke(app, ["--no-color", "version"])
 
         assert result.exit_code == 0
+
+    def test_pii_mode_flag_available(self) -> None:
+        """--pii-mode flag is recognized."""
+        result = runner.invoke(app, ["--pii-mode", "hash", "version"])
+
+        assert result.exit_code == 0
+
+    def test_pii_mode_accepts_all_values(self) -> None:
+        """--pii-mode accepts hash, redact, and full."""
+        for mode in ["hash", "redact", "full"]:
+            result = runner.invoke(app, ["--pii-mode", mode, "version"])
+            assert result.exit_code == 0, f"Failed for mode: {mode}"
+
+    def test_pii_mode_shown_in_help(self) -> None:
+        """--pii-mode is shown in help."""
+        result = runner.invoke(app, ["--help"])
+
+        assert result.exit_code == 0
+        assert "--pii-mode" in result.stdout
