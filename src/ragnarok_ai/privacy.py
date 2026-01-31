@@ -57,24 +57,26 @@ _PII_PATTERNS = [
 ]
 
 # Keys that typically contain PII
-_PII_KEYS = frozenset({
-    "source",
-    "source_uri",
-    "source_path",
-    "file_path",
-    "path",
-    "filename",
-    "file",
-    "user",
-    "username",
-    "user_id",
-    "author",
-    "email",
-    "ip",
-    "ip_address",
-    "host",
-    "hostname",
-})
+_PII_KEYS = frozenset(
+    {
+        "source",
+        "source_uri",
+        "source_path",
+        "file_path",
+        "path",
+        "filename",
+        "file",
+        "user",
+        "username",
+        "user_id",
+        "author",
+        "email",
+        "ip",
+        "ip_address",
+        "host",
+        "hostname",
+    }
+)
 
 
 def _looks_like_pii(value: str) -> bool:
@@ -153,8 +155,7 @@ def sanitize_dict(
             result[key] = sanitize_dict(value, mode, recursive=True)
         elif isinstance(value, list) and recursive:
             result[key] = [
-                sanitize_dict(item, mode, recursive=True) if isinstance(item, dict) else item
-                for item in value
+                sanitize_dict(item, mode, recursive=True) if isinstance(item, dict) else item for item in value
             ]
         else:
             result[key] = value

@@ -25,10 +25,12 @@ class TestLoadForgeBundle:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text(
-            json.dumps({
-                "_schema_version": "1.0",
-                "document_count": 3,
-            })
+            json.dumps(
+                {
+                    "_schema_version": "1.0",
+                    "document_count": 3,
+                }
+            )
         )
         (bundle / "documents.jsonl").write_text("")
 
@@ -42,10 +44,12 @@ class TestLoadForgeBundle:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text(
-            json.dumps({
-                "schema_version": "1.0",  # Alternative key
-                "document_count": 1,
-            })
+            json.dumps(
+                {
+                    "schema_version": "1.0",  # Alternative key
+                    "document_count": 1,
+                }
+            )
         )
         (bundle / "documents.jsonl").write_text("")
 
@@ -94,8 +98,7 @@ class TestLoadForgeDocuments:
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
         (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "doc_1", "content": "Hello world"}\n'
-            '{"doc_id": "doc_2", "content": "Goodbye world"}\n'
+            '{"doc_id": "doc_1", "content": "Hello world"}\n{"doc_id": "doc_2", "content": "Goodbye world"}\n'
         )
 
         docs = load_forge_documents(bundle)
@@ -111,9 +114,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"id": "alt_1", "content": "Using id field"}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"id": "alt_1", "content": "Using id field"}\n')
 
         docs = load_forge_documents(bundle)
 
@@ -126,9 +127,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "doc_1", "text": "Using text field"}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"doc_id": "doc_1", "text": "Using text field"}\n')
 
         docs = load_forge_documents(bundle)
 
@@ -140,9 +139,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "forge_id", "id": "alt_id", "content": "test"}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"doc_id": "forge_id", "id": "alt_id", "content": "test"}\n')
 
         docs = load_forge_documents(bundle)
 
@@ -153,9 +150,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "d1", "content": "primary", "text": "fallback"}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"doc_id": "d1", "content": "primary", "text": "fallback"}\n')
 
         docs = load_forge_documents(bundle)
 
@@ -166,9 +161,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "d1", "content": "test", "metadata": {"key": "value"}}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"doc_id": "d1", "content": "test", "metadata": {"key": "value"}}\n')
 
         docs = load_forge_documents(bundle)
 
@@ -203,9 +196,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"content": "no id here"}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"content": "no id here"}\n')
 
         with pytest.raises(ForgeLoadError, match="no doc_id or id"):
             load_forge_documents(bundle)
@@ -215,9 +206,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "d1"}\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"doc_id": "d1"}\n')
 
         with pytest.raises(ForgeLoadError, match="no content or text"):
             load_forge_documents(bundle)
@@ -227,10 +216,7 @@ class TestLoadForgeDocuments:
         bundle = tmp_path / "bundle"
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
-        (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "d1", "content": "valid"}\n'
-            'not valid json\n'
-        )
+        (bundle / "documents.jsonl").write_text('{"doc_id": "d1", "content": "valid"}\nnot valid json\n')
 
         with pytest.raises(ForgeLoadError, match="Invalid JSON at line 2"):
             load_forge_documents(bundle)
@@ -241,10 +227,7 @@ class TestLoadForgeDocuments:
         bundle.mkdir()
         (bundle / "manifest.json").write_text('{"_schema_version": "1.0"}')
         (bundle / "documents.jsonl").write_text(
-            '{"doc_id": "d1", "content": "first"}\n'
-            '\n'
-            '{"doc_id": "d2", "content": "second"}\n'
-            '\n'
+            '{"doc_id": "d1", "content": "first"}\n\n{"doc_id": "d2", "content": "second"}\n\n'
         )
 
         docs = load_forge_documents(bundle)
