@@ -114,8 +114,10 @@ class TestOllamaLLMGenerate:
         await llm.generate("test")
 
         assert route.called
-        request_json = route.calls[0].request.content
-        assert b'"model":"llama2"' in request_json
+        import json
+
+        request_data = json.loads(route.calls[0].request.content)
+        assert request_data["model"] == "llama2"
 
 
 class TestOllamaLLMEmbed:
@@ -198,8 +200,10 @@ class TestOllamaLLMEmbed:
         await llm.embed("test")
 
         assert route.called
-        request_json = route.calls[0].request.content
-        assert b'"model":"mxbai-embed-large"' in request_json
+        import json
+
+        request_data = json.loads(route.calls[0].request.content)
+        assert request_data["model"] == "mxbai-embed-large"
 
 
 class TestOllamaLLMIsAvailable:

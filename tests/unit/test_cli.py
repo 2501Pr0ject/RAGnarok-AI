@@ -179,8 +179,8 @@ class TestGlobalOptions:
         """No arguments shows help."""
         result = runner.invoke(app, [])
 
-        # Typer's no_args_is_help returns exit code 2 (standard for help)
-        assert result.exit_code == 2
+        # Typer shows help and returns 0 when no arguments provided
+        assert result.exit_code == 0
         assert "Usage" in result.stdout
 
     def test_help_flag(self) -> None:

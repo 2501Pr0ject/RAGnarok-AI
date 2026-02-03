@@ -367,16 +367,17 @@ class TestCreateLlamaIndexAdapter:
     """Tests for create_llamaindex_adapter factory function."""
 
     def test_create_from_retriever(self) -> None:
-        """Test factory creates RetrieverAdapter for retrievers."""
+        """Test factory raises TypeError for non-LlamaIndex types."""
         retriever = MockRetriever([])
 
-        # Mock the isinstance check
-        with pytest.raises(ImportError, match="llama-index-core is required"):
+        # MockRetriever is not a real LlamaIndex type, so TypeError is raised
+        with pytest.raises(TypeError, match="Unsupported LlamaIndex object type"):
             create_llamaindex_adapter(retriever)
 
     def test_create_requires_llama_index(self) -> None:
-        """Test that factory requires llama-index-core."""
-        with pytest.raises(ImportError, match="llama-index-core is required"):
+        """Test that factory raises TypeError for unknown types."""
+        # MagicMock is not a LlamaIndex type, so TypeError is raised
+        with pytest.raises(TypeError, match="Unsupported LlamaIndex object type"):
             create_llamaindex_adapter(MagicMock())
 
 

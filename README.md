@@ -505,8 +505,63 @@ pre-commit install
 pytest                    # Tests
 pytest --cov=ragnarok_ai  # With coverage
 ruff check . --fix        # Lint
-ruff format .             # Format  
+ruff format .             # Format
 mypy src/                 # Type check
+```
+
+---
+
+## Advanced Usage
+
+### Importing Types
+
+For advanced use cases (custom RAG implementations, type hints), import types directly from submodules:
+
+```python
+# Core types
+from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
+
+# Protocols (for implementing custom adapters)
+from ragnarok_ai.core.protocols import RAGProtocol, LLMProtocol, VectorStoreProtocol
+
+# Evaluators
+from ragnarok_ai.evaluators import FaithfulnessEvaluator, RelevanceEvaluator
+
+# Adapters
+from ragnarok_ai.adapters.llm import OllamaLLM, OpenAILLM
+from ragnarok_ai.adapters.vectorstore import ChromaVectorStore, QdrantVectorStore
+```
+
+### Implementing a Custom RAG
+
+```python
+from ragnarok_ai.core.protocols import RAGProtocol
+from ragnarok_ai.core.types import RAGResponse, Document
+
+class MyCustomRAG:
+    """Custom RAG implementing the RAGProtocol."""
+
+    async def query(self, question: str, k: int = 5) -> RAGResponse:
+        # Your retrieval logic here
+        docs = await self.retrieve(question, k)
+        answer = await self.generate(question, docs)
+
+        return RAGResponse(
+            answer=answer,
+            retrieved_docs=[
+                Document(id=d.id, content=d.text, metadata=d.meta)
+                for d in docs
+            ],
+        )
+
+# Use with ragnarok-ai
+from ragnarok_ai import evaluate
+
+results = await evaluate(
+    rag_pipeline=MyCustomRAG(),
+    testset=testset,
+    metrics=["retrieval", "faithfulness"],
+)
 ```
 
 ---
