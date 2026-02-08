@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -13,10 +13,10 @@ from ragnarok_ai.evaluators.judge import (
     parse_judge_response,
 )
 
-
 # =============================================================================
 # Parser Tests (No LLM required)
 # =============================================================================
+
 
 class TestParseJudgeResponse:
     """Tests for parse_judge_response function."""
@@ -136,6 +136,7 @@ Explanation: Good answer with proper context.
 # JudgeResults Tests
 # =============================================================================
 
+
 class TestJudgeResults:
     """Tests for JudgeResults dataclass."""
 
@@ -203,6 +204,7 @@ class TestJudgeResults:
 # =============================================================================
 # LLMJudge Tests (Mocked)
 # =============================================================================
+
 
 class TestLLMJudge:
     """Tests for LLMJudge class with mocked LLM."""
@@ -326,6 +328,7 @@ Explanation: Covers main point but misses details."""
 # =============================================================================
 # Integration Tests (Require Ollama)
 # =============================================================================
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
