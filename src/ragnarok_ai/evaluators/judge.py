@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
@@ -191,7 +191,7 @@ class JudgeResults:
             return "PARTIAL"
         return "PASS"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "faithfulness": {
@@ -312,8 +312,8 @@ class LLMJudge:
     # Q5 provides better precision for subtle judgments (hallucination, faithfulness)
     DEFAULT_MODEL = "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M"
     # Alternative names users might create
-    PROMETHEUS_ALIASES = ["prometheus2", "prometheus", "prometheus-7b"]
-    FALLBACK_MODELS = ["mistral", "llama3.2", "llama3", "llama2"]
+    PROMETHEUS_ALIASES: ClassVar[list[str]] = ["prometheus2", "prometheus", "prometheus-7b"]
+    FALLBACK_MODELS: ClassVar[list[str]] = ["mistral", "llama3.2", "llama3", "llama2"]
 
     def __init__(
         self,
@@ -526,7 +526,7 @@ class LLMJudge:
 
     async def evaluate_batch(
         self,
-        items: list[dict],
+        items: list[dict[str, Any]],
     ) -> list[JudgeResults]:
         """Evaluate a batch of items.
 

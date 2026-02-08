@@ -15,30 +15,23 @@ from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
 __version__ = "1.2.0"
 __all__ = [
-    # Batch evaluation
     "BatchConfig",
     "BatchEvaluator",
     "BatchProgress",
     "BatchResult",
-    # Comparison
     "ComparisonResult",
-    "compare",
-    # Evaluation
     "EvaluationResult",
-    "evaluate",
-    "evaluate_stream",
-    # Forge loader
     "ForgeLoadError",
-    "load_forge_bundle",
-    "load_forge_documents",
-    # LLM-as-Judge (Prometheus 2)
     "JudgeResult",
     "JudgeResults",
     "LLMJudge",
-    # Privacy
     "PiiMode",
+    "__version__",
+    "compare",
+    "evaluate",
+    "evaluate_stream",
+    "load_forge_bundle",
+    "load_forge_documents",
     "sanitize_dict",
     "sanitize_value",
-    # Version
-    "__version__",
 ]
