@@ -11,16 +11,17 @@ import re
 from typing import Any
 
 
-def parse_json_array(text: str) -> list[str]:
+def parse_json_array(text: str) -> list[Any]:
     """Parse a JSON array from LLM response.
 
-    Handles cases where the JSON array is embedded in surrounding text.
+    Handles cases where the JSON array is embedded in surrounding text,
+    and attempts to repair incomplete JSON (missing closing brackets).
 
     Args:
         text: The LLM response text.
 
     Returns:
-        Parsed list of strings, or empty list if parsing fails.
+        Parsed list of items (strings or dicts), or empty list if parsing fails.
 
     Example:
         >>> parse_json_array('["Q1", "Q2"]')
@@ -47,6 +48,20 @@ def parse_json_array(text: str) -> list[str]:
                 return result
         except json.JSONDecodeError:
             pass
+
+    # Try to repair incomplete JSON (missing closing bracket)
+    # Find the start of the array
+    start_idx = text.find("[")
+    if start_idx != -1:
+        array_text = text[start_idx:]
+        # Try adding closing bracket(s)
+        for suffix in ["]", "}]", "\"}]", "\" }]"]:
+            try:
+                result = json.loads(array_text + suffix)
+                if isinstance(result, list):
+                    return result
+            except json.JSONDecodeError:
+                continue
 
     return []
 

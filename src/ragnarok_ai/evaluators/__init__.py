@@ -16,6 +16,11 @@ from ragnarok_ai.evaluators.hallucination import (
     HallucinationDetector,
     HallucinationResult,
 )
+from ragnarok_ai.evaluators.judge import (
+    JudgeResult,
+    JudgeResults,
+    LLMJudge,
+)
 from ragnarok_ai.evaluators.relevance import (
     RelevanceEvaluator,
     RelevanceResult,
@@ -30,14 +35,22 @@ from ragnarok_ai.evaluators.retrieval import (
 )
 
 __all__ = [
+    # Faithfulness
     "ClaimVerification",
     "FaithfulnessEvaluator",
     "FaithfulnessResult",
+    # Hallucination
     "Hallucination",
     "HallucinationDetector",
     "HallucinationResult",
+    # LLM-as-Judge (Prometheus 2)
+    "JudgeResult",
+    "JudgeResults",
+    "LLMJudge",
+    # Relevance
     "RelevanceEvaluator",
     "RelevanceResult",
+    # Retrieval
     "RetrievalMetrics",
     "evaluate_retrieval",
     "mrr",

@@ -193,19 +193,35 @@ class SyntheticQuestionGenerator:
 
         # Generate answers for each question
         generated: list[GeneratedQuestion] = []
-        for q_text in questions[:num_questions]:
-            if not isinstance(q_text, str) or not q_text.strip():
+        for q_item in questions[:num_questions]:
+            # Handle both string format and dict format from LLM
+            if isinstance(q_item, dict):
+                q_text = q_item.get("question", "")
+                # If LLM already provided an answer, use it
+                prefetched_answer = q_item.get("answer")
+            elif isinstance(q_item, str):
+                q_text = q_item
+                prefetched_answer = None
+            else:
+                continue
+
+            if not q_text or not q_text.strip():
                 continue
 
             try:
-                answer = await self._generate_answer(document, q_text)
+                # Use prefetched answer if available, otherwise generate
+                if prefetched_answer:
+                    answer = prefetched_answer
+                else:
+                    answer = await self._generate_answer(document, q_text)
+
                 if answer and answer != "UNANSWERABLE":
                     # Determine question type based on keywords
                     q_type = self._classify_question_type(q_text, question_types)
                     generated.append(
                         GeneratedQuestion(
                             question=q_text.strip(),
-                            answer=answer.strip(),
+                            answer=str(answer).strip(),
                             source_doc_id=document.id,
                             question_type=q_type,
                         )

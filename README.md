@@ -92,7 +92,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.1 is now available!** Install with `pip install ragnarok-ai`
+> **v1.2 is now available!** Includes LLM-as-Judge with Prometheus 2. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -101,6 +101,7 @@ results.export("report.html")
 | Feature | Description |
 |---------|-------------|
 | **100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
+| **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness. |
 | **Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
 | **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
@@ -257,6 +258,36 @@ metrics.log_to("./metrics/")  # Time-series storage
 - **Hallucination** — Does the answer contain fabricated info?
 - **Completeness** — Are all aspects of the question covered?
 
+### LLM-as-Judge (v1.2+)
+
+Use Prometheus 2 for comprehensive, local evaluation:
+
+```python
+from ragnarok_ai import LLMJudge
+
+# Initialize judge (uses Prometheus 2 by default)
+judge = LLMJudge()
+
+# Evaluate a single response
+result = await judge.evaluate_all(
+    context="Python was created by Guido van Rossum in 1991.",
+    question="Who created Python?",
+    answer="Guido van Rossum created Python.",
+)
+
+print(f"Overall: {result.overall_verdict} ({result.overall_score:.2f})")
+# Overall: PASS (0.85)
+
+print(f"Faithfulness: {result.faithfulness.verdict}")
+print(f"Hallucination: {result.hallucination.verdict}")
+```
+
+**Installation:**
+```bash
+# Install Prometheus 2 (~5GB, runs on 16GB RAM)
+ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
+```
+
 ### System Metrics
 - **Latency** — End-to-end response time
 - **Token usage** — Cost tracking for LLM calls
@@ -391,12 +422,27 @@ metrics.log_to("./metrics/")  # Time-series storage
 
 </details>
 
+<details>
+<summary><strong>v1.2 — LLM-as-Judge</strong></summary>
+
+- [x] `LLMJudge` class with Prometheus 2 integration
+- [x] Multi-criteria evaluation (faithfulness, relevance, hallucination, completeness)
+- [x] 100% local evaluation with Ollama (Q5_K_M quantization, ~5GB)
+- [x] Rubric-based prompts with 1-5 scoring normalized to 0-1
+- [x] Detailed explanations for each judgment
+- [x] Batch evaluation support
+- [x] Robust JSON parsing for LLM responses (handles incomplete JSON)
+- [x] `keep_alive` support for Ollama (prevents model unloading between requests)
+
+</details>
+
 ### Planned
 
-#### v1.2+ — Post-launch
+#### v1.3+ — Post-launch
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
 - [ ] Production monitoring mode
+- [ ] `ragnarok judge` CLI command
 
 ### Future
 

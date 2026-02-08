@@ -59,6 +59,7 @@ class OllamaLLM:
         model: str = DEFAULT_MODEL,
         embed_model: str = DEFAULT_EMBED_MODEL,
         timeout: float = DEFAULT_TIMEOUT,
+        keep_alive: str = "10m",
     ) -> None:
         """Initialize OllamaLLM client.
 
@@ -67,11 +68,13 @@ class OllamaLLM:
             model: Model name for text generation. Defaults to "mistral".
             embed_model: Model name for embeddings. Defaults to "nomic-embed-text".
             timeout: Request timeout in seconds. Defaults to 60.0.
+            keep_alive: How long to keep model in memory after request. Defaults to "10m".
         """
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.embed_model = embed_model
         self.timeout = timeout
+        self.keep_alive = keep_alive
         self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> OllamaLLM:
@@ -130,6 +133,7 @@ class OllamaLLM:
             "model": self.model,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": self.keep_alive,
         }
 
         try:
@@ -172,6 +176,7 @@ class OllamaLLM:
         payload = {
             "model": self.embed_model,
             "input": text,
+            "keep_alive": self.keep_alive,
         }
 
         try:

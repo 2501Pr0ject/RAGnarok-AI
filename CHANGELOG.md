@@ -5,6 +5,36 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-02-08
+
+### Added
+- **LLM-as-Judge with Prometheus 2**
+  - `LLMJudge` class for multi-criteria evaluation
+  - Faithfulness evaluation (is the answer grounded in context?)
+  - Relevance evaluation (does the answer address the question?)
+  - Hallucination detection (are there fabricated claims?)
+  - Completeness evaluation (are all aspects covered?)
+  - Rubric-based prompts with 1-5 scoring, normalized to 0-1
+  - Detailed explanations for each judgment
+  - `evaluate_all()` for comprehensive evaluation
+  - `evaluate_batch()` for batch processing
+- **Prometheus 2 Q5_K_M Integration**
+  - Default model: `hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M`
+  - ~5GB download, runs on 16GB RAM (M1/M2 compatible)
+  - Automatic fallback to available models (mistral, llama3.2, etc.)
+- **OllamaLLM `keep_alive` Support**
+  - Prevents model unloading between requests
+  - Default: 10 minutes (`keep_alive="10m"`)
+  - Applied to both `generate()` and `embed()` methods
+
+### Fixed
+- **SyntheticQuestionGenerator**: Now handles both string and dict formats from LLM responses
+- **JSON Parsing**: Robust parsing for incomplete JSON (missing closing brackets)
+- **Integration Tests**: Excluded by default (`-m "not integration"` in pytest config)
+
+### Changed
+- Default pytest config now skips integration tests (run with `pytest -m integration`)
+
 ## [1.1.2] - 2025-01-27
 
 ### Fixed
