@@ -282,6 +282,11 @@ print(f"Faithfulness: {result.faithfulness.verdict}")
 print(f"Hallucination: {result.hallucination.verdict}")
 ```
 
+**Performance:**
+- ~20-30s per evaluation on Apple M2 16GB
+- Prometheus 2 Q5_K_M: ~5GB RAM usage
+- `keep_alive` enabled by default (prevents model unloading between requests)
+
 **Installation:**
 ```bash
 # Install Prometheus 2 (~5GB, runs on 16GB RAM)
