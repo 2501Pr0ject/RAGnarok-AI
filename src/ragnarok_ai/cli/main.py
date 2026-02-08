@@ -1124,5 +1124,188 @@ def _run_benchmark_history(config_name: str, storage: str) -> None:
         typer.echo()
 
 
+# =============================================================================
+# Plugins Command
+# =============================================================================
+
+
+@app.command()
+def plugins(
+    list_all: Annotated[
+        bool,
+        typer.Option(
+            "--list",
+            "-l",
+            help="List all available plugins and adapters.",
+        ),
+    ] = False,
+    adapter_type: Annotated[
+        str | None,
+        typer.Option(
+            "--type",
+            "-t",
+            help="Filter by adapter type: llm, vectorstore, framework, evaluator.",
+        ),
+    ] = None,
+    local_only: Annotated[
+        bool,
+        typer.Option(
+            "--local",
+            help="Only show local adapters (no cloud services).",
+        ),
+    ] = False,
+    info: Annotated[
+        str | None,
+        typer.Option(
+            "--info",
+            "-i",
+            help="Show detailed info for a specific plugin.",
+        ),
+    ] = None,
+) -> None:
+    """Manage and list available plugins.
+
+    Examples:
+        ragnarok plugins --list
+        ragnarok plugins --list --type llm
+        ragnarok plugins --list --local
+        ragnarok plugins --info ollama
+    """
+    if not list_all and not info:
+        if state["json"]:
+            typer.echo(json_response("plugins", "error", errors=["Specify --list or --info <plugin>."]))
+        else:
+            typer.echo("Error: Specify --list or --info <plugin>.", err=True)
+            typer.echo("Run 'ragnarok plugins --help' for usage.", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
+
+    if list_all:
+        _list_plugins(adapter_type=adapter_type, local_only=local_only)
+    elif info:
+        _show_plugin_info(plugin_name=info)
+
+
+def _list_plugins(adapter_type: str | None = None, local_only: bool = False) -> None:
+    """List available plugins."""
+    from ragnarok_ai.plugins import PluginRegistry
+
+    registry = PluginRegistry.get()
+    registry.discover()
+
+    # Validate adapter_type if provided
+    valid_types = ["llm", "vectorstore", "framework", "evaluator"]
+    if adapter_type and adapter_type.lower() not in valid_types:
+        if state["json"]:
+            typer.echo(
+                json_response(
+                    "plugins",
+                    "error",
+                    errors=[f"Invalid type '{adapter_type}'. Valid: {', '.join(valid_types)}"],
+                )
+            )
+        else:
+            typer.echo(f"Error: Invalid type '{adapter_type}'.", err=True)
+            typer.echo(f"Valid types: {', '.join(valid_types)}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
+
+    # Get plugins with filters
+    plugins = registry.list_adapters(
+        adapter_type=adapter_type.lower() if adapter_type else None,  # type: ignore[arg-type]
+        local_only=local_only,
+    )
+
+    if state["json"]:
+        data = {
+            "plugins": [
+                {
+                    "name": p.name,
+                    "type": p.adapter_type,
+                    "is_local": p.is_local,
+                    "is_builtin": p.is_builtin,
+                }
+                for p in plugins
+            ],
+            "total": len(plugins),
+            "filters": {
+                "type": adapter_type,
+                "local_only": local_only,
+            },
+        }
+        typer.echo(json_response("plugins", "success", data=data))
+    else:
+        typer.echo()
+        title = "Available Plugins"
+        if adapter_type:
+            title += f" ({adapter_type.upper()})"
+        if local_only:
+            title += " [Local Only]"
+        typer.echo(f"  {title}")
+        typer.echo("  " + "-" * 50)
+
+        if not plugins:
+            typer.echo("  (none)")
+        else:
+            # Group by type
+            by_type: dict[str, list[Any]] = {}
+            for p in plugins:
+                if p.adapter_type not in by_type:
+                    by_type[p.adapter_type] = []
+                by_type[p.adapter_type].append(p)
+
+            for ptype in sorted(by_type.keys()):
+                typer.echo(f"\n  {ptype.upper()}:")
+                for p in by_type[ptype]:
+                    local_tag = "[local]" if p.is_local else "[cloud]"
+                    builtin_tag = "" if p.is_builtin else " (plugin)"
+                    typer.echo(f"    {p.name:15} {local_tag:8}{builtin_tag}")
+
+        typer.echo()
+        typer.echo(f"  Total: {len(plugins)} adapters")
+        typer.echo()
+
+
+def _show_plugin_info(plugin_name: str) -> None:
+    """Show detailed info for a plugin."""
+    from ragnarok_ai.plugins import PluginNotFoundError, PluginRegistry
+
+    registry = PluginRegistry.get()
+    registry.discover()
+
+    try:
+        info = registry.get_plugin_info(plugin_name)
+    except PluginNotFoundError:
+        if state["json"]:
+            typer.echo(json_response("plugins", "error", errors=[f"Plugin '{plugin_name}' not found."]))
+        else:
+            typer.echo(f"Error: Plugin '{plugin_name}' not found.", err=True)
+            typer.echo("Run 'ragnarok plugins --list' to see available plugins.", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    if state["json"]:
+        data = {
+            "name": info.name,
+            "type": info.adapter_type,
+            "is_local": info.is_local,
+            "is_builtin": info.is_builtin,
+            "class": f"{info.adapter_class.__module__}.{info.adapter_class.__name__}",
+            "version": info.version,
+            "description": info.description,
+        }
+        typer.echo(json_response("plugins", "success", data=data))
+    else:
+        typer.echo()
+        typer.echo(f"  Plugin: {info.name}")
+        typer.echo("  " + "-" * 40)
+        typer.echo(f"  Type:     {info.adapter_type}")
+        typer.echo(f"  Local:    {'Yes' if info.is_local else 'No'}")
+        typer.echo(f"  Builtin:  {'Yes' if info.is_builtin else 'No (external plugin)'}")
+        typer.echo(f"  Class:    {info.adapter_class.__module__}.{info.adapter_class.__name__}")
+        if info.version:
+            typer.echo(f"  Version:  {info.version}")
+        if info.description:
+            typer.echo(f"  Description: {info.description}")
+        typer.echo()
+
+
 if __name__ == "__main__":
     app()

@@ -92,7 +92,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.2 is now available!** Includes LLM-as-Judge with Prometheus 2. Install with `pip install ragnarok-ai`
+> **v1.2.5 is now available!** Includes Plugin Architecture and LLM-as-Judge. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -441,6 +441,20 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 
 </details>
 
+<details>
+<summary><strong>v1.2.5 — Plugin Architecture</strong></summary>
+
+- [x] Plugin system based on Python entry points
+- [x] `PluginRegistry` singleton for adapter discovery
+- [x] Dynamic discovery of external plugins via `importlib.metadata`
+- [x] `ragnarok plugins` CLI command (list, info, filters)
+- [x] Support for 4 namespaces: llm, vectorstore, framework, evaluator
+- [x] LOCAL/CLOUD classification for all adapters
+- [x] Plugin documentation (`docs/PLUGINS.md`)
+- [x] E2E plugin test with mock package
+
+</details>
+
 ### Planned
 
 #### v1.3+ — Post-launch
@@ -456,14 +470,6 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 
 - [ ] Basic Web UI (read-only dashboard)
 - [ ] Full Web UI dashboard
-
-</details>
-
-<details>
-<summary><strong>Plugin Architecture</strong></summary>
-
-- [ ] Plugin architecture for community adapters
-- [ ] Entry points system
 
 </details>
 

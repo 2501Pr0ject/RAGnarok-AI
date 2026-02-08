@@ -13,7 +13,7 @@ from ragnarok_ai.loaders.forge_bundle import (
 )
 from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
-__version__ = "1.2.0"
+__version__ = "1.2.5"
 __all__ = [
     "BatchConfig",
     "BatchEvaluator",
