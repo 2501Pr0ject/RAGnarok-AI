@@ -128,6 +128,7 @@ Explanation: [What was covered and what was missed]
 # Data Classes
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class JudgeResult:
     """Result from LLM judge evaluation.
@@ -229,6 +230,7 @@ class JudgeResults:
 # Response Parser
 # =============================================================================
 
+
 def parse_judge_response(response: str, criteria: str) -> JudgeResult:
     """Parse Prometheus 2 response into JudgeResult.
 
@@ -278,6 +280,7 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
 # =============================================================================
 # LLM Judge
 # =============================================================================
+
 
 class LLMJudge:
     """Multi-criteria LLM-as-Judge using Prometheus 2.
@@ -349,10 +352,7 @@ class LLMJudge:
                     )
                     selected_model = fallback
                 else:
-                    msg = (
-                        f"No suitable judge model found. "
-                        f"Install Prometheus 2 with: ollama pull {self.DEFAULT_MODEL}"
-                    )
+                    msg = f"No suitable judge model found. Install Prometheus 2 with: ollama pull {self.DEFAULT_MODEL}"
                     raise RuntimeError(msg)
 
             self.llm = OllamaLLM(

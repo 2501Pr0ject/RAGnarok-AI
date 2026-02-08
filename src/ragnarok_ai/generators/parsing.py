@@ -55,7 +55,7 @@ def parse_json_array(text: str) -> list[Any]:
     if start_idx != -1:
         array_text = text[start_idx:]
         # Try adding closing bracket(s)
-        for suffix in ["]", "}]", "\"}]", "\" }]"]:
+        for suffix in ["]", "}]", '"}]', '" }]']:
             try:
                 result = json.loads(array_text + suffix)
                 if isinstance(result, list):
