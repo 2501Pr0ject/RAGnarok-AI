@@ -13,8 +13,9 @@ from typing import Any
 _tiktoken_available = False
 _tiktoken_module: Any = None
 try:
-    import tiktoken as _tiktoken_module
+    import tiktoken
 
+    _tiktoken_module = tiktoken
     _tiktoken_available = True
 except ImportError:
     pass
