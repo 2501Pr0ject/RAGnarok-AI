@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from ragnarok_ai.cache.base import CacheProtocol
     from ragnarok_ai.core.protocols import RAGProtocol
     from ragnarok_ai.core.types import Query, TestSet
+    from ragnarok_ai.cost.tracker import CostSummary
     from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
     from ragnarok_ai.telemetry.tracer import RAGTracer
 
@@ -57,6 +58,7 @@ class EvaluationResult:
     query_results: list[QueryResult] = field(default_factory=list)
     total_latency_ms: float = 0.0
     errors: list[tuple[Query, Exception]] = field(default_factory=list)
+    cost: CostSummary | None = None
 
     def summary(self) -> dict[str, float]:
         if not self.metrics:
@@ -69,6 +71,16 @@ class EvaluationResult:
             "mrr": sum(m.mrr for m in self.metrics) / n,
             "ndcg": sum(m.ndcg for m in self.metrics) / n,
         }
+
+    def cost_summary(self) -> str:
+        """Get formatted cost summary.
+
+        Returns:
+            Formatted string with cost breakdown, or message if not tracked.
+        """
+        if self.cost is None:
+            return "Cost tracking was not enabled. Use track_cost=True in evaluate()."
+        return self.cost.summary()
 
 
 class QueryTimeoutError(Exception):
@@ -91,6 +103,7 @@ async def evaluate(
     timeout: float | None = None,
     max_retries: int = 0,
     retry_delay: float = 1.0,
+    track_cost: bool = False,
 ) -> EvaluationResult:
     """Evaluate a RAG pipeline against a test set.
 
@@ -108,9 +121,10 @@ async def evaluate(
         timeout: Optional timeout in seconds for each query. None means no timeout.
         max_retries: Maximum number of retries on failure (default: 0, no retries).
         retry_delay: Delay in seconds between retries (default: 1.0).
+        track_cost: If True, track token usage and calculate costs.
 
     Returns:
-        EvaluationResult containing metrics and responses.
+        EvaluationResult containing metrics, responses, and optionally cost summary.
 
     Example:
         >>> from ragnarok_ai import evaluate
@@ -134,10 +148,68 @@ async def evaluate(
         >>> cache = MemoryCache()
         >>> result = await evaluate(rag_pipeline, testset, cache=cache)
         >>> print(cache.stats())  # Shows hit/miss statistics
+        >>>
+        >>> # With cost tracking
+        >>> result = await evaluate(rag_pipeline, testset, track_cost=True)
+        >>> print(result.cost_summary())
     """
+    from ragnarok_ai.cost.tracker import cost_tracking
+
     if max_concurrency < 1:
         max_concurrency = 1
 
+    # Wrap evaluation in cost tracking context if enabled
+    if track_cost:
+        with cost_tracking() as tracker:
+            result = await _run_evaluation(
+                rag_pipeline,
+                testset,
+                k=k,
+                max_concurrency=max_concurrency,
+                tracer=tracer,
+                on_progress=on_progress,
+                fail_fast=fail_fast,
+                cache=cache,
+                pipeline_id=pipeline_id,
+                timeout=timeout,
+                max_retries=max_retries,
+                retry_delay=retry_delay,
+            )
+            result.cost = tracker.get_summary()
+            return result
+
+    return await _run_evaluation(
+        rag_pipeline,
+        testset,
+        k=k,
+        max_concurrency=max_concurrency,
+        tracer=tracer,
+        on_progress=on_progress,
+        fail_fast=fail_fast,
+        cache=cache,
+        pipeline_id=pipeline_id,
+        timeout=timeout,
+        max_retries=max_retries,
+        retry_delay=retry_delay,
+    )
+
+
+async def _run_evaluation(
+    rag_pipeline: RAGProtocol,
+    testset: TestSet,
+    *,
+    k: int = 10,
+    max_concurrency: int = 1,
+    tracer: RAGTracer | None = None,
+    on_progress: ProgressCallback | None = None,
+    fail_fast: bool = True,
+    cache: CacheProtocol | None = None,
+    pipeline_id: str | None = None,
+    timeout: float | None = None,
+    max_retries: int = 0,
+    retry_delay: float = 1.0,
+) -> EvaluationResult:
+    """Internal function to run evaluation (sequential or parallel)."""
     # Sequential execution (original behavior)
     if max_concurrency == 1:
         return await _evaluate_sequential(

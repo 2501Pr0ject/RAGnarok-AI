@@ -455,9 +455,23 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 
 </details>
 
+<details>
+<summary><strong>v1.3.0 — Cost Tracking</strong></summary>
+
+- [x] Cost tracking module (`ragnarok_ai.cost`)
+- [x] Pricing table for OpenAI, Anthropic, Groq, Mistral, Together AI
+- [x] Token counting with tiktoken (fallback to estimation)
+- [x] `CostTracker` class with context manager support
+- [x] `track_cost=True` parameter in `evaluate()`
+- [x] Formatted summary table and JSON export
+- [x] Local providers (Ollama, vLLM) = $0.00
+- [x] Automatic tracking in LLM adapters
+
+</details>
+
 ### Planned
 
-#### v1.3+ — Post-launch
+#### v1.4+ — Post-launch
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
 - [ ] Production monitoring mode
@@ -503,7 +517,6 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 <summary><strong>Advanced Features</strong></summary>
 
 - [ ] Streaming evaluation
-- [ ] Cost tracking ($ per evaluation)
 - [ ] A/B testing support
 - [ ] Dataset versioning
 - [ ] Fine-tuning recommendations

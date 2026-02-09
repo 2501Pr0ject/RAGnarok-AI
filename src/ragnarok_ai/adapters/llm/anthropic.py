@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 import httpx
 
 from ragnarok_ai.core.exceptions import LLMConnectionError
+from ragnarok_ai.cost.tracker import track_usage
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -163,6 +164,17 @@ class AnthropicLLM:
                 response = await client.post(url, json=payload, headers=self._get_headers())
                 response.raise_for_status()
                 data = response.json()
+
+                # Track token usage if cost tracking is active
+                usage = data.get("usage", {})
+                if usage:
+                    track_usage(
+                        provider="anthropic",
+                        model=self.model,
+                        input_tokens=usage.get("input_tokens", 0),
+                        output_tokens=usage.get("output_tokens", 0),
+                    )
+
                 content = data.get("content", [])
                 if content and isinstance(content, list):
                     # Extract text from content blocks

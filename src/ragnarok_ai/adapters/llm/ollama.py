@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import httpx
 
 from ragnarok_ai.core.exceptions import LLMConnectionError
+from ragnarok_ai.cost.tracker import track_usage
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -141,6 +142,16 @@ class OllamaLLM:
                 response = await client.post(url, json=payload)
                 response.raise_for_status()
                 data = response.json()
+
+                # Track token usage if cost tracking is active
+                # Ollama returns prompt_eval_count (input) and eval_count (output)
+                track_usage(
+                    provider="ollama",
+                    model=self.model,
+                    input_tokens=data.get("prompt_eval_count", 0),
+                    output_tokens=data.get("eval_count", 0),
+                )
+
                 return str(data.get("response", ""))
         except httpx.ConnectError as e:
             msg = f"Failed to connect to Ollama at {self.base_url}: {e}"

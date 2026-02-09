@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 import httpx
 
 from ragnarok_ai.core.exceptions import LLMConnectionError
+from ragnarok_ai.cost.tracker import track_usage
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -150,6 +151,18 @@ class VLLMAdapter:
                 response = await client.post(url, json=payload, headers=self._get_headers())
                 response.raise_for_status()
                 data = response.json()
+
+                # Track token usage if cost tracking is active
+                # vLLM uses OpenAI-compatible format
+                usage = data.get("usage", {})
+                if usage:
+                    track_usage(
+                        provider="vllm",
+                        model=self.model,
+                        input_tokens=usage.get("prompt_tokens", 0),
+                        output_tokens=usage.get("completion_tokens", 0),
+                    )
+
                 choices = data.get("choices", [])
                 if choices:
                     return str(choices[0].get("message", {}).get("content", ""))
