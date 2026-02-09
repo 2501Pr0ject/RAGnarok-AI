@@ -92,7 +92,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.2.5 is now available!** Includes Plugin Architecture and LLM-as-Judge. Install with `pip install ragnarok-ai`
+> **v1.3.1 is now available!** Includes Cost Tracking and Jupyter Integration. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -102,6 +102,8 @@ results.export("report.html")
 |---------|-------------|
 | **100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
 | **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness. |
+| **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
+| **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
 | **Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
 | **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
@@ -296,6 +298,40 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ### System Metrics
 - **Latency** — End-to-end response time
 - **Token usage** — Cost tracking for LLM calls
+
+### Cost Tracking (v1.3+)
+
+Track exactly what your evaluations cost:
+
+```python
+results = await evaluate(rag, testset, track_cost=True)
+print(results.cost)
+# +--------------------+------------+----------+
+# | Provider           |     Tokens |     Cost |
+# +--------------------+------------+----------+
+# | ollama (local)     |     45,230 |    $0.00 |
+# | openai             |     12,500 |    $0.38 |
+# +--------------------+------------+----------+
+```
+
+**Local-first advantage:** Ollama evaluations cost $0.00.
+
+### Jupyter Notebook (v1.3.1+)
+
+Rich HTML display for evaluation results:
+
+```python
+from ragnarok_ai.notebook import display, display_comparison
+
+# Full dashboard with metrics, cost, latency
+display(results)
+
+# Compare multiple pipelines side-by-side
+display_comparison([
+    ("Baseline", baseline_results),
+    ("Improved", improved_results),
+])
+```
 
 ---
 
@@ -536,12 +572,13 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 </details>
 
 <details>
-<summary><strong>Enterprise</strong></summary>
+<summary><strong>Enterprise (On-Premise)</strong></summary>
 
-- [ ] SSO support
+- [ ] SSO support (SAML, OIDC)
 - [ ] Role-based access control
 - [ ] Audit logging
-- [ ] RAGnarok Cloud (managed service)
+- [ ] Air-gapped deployment guide
+- [ ] Docker/Kubernetes helm charts
 
 </details>
 
