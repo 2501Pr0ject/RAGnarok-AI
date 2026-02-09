@@ -469,6 +469,18 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 
 </details>
 
+<details>
+<summary><strong>v1.3.1 — Jupyter Integration</strong></summary>
+
+- [x] Jupyter notebook module (`ragnarok_ai.notebook`)
+- [x] Rich HTML display for evaluation results
+- [x] Metrics visualization with progress bars
+- [x] Cost breakdown tables
+- [x] Pipeline comparison display
+- [x] Auto-detection of notebook environment
+
+</details>
+
 ### Planned
 
 #### v1.4+ — Post-launch
@@ -492,7 +504,6 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 
 - [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
 - [ ] VS Code extension
-- [ ] Jupyter notebook integration
 - [ ] Interactive CLI (TUI)
 - [ ] Rust acceleration for hot paths
 
