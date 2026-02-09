@@ -1,7 +1,5 @@
 """Tests for notebook display module."""
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from ragnarok_ai.core.evaluate import EvaluationResult

@@ -226,6 +226,10 @@ ignore_missing_imports = true
 module = ["tiktoken", "tiktoken.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["IPython", "IPython.*"]
+ignore_missing_imports = true
+
 # ============================================================================
 # Pytest Configuration
 # ============================================================================

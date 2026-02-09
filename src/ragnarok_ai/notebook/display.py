@@ -16,9 +16,9 @@ if TYPE_CHECKING:
 def _in_notebook() -> bool:
     """Check if we're running in a Jupyter notebook."""
     try:
-        from IPython import get_ipython
+        from IPython import get_ipython  # type: ignore[attr-defined]
 
-        shell = get_ipython()
+        shell = get_ipython()  # type: ignore[no-untyped-call]
         if shell is None:
             return False
         shell_name = shell.__class__.__name__
@@ -37,7 +37,7 @@ def _display_html(html: str) -> None:
         from IPython.display import HTML
         from IPython.display import display as ipy_display
 
-        ipy_display(HTML(html))
+        ipy_display(HTML(html))  # type: ignore[no-untyped-call]
     else:
         print("[HTML output available in Jupyter notebook]")
 
