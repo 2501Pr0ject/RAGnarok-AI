@@ -35,21 +35,21 @@ class TestHelperFunctions:
     def test_progress_bar_contains_html(self):
         """Test progress bar returns HTML."""
         html = _progress_bar(0.75)
-        assert "<div" in html
-        assert "75%" in html or "75.0%" in html
+        assert "<span" in html
+        assert "0.75" in html
 
     def test_progress_bar_colors(self):
-        """Test progress bar uses different colors."""
+        """Test progress bar uses different colors (terminal theme)."""
         low = _progress_bar(0.25)
         mid = _progress_bar(0.60)
         high = _progress_bar(0.90)
 
-        # Low should be red
-        assert "#e74c3c" in low
-        # Mid should be orange
-        assert "#f39c12" in mid
-        # High should be green
-        assert "#27ae60" in high
+        # Low should be red (terminal theme)
+        assert "#f85149" in low
+        # Mid should be yellow (terminal theme)
+        assert "#d29922" in mid
+        # High should be green (terminal theme)
+        assert "#3fb950" in high
 
 
 class TestInNotebook:
