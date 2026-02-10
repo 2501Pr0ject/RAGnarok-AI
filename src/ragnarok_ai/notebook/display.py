@@ -68,7 +68,7 @@ def _format_number(value: float, decimals: int = 2) -> str:
     return f"{value:.{decimals}f}"
 
 
-def _progress_bar(value: float, max_value: float = 1.0, width: int = 120) -> str:
+def _progress_bar(value: float, max_value: float = 1.0) -> str:
     """Generate a terminal-style progress bar."""
     percentage = min(100, max(0, (value / max_value) * 100))
 
@@ -295,7 +295,7 @@ def display(result: EvaluationResult) -> None:
             html += f"""
             <tr style="border-bottom: 1px solid {_BORDER};">
                 <td style="padding: 8px 0; color: {_TEXT_SECONDARY}; width: 100px;">{name}</td>
-                <td style="padding: 8px 0;">{_progress_bar(value, width=200)}</td>
+                <td style="padding: 8px 0;">{_progress_bar(value)}</td>
             </tr>
             """
 
