@@ -17,6 +17,7 @@
   <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL--3.0-green.svg" alt="License: AGPL-3.0"></a>
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
   <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/type%20checked-mypy-blue.svg" alt="Type Checked: mypy"></a>
+  <a href="https://colab.research.google.com/drive/1BC90iuDMwYi4u9I59jfcjNYiBd2MNvTA?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
 </p>
 
 <p align="center">
@@ -128,6 +129,8 @@ results.export("report.html")
 ---
 
 ## Quick Start
+
+**Try it now:** [Open in Google Colab](https://colab.research.google.com/drive/1BC90iuDMwYi4u9I59jfcjNYiBd2MNvTA?usp=sharing)
 
 ### Prerequisites
 
