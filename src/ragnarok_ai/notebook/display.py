@@ -2,6 +2,8 @@
 
 This module provides HTML-rich display functions for RAGnarok-AI results
 in Jupyter notebooks and IPython environments.
+
+Theme: Terminal dark mode
 """
 
 from __future__ import annotations
@@ -11,6 +13,21 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ragnarok_ai.core.evaluate import EvaluationResult
     from ragnarok_ai.cost.tracker import CostSummary
+
+
+# Terminal theme colors
+_BG_DARK = "#0d1117"
+_BG_LIGHTER = "#161b22"
+_BG_HEADER = "#1f2428"
+_TEXT_PRIMARY = "#e6edf3"
+_TEXT_SECONDARY = "#8b949e"
+_TEXT_MUTED = "#6e7681"
+_GREEN = "#3fb950"
+_YELLOW = "#d29922"
+_RED = "#f85149"
+_CYAN = "#58a6ff"
+_PURPLE = "#a371f7"
+_BORDER = "#30363d"
 
 
 def _in_notebook() -> bool:
@@ -51,23 +68,25 @@ def _format_number(value: float, decimals: int = 2) -> str:
     return f"{value:.{decimals}f}"
 
 
-def _progress_bar(value: float, max_value: float = 1.0, width: int = 100) -> str:
-    """Generate an HTML progress bar."""
+def _progress_bar(value: float, max_value: float = 1.0, width: int = 120) -> str:
+    """Generate a terminal-style progress bar."""
     percentage = min(100, max(0, (value / max_value) * 100))
 
-    # Color based on value (red -> yellow -> green)
+    # Color based on value
     if percentage < 50:
-        color = "#e74c3c"  # Red
+        color = _RED
     elif percentage < 75:
-        color = "#f39c12"  # Orange
+        color = _YELLOW
     else:
-        color = "#27ae60"  # Green
+        color = _GREEN
+
+    filled = int(percentage / 100 * 20)
+    empty = 20 - filled
+    bar = "█" * filled + "░" * empty
 
     return f"""
-    <div style="background: #ecf0f1; border-radius: 4px; width: {width}px; height: 16px; display: inline-block; vertical-align: middle;">
-        <div style="background: {color}; width: {percentage}%; height: 100%; border-radius: 4px;"></div>
-    </div>
-    <span style="margin-left: 8px; font-weight: 500;">{_format_number(value)}</span>
+    <span style="font-family: monospace; color: {color};">[{bar}]</span>
+    <span style="font-family: monospace; color: {_TEXT_PRIMARY}; margin-left: 8px;">{_format_number(value)}</span>
     """
 
 
@@ -83,38 +102,38 @@ def display_metrics(result: EvaluationResult) -> None:
     """
     summary = result.summary()
     if not summary:
-        _display_html("<p><em>No metrics available.</em></p>")
+        _display_html(f'<p style="color: {_TEXT_MUTED}; font-family: monospace;">No metrics available.</p>')
         return
 
-    html = """
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 500px;">
-        <h3 style="margin: 0 0 16px 0; color: #2c3e50; font-size: 16px; border-bottom: 2px solid #3498db; padding-bottom: 8px;">
-            📊 Evaluation Metrics
-        </h3>
+    html = f"""
+    <div style="font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; padding: 16px; background: {_BG_DARK}; border-radius: 6px; border: 1px solid {_BORDER}; max-width: 500px;">
+        <div style="color: {_CYAN}; font-size: 14px; margin-bottom: 16px; border-bottom: 1px solid {_BORDER}; padding-bottom: 8px;">
+            $ ragnarok metrics
+        </div>
         <table style="width: 100%; border-collapse: collapse;">
     """
 
     metrics = [
-        ("Precision", summary.get("precision", 0)),
-        ("Recall", summary.get("recall", 0)),
-        ("MRR", summary.get("mrr", 0)),
-        ("NDCG", summary.get("ndcg", 0)),
+        ("precision", summary.get("precision", 0)),
+        ("recall", summary.get("recall", 0)),
+        ("mrr", summary.get("mrr", 0)),
+        ("ndcg", summary.get("ndcg", 0)),
     ]
 
     for name, value in metrics:
         html += f"""
-        <tr style="border-bottom: 1px solid #ecf0f1;">
-            <td style="padding: 8px 0; color: #7f8c8d; width: 80px;">{name}</td>
-            <td style="padding: 8px 0;">{_progress_bar(value)}</td>
+        <tr>
+            <td style="padding: 6px 0; color: {_TEXT_SECONDARY}; width: 100px;">{name}</td>
+            <td style="padding: 6px 0;">{_progress_bar(value)}</td>
         </tr>
         """
 
     num_queries = int(summary.get("num_queries", 0))
     html += f"""
         </table>
-        <p style="margin: 12px 0 0 0; color: #95a5a6; font-size: 12px;">
-            Based on {num_queries} queries
-        </p>
+        <div style="margin-top: 12px; color: {_TEXT_MUTED}; font-size: 12px;">
+            # {num_queries} queries evaluated
+        </div>
     </div>
     """
 
@@ -133,11 +152,10 @@ def display_cost(result: EvaluationResult) -> None:
         >>> display_cost(results)
     """
     if result.cost is None:
-        _display_html("""
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px; background: #fef9e7; border-radius: 8px; border-left: 4px solid #f39c12;">
-            <p style="margin: 0; color: #7d6608;">
-                ⚠️ Cost tracking was not enabled. Use <code>track_cost=True</code> in evaluate().
-            </p>
+        _display_html(f"""
+        <div style="font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; padding: 16px; background: {_BG_DARK}; border-radius: 6px; border: 1px solid {_YELLOW};">
+            <span style="color: {_YELLOW};">WARNING:</span>
+            <span style="color: {_TEXT_PRIMARY};"> Cost tracking not enabled. Use track_cost=True</span>
         </div>
         """)
         return
@@ -147,17 +165,17 @@ def display_cost(result: EvaluationResult) -> None:
 
 def _display_cost_summary(cost: CostSummary) -> None:
     """Display a CostSummary object."""
-    html = """
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 450px;">
-        <h3 style="margin: 0 0 16px 0; color: #2c3e50; font-size: 16px; border-bottom: 2px solid #27ae60; padding-bottom: 8px;">
-            💰 Cost Summary
-        </h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    html = f"""
+    <div style="font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; padding: 16px; background: {_BG_DARK}; border-radius: 6px; border: 1px solid {_BORDER}; max-width: 500px;">
+        <div style="color: {_CYAN}; font-size: 14px; margin-bottom: 16px; border-bottom: 1px solid {_BORDER}; padding-bottom: 8px;">
+            $ ragnarok cost
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <thead>
-                <tr style="background: #f8f9fa;">
-                    <th style="padding: 10px; text-align: left; color: #7f8c8d; font-weight: 500;">Provider</th>
-                    <th style="padding: 10px; text-align: right; color: #7f8c8d; font-weight: 500;">Tokens</th>
-                    <th style="padding: 10px; text-align: right; color: #7f8c8d; font-weight: 500;">Cost</th>
+                <tr style="border-bottom: 1px solid {_BORDER};">
+                    <th style="padding: 8px 0; text-align: left; color: {_TEXT_SECONDARY}; font-weight: normal;">PROVIDER</th>
+                    <th style="padding: 8px 0; text-align: right; color: {_TEXT_SECONDARY}; font-weight: normal;">TOKENS</th>
+                    <th style="padding: 8px 0; text-align: right; color: {_TEXT_SECONDARY}; font-weight: normal;">COST</th>
                 </tr>
             </thead>
             <tbody>
@@ -166,27 +184,27 @@ def _display_cost_summary(cost: CostSummary) -> None:
     for _, usage in sorted(cost.by_provider.items(), key=lambda x: x[1].cost, reverse=True):
         provider_name = usage.provider
         if usage.is_local:
-            provider_name += ' <span style="background: #d5f5e3; color: #1e8449; padding: 2px 6px; border-radius: 4px; font-size: 11px;">local</span>'
+            provider_name += f' <span style="color: {_GREEN};">[local]</span>'
 
-        cost_color = "#27ae60" if usage.cost == 0 else "#2c3e50"
+        cost_color = _GREEN if usage.cost == 0 else _TEXT_PRIMARY
 
         html += f"""
-            <tr style="border-bottom: 1px solid #ecf0f1;">
-                <td style="padding: 10px; color: #2c3e50;">{provider_name}</td>
-                <td style="padding: 10px; text-align: right; color: #7f8c8d;">{usage.total_tokens:,}</td>
-                <td style="padding: 10px; text-align: right; color: {cost_color}; font-weight: 500;">${usage.cost:.2f}</td>
+            <tr style="border-bottom: 1px solid {_BORDER};">
+                <td style="padding: 8px 0; color: {_TEXT_PRIMARY};">{provider_name}</td>
+                <td style="padding: 8px 0; text-align: right; color: {_TEXT_SECONDARY};">{usage.total_tokens:,}</td>
+                <td style="padding: 8px 0; text-align: right; color: {cost_color};">${usage.cost:.4f}</td>
             </tr>
         """
 
     # Total row
-    total_color = "#27ae60" if cost.total_cost == 0 else "#2c3e50"
+    total_color = _GREEN if cost.total_cost == 0 else _TEXT_PRIMARY
     html += f"""
             </tbody>
             <tfoot>
-                <tr style="background: #f8f9fa; font-weight: 600;">
-                    <td style="padding: 10px; color: #2c3e50;">Total</td>
-                    <td style="padding: 10px; text-align: right; color: #2c3e50;">{cost.total_tokens:,}</td>
-                    <td style="padding: 10px; text-align: right; color: {total_color};">${cost.total_cost:.2f}</td>
+                <tr>
+                    <td style="padding: 10px 0; color: {_TEXT_PRIMARY}; font-weight: bold;">TOTAL</td>
+                    <td style="padding: 10px 0; text-align: right; color: {_TEXT_PRIMARY};">{cost.total_tokens:,}</td>
+                    <td style="padding: 10px 0; text-align: right; color: {total_color}; font-weight: bold;">${cost.total_cost:.4f}</td>
                 </tr>
             </tfoot>
         </table>
@@ -217,12 +235,12 @@ def display(result: EvaluationResult) -> None:
     summary = result.summary()
 
     # Header
-    html = """
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-            <h2 style="margin: 0; font-size: 20px; font-weight: 600;">⚡ RAGnarok Evaluation Results</h2>
+    html = f"""
+    <div style="font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;">
+        <div style="background: {_BG_HEADER}; color: {_CYAN}; padding: 16px; border-radius: 6px 6px 0 0; border: 1px solid {_BORDER}; border-bottom: none;">
+            <span style="color: {_GREEN};">$</span> ragnarok evaluate --summary
         </div>
-        <div style="background: #fff; padding: 20px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="background: {_BG_DARK}; padding: 20px; border-radius: 0 0 6px 6px; border: 1px solid {_BORDER}; border-top: none;">
     """
 
     # Quick stats
@@ -231,29 +249,29 @@ def display(result: EvaluationResult) -> None:
     avg_latency = result.total_latency_ms / max(num_queries, 1)
 
     html += f"""
-        <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
-            <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 6px; text-align: center;">
-                <div style="font-size: 24px; font-weight: 600; color: #3498db;">{num_queries}</div>
-                <div style="font-size: 12px; color: #7f8c8d;">Queries</div>
+        <div style="display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap;">
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: {_CYAN};">{num_queries}</div>
+                <div style="font-size: 11px; color: {_TEXT_MUTED};">queries</div>
             </div>
-            <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 6px; text-align: center;">
-                <div style="font-size: 24px; font-weight: 600; color: #9b59b6;">{latency_s:.1f}s</div>
-                <div style="font-size: 12px; color: #7f8c8d;">Total Time</div>
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: {_PURPLE};">{latency_s:.2f}s</div>
+                <div style="font-size: 11px; color: {_TEXT_MUTED};">total_time</div>
             </div>
-            <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 6px; text-align: center;">
-                <div style="font-size: 24px; font-weight: 600; color: #e67e22;">{avg_latency:.0f}ms</div>
-                <div style="font-size: 12px; color: #7f8c8d;">Avg/Query</div>
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: {_YELLOW};">{avg_latency:.0f}ms</div>
+                <div style="font-size: 11px; color: {_TEXT_MUTED};">avg/query</div>
             </div>
     """
 
     # Cost stat if available
     if result.cost is not None:
-        cost_display = f"${result.cost.total_cost:.2f}" if result.cost.total_cost > 0 else "FREE"
-        cost_color = "#27ae60" if result.cost.total_cost == 0 else "#e74c3c"
+        cost_display = f"${result.cost.total_cost:.4f}" if result.cost.total_cost > 0 else "$0.00"
+        cost_color = _GREEN if result.cost.total_cost == 0 else _RED
         html += f"""
-            <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 6px; text-align: center;">
-                <div style="font-size: 24px; font-weight: 600; color: {cost_color};">{cost_display}</div>
-                <div style="font-size: 12px; color: #7f8c8d;">Cost</div>
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: {cost_color};">{cost_display}</div>
+                <div style="font-size: 11px; color: {_TEXT_MUTED};">cost</div>
             </div>
         """
 
@@ -261,58 +279,54 @@ def display(result: EvaluationResult) -> None:
 
     # Metrics section
     if summary:
-        html += """
-        <h4 style="margin: 20px 0 12px 0; color: #2c3e50; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Retrieval Metrics</h4>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        html += f"""
+        <div style="color: {_TEXT_MUTED}; font-size: 12px; margin: 16px 0 8px 0;"># RETRIEVAL METRICS</div>
+        <table style="width: 100%; border-collapse: collapse;">
         """
 
         metrics = [
-            ("Precision", summary.get("precision", 0), "Relevant docs / Retrieved docs"),
-            ("Recall", summary.get("recall", 0), "Retrieved relevant / Total relevant"),
-            ("MRR", summary.get("mrr", 0), "Mean Reciprocal Rank"),
-            ("NDCG", summary.get("ndcg", 0), "Normalized DCG"),
+            ("precision", summary.get("precision", 0)),
+            ("recall", summary.get("recall", 0)),
+            ("mrr", summary.get("mrr", 0)),
+            ("ndcg", summary.get("ndcg", 0)),
         ]
 
-        for name, value, tooltip in metrics:
-            html += f'''
-            <tr style="border-bottom: 1px solid #ecf0f1;">
-                <td style="padding: 10px 0; color: #7f8c8d; width: 100px;" title="{tooltip}">{name}</td>
-                <td style="padding: 10px 0;">{_progress_bar(value, width=200)}</td>
+        for name, value in metrics:
+            html += f"""
+            <tr style="border-bottom: 1px solid {_BORDER};">
+                <td style="padding: 8px 0; color: {_TEXT_SECONDARY}; width: 100px;">{name}</td>
+                <td style="padding: 8px 0;">{_progress_bar(value, width=200)}</td>
             </tr>
-            '''
+            """
 
         html += "</table>"
 
     # Cost section
     if result.cost is not None and result.cost.by_provider:
-        html += """
-        <h4 style="margin: 20px 0 12px 0; color: #2c3e50; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Cost Breakdown</h4>
-        <table style="width: 100%; border-collapse: collapse;">
+        html += f"""
+        <div style="color: {_TEXT_MUTED}; font-size: 12px; margin: 20px 0 8px 0;"># COST BREAKDOWN</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <thead>
-                <tr style="background: #f8f9fa;">
-                    <th style="padding: 10px; text-align: left; color: #7f8c8d; font-weight: 500;">Provider</th>
-                    <th style="padding: 10px; text-align: right; color: #7f8c8d; font-weight: 500;">Model</th>
-                    <th style="padding: 10px; text-align: right; color: #7f8c8d; font-weight: 500;">Tokens</th>
-                    <th style="padding: 10px; text-align: right; color: #7f8c8d; font-weight: 500;">Cost</th>
+                <tr style="border-bottom: 1px solid {_BORDER};">
+                    <th style="padding: 8px 0; text-align: left; color: {_TEXT_MUTED}; font-weight: normal;">provider</th>
+                    <th style="padding: 8px 0; text-align: right; color: {_TEXT_MUTED}; font-weight: normal;">model</th>
+                    <th style="padding: 8px 0; text-align: right; color: {_TEXT_MUTED}; font-weight: normal;">tokens</th>
+                    <th style="padding: 8px 0; text-align: right; color: {_TEXT_MUTED}; font-weight: normal;">cost</th>
                 </tr>
             </thead>
             <tbody>
         """
 
         for _, usage in sorted(result.cost.by_provider.items(), key=lambda x: x[1].cost, reverse=True):
-            local_badge = (
-                ' <span style="background: #d5f5e3; color: #1e8449; padding: 2px 6px; border-radius: 4px; font-size: 10px;">local</span>'
-                if usage.is_local
-                else ""
-            )
-            cost_color = "#27ae60" if usage.cost == 0 else "#2c3e50"
+            local_badge = f' <span style="color: {_GREEN};">[local]</span>' if usage.is_local else ""
+            cost_color = _GREEN if usage.cost == 0 else _TEXT_PRIMARY
 
             html += f"""
-            <tr style="border-bottom: 1px solid #ecf0f1;">
-                <td style="padding: 10px; color: #2c3e50;">{usage.provider}{local_badge}</td>
-                <td style="padding: 10px; text-align: right; color: #7f8c8d; font-family: monospace; font-size: 12px;">{usage.model}</td>
-                <td style="padding: 10px; text-align: right; color: #7f8c8d;">{usage.total_tokens:,}</td>
-                <td style="padding: 10px; text-align: right; color: {cost_color}; font-weight: 500;">${usage.cost:.2f}</td>
+            <tr style="border-bottom: 1px solid {_BORDER};">
+                <td style="padding: 8px 0; color: {_TEXT_PRIMARY};">{usage.provider}{local_badge}</td>
+                <td style="padding: 8px 0; text-align: right; color: {_TEXT_SECONDARY};">{usage.model}</td>
+                <td style="padding: 8px 0; text-align: right; color: {_TEXT_SECONDARY};">{usage.total_tokens:,}</td>
+                <td style="padding: 8px 0; text-align: right; color: {cost_color};">${usage.cost:.4f}</td>
             </tr>
             """
 
@@ -321,8 +335,9 @@ def display(result: EvaluationResult) -> None:
     # Errors section
     if result.errors:
         html += f"""
-        <div style="margin-top: 20px; background: #fdedec; border-left: 4px solid #e74c3c; padding: 12px; border-radius: 4px;">
-            <strong style="color: #c0392b;">⚠️ {len(result.errors)} error(s) occurred</strong>
+        <div style="margin-top: 20px; background: {_BG_LIGHTER}; border-left: 3px solid {_RED}; padding: 12px;">
+            <span style="color: {_RED};">ERROR:</span>
+            <span style="color: {_TEXT_PRIMARY};"> {len(result.errors)} error(s) occurred</span>
         </div>
         """
 
@@ -350,66 +365,68 @@ def display_comparison(
         ... ])
     """
     if not results:
-        _display_html("<p><em>No results to compare.</em></p>")
+        _display_html(f'<p style="color: {_TEXT_MUTED}; font-family: monospace;">No results to compare.</p>')
         return
 
-    html = """
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-        <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-            <h2 style="margin: 0; font-size: 20px; font-weight: 600;">📊 Pipeline Comparison</h2>
+    html = f"""
+    <div style="font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;">
+        <div style="background: {_BG_HEADER}; color: {_CYAN}; padding: 16px; border-radius: 6px 6px 0 0; border: 1px solid {_BORDER}; border-bottom: none;">
+            <span style="color: {_GREEN};">$</span> ragnarok compare
         </div>
-        <div style="background: #fff; padding: 20px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <table style="width: 100%; border-collapse: collapse;">
+        <div style="background: {_BG_DARK}; padding: 20px; border-radius: 0 0 6px 6px; border: 1px solid {_BORDER}; border-top: none;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                 <thead>
-                    <tr style="background: #f8f9fa;">
-                        <th style="padding: 12px; text-align: left; color: #7f8c8d;">Metric</th>
+                    <tr style="border-bottom: 1px solid {_BORDER};">
+                        <th style="padding: 10px 0; text-align: left; color: {_TEXT_MUTED}; font-weight: normal;">metric</th>
     """
 
     for name, _ in results:
-        html += f'<th style="padding: 12px; text-align: center; color: #2c3e50;">{name}</th>'
+        html += f'<th style="padding: 10px; text-align: center; color: {_TEXT_PRIMARY};">{name}</th>'
 
     html += "</tr></thead><tbody>"
 
     metrics = ["precision", "recall", "mrr", "ndcg"]
-    metric_names = ["Precision", "Recall", "MRR", "NDCG"]
 
-    for metric, metric_name in zip(metrics, metric_names, strict=False):
-        html += f'<tr style="border-bottom: 1px solid #ecf0f1;"><td style="padding: 12px; color: #7f8c8d;">{metric_name}</td>'
+    for metric in metrics:
+        html += f'<tr style="border-bottom: 1px solid {_BORDER};"><td style="padding: 10px 0; color: {_TEXT_SECONDARY};">{metric}</td>'
 
         values = [r.summary().get(metric, 0) for _, r in results]
         max_val = max(values) if values else 0
 
         for (_, __), val in zip(results, values, strict=False):
             is_best = val == max_val and max_val > 0
-            style = "font-weight: 600; color: #27ae60;" if is_best else "color: #2c3e50;"
-            badge = " 🏆" if is_best and len(results) > 1 else ""
-            html += f'<td style="padding: 12px; text-align: center; {style}">{_format_number(val)}{badge}</td>'
+            color = _GREEN if is_best else _TEXT_PRIMARY
+            marker = " *" if is_best and len(results) > 1 else ""
+            html += f'<td style="padding: 10px; text-align: center; color: {color};">{_format_number(val)}{marker}</td>'
 
         html += "</tr>"
 
     # Cost row
-    html += '<tr style="border-bottom: 1px solid #ecf0f1;"><td style="padding: 12px; color: #7f8c8d;">Cost</td>'
+    html += f'<tr style="border-bottom: 1px solid {_BORDER};"><td style="padding: 10px 0; color: {_TEXT_SECONDARY};">cost</td>'
     for _, result in results:
         if result.cost:
             cost = result.cost.total_cost
-            cost_str = f"${cost:.2f}" if cost > 0 else "FREE"
-            color = "#27ae60" if cost == 0 else "#e74c3c"
+            cost_str = f"${cost:.4f}" if cost > 0 else "$0.00"
+            color = _GREEN if cost == 0 else _TEXT_PRIMARY
         else:
             cost_str = "N/A"
-            color = "#95a5a6"
-        html += f'<td style="padding: 12px; text-align: center; color: {color};">{cost_str}</td>'
+            color = _TEXT_MUTED
+        html += f'<td style="padding: 10px; text-align: center; color: {color};">{cost_str}</td>'
     html += "</tr>"
 
     # Latency row
-    html += '<tr><td style="padding: 12px; color: #7f8c8d;">Latency</td>'
+    html += f'<tr><td style="padding: 10px 0; color: {_TEXT_SECONDARY};">latency</td>'
     for _, result in results:
         latency = result.total_latency_ms / 1000
-        html += f'<td style="padding: 12px; text-align: center; color: #2c3e50;">{latency:.1f}s</td>'
+        html += f'<td style="padding: 10px; text-align: center; color: {_TEXT_PRIMARY};">{latency:.2f}s</td>'
     html += "</tr>"
 
-    html += """
+    html += f"""
             </tbody>
         </table>
+        <div style="margin-top: 12px; color: {_TEXT_MUTED}; font-size: 11px;">
+            * = best score
+        </div>
         </div>
     </div>
     """
