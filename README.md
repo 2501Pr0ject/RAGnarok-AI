@@ -526,7 +526,7 @@ display_comparison([
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
 - [ ] Production monitoring mode
-- [ ] `ragnarok judge` CLI command
+- [x] `ragnarok judge` CLI command
 
 ### Future
 
