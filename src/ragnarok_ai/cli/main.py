@@ -1313,7 +1313,8 @@ def _run_judge(
                 typer.echo(f"Error: Invalid JSON in {file}: {e}", err=True)
             raise typer.Exit(EXIT_BAD_INPUT) from None
     else:
-        items = [{"context": context, "question": question, "answer": answer}]
+        # At this point, direct inputs are validated as non-None
+        items = [{"context": context or "", "question": question or "", "answer": answer or ""}]
 
     if not state["json"]:
         typer.echo()
@@ -1369,7 +1370,7 @@ def _run_judge(
                 scores.append(r.score)
 
             if "hallucination" in selected_criteria:
-                r = await judge_instance.evaluate_hallucination(ctx, a)
+                r = await judge_instance.detect_hallucination(ctx, a)
                 item_result["criteria"]["hallucination"] = {
                     "verdict": r.verdict,
                     "score": r.score,
