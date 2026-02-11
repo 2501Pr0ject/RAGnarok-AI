@@ -1125,6 +1125,339 @@ def _run_benchmark_history(config_name: str, storage: str) -> None:
 
 
 # =============================================================================
+# Judge Command
+# =============================================================================
+
+
+@app.command()
+def judge(
+    context: Annotated[
+        str | None,
+        typer.Option(
+            "--context",
+            "-c",
+            help="Context text for evaluation.",
+        ),
+    ] = None,
+    question: Annotated[
+        str | None,
+        typer.Option(
+            "--question",
+            "-q",
+            help="Question to evaluate.",
+        ),
+    ] = None,
+    answer: Annotated[
+        str | None,
+        typer.Option(
+            "--answer",
+            "-a",
+            help="Answer to evaluate.",
+        ),
+    ] = None,
+    file: Annotated[
+        str | None,
+        typer.Option(
+            "--file",
+            "-f",
+            help="JSON file with items to evaluate (array of {context, question, answer}).",
+        ),
+    ] = None,
+    criteria: Annotated[
+        str,
+        typer.Option(
+            "--criteria",
+            help="Comma-separated criteria: faithfulness,relevance,hallucination,completeness (default: all).",
+        ),
+    ] = "all",
+    model: Annotated[
+        str | None,
+        typer.Option(
+            "--model",
+            "-m",
+            help="Ollama model for evaluation (default: Prometheus 2).",
+        ),
+    ] = None,
+    fail_under: Annotated[
+        float | None,
+        typer.Option(
+            "--fail-under",
+            help="Fail if average score is below threshold (0.0-1.0).",
+        ),
+    ] = None,
+    output: Annotated[
+        str | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output file for results (JSON).",
+        ),
+    ] = None,
+    ollama_url: Annotated[
+        str,
+        typer.Option(
+            "--ollama-url",
+            help="Ollama API base URL.",
+        ),
+    ] = "http://localhost:11434",
+) -> None:
+    """Evaluate responses using LLM-as-Judge (Prometheus 2).
+
+    Evaluate a single response:
+        ragnarok judge -c "Paris is France's capital." -q "What is France's capital?" -a "Paris"
+
+    Evaluate from file:
+        ragnarok judge --file items.json
+
+    Select criteria:
+        ragnarok judge --file items.json --criteria faithfulness,relevance
+    """
+    # Validate input
+    has_direct_input = context is not None and question is not None and answer is not None
+    has_file_input = file is not None
+
+    if not has_direct_input and not has_file_input:
+        if state["json"]:
+            typer.echo(
+                json_response(
+                    "judge",
+                    "error",
+                    errors=["Provide --context, --question, --answer OR --file."],
+                )
+            )
+        else:
+            typer.echo("Error: Provide --context, --question, --answer OR --file.", err=True)
+            typer.echo("Run 'ragnarok judge --help' for usage.", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
+
+    if has_direct_input and has_file_input:
+        if state["json"]:
+            typer.echo(
+                json_response(
+                    "judge",
+                    "error",
+                    errors=["Cannot use both direct input and --file. Choose one."],
+                )
+            )
+        else:
+            typer.echo("Error: Cannot use both direct input and --file. Choose one.", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
+
+    _run_judge(
+        context=context,
+        question=question,
+        answer=answer,
+        file=file,
+        criteria=criteria,
+        model=model,
+        fail_under=fail_under,
+        output=output,
+        ollama_url=ollama_url,
+    )
+
+
+def _run_judge(
+    context: str | None,
+    question: str | None,
+    answer: str | None,
+    file: str | None,
+    criteria: str,
+    model: str | None,
+    fail_under: float | None,
+    output: str | None,
+    ollama_url: str,
+) -> None:
+    """Run LLM-as-Judge evaluation."""
+    from ragnarok_ai.evaluators.judge import LLMJudge
+
+    # Parse criteria
+    valid_criteria = {"faithfulness", "relevance", "hallucination", "completeness", "all"}
+    if criteria.lower() == "all":
+        selected_criteria = ["faithfulness", "relevance", "hallucination", "completeness"]
+    else:
+        selected_criteria = [c.strip().lower() for c in criteria.split(",")]
+        invalid = set(selected_criteria) - valid_criteria
+        if invalid:
+            if state["json"]:
+                typer.echo(
+                    json_response(
+                        "judge",
+                        "error",
+                        errors=[f"Invalid criteria: {invalid}. Valid: {valid_criteria - {'all'}}"],
+                    )
+                )
+            else:
+                typer.echo(f"Error: Invalid criteria: {invalid}", err=True)
+                typer.echo(f"Valid: {', '.join(valid_criteria - {'all'})}", err=True)
+            raise typer.Exit(EXIT_BAD_INPUT)
+
+    # Load items to evaluate
+    items: list[dict[str, str]] = []
+    if file:
+        file_path = Path(file)
+        if not file_path.exists():
+            if state["json"]:
+                typer.echo(json_response("judge", "error", errors=[f"File not found: {file}"]))
+            else:
+                typer.echo(f"Error: File not found: {file}", err=True)
+            raise typer.Exit(EXIT_BAD_INPUT)
+
+        try:
+            items = json.loads(file_path.read_text())
+            if not isinstance(items, list):
+                items = [items]
+        except json.JSONDecodeError as e:
+            if state["json"]:
+                typer.echo(json_response("judge", "error", errors=[f"Invalid JSON: {e}"]))
+            else:
+                typer.echo(f"Error: Invalid JSON in {file}: {e}", err=True)
+            raise typer.Exit(EXIT_BAD_INPUT) from None
+    else:
+        items = [{"context": context, "question": question, "answer": answer}]
+
+    if not state["json"]:
+        typer.echo()
+        typer.echo("  RAGnarok-AI LLM-as-Judge")
+        typer.echo("  " + "=" * 40)
+        typer.echo()
+        typer.echo(f"  Items to evaluate: {len(items)}")
+        typer.echo(f"  Criteria: {', '.join(selected_criteria)}")
+        typer.echo(f"  Model: {model or 'Prometheus 2 (default)'}")
+        typer.echo()
+        typer.echo("  Connecting to Ollama...")
+
+    async def run_evaluation() -> dict[str, Any]:
+        judge_instance = LLMJudge(model=model, base_url=ollama_url)
+
+        results: list[dict[str, Any]] = []
+        total_scores: list[float] = []
+
+        for i, item in enumerate(items):
+            ctx = item.get("context", "")
+            q = item.get("question", "")
+            a = item.get("answer", "")
+
+            if not state["json"]:
+                preview = q[:50] + "..." if len(q) > 50 else q
+                typer.echo(f"  [{i + 1}/{len(items)}] Evaluating: {preview}")
+
+            item_result: dict[str, Any] = {
+                "question": q,
+                "answer": a[:100] + "..." if len(a) > 100 else a,
+                "criteria": {},
+            }
+
+            scores: list[float] = []
+
+            # Evaluate selected criteria
+            if "faithfulness" in selected_criteria:
+                r = await judge_instance.evaluate_faithfulness(ctx, q, a)
+                item_result["criteria"]["faithfulness"] = {
+                    "verdict": r.verdict,
+                    "score": r.score,
+                    "explanation": r.explanation,
+                }
+                scores.append(r.score)
+
+            if "relevance" in selected_criteria:
+                r = await judge_instance.evaluate_relevance(q, a)
+                item_result["criteria"]["relevance"] = {
+                    "verdict": r.verdict,
+                    "score": r.score,
+                    "explanation": r.explanation,
+                }
+                scores.append(r.score)
+
+            if "hallucination" in selected_criteria:
+                r = await judge_instance.evaluate_hallucination(ctx, a)
+                item_result["criteria"]["hallucination"] = {
+                    "verdict": r.verdict,
+                    "score": r.score,
+                    "explanation": r.explanation,
+                }
+                scores.append(r.score)
+
+            if "completeness" in selected_criteria:
+                r = await judge_instance.evaluate_completeness(q, a, ctx)
+                item_result["criteria"]["completeness"] = {
+                    "verdict": r.verdict,
+                    "score": r.score,
+                    "explanation": r.explanation,
+                }
+                scores.append(r.score)
+
+            item_avg = sum(scores) / len(scores) if scores else 0
+            item_result["average_score"] = round(item_avg, 4)
+            total_scores.append(item_avg)
+            results.append(item_result)
+
+        overall_avg = sum(total_scores) / len(total_scores) if total_scores else 0
+
+        return {
+            "items_evaluated": len(items),
+            "criteria": selected_criteria,
+            "results": results,
+            "overall_average": round(overall_avg, 4),
+        }
+
+    try:
+        data = asyncio.run(run_evaluation())
+    except Exception as e:
+        if state["json"]:
+            typer.echo(json_response("judge", "error", errors=[str(e)]))
+        else:
+            typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(EXIT_FAILURE) from None
+
+    # Check threshold
+    exit_code = 0
+    status = "pass"
+    if fail_under is not None and data["overall_average"] < fail_under:
+        status = "fail"
+        data["fail_reason"] = f"Average score {data['overall_average']:.4f} < threshold {fail_under}"
+        exit_code = 1
+
+    # Output results
+    if state["json"]:
+        typer.echo(json_response("judge", status, data=data))
+    else:
+        typer.echo()
+        typer.echo("  " + "-" * 40)
+        typer.echo("  Results")
+        typer.echo("  " + "-" * 40)
+
+        for i, result in enumerate(data["results"]):
+            typer.echo(f"\n  Item {i + 1}:")
+            typer.echo(f"    Question: {result['question'][:60]}...")
+            for crit, crit_data in result["criteria"].items():
+                verdict_icon = "+" if crit_data["verdict"] == "PASS" else "-" if crit_data["verdict"] == "FAIL" else "~"
+                typer.echo(f"    [{verdict_icon}] {crit}: {crit_data['score']:.2f} ({crit_data['verdict']})")
+            typer.echo(f"    Average: {result['average_score']:.2f}")
+
+        typer.echo()
+        typer.echo("  " + "-" * 40)
+        typer.echo(f"  Overall Average: {data['overall_average']:.4f}")
+
+        if fail_under is not None:
+            if exit_code == 0:
+                typer.echo(f"  Threshold: {fail_under} -> PASS")
+            else:
+                typer.echo(f"  Threshold: {fail_under} -> FAIL")
+
+        typer.echo()
+
+    # Save to file
+    if output:
+        file_data = {"status": status, **data}
+        Path(output).write_text(json.dumps(file_data, indent=2))
+        if not state["json"]:
+            typer.echo(f"  Results saved to: {output}")
+            typer.echo()
+
+    sys.exit(exit_code)
+
+
+# =============================================================================
 # Plugins Command
 # =============================================================================
 
