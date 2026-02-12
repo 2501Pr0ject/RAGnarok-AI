@@ -16,6 +16,7 @@ from ragnarok_ai.core.exceptions import EvaluationError
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
+    from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
 
 
 class ClaimVerification(BaseModel):
@@ -102,13 +103,22 @@ class FaithfulnessEvaluator:
         ...     print(f"Faithfulness: {score:.2f}")
     """
 
-    def __init__(self, llm: LLMProtocol) -> None:
+    def __init__(self, llm: LLMProtocol, medical_mode: bool = False) -> None:
         """Initialize FaithfulnessEvaluator.
 
         Args:
             llm: The LLM provider implementing LLMProtocol.
+            medical_mode: If True, normalize medical abbreviations before evaluation.
+                         Reduces false positives from abbreviation ambiguity.
         """
         self.llm = llm
+        self.medical_mode = medical_mode
+        self._normalizer: MedicalAbbreviationNormalizer | None = None
+
+        if medical_mode:
+            from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
+
+            self._normalizer = MedicalAbbreviationNormalizer()
 
     async def evaluate(
         self,
@@ -149,6 +159,11 @@ class FaithfulnessEvaluator:
         Raises:
             EvaluationError: If evaluation fails.
         """
+        # Normalize medical abbreviations if medical_mode is enabled
+        if self.medical_mode and self._normalizer:
+            context, _ = self._normalizer.normalize_text(context)
+            response, _ = self._normalizer.normalize_text(response)
+
         # Handle empty response
         if not response.strip():
             return FaithfulnessResult(
