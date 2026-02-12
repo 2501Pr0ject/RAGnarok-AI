@@ -291,6 +291,7 @@ class LLMJudge:
     Attributes:
         llm: The LLM provider for judge evaluations.
         model: Model name being used.
+        medical_mode: If True, normalizes medical abbreviations before evaluation.
 
     Example:
         >>> from ragnarok_ai.evaluators import LLMJudge
@@ -302,6 +303,15 @@ class LLMJudge:
         ... )
         >>> print(result.verdict)
         'PASS'
+
+        Medical mode example:
+        >>> judge = LLMJudge(medical_mode=True)
+        >>> result = await judge.evaluate_faithfulness(
+        ...     context="Patient has CHF",
+        ...     question="What condition does the patient have?",
+        ...     answer="Patient has congestive heart failure"
+        ... )
+        >>> # CHF and "congestive heart failure" normalized to same form
 
     Installation:
         Install Prometheus 2 (Q5_K_M quantized, ~4.8GB) via Ollama:
@@ -324,6 +334,7 @@ class LLMJudge:
         base_url: str = "http://localhost:11434",
         timeout: float = 300.0,
         llm: LLMProtocol | None = None,
+        medical_mode: bool = False,
     ) -> None:
         """Initialize LLMJudge.
 
@@ -332,6 +343,8 @@ class LLMJudge:
             base_url: Ollama API base URL.
             timeout: Request timeout in seconds. Default 300s for thorough evaluations.
             llm: Optional pre-configured LLM instance. If provided, model/base_url are ignored.
+            medical_mode: If True, normalize medical abbreviations before evaluation.
+                         Reduces false positives from abbreviation ambiguity in medical contexts.
         """
         if llm is not None:
             self.llm = llm
@@ -361,6 +374,14 @@ class LLMJudge:
                 timeout=timeout,
             )
             self.model = selected_model
+
+        # Initialize medical abbreviation normalizer if medical_mode is enabled
+        self.medical_mode = medical_mode
+        self._normalizer: Any = None
+        if medical_mode:
+            from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
+
+            self._normalizer = MedicalAbbreviationNormalizer()
 
     def _get_available_models(self, base_url: str) -> list[str]:
         """Get list of available Ollama models.
@@ -422,6 +443,11 @@ class LLMJudge:
         Returns:
             JudgeResult with faithfulness assessment.
         """
+        # Normalize medical abbreviations if medical_mode is enabled
+        if self.medical_mode and self._normalizer:
+            context, _ = self._normalizer.normalize_text(context)
+            answer, _ = self._normalizer.normalize_text(answer)
+
         prompt = FAITHFULNESS_PROMPT.format(
             context=context,
             question=question,
@@ -465,6 +491,11 @@ class LLMJudge:
         Returns:
             JudgeResult with hallucination detection results.
         """
+        # Normalize medical abbreviations if medical_mode is enabled
+        if self.medical_mode and self._normalizer:
+            context, _ = self._normalizer.normalize_text(context)
+            answer, _ = self._normalizer.normalize_text(answer)
+
         prompt = HALLUCINATION_PROMPT.format(
             context=context,
             answer=answer,
@@ -488,6 +519,11 @@ class LLMJudge:
         Returns:
             JudgeResult with completeness assessment.
         """
+        # Normalize medical abbreviations if medical_mode is enabled
+        if self.medical_mode and self._normalizer:
+            context, _ = self._normalizer.normalize_text(context)
+            answer, _ = self._normalizer.normalize_text(answer)
+
         prompt = COMPLETENESS_PROMPT.format(
             context=context,
             question=question,
