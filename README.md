@@ -215,13 +215,15 @@ pre-commit install
 
 ```yaml
 # .github/workflows/rag-tests.yml
-- name: Evaluate RAG Quality
-  run: |
-    ragnarok evaluate \
-      --config ragnarok.yaml \
-      --fail-under 0.8 \
-      --output results.json
+- uses: 2501Pr0ject/ragnarok-evaluate-action@v1
+  with:
+    config: ragnarok.yaml
+    threshold: 0.8
+    # fail-on-threshold: false (default - advisory only)
+    # comment-on-pr: true (default - posts PR comment)
 ```
+
+The action posts a PR comment distinguishing **deterministic** retrieval metrics from **advisory** LLM-as-Judge scores.
 
 ### Compare Embedding Models
 
@@ -583,7 +585,7 @@ display_comparison([
 <details>
 <summary><strong>Developer Experience</strong></summary>
 
-- [ ] GitHub Action (`uses: ragnarok-ai/evaluate@v1`)
+- [x] GitHub Action ([`2501Pr0ject/ragnarok-evaluate-action`](https://github.com/2501Pr0ject/ragnarok-evaluate-action))
 - [ ] VS Code extension
 - [ ] Interactive CLI (TUI)
 - [ ] Rust acceleration for hot paths
