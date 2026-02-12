@@ -50,7 +50,7 @@ class TestEvaluateCommand:
 
         assert result.exit_code == 2  # Bad input
         # Error message goes to stderr, combined output in result.output
-        assert "Either --demo or --testset is required" in result.output
+        assert "Either --demo" in result.output and "is required" in result.output
 
     def test_evaluate_help(self) -> None:
         """Evaluate --help shows usage."""
@@ -93,6 +93,61 @@ class TestEvaluateCommand:
 
         assert result.exit_code == 1
         assert "FAIL" in result.stdout
+
+
+class TestConfigFile:
+    """Tests for --config support."""
+
+    def test_config_file_not_found(self) -> None:
+        """Test error when config file not found."""
+        result = runner.invoke(app, ["evaluate", "--config", "/nonexistent/ragnarok.yaml"])
+
+        assert result.exit_code == 2
+        assert "Config file not found" in result.output
+
+    def test_config_file_invalid_yaml(self, tmp_path) -> None:
+        """Test error when config file has invalid YAML."""
+        config_file = tmp_path / "ragnarok.yaml"
+        config_file.write_text("invalid: yaml: content: [")
+
+        result = runner.invoke(app, ["evaluate", "--config", str(config_file)])
+
+        assert result.exit_code == 2
+        assert "Invalid YAML" in result.output
+
+    def test_config_file_with_demo_override(self, tmp_path) -> None:
+        """Test that --demo overrides config testset."""
+        config_file = tmp_path / "ragnarok.yaml"
+        config_file.write_text("testset: some_testset.json\nfail_under: 0.3\n")
+
+        result = runner.invoke(app, ["evaluate", "--config", str(config_file), "--demo", "--limit", "2"])
+
+        assert result.exit_code == 0
+        assert "RAGnarok-AI Demo Evaluation" in result.output
+
+    def test_config_cli_overrides_config_file(self, tmp_path) -> None:
+        """Test that CLI options override config file values."""
+        config_file = tmp_path / "ragnarok.yaml"
+        config_file.write_text("fail_under: 0.99\n")
+
+        # Config has fail_under=0.99 which would fail, but CLI overrides to 0.3
+        result = runner.invoke(
+            app, ["evaluate", "--config", str(config_file), "--demo", "--limit", "2", "--fail-under", "0.3"]
+        )
+
+        assert result.exit_code == 0
+        assert "PASS" in result.output
+
+    def test_config_json_output_on_error(self) -> None:
+        """Test JSON output when config file not found."""
+        import json as json_module
+
+        result = runner.invoke(app, ["--json", "evaluate", "--config", "/nonexistent/ragnarok.yaml"])
+
+        assert result.exit_code == 2
+        data = json_module.loads(result.output)
+        assert data["status"] == "error"
+        assert any("Config file not found" in e for e in data["errors"])
 
 
 class TestGenerateCommand:

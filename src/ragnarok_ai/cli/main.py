@@ -9,6 +9,7 @@ import asyncio
 import json
 import random
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
 
@@ -69,6 +70,64 @@ def json_response(
             "errors": errors or [],
         },
         indent=2,
+    )
+
+
+@dataclass
+class EvaluateConfig:
+    """Configuration for evaluate command loaded from ragnarok.yaml."""
+
+    testset: str | None = None
+    output: str | None = None
+    fail_under: float | None = None
+    metrics: list[str] = field(
+        default_factory=lambda: ["precision", "recall", "mrr", "ndcg"]
+    )
+    criteria: list[str] = field(
+        default_factory=lambda: ["faithfulness", "relevance", "hallucination", "completeness"]
+    )
+    ollama_url: str = "http://localhost:11434"
+
+
+def load_config(config_path: str) -> EvaluateConfig:
+    """Load configuration from YAML file.
+
+    Args:
+        config_path: Path to ragnarok.yaml config file.
+
+    Returns:
+        EvaluateConfig with values from file.
+
+    Raises:
+        typer.Exit: If file not found or invalid YAML.
+    """
+    import yaml
+
+    path = Path(config_path)
+    if not path.exists():
+        if state["json"]:
+            typer.echo(json_response("evaluate", "error", errors=[f"Config file not found: {config_path}"]))
+        else:
+            typer.echo(f"Error: Config file not found: {config_path}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
+
+    try:
+        with path.open() as f:
+            data = yaml.safe_load(f) or {}
+    except yaml.YAMLError as e:
+        if state["json"]:
+            typer.echo(json_response("evaluate", "error", errors=[f"Invalid YAML: {e}"]))
+        else:
+            typer.echo(f"Error: Invalid YAML in {config_path}: {e}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    return EvaluateConfig(
+        testset=data.get("testset"),
+        output=data.get("output"),
+        fail_under=data.get("fail_under"),
+        metrics=data.get("metrics", ["precision", "recall", "mrr", "ndcg"]),
+        criteria=data.get("criteria", ["faithfulness", "relevance", "hallucination", "completeness"]),
+        ollama_url=data.get("ollama_url", "http://localhost:11434"),
     )
 
 
@@ -139,6 +198,14 @@ def version() -> None:
 
 @app.command()
 def evaluate(
+    config: Annotated[
+        str | None,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to ragnarok.yaml config file.",
+        ),
+    ] = None,
     demo: Annotated[
         bool,
         typer.Option(
@@ -189,21 +256,30 @@ def evaluate(
 
     Examples:
         ragnarok evaluate --demo
+        ragnarok evaluate --config ragnarok.yaml
         ragnarok evaluate --demo --limit 5
         ragnarok evaluate --demo --output results.json
         ragnarok evaluate --demo --fail-under 0.7
-        ragnarok evaluate --demo --json
+        ragnarok evaluate --config ragnarok.yaml --fail-under 0.9
     """
-    if not demo and not testset:
+    # Load config file if provided
+    cfg = load_config(config) if config else EvaluateConfig()
+
+    # CLI options override config file (explicit > config > default)
+    effective_testset = testset if testset is not None else cfg.testset
+    effective_output = output if output is not None else cfg.output
+    effective_fail_under = fail_under if fail_under is not None else cfg.fail_under
+
+    if not demo and not effective_testset:
         if state["json"]:
-            typer.echo(json_response("evaluate", "error", errors=["Either --demo or --testset is required."]))
+            typer.echo(json_response("evaluate", "error", errors=["Either --demo, --testset, or --config with testset is required."]))
         else:
-            typer.echo("Error: Either --demo or --testset is required.", err=True)
+            typer.echo("Error: Either --demo, --testset, or --config with testset is required.", err=True)
             typer.echo("Run 'ragnarok evaluate --help' for usage.", err=True)
         raise typer.Exit(EXIT_BAD_INPUT)
 
     if demo:
-        _run_demo_evaluation(output=output, fail_under=fail_under, limit=limit, seed=seed)
+        _run_demo_evaluation(output=effective_output, fail_under=effective_fail_under, limit=limit, seed=seed)
     else:
         if state["json"]:
             typer.echo(
@@ -214,7 +290,7 @@ def evaluate(
                 )
             )
         else:
-            typer.echo(f"Evaluating with testset: {testset}")
+            typer.echo(f"Evaluating with testset: {effective_testset}")
             typer.echo("Custom testset evaluation coming in next release.")
             typer.echo("For now, use --demo to see the evaluation flow.")
         raise typer.Exit(1)

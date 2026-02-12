@@ -181,7 +181,7 @@ class TestCLIErrorHandling:
         result = runner.invoke(app, ["evaluate"])
 
         assert result.exit_code == 2  # Bad input
-        assert "Either --demo or --testset is required" in result.output
+        assert "Either --demo" in result.output and "is required" in result.output
 
     def test_json_output_on_error(self) -> None:
         """Test that --json produces valid JSON even on error."""
