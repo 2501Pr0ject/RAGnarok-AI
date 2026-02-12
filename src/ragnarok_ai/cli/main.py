@@ -80,12 +80,8 @@ class EvaluateConfig:
     testset: str | None = None
     output: str | None = None
     fail_under: float | None = None
-    metrics: list[str] = field(
-        default_factory=lambda: ["precision", "recall", "mrr", "ndcg"]
-    )
-    criteria: list[str] = field(
-        default_factory=lambda: ["faithfulness", "relevance", "hallucination", "completeness"]
-    )
+    metrics: list[str] = field(default_factory=lambda: ["precision", "recall", "mrr", "ndcg"])
+    criteria: list[str] = field(default_factory=lambda: ["faithfulness", "relevance", "hallucination", "completeness"])
     ollama_url: str = "http://localhost:11434"
 
 
@@ -272,7 +268,11 @@ def evaluate(
 
     if not demo and not effective_testset:
         if state["json"]:
-            typer.echo(json_response("evaluate", "error", errors=["Either --demo, --testset, or --config with testset is required."]))
+            typer.echo(
+                json_response(
+                    "evaluate", "error", errors=["Either --demo, --testset, or --config with testset is required."]
+                )
+            )
         else:
             typer.echo("Error: Either --demo, --testset, or --config with testset is required.", err=True)
             typer.echo("Run 'ragnarok evaluate --help' for usage.", err=True)
