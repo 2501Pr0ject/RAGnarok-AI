@@ -298,6 +298,36 @@ print(f"Hallucination: {result.hallucination.verdict}")
 ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ```
 
+### Medical Mode
+
+Reduce false positives in healthcare RAG evaluation with automatic medical abbreviation normalization.
+
+```python
+from ragnarok_ai import LLMJudge
+
+# Enable medical mode
+judge = LLMJudge(medical_mode=True)
+
+# "CHF" and "congestive heart failure" are now treated as equivalent
+result = await judge.evaluate_faithfulness(
+    context="Patient diagnosed with CHF.",
+    question="What condition does the patient have?",
+    answer="Patient has congestive heart failure.",
+)
+# Without medical_mode: may flag as unfaithful (text mismatch)
+# With medical_mode: correctly identifies as faithful
+```
+
+**Features:**
+- 350+ medical abbreviations (CHF, MI, COPD, DVT...)
+- Context-aware disambiguation (MS = multiple sclerosis vs mitral stenosis)
+- Multiple formats: dotted (q.d.), slash (s/p), mixed-case (SpO2)
+- False positive filtering (OR, US, IT stay unchanged)
+
+Also works with `FaithfulnessEvaluator(llm, medical_mode=True)`.
+
+> Contributed by [@harish1120](https://github.com/harish1120)
+
 ### System Metrics
 - **Latency** — End-to-end response time
 - **Token usage** — Cost tracking for LLM calls
@@ -520,13 +550,25 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.4.0 — Medical Mode</strong></summary>
+
+- [x] Medical abbreviation normalizer (`medical_mode=True`)
+- [x] 350+ abbreviations (CHF, MI, COPD, DVT...)
+- [x] Context-aware disambiguation
+- [x] Integration with `LLMJudge` and `FaithfulnessEvaluator`
+- [x] Contributed by [@harish1120](https://github.com/harish1120)
+
+</details>
+
 ### Planned
 
-#### v1.4+ — Post-launch
+#### v1.5+ — Post-launch
 - [ ] Comprehensive documentation site
 - [ ] Performance benchmarks published
 - [ ] Production monitoring mode
 - [x] `ragnarok judge` CLI command
+- [x] `--config ragnarok.yaml` support
 
 ### Future
 
