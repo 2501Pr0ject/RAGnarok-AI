@@ -29,12 +29,20 @@ from ragnarok_ai.adapters.frameworks import (
     LlamaIndexQueryEngineAdapter,
     LlamaIndexRetrieverAdapter,
 )
-from ragnarok_ai.adapters.llm import AnthropicLLM, OllamaLLM, OpenAILLM, VLLMAdapter
+from ragnarok_ai.adapters.llm import (
+    AnthropicLLM,
+    GroqLLM,
+    MistralLLM,
+    OllamaLLM,
+    OpenAILLM,
+    TogetherLLM,
+    VLLMAdapter,
+)
 from ragnarok_ai.adapters.vectorstore import ChromaVectorStore, FAISSVectorStore, QdrantVectorStore
 
 # LLM adapter classification
 LOCAL_LLM_ADAPTERS: tuple[type, ...] = (OllamaLLM, VLLMAdapter)
-CLOUD_LLM_ADAPTERS: tuple[type, ...] = (AnthropicLLM, OpenAILLM)
+CLOUD_LLM_ADAPTERS: tuple[type, ...] = (AnthropicLLM, GroqLLM, MistralLLM, OpenAILLM, TogetherLLM)
 
 # VectorStore adapter classification
 LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (ChromaVectorStore, FAISSVectorStore, QdrantVectorStore)
@@ -52,6 +60,7 @@ __all__ = [
     "DSPyRAGAdapter",
     "DSPyRetrieverAdapter",
     "FAISSVectorStore",
+    "GroqLLM",
     "LangChainAdapter",
     "LangChainRetrieverAdapter",
     "LangGraphAdapter",
@@ -59,10 +68,12 @@ __all__ = [
     "LlamaIndexAdapter",
     "LlamaIndexQueryEngineAdapter",
     "LlamaIndexRetrieverAdapter",
+    "MistralLLM",
     "OllamaLLM",
     "OpenAILLM",
     "QdrantVectorStore",
     "ReActAdapter",
     "ReActParser",
+    "TogetherLLM",
     "VLLMAdapter",
 ]
