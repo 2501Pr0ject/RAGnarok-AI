@@ -12,7 +12,6 @@ import respx
 from ragnarok_ai.adapters.llm.together import TogetherLLM
 from ragnarok_ai.core.exceptions import LLMConnectionError
 
-
 # ============================================================================
 # Initialization Tests
 # ============================================================================

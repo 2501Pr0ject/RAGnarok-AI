@@ -12,7 +12,6 @@ import respx
 from ragnarok_ai.adapters.llm.groq import GroqLLM
 from ragnarok_ai.core.exceptions import LLMConnectionError
 
-
 # ============================================================================
 # Initialization Tests
 # ============================================================================
