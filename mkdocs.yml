@@ -1,0 +1,101 @@
+site_name: RAGnarok-AI
+site_url: https://2501pr0ject.github.io/RAGnarok-AI/
+site_description: Local-first RAG evaluation framework for LLM applications
+site_author: Abdelatif Touati
+repo_url: https://github.com/2501Pr0ject/RAGnarok-AI
+repo_name: 2501Pr0ject/RAGnarok-AI
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2024-2026 Abdelatif Touati - AGPL-3.0
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  font:
+    text: JetBrains Mono
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.mark
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/2501Pr0ject/RAGnarok-AI
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/ragnarok-ai/
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+  - User Guide:
+    - Evaluation: user-guide/evaluation.md
+    - LLM-as-Judge: user-guide/judge.md
+    - Benchmarking: user-guide/benchmarking.md
+  - CI/CD:
+    - GitHub Action: ci-cd/github-action.md
+    - CLI Reference: ci-cd/cli-reference.md
+  - API Reference:
+    - Core Types: api/types.md
+    - Evaluators: api/evaluators.md
+    - Adapters: api/adapters.md

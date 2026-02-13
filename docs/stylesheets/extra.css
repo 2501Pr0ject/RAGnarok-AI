@@ -1,0 +1,71 @@
+/* RAGnarok-AI Documentation Styles */
+
+/* Terminal-like code blocks */
+.md-typeset code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Custom admonition colors */
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  border-color: #7c4dff;
+}
+
+.md-typeset .admonition.note > .admonition-title,
+.md-typeset details.note > summary {
+  background-color: rgba(124, 77, 255, 0.1);
+}
+
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #00e676;
+}
+
+.md-typeset .admonition.tip > .admonition-title,
+.md-typeset details.tip > summary {
+  background-color: rgba(0, 230, 118, 0.1);
+}
+
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: #ffc107;
+}
+
+.md-typeset .admonition.warning > .admonition-title,
+.md-typeset details.warning > summary {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Table styling */
+.md-typeset table:not([class]) {
+  font-size: 0.9rem;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+}
+
+/* Hero section styling */
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+/* Code copy button */
+.md-clipboard {
+  color: var(--md-default-fg-color--light);
+}
+
+.md-clipboard:hover {
+  color: var(--md-accent-fg-color);
+}
+
+/* Navigation improvements */
+.md-nav__link {
+  font-size: 0.85rem;
+}
+
+/* Footer */
+.md-footer {
+  background-color: var(--md-default-bg-color);
+}

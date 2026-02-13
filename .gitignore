@@ -101,7 +101,15 @@ Thumbs.db
 # ============================================================================
 # Project Specific
 # ============================================================================
-docs/
+# Internal docs (keep MkDocs docs/)
+docs/*.drawio
+docs/*-health-check.txt
+docs/ragnarok_health_report.txt
+docs/SESSION_NOTES.md
+docs/architecture-v0.9.md
+
+# MkDocs build output
+site/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/

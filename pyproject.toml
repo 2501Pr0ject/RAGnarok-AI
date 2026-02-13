@@ -50,6 +50,11 @@ dev = [
     "pip-audit>=2.7",
     "types-pyyaml>=6.0",
 ]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocs-minify-plugin>=0.8",
+]
 ollama = [
     "httpx>=0.27",
 ]
@@ -103,7 +108,7 @@ ragnarok = "ragnarok_ai.cli.main:app"
 [project.urls]
 Homepage = "https://github.com/2501Pr0ject/RAGnarok-AI"
 Repository = "https://github.com/2501Pr0ject/RAGnarok-AI"
-Documentation = "https://github.com/2501Pr0ject/RAGnarok-AI#readme"
+Documentation = "https://2501pr0ject.github.io/RAGnarok-AI/"
 Issues = "https://github.com/2501Pr0ject/RAGnarok-AI/issues"
 
 [build-system]
