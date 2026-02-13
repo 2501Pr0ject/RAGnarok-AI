@@ -38,15 +38,29 @@ from ragnarok_ai.adapters.llm import (
     TogetherLLM,
     VLLMAdapter,
 )
-from ragnarok_ai.adapters.vectorstore import ChromaVectorStore, FAISSVectorStore, QdrantVectorStore
+from ragnarok_ai.adapters.vectorstore import (
+    ChromaVectorStore,
+    FAISSVectorStore,
+    MilvusVectorStore,
+    PgvectorVectorStore,
+    PineconeVectorStore,
+    QdrantVectorStore,
+    WeaviateVectorStore,
+)
 
 # LLM adapter classification
 LOCAL_LLM_ADAPTERS: tuple[type, ...] = (OllamaLLM, VLLMAdapter)
 CLOUD_LLM_ADAPTERS: tuple[type, ...] = (AnthropicLLM, GroqLLM, MistralLLM, OpenAILLM, TogetherLLM)
 
 # VectorStore adapter classification
-LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (ChromaVectorStore, FAISSVectorStore, QdrantVectorStore)
-CLOUD_VECTORSTORE_ADAPTERS: tuple[type, ...] = ()  # Pinecone, Weaviate coming later
+LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (
+    ChromaVectorStore,
+    FAISSVectorStore,
+    MilvusVectorStore,
+    PgvectorVectorStore,
+    QdrantVectorStore,
+)
+CLOUD_VECTORSTORE_ADAPTERS: tuple[type, ...] = (PineconeVectorStore, WeaviateVectorStore)
 
 __all__ = [
     "CLOUD_LLM_ADAPTERS",
@@ -68,12 +82,16 @@ __all__ = [
     "LlamaIndexAdapter",
     "LlamaIndexQueryEngineAdapter",
     "LlamaIndexRetrieverAdapter",
+    "MilvusVectorStore",
     "MistralLLM",
     "OllamaLLM",
     "OpenAILLM",
+    "PgvectorVectorStore",
+    "PineconeVectorStore",
     "QdrantVectorStore",
     "ReActAdapter",
     "ReActParser",
     "TogetherLLM",
     "VLLMAdapter",
+    "WeaviateVectorStore",
 ]

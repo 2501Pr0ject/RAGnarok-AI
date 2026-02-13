@@ -85,6 +85,19 @@ chroma = [
 faiss = [
     "faiss-cpu>=1.7",
 ]
+pinecone = [
+    "pinecone-client>=3.0",
+]
+weaviate = [
+    "weaviate-client>=4.0",
+]
+milvus = [
+    "pymilvus>=2.3",
+]
+pgvector = [
+    "asyncpg>=0.29",
+    "pgvector>=0.2",
+]
 langchain = [
     "langchain>=0.1",
     "langchain-community>=0.0.10",
@@ -108,7 +121,7 @@ telemetry = [
     "opentelemetry-exporter-otlp-proto-http>=1.20",
 ]
 all = [
-    "ragnarok-ai[ollama,openai,anthropic,vllm,groq,mistral,together,qdrant,chroma,faiss,langchain,langgraph,llamaindex,dspy,cli,telemetry]",
+    "ragnarok-ai[ollama,openai,anthropic,vllm,groq,mistral,together,qdrant,chroma,faiss,pinecone,weaviate,milvus,pgvector,langchain,langgraph,llamaindex,dspy,cli,telemetry]",
 ]
 
 [project.scripts]
@@ -206,6 +219,22 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["faiss", "faiss.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pinecone", "pinecone.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["weaviate", "weaviate.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pymilvus", "pymilvus.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["asyncpg", "asyncpg.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

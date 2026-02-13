@@ -242,6 +242,103 @@ pip install ragnarok-ai[faiss]
 
 ---
 
+### PineconeVectorStore
+
+Pinecone cloud vector database.
+
+```python
+from ragnarok_ai.adapters.vectorstore import PineconeVectorStore
+
+async with PineconeVectorStore(
+    api_key: str | None = None,  # Uses PINECONE_API_KEY env var
+    index_name: str = "my-index",
+    namespace: str = "",
+) as store:
+    await store.add(documents)
+    results = await store.search(query_embedding, k=10)
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[pinecone]
+```
+
+---
+
+### WeaviateVectorStore
+
+Weaviate vector database (cloud or self-hosted).
+
+```python
+from ragnarok_ai.adapters.vectorstore import WeaviateVectorStore
+
+async with WeaviateVectorStore(
+    url: str = "http://localhost:8080",
+    api_key: str | None = None,  # Uses WEAVIATE_API_KEY env var
+    collection_name: str = "RagnarokDocuments",
+) as store:
+    await store.add(documents)
+    results = await store.search(query_embedding, k=10)
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[weaviate]
+```
+
+---
+
+### MilvusVectorStore
+
+Milvus vector database (self-hosted).
+
+```python
+from ragnarok_ai.adapters.vectorstore import MilvusVectorStore
+
+async with MilvusVectorStore(
+    host: str = "localhost",
+    port: int = 19530,
+    collection_name: str = "ragnarok_documents",
+    vector_size: int = 768,
+) as store:
+    await store.add(documents)
+    results = await store.search(query_embedding, k=10)
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[milvus]
+```
+
+---
+
+### PgvectorVectorStore
+
+PostgreSQL with pgvector extension.
+
+```python
+from ragnarok_ai.adapters.vectorstore import PgvectorVectorStore
+
+async with PgvectorVectorStore(
+    connection_string: str | None = None,  # Uses DATABASE_URL env var
+    table_name: str = "ragnarok_documents",
+    vector_size: int = 768,
+) as store:
+    await store.add(documents)
+    results = await store.search(query_embedding, k=10)
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[pgvector]
+```
+
+---
+
 ## Framework Adapters
 
 ### LangChainAdapter
@@ -349,6 +446,10 @@ All adapters are classified as local or cloud:
 | QdrantVectorStore | Local | Self-hosted |
 | ChromaVectorStore | Local | Local or persistent |
 | FAISSVectorStore | Local | Pure local, no server |
+| PineconeVectorStore | Cloud | Managed cloud service |
+| WeaviateVectorStore | Cloud | Cloud or self-hosted |
+| MilvusVectorStore | Local | Self-hosted |
+| PgvectorVectorStore | Local | PostgreSQL extension |
 
 List adapters by type:
 
