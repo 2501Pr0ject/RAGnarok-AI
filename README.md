@@ -624,10 +624,10 @@ display_comparison([
 - [x] Groq adapter
 - [x] Mistral API adapter
 - [x] Together AI adapter
-- [ ] pgvector adapter
-- [ ] Weaviate adapter
-- [ ] Pinecone adapter
-- [ ] Milvus adapter
+- [x] pgvector adapter
+- [x] Weaviate adapter
+- [x] Pinecone adapter
+- [x] Milvus adapter
 
 </details>
 
@@ -774,9 +774,9 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 **Priority areas for contributions:**
 - Framework adapters (Haystack, Semantic Kernel)
-- Vector store adapters (pgvector, Weaviate, Pinecone)
-- LLM adapters (Groq, Mistral API, Together AI)
 - Agent evaluation features
+- Streaming evaluation support
+- Multi-modal evaluation
 - Documentation & examples
 
 ---
