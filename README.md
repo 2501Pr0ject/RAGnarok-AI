@@ -128,6 +128,30 @@ results.export("report.html")
 
 ---
 
+## Performance
+
+Benchmarked on Apple M2 16GB, Python 3.10:
+
+**Retrieval Metrics:** ~24,000 queries/sec
+| Queries | Time   | Peak RAM |
+|---------|--------|----------|
+| 50      | 0.002s | 0.02 MB  |
+| 500     | 0.021s | 0.03 MB  |
+| 5000    | 0.217s | 0.17 MB  |
+
+**LLM-as-Judge (Prometheus 2):**
+| Criterion | Avg Time |
+|-----------|----------|
+| Faithfulness | ~25s |
+| Relevance | ~22s |
+| Hallucination | ~28s |
+
+*Retrieval is pure computation — instant. LLM-as-Judge is the bottleneck (~25s/eval), but runs 100% local.*
+
+[Full benchmarks →](benchmarks/README.md)
+
+---
+
 ## Quick Start
 
 **Try it now:** [Open in Google Colab](https://colab.research.google.com/drive/1BC90iuDMwYi4u9I59jfcjNYiBd2MNvTA?usp=sharing)
