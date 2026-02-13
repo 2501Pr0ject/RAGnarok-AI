@@ -314,7 +314,7 @@ class MilvusVectorStore:
         try:
             collection = await self._ensure_connection()
 
-            return collection.num_entities
+            return int(collection.num_entities)
 
         except Exception as e:
             if isinstance(e, VectorStoreConnectionError):

@@ -280,9 +280,7 @@ class WeaviateVectorStore:
             collection = client.collections.get(self.collection_name)
 
             for doc_id in document_ids:
-                collection.data.delete_many(
-                    where=Filter.by_property("doc_id").equal(doc_id)
-                )
+                collection.data.delete_many(where=Filter.by_property("doc_id").equal(doc_id))
 
         except Exception as e:
             if isinstance(e, VectorStoreConnectionError):
@@ -324,6 +322,6 @@ class WeaviateVectorStore:
         """
         try:
             client = await self._ensure_client()
-            return client.is_ready()
+            return bool(client.is_ready())
         except Exception:
             return False

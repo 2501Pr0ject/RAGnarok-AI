@@ -209,11 +209,13 @@ class PineconeVectorStore:
                     "content": doc.content,
                     **{k: v for k, v in doc.metadata.items() if k != "embedding"},
                 }
-                vectors.append({
-                    "id": doc.id,
-                    "values": embedding,
-                    "metadata": metadata,
-                })
+                vectors.append(
+                    {
+                        "id": doc.id,
+                        "values": embedding,
+                        "metadata": metadata,
+                    }
+                )
 
             # Upsert in batches of 100 (Pinecone recommendation)
             batch_size = 100

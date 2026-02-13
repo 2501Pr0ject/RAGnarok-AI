@@ -147,8 +147,8 @@ class TestAdapterClassification:
     def test_all_local_vectorstore_adapters_have_is_local_true(self) -> None:
         """All LOCAL_VECTORSTORE_ADAPTERS should have is_local=True."""
         for adapter_cls in LOCAL_VECTORSTORE_ADAPTERS:
-            instance = adapter_cls()
-            assert instance.is_local is True, f"{adapter_cls.__name__} should be local"
+            # Check class attribute directly (some adapters require init params)
+            assert adapter_cls.is_local is True, f"{adapter_cls.__name__} should be local"
 
     def test_no_overlap_llm_adapters(self) -> None:
         """LOCAL and CLOUD LLM adapters should not overlap."""

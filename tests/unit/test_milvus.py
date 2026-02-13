@@ -72,11 +72,15 @@ class TestMilvusVectorStoreSearch:
 
         mock_collection = MagicMock()
         mock_hit1 = MagicMock()
-        mock_hit1.entity.get = lambda x, default=None: {"id": "doc1", "content": "Test content 1", "metadata": {}}.get(x, default)
+        mock_hit1.entity.get = lambda x, default=None: {"id": "doc1", "content": "Test content 1", "metadata": {}}.get(
+            x, default
+        )
         mock_hit1.distance = 0.1
 
         mock_hit2 = MagicMock()
-        mock_hit2.entity.get = lambda x, default=None: {"id": "doc2", "content": "Test content 2", "metadata": {}}.get(x, default)
+        mock_hit2.entity.get = lambda x, default=None: {"id": "doc2", "content": "Test content 2", "metadata": {}}.get(
+            x, default
+        )
         mock_hit2.distance = 0.2
 
         mock_collection.search.return_value = [[mock_hit1, mock_hit2]]
