@@ -617,10 +617,10 @@ display_comparison([
 </details>
 
 <details>
-<summary><strong>More Integrations</strong></summary>
+<summary><strong>More Integrations</strong> ✅</summary>
 
-- [ ] Haystack adapter
-- [ ] Semantic Kernel adapter
+- [x] Haystack adapter
+- [x] Semantic Kernel adapter
 - [x] Groq adapter
 - [x] Mistral API adapter
 - [x] Together AI adapter
