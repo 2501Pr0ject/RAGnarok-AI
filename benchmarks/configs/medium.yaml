@@ -1,0 +1,4 @@
+# Medium benchmark configuration (default)
+queries: 500
+llm_judge_samples: 3
+checkpointing_queries: 100

@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-02-13T09:14:12.090257+00:00",
+  "system": {
+    "cpu": "Apple M2",
+    "ram_gb": 16,
+    "python_version": "3.10.18",
+    "os": "Darwin 25.0.0",
+    "ragnarok_version": "1.3.1"
+  },
+  "evaluation": {
+    "queries_50": {
+      "queries": 50,
+      "time_s": 0.002,
+      "queries_per_sec": 24316.11,
+      "ram_peak_mb": 0.02,
+      "ram_avg_mb": 0.01
+    },
+    "queries_500": {
+      "queries": 500,
+      "time_s": 0.021,
+      "queries_per_sec": 24057.98,
+      "ram_peak_mb": 0.03,
+      "ram_avg_mb": 0.02
+    },
+    "queries_5000": {
+      "queries": 5000,
+      "time_s": 0.217,
+      "queries_per_sec": 23056.93,
+      "ram_peak_mb": 0.17,
+      "ram_avg_mb": 0.09
+    }
+  },
+  "llm_judge": [],
+  "checkpointing": {
+    "queries": 100,
+    "time_without_s": 0.001,
+    "time_with_s": 0.005,
+    "overhead_pct": 344.51
+  },
+  "errors": []
+}

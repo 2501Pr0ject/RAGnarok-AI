@@ -1,0 +1,4 @@
+# Small benchmark configuration (quick test)
+queries: 50
+llm_judge_samples: 1
+checkpointing_queries: 50

@@ -1,0 +1,4 @@
+# Large benchmark configuration (full test)
+queries: 5000
+llm_judge_samples: 5
+checkpointing_queries: 500
