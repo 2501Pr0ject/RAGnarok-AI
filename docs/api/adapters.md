@@ -103,6 +103,74 @@ pip install ragnarok-ai[vllm]
 
 ---
 
+### GroqLLM
+
+Fast inference for open-source models via Groq.
+
+```python
+from ragnarok_ai.adapters.llm import GroqLLM
+
+async with GroqLLM(
+    api_key: str | None = None,  # Uses GROQ_API_KEY env var
+    model: str = "llama-3.1-70b-versatile",
+) as llm:
+    response = await llm.generate("What is Python?")
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[groq]
+```
+
+---
+
+### MistralLLM
+
+Mistral AI models with embedding support.
+
+```python
+from ragnarok_ai.adapters.llm import MistralLLM
+
+async with MistralLLM(
+    api_key: str | None = None,  # Uses MISTRAL_API_KEY env var
+    model: str = "mistral-small-latest",
+) as llm:
+    response = await llm.generate("What is Python?")
+    embedding = await llm.embed("Hello world")
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[mistral]
+```
+
+---
+
+### TogetherLLM
+
+Open-source models via Together AI.
+
+```python
+from ragnarok_ai.adapters.llm import TogetherLLM
+
+async with TogetherLLM(
+    api_key: str | None = None,  # Uses TOGETHER_API_KEY env var
+    model: str = "meta-llama/Llama-3-70b-chat-hf",
+) as llm:
+    response = await llm.generate("What is Python?")
+    embedding = await llm.embed("Hello world")
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[together]
+```
+
+---
+
 ## Vector Store Adapters
 
 ### QdrantVectorStore
@@ -275,6 +343,9 @@ All adapters are classified as local or cloud:
 | vLLM | Local | High-performance local inference |
 | OpenAILLM | Cloud | Requires API key |
 | AnthropicLLM | Cloud | Requires API key |
+| GroqLLM | Cloud | Fast inference for open-source models |
+| MistralLLM | Cloud | Mistral AI models |
+| TogetherLLM | Cloud | Open-source models via Together AI |
 | QdrantVectorStore | Local | Self-hosted |
 | ChromaVectorStore | Local | Local or persistent |
 | FAISSVectorStore | Local | Pure local, no server |

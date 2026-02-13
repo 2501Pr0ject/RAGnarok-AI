@@ -621,9 +621,9 @@ display_comparison([
 
 - [ ] Haystack adapter
 - [ ] Semantic Kernel adapter
-- [ ] Groq adapter
-- [ ] Mistral API adapter
-- [ ] Together AI adapter
+- [x] Groq adapter
+- [x] Mistral API adapter
+- [x] Together AI adapter
 - [ ] pgvector adapter
 - [ ] Weaviate adapter
 - [ ] Pinecone adapter
