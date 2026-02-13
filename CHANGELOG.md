@@ -5,7 +5,115 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2025-02-08
+## [1.4.0] - 2026-02-13
+
+### Added
+- **More Integrations — 9 New Adapters**
+  - **LLM Adapters (Cloud)**
+    - `GroqLLM` — Fast inference via Groq API (OpenAI-compatible)
+    - `MistralLLM` — Mistral AI models with embedding support
+    - `TogetherLLM` — Open-source models via Together AI
+  - **VectorStore Adapters**
+    - `PineconeVectorStore` — Pinecone managed cloud vector database
+    - `WeaviateVectorStore` — Weaviate cloud or self-hosted
+    - `MilvusVectorStore` — Milvus self-hosted with HNSW indexing
+    - `PgvectorVectorStore` — PostgreSQL with pgvector extension
+  - **Framework Adapters**
+    - `HaystackAdapter` — Haystack 2.x pipeline wrapper
+    - `HaystackRetrieverAdapter` — Haystack retriever-only evaluation
+    - `SemanticKernelAdapter` — Microsoft Semantic Kernel function wrapper
+    - `SemanticKernelMemoryAdapter` — Semantic Kernel memory search evaluation
+- **Medical Mode** (contributed by [@harish1120](https://github.com/harish1120))
+  - `MedicalAbbreviationNormalizer` for reducing false positives in medical RAG evaluation
+  - 350+ medical abbreviations across specialties (CHF, MI, COPD, DVT, etc.)
+  - Context-aware disambiguation (same abbreviation, different meanings)
+  - Integration with `LLMJudge` and `FaithfulnessEvaluator` via `medical_mode=True`
+  - False positive filtering for explicit definitions
+- **CLI Enhancements**
+  - `ragnarok judge` command for standalone LLM-as-Judge evaluation
+    - `--question`, `--answer`, `--context` parameters
+    - `--criteria` selection (faithfulness, relevance, hallucination, completeness, all)
+    - `--model` for custom Ollama model selection
+    - `--json` output format support
+  - `--config ragnarok.yaml` support for `evaluate` command
+    - YAML-based configuration for reproducible evaluations
+    - Supports all evaluate parameters (model, metrics, thresholds, etc.)
+- **Performance Benchmarks**
+  - `benchmarks/` directory with systematic performance tests
+  - Retrieval metrics benchmarks (~24,000 queries/sec)
+  - LLM-as-Judge benchmarks with timing data
+  - Memory usage tracking
+- **MkDocs Documentation Site**
+  - Full documentation at `docs/`
+  - API reference for adapters, evaluators, and types
+  - Getting started guide
+  - CI/CD integration guide
+- **GitHub Action Reference**
+  - Documentation for [`2501Pr0ject/ragnarok-evaluate-action`](https://github.com/2501Pr0ject/ragnarok-evaluate-action)
+
+### Changed
+- Updated `pyproject.toml` with 9 new optional dependencies
+- Plugin registry now includes all new adapters
+- Adapter classification updated (LOCAL/CLOUD for all new adapters)
+
+## [1.3.1] - 2026-02-09
+
+### Added
+- **Jupyter Notebook Integration**
+  - `ragnarok_ai.notebook` module for rich notebook display
+  - `display_results()` — Rich HTML display for evaluation results
+  - `display_comparison()` — Side-by-side pipeline comparison
+  - `display_cost()` — Cost breakdown visualization
+  - Metrics visualization with color-coded progress bars
+  - Auto-detection of notebook environment (Jupyter, Colab, IPython)
+  - Dark terminal theme for consistent appearance
+- Google Colab quickstart link in README
+
+### Changed
+- Updated logo with dark background for better visibility
+
+## [1.3.0] - 2026-02-09
+
+### Added
+- **Cost Tracking Module**
+  - `ragnarok_ai.cost` module for token usage and cost tracking
+  - `CostTracker` class with context manager support
+  - `Pricing` class with rates for major providers:
+    - OpenAI (GPT-4, GPT-4 Turbo, GPT-3.5 Turbo)
+    - Anthropic (Claude 3 Opus, Sonnet, Haiku)
+    - Groq (Llama, Mixtral)
+    - Mistral (Small, Medium, Large)
+    - Together AI (various models)
+  - Token counting with tiktoken (fallback to character-based estimation)
+  - `track_cost=True` parameter in `evaluate()` function
+  - Formatted summary table output
+  - JSON export for cost reports
+  - Local providers (Ollama, vLLM) tracked as $0.00
+
+### Changed
+- LLM adapters now automatically track token usage when cost tracking is enabled
+
+## [1.2.5] - 2026-02-08
+
+### Added
+- **Plugin Architecture**
+  - Plugin system based on Python entry points (`ragnarok_ai.plugins` namespace)
+  - `PluginRegistry` singleton for adapter discovery and management
+  - Dynamic discovery of external plugins via `importlib.metadata`
+  - `ragnarok plugins` CLI command:
+    - `--list` — List all available plugins
+    - `--info <name>` — Show detailed plugin information
+    - `--local` / `--cloud` — Filter by adapter type
+    - `--namespace <ns>` — Filter by namespace (llm, vectorstore, framework, evaluator)
+  - Support for 4 plugin namespaces: `llm`, `vectorstore`, `framework`, `evaluator`
+  - LOCAL/CLOUD classification for all built-in adapters
+  - Plugin documentation (`docs/PLUGINS.md`)
+  - E2E plugin test with mock package
+
+### Changed
+- All adapters now have `is_local: ClassVar[bool]` attribute for classification
+
+## [1.2.0] - 2026-02-08
 
 ### Added
 - **LLM-as-Judge with Prometheus 2**
@@ -64,7 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `--dry-run`: Preview benchmark without running
   - `--output`: Save results to JSON file
   - Comparison table with baseline, deltas, and regression alerts
-- **E2E tests**: Full CLI workflow tests (generate → evaluate → benchmark)
+- **E2E tests**: Full CLI workflow tests (generate -> evaluate -> benchmark)
 - **Trusted Publishing**: PyPI OIDC-based publishing (no API tokens)
 - **Standardized JSON envelope**: All `--json` output now uses consistent format:
   - `command`: Command name (evaluate, generate, benchmark)
@@ -219,6 +327,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.4.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.1...v1.4.0
+[1.3.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.2.5...v1.3.0
+[1.2.5]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.2.0...v1.2.5
+[1.2.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.0.2...v1.1.0

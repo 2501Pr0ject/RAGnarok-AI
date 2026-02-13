@@ -43,11 +43,11 @@ Current evaluation tools are either:
 | **Manual testing** | Doesn't scale, not reproducible |
 
 **You need a tool that:**
-- ✅ Runs 100% locally (Ollama, local models)
-- ✅ Evaluates fast with checkpointing (no lost progress)
-- ✅ Integrates with your existing stack (LangChain, LangGraph)
-- ✅ Fits in CI/CD pipelines
-- ✅ Doesn't require a PhD to use
+- Runs 100% locally (Ollama, local models)
+- Evaluates fast with checkpointing (no lost progress)
+- Integrates with your existing stack (LangChain, LangGraph)
+- Fits in CI/CD pipelines
+- Doesn't require a PhD to use
 
 ---
 
@@ -84,16 +84,16 @@ results.summary()
 # ┌─────────────────┬───────┬────────┐
 # │ Metric          │ Score │ Status │
 # ├─────────────────┼───────┼────────┤
-# │ Retrieval P@10  │ 0.82  │ ✅      │
-# │ Faithfulness    │ 0.74  │ ⚠️      │
-# │ Relevance       │ 0.89  │ ✅      │
-# │ Hallucination   │ 0.12  │ ✅      │
+# │ Retrieval P@10  │ 0.82  │ PASS   │
+# │ Faithfulness    │ 0.74  │ WARN   │
+# │ Relevance       │ 0.89  │ PASS   │
+# │ Hallucination   │ 0.12  │ PASS   │
 # └─────────────────┴───────┴────────┘
 
 results.export("report.html")
 ```
 
-> **v1.3.1 is now available!** Includes Cost Tracking and Jupyter Integration. Install with `pip install ragnarok-ai`
+> **v1.4.0 is now available!** Includes 9 new adapters, Medical Mode, and CLI enhancements. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -118,13 +118,13 @@ results.export("report.html")
 
 | Feature | ragnarok-ai | Giskard | RAGAS |
 |---------|-------------|---------|-------|
-| 100% Local | ✅ | ⚠️ Partial | ❌ |
-| Checkpointing | ✅ | ❌ | ❌ |
-| Fast evaluation | ✅ | ❌ (45-60 min) | ✅ |
-| CLI support | ✅ | ❌ | ❌ |
-| LangChain integration | ✅ | ✅ | ✅ |
-| Minimal deps | ✅ | ❌ | ⚠️ |
-| Free & OSS | ✅ AGPL-3.0 | ⚠️ Open-core | ✅ Apache-2.0 |
+| 100% Local | Yes | Partial | No |
+| Checkpointing | Yes | No | No |
+| Fast evaluation | Yes | No (45-60 min) | Yes |
+| CLI support | Yes | No | No |
+| LangChain integration | Yes | Yes | Yes |
+| Minimal deps | Yes | No | Partial |
+| Free & OSS | AGPL-3.0 | Open-core | Apache-2.0 |
 
 ---
 
@@ -577,24 +577,22 @@ display_comparison([
 </details>
 
 <details>
-<summary><strong>v1.4.0 — Medical Mode</strong></summary>
+<summary><strong>v1.4.0 — More Integrations</strong></summary>
 
-- [x] Medical abbreviation normalizer (`medical_mode=True`)
-- [x] 350+ abbreviations (CHF, MI, COPD, DVT...)
-- [x] Context-aware disambiguation
-- [x] Integration with `LLMJudge` and `FaithfulnessEvaluator`
-- [x] Contributed by [@harish1120](https://github.com/harish1120)
+- [x] **LLM Adapters**: Groq, Mistral, Together AI
+- [x] **VectorStore Adapters**: Pinecone, Weaviate, Milvus, pgvector
+- [x] **Framework Adapters**: Haystack, Semantic Kernel
+- [x] **Medical Mode**: Abbreviation normalizer with 350+ terms (contributed by [@harish1120](https://github.com/harish1120))
+- [x] **CLI**: `ragnarok judge` command, `--config ragnarok.yaml` support
+- [x] **Docs**: MkDocs documentation site, performance benchmarks
 
 </details>
 
 ### Planned
 
-#### v1.5+ — Post-launch
-- [ ] Comprehensive documentation site
-- [ ] Performance benchmarks published
+#### v1.5+
 - [ ] Production monitoring mode
-- [x] `ragnarok judge` CLI command
-- [x] `--config ragnarok.yaml` support
+- [ ] Web UI dashboard
 
 ### Future
 
@@ -616,20 +614,6 @@ display_comparison([
 
 </details>
 
-<details>
-<summary><strong>More Integrations</strong> ✅</summary>
-
-- [x] Haystack adapter
-- [x] Semantic Kernel adapter
-- [x] Groq adapter
-- [x] Mistral API adapter
-- [x] Together AI adapter
-- [x] pgvector adapter
-- [x] Weaviate adapter
-- [x] Pinecone adapter
-- [x] Milvus adapter
-
-</details>
 
 <details>
 <summary><strong>Advanced Features</strong></summary>

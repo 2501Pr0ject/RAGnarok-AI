@@ -272,7 +272,7 @@ ragnarok judge --file items.json --json
 {
   "command": "judge",
   "status": "pass",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "data": {
     "items_evaluated": 1,
     "criteria": ["faithfulness", "relevance"],

@@ -32,6 +32,9 @@ pip install ragnarok-ai[ollama]      # Ollama (local)
 pip install ragnarok-ai[openai]      # OpenAI
 pip install ragnarok-ai[anthropic]   # Anthropic
 pip install ragnarok-ai[vllm]        # vLLM (local high-performance)
+pip install ragnarok-ai[groq]        # Groq
+pip install ragnarok-ai[mistral]     # Mistral AI
+pip install ragnarok-ai[together]    # Together AI
 ```
 
 ### Vector Stores
@@ -40,6 +43,10 @@ pip install ragnarok-ai[vllm]        # vLLM (local high-performance)
 pip install ragnarok-ai[qdrant]      # Qdrant
 pip install ragnarok-ai[chroma]      # ChromaDB
 pip install ragnarok-ai[faiss]       # FAISS (pure local)
+pip install ragnarok-ai[pinecone]    # Pinecone (cloud)
+pip install ragnarok-ai[weaviate]    # Weaviate
+pip install ragnarok-ai[milvus]      # Milvus
+pip install ragnarok-ai[pgvector]    # PostgreSQL pgvector
 ```
 
 ### RAG Frameworks
@@ -48,6 +55,8 @@ pip install ragnarok-ai[faiss]       # FAISS (pure local)
 pip install ragnarok-ai[langchain]   # LangChain/LangGraph
 pip install ragnarok-ai[llamaindex]  # LlamaIndex
 pip install ragnarok-ai[dspy]        # DSPy
+pip install ragnarok-ai[haystack]    # Haystack
+pip install ragnarok-ai[semantic-kernel]  # Semantic Kernel
 ```
 
 ### Observability
@@ -116,7 +125,7 @@ mypy src/                 # Type check
 
 ```bash
 ragnarok --version
-# ragnarok-ai v1.3.1
+# ragnarok-ai v1.4.0
 
 ragnarok evaluate --demo
 ```

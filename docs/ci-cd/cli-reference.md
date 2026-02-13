@@ -28,7 +28,7 @@ Show the current version.
 
 ```bash
 ragnarok version
-# ragnarok-ai v1.3.1
+# ragnarok-ai v1.4.0
 ```
 
 ---
@@ -248,7 +248,7 @@ Response envelope:
 {
   "command": "evaluate",
   "status": "pass",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "data": { ... },
   "warnings": [],
   "errors": []
