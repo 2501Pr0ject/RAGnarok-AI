@@ -54,9 +54,7 @@ class SystemInfo:
         # Get CPU info
         if platform.system() == "Darwin":
             try:
-                cpu = subprocess.check_output(
-                    ["sysctl", "-n", "machdep.cpu.brand_string"], text=True
-                ).strip()
+                cpu = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"], text=True).strip()
             except Exception:
                 cpu = platform.processor() or "Unknown"
         else:
@@ -435,7 +433,7 @@ def run_benchmarks(skip_llm: bool = False, output_path: Path | None = None) -> B
     print("\nEvaluation Performance:")
     print("| Queries | Time    | Queries/sec | Peak RAM |")
     print("|---------|---------|-------------|----------|")
-    for key, r in results.evaluation.items():
+    for _, r in results.evaluation.items():
         time_str = f"{r.time_s}s" if r.time_s < 60 else f"{r.time_s / 60:.1f}m"
         print(f"| {r.queries:<7} | {time_str:<7} | {r.queries_per_sec:<11} | {r.ram_peak_mb} MB |")
 
