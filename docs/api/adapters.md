@@ -430,6 +430,58 @@ pip install ragnarok-ai[dspy]
 
 ---
 
+### HaystackAdapter
+
+Wrap Haystack 2.x pipelines.
+
+```python
+from ragnarok_ai.adapters.frameworks import HaystackAdapter
+from haystack import Pipeline
+
+pipeline = Pipeline()
+pipeline.add_component("retriever", retriever)
+pipeline.add_component("generator", generator)
+pipeline.connect("retriever", "generator")
+
+adapter = HaystackAdapter(pipeline)
+response = await adapter.query("What is Python?")
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[haystack]
+```
+
+---
+
+### SemanticKernelAdapter
+
+Wrap Microsoft Semantic Kernel functions.
+
+```python
+from ragnarok_ai.adapters.frameworks import SemanticKernelAdapter
+from semantic_kernel import Kernel
+
+kernel = Kernel()
+kernel.add_plugin(rag_plugin, "rag")
+
+adapter = SemanticKernelAdapter(
+    kernel,
+    function_name="answer_question",
+    plugin_name="rag",
+)
+response = await adapter.query("What is Python?")
+```
+
+**Installation:**
+
+```bash
+pip install ragnarok-ai[semantic-kernel]
+```
+
+---
+
 ## Local vs Cloud
 
 All adapters are classified as local or cloud:
