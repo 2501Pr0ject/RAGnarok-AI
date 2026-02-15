@@ -14,7 +14,6 @@ from ragnarok_ai.core.compare import (
     ComparisonProgress,
     ComparisonResult,
     ConfigResult,
-    _compute_testset_hash,
     compare,
 )
 from ragnarok_ai.core.evaluate import EvaluationResult
@@ -130,11 +129,11 @@ def sample_comparison_result(
 
 
 class TestTestsetHash:
-    """Tests for testset hash computation."""
+    """Tests for testset hash computation (using TestSet.hash_short)."""
 
     def test_testset_hash_computed(self, sample_testset: TestSet) -> None:
-        """testset_hash is computed from testset content."""
-        hash_value = _compute_testset_hash(sample_testset)
+        """hash_short is computed from testset content."""
+        hash_value = sample_testset.hash_short
 
         assert hash_value
         assert len(hash_value) == 16
@@ -142,8 +141,8 @@ class TestTestsetHash:
 
     def test_testset_hash_deterministic(self, sample_testset: TestSet) -> None:
         """Same testset produces same hash."""
-        hash1 = _compute_testset_hash(sample_testset)
-        hash2 = _compute_testset_hash(sample_testset)
+        hash1 = sample_testset.hash_short
+        hash2 = sample_testset.hash_short
 
         assert hash1 == hash2
 
@@ -152,8 +151,8 @@ class TestTestsetHash:
         testset1 = TestSet(queries=[Query(text="Question 1", ground_truth_docs=["doc1"])])
         testset2 = TestSet(queries=[Query(text="Question 2", ground_truth_docs=["doc2"])])
 
-        hash1 = _compute_testset_hash(testset1)
-        hash2 = _compute_testset_hash(testset2)
+        hash1 = testset1.hash_short
+        hash2 = testset2.hash_short
 
         assert hash1 != hash2
 

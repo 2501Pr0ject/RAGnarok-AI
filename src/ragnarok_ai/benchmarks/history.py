@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any
 
 from ragnarok_ai.benchmarks.models import BenchmarkRecord
 from ragnarok_ai.benchmarks.storage import JSONFileStore, StorageProtocol
-from ragnarok_ai.core.compare import _compute_testset_hash
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.evaluate import EvaluationResult
@@ -140,7 +139,7 @@ class BenchmarkHistory:
             id=str(uuid.uuid4()),
             timestamp=datetime.now(),
             config_name=config_name,
-            testset_hash=_compute_testset_hash(testset),
+            testset_hash=testset.hash_short,
             testset_name=testset.name or "unnamed",
             metrics=self._compute_metrics(result),
             metadata=metadata or {},
@@ -228,7 +227,7 @@ class BenchmarkHistory:
             return None
 
         # Validate testset hash
-        current_hash = _compute_testset_hash(testset)
+        current_hash = testset.hash_short
         if baseline_record.testset_hash != current_hash:
             raise ValueError(f"Testset hash mismatch: baseline={baseline_record.testset_hash}, current={current_hash}")
 

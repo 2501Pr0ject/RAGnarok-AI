@@ -16,9 +16,11 @@ from ragnarok_ai.core.artifacts import (
     RetrieverConfig,
     Run,
     Trace,
-    _canonical_json,
-    _sha256_hex,
-    _sha256_hex_short,
+)
+from ragnarok_ai.core.hashing import (
+    canonical_json,
+    sha256_hex,
+    sha256_short,
 )
 
 # =============================================================================
@@ -29,33 +31,33 @@ from ragnarok_ai.core.artifacts import (
 class TestHashingHelpers:
     """Tests for hashing helper functions."""
 
-    def test_canonical_json_sorts_keys(self) -> None:
+    def testcanonical_json_sorts_keys(self) -> None:
         """Canonical JSON should sort keys for determinism."""
         data1 = {"b": 1, "a": 2}
         data2 = {"a": 2, "b": 1}
-        assert _canonical_json(data1) == _canonical_json(data2)
+        assert canonical_json(data1) == canonical_json(data2)
 
-    def test_canonical_json_no_spaces(self) -> None:
+    def testcanonical_json_no_spaces(self) -> None:
         """Canonical JSON should have no extra spaces."""
         data = {"key": "value", "num": 123}
-        result = _canonical_json(data)
+        result = canonical_json(data)
         assert " " not in result
         assert result == '{"key":"value","num":123}'
 
-    def test_sha256_hex_length(self) -> None:
+    def testsha256_hex_length(self) -> None:
         """SHA256 hex should be 64 characters."""
-        result = _sha256_hex("test")
+        result = sha256_hex("test")
         assert len(result) == 64
 
-    def test_sha256_hex_deterministic(self) -> None:
+    def testsha256_hex_deterministic(self) -> None:
         """Same input should produce same hash."""
-        assert _sha256_hex("hello") == _sha256_hex("hello")
-        assert _sha256_hex("hello") != _sha256_hex("world")
+        assert sha256_hex("hello") == sha256_hex("hello")
+        assert sha256_hex("hello") != sha256_hex("world")
 
-    def test_sha256_hex_short(self) -> None:
+    def test_sha256_short(self) -> None:
         """Short hash should truncate correctly."""
-        full = _sha256_hex("test")
-        short = _sha256_hex_short("test", n=16)
+        full = sha256_hex("test")
+        short = sha256_short("test", length=16)
         assert short == full[:16]
         assert len(short) == 16
 

@@ -7,7 +7,6 @@ on the same testset and identify the best performing configuration.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -24,19 +23,6 @@ if TYPE_CHECKING:
 
 # Metrics where lower is better
 LOWER_IS_BETTER: set[str] = {"latency_ms", "avg_latency_ms", "total_latency_ms"}
-
-
-def _compute_testset_hash(testset: TestSet) -> str:
-    """Compute deterministic hash of testset for tracking.
-
-    Args:
-        testset: TestSet to hash.
-
-    Returns:
-        16-character hash string.
-    """
-    content = "".join(q.text + "".join(q.ground_truth_docs) for q in testset.queries)
-    return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
 @dataclass
@@ -100,7 +86,7 @@ class ComparisonResult:
     def __post_init__(self) -> None:
         """Compute testset_hash if not provided."""
         if not self.testset_hash:
-            self.testset_hash = _compute_testset_hash(self.testset)
+            self.testset_hash = self.testset.hash_short
 
     def summary(self) -> str:
         """Generate a formatted comparison table.

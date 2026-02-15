@@ -15,8 +15,6 @@ Design goals:
 
 from __future__ import annotations
 
-import hashlib
-import json
 import platform
 import sys
 import uuid
@@ -25,29 +23,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-# =============================================================================
-# Hashing helpers (canonical JSON)
-# =============================================================================
-
-
-def _canonical_json(data: Any) -> str:
-    """
-    Stable JSON serialization used for fingerprints.
-
-    Assumes `data` is already JSON-serializable (dict/list/str/int/float/bool/None).
-    """
-    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
-
-def _sha256_hex(text: str) -> str:
-    """Compute full SHA256 hex digest."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def _sha256_hex_short(text: str, n: int = 16) -> str:
-    """Compute truncated SHA256 hex digest for display."""
-    return _sha256_hex(text)[:n]
-
+from ragnarok_ai.core.hashing import (
+    compute_hash,
+    sha256_hex,
+    sha256_short,
+)
 
 # =============================================================================
 # Environment & Fingerprints
@@ -111,7 +91,7 @@ class Environment(BaseModel):
     def fingerprint(self) -> str:
         """Deterministic env fingerprint (full sha256 hex)."""
         payload = self.model_dump(mode="json")
-        return _sha256_hex(_canonical_json(payload))
+        return compute_hash(payload)
 
 
 class Fingerprint(BaseModel):
@@ -131,7 +111,7 @@ class Fingerprint(BaseModel):
     def combined(self) -> str:
         """Full sha256 for storage."""
         payload = f"{self.dataset_hash}:{self.config_hash}:{self.env_hash}"
-        return _sha256_hex(payload)
+        return sha256_hex(payload)
 
     @property
     def short(self) -> str:
@@ -161,7 +141,7 @@ class RetrieverConfig(BaseModel):
     def fingerprint(self) -> str:
         """Compute config fingerprint (full sha256)."""
         payload = self.model_dump(mode="json", exclude={"metadata"})
-        return _sha256_hex(_canonical_json(payload))
+        return compute_hash(payload)
 
 
 class GeneratorConfig(BaseModel):
@@ -178,7 +158,7 @@ class GeneratorConfig(BaseModel):
     def fingerprint(self) -> str:
         """Compute config fingerprint (full sha256)."""
         payload = self.model_dump(mode="json", exclude={"metadata"})
-        return _sha256_hex(_canonical_json(payload))
+        return compute_hash(payload)
 
 
 class JudgeConfig(BaseModel):
@@ -195,7 +175,7 @@ class JudgeConfig(BaseModel):
     def fingerprint(self) -> str:
         """Compute config fingerprint (full sha256)."""
         payload = self.model_dump(mode="json", exclude={"metadata"})
-        return _sha256_hex(_canonical_json(payload))
+        return compute_hash(payload)
 
 
 class PipelineConfig(BaseModel):
@@ -212,7 +192,7 @@ class PipelineConfig(BaseModel):
     def fingerprint(self) -> str:
         """Compute pipeline fingerprint (full sha256, includes all sub-configs)."""
         payload = self.model_dump(mode="json", exclude={"metadata"})
-        return _sha256_hex(_canonical_json(payload))
+        return compute_hash(payload)
 
 
 # =============================================================================
@@ -266,7 +246,7 @@ class Run(BaseModel):
     ) -> Run:
         """Create a new run with auto-generated fingerprint."""
         env = Environment.capture()
-        env_hash = env.fingerprint() if include_env_in_fingerprint else _sha256_hex("no-env")
+        env_hash = env.fingerprint() if include_env_in_fingerprint else sha256_hex("no-env")
         fp = Fingerprint(
             dataset_hash=dataset_hash,
             config_hash=pipeline_config.fingerprint(),
@@ -358,7 +338,7 @@ class Trace(BaseModel):
     def create(cls, *, query_text: str | None, store_text: bool = False) -> Trace:
         """Create a new trace (PII-safe by default)."""
         q_text = query_text or ""
-        q_hash = _sha256_hex_short(q_text, n=16) if q_text else _sha256_hex_short("empty", n=16)
+        q_hash = sha256_short(q_text, length=16) if q_text else sha256_short("empty", length=16)
         return cls(
             query_hash=q_hash,
             query_text=q_text if store_text else None,
@@ -370,7 +350,7 @@ class Trace(BaseModel):
             self.answer_hash = None
             self.answer_text = None
             return
-        self.answer_hash = _sha256_hex_short(answer_text, n=16)
+        self.answer_hash = sha256_short(answer_text, length=16)
         self.answer_text = answer_text if store_text else None
 
     def to_prometheus_labels(self) -> dict[str, str]:

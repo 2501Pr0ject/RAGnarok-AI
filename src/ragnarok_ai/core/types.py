@@ -6,10 +6,13 @@ the library for documents, queries, and evaluation results.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
+
+from ragnarok_ai.core.hashing import compute_hash
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -76,17 +79,23 @@ class Query(BaseModel):
 
 
 class TestSet(BaseModel):
-    """A collection of queries for evaluation.
+    """A collection of queries for evaluation with versioning support.
 
     Attributes:
         queries: List of queries to evaluate.
         name: Optional name for the test set.
         description: Optional description of the test set.
+        schema_version: Schema version for migration compatibility.
+        dataset_version: Semantic version of this dataset (e.g., "1.0.0").
+        created_at: Timestamp when the dataset was created.
+        author: Optional author identifier.
+        source: Optional source description (e.g., "curated", "generated").
         metadata: Optional metadata associated with the test set.
 
     Example:
         >>> testset = TestSet(
         ...     name="geography_questions",
+        ...     dataset_version="1.0.0",
         ...     queries=[
         ...         Query(text="What is the capital of France?"),
         ...         Query(text="What is the largest country?"),
@@ -94,16 +103,34 @@ class TestSet(BaseModel):
         ... )
         >>> len(testset)
         2
+        >>> testset.compute_hash()[:16]  # Short hash for display
+        '...'
     """
 
     __test__ = False  # Prevent pytest collection warning
 
+    # Core data
     queries: list[Query] = Field(..., description="List of queries to evaluate")
     name: str | None = Field(default=None, description="Optional name for the test set")
     description: str | None = Field(default=None, description="Optional description")
+
+    # Versioning fields
+    schema_version: int = Field(default=1, description="Schema version for migration")
+    dataset_version: str = Field(default="1.0.0", description="Semantic version of dataset")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Creation timestamp (excluded from hash)",
+    )
+    author: str | None = Field(default=None, description="Author identifier (excluded from hash)")
+    source: str | None = Field(
+        default=None,
+        description="Source description (e.g., 'curated', 'generated', 'imported')",
+    )
+
+    # Metadata
     metadata: dict[str, Any] = Field(
         default_factory=dict,
-        description="Optional metadata associated with the test set",
+        description="Optional metadata associated with the test set (excluded from hash)",
     )
 
     def __len__(self) -> int:
@@ -113,6 +140,27 @@ class TestSet(BaseModel):
     def __iter__(self) -> Iterator[Query]:  # type: ignore[override]
         """Iterate over queries in the test set."""
         return iter(self.queries)
+
+    def compute_hash(self) -> str:
+        """Compute deterministic hash of dataset content.
+
+        Excludes volatile fields (created_at, author, metadata) to ensure
+        the same dataset content always produces the same hash.
+
+        Returns:
+            Full 64-character SHA256 hex digest.
+        """
+        # Include only fields that affect evaluation results
+        payload = self.model_dump(
+            mode="json",
+            exclude={"created_at", "author", "metadata"},
+        )
+        return compute_hash(payload)
+
+    @property
+    def hash_short(self) -> str:
+        """Short form of hash for display (16 characters)."""
+        return self.compute_hash()[:16]
 
 
 class RetrievalResult(BaseModel):
