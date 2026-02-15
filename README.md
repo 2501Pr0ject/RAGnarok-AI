@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.4.0 is now available!** Includes 9 new adapters, Medical Mode, and CLI enhancements. Install with `pip install ragnarok-ai`
+> **v1.4.1 is now available!** Includes dataset versioning, diff command, and unified artifact schema. Install with `pip install ragnarok-ai`
 
 ---
 

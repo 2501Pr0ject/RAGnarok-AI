@@ -28,7 +28,7 @@ Show the current version.
 
 ```bash
 ragnarok version
-# ragnarok-ai v1.4.0
+# ragnarok-ai v1.4.1
 ```
 
 ---
@@ -201,6 +201,82 @@ ragnarok judge --file items.json --json
 
 ---
 
+### dataset
+
+Manage and compare dataset versions.
+
+```bash
+ragnarok dataset COMMAND [OPTIONS]
+```
+
+#### dataset diff
+
+Compare two dataset versions to detect changes.
+
+```bash
+ragnarok dataset diff <v1_path> <v2_path> [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--key`, `-k` | Field to use as item key (default: metadata.id or content hash) |
+| `--ignore-metadata` | Ignore metadata changes in comparison |
+| `--show`, `-n` | Limit number of items shown (default: 10) |
+| `--output`, `-o` | Export diff report to JSON file |
+| `--fail-on-change` | Exit with error if changes detected (for CI) |
+
+**Examples:**
+
+```bash
+# Compare two testset versions
+ragnarok dataset diff testset_v1.json testset_v2.json
+
+# Ignore metadata changes
+ragnarok dataset diff v1.json v2.json --ignore-metadata
+
+# Export diff report
+ragnarok dataset diff v1.json v2.json --output diff_report.json
+
+# CI gating: fail if dataset changed
+ragnarok dataset diff baseline.json current.json --fail-on-change
+```
+
+**Output:**
+
+```
+  RAGnarok-AI Dataset Diff
+  ========================================
+
+  v1: testset_v1.json
+      hash=a1b2c3d4e5f6g7h8  items=50
+  v2: testset_v2.json
+      hash=x9y8z7w6v5u4t3s2  items=52
+
+  ----------------------------------------
+  Summary
+  ----------------------------------------
+    Added:     2
+    Removed:   0
+    Modified:  3
+    Unchanged: 47
+```
+
+#### dataset info
+
+Show dataset metadata and statistics.
+
+```bash
+ragnarok dataset info <path>
+```
+
+**Example:**
+
+```bash
+ragnarok dataset info testset.json
+```
+
+---
+
 ### plugins
 
 Manage and list available plugins.
@@ -248,7 +324,7 @@ Response envelope:
 {
   "command": "evaluate",
   "status": "pass",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "data": { ... },
   "warnings": [],
   "errors": []

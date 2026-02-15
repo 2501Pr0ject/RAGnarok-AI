@@ -5,6 +5,43 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-02-15
+
+### Added
+- **Dataset Versioning**
+  - Shared hashing utilities in `ragnarok_ai.core.hashing`
+    - `canonical_json()` — Deterministic JSON serialization
+    - `sha256_hex()` / `sha256_short()` — Content-based hashing
+    - `compute_hash()` — Generic hash computation for any serializable object
+  - TestSet versioning fields
+    - `schema_version` — Schema version for future migrations
+    - `dataset_version` — Semantic version of the dataset content
+    - `created_at` — Creation timestamp (UTC)
+    - `author` — Dataset author
+    - `source` — Data source identifier
+  - `TestSet.compute_hash()` / `TestSet.hash_short` — Content-based identity
+  - Dataset I/O module (`ragnarok_ai.dataset`)
+    - `load_testset()` — Load from JSON, JSONL, or structured object
+    - `save_testset()` — Export TestSet to JSON
+  - Dataset diff functionality
+    - `build_index()` — Create stable key index (metadata.id or content hash)
+    - `diff_testsets()` — Compare two TestSet versions
+    - `DatasetDiffReport` — Added/removed/modified/unchanged detection
+- **CLI `dataset` Command**
+  - `ragnarok dataset diff <v1> <v2>` — Compare two dataset versions
+    - `--key` — Custom key field for matching items
+    - `--ignore-metadata` — Exclude metadata from comparison
+    - `--show` — Limit number of items shown
+    - `--output` — Export diff report to JSON
+    - `--fail-on-change` — Exit with error if changes detected (CI gating)
+  - `ragnarok dataset info <path>` — Show dataset metadata and statistics
+- **Unified Artifact Schema**
+  - `EvaluationArtifact` model for reproducible evaluation results
+  - Automatic capture of environment, config, and RAGnarok version
+
+### Fixed
+- Version consistency between `pyproject.toml` and `__init__.py`
+
 ## [1.4.0] - 2026-02-13
 
 ### Added
@@ -327,6 +364,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.4.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.2.5...v1.3.0

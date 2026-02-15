@@ -64,13 +64,17 @@ query = Query(
 
 ## TestSet
 
-Collection of queries for evaluation.
+Collection of queries for evaluation with versioning support.
 
 ```python
 from ragnarok_ai.core.types import TestSet, Query
 
 testset = TestSet(
     name="my-testset",
+    description="Test set for Q&A evaluation",
+    dataset_version="1.0.0",
+    author="team@example.com",
+    source="generated",
     queries=[
         Query(text="Question 1", ground_truth_docs=["doc_1"]),
         Query(text="Question 2", ground_truth_docs=["doc_2", "doc_3"]),
@@ -78,12 +82,42 @@ testset = TestSet(
 )
 
 print(len(testset.queries))  # 2
+print(testset.hash_short)     # Content-based hash (16 chars)
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `str \| None` | Optional testset name |
+| `description` | `str \| None` | Description of the testset |
 | `queries` | `list[Query]` | List of queries |
+| `schema_version` | `int` | Schema version for migrations (default: 1) |
+| `dataset_version` | `str` | Semantic version of content (default: "1.0.0") |
+| `created_at` | `datetime` | Creation timestamp (UTC) |
+| `author` | `str \| None` | Dataset author |
+| `source` | `str \| None` | Data source identifier |
+| `metadata` | `dict[str, Any]` | Custom metadata |
+
+### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `compute_hash()` | `str` | Full SHA256 hash of content |
+| `hash_short` | `str` | Short hash (16 chars) for display |
+
+### Versioning Example
+
+```python
+# Compare two versions of a testset
+from ragnarok_ai.dataset import diff_testsets
+
+v1 = load_testset("testset_v1.json")
+v2 = load_testset("testset_v2.json")
+
+report = diff_testsets(v1, v2)
+print(f"Added: {len(report.added)}")
+print(f"Removed: {len(report.removed)}")
+print(f"Modified: {len(report.modified)}")
+```
 
 ---
 
