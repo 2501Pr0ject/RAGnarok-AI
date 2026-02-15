@@ -49,6 +49,7 @@ dev = [
     "httpx>=0.27",
     "pip-audit>=2.7",
     "types-pyyaml>=6.0",
+    "time-machine>=2.10",
 ]
 docs = [
     "mkdocs>=1.6",

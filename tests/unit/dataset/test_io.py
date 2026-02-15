@@ -190,7 +190,7 @@ class TestLoadTestsetErrors:
         path = tmp_path / "testset.json"
         path.write_text(json.dumps(data))
 
-        with pytest.raises(ValueError, match="missing.*text"):
+        with pytest.raises(ValueError, match=r"missing.*text"):
             load_testset(path)
 
 
