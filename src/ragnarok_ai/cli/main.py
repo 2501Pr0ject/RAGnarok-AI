@@ -1717,5 +1717,311 @@ def _show_plugin_info(plugin_name: str) -> None:
         typer.echo()
 
 
+# =============================================================================
+# Dataset Command
+# =============================================================================
+
+
+# Create dataset subcommand group
+dataset_app = typer.Typer(
+    name="dataset",
+    help="Dataset management commands (diff, info, etc.).",
+    no_args_is_help=True,
+)
+app.add_typer(dataset_app, name="dataset")
+
+
+@dataset_app.command("diff")
+def dataset_diff(
+    v1_path: Annotated[
+        str,
+        typer.Argument(help="Path to first (baseline) dataset file."),
+    ],
+    v2_path: Annotated[
+        str,
+        typer.Argument(help="Path to second (current) dataset file."),
+    ],
+    key: Annotated[
+        str,
+        typer.Option(
+            "--key",
+            "-k",
+            help="Key field for matching items: 'id' (use metadata.id) or 'hash' (content hash).",
+        ),
+    ] = "auto",
+    ignore_metadata: Annotated[
+        bool,
+        typer.Option(
+            "--ignore-metadata/--include-metadata",
+            help="Ignore metadata when comparing items.",
+        ),
+    ] = True,
+    show: Annotated[
+        int,
+        typer.Option(
+            "--show",
+            "-n",
+            help="Number of modified items to display in detail.",
+        ),
+    ] = 10,
+    output: Annotated[
+        str | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output file for diff report (JSON).",
+        ),
+    ] = None,
+    fail_on_change: Annotated[
+        bool,
+        typer.Option(
+            "--fail-on-change",
+            help="Exit with code 1 if any changes detected (useful for CI).",
+        ),
+    ] = False,
+) -> None:
+    """Compare two dataset versions and show differences.
+
+    Identifies added, removed, and modified items between v1 and v2.
+    Uses stable item keys (metadata.id or content hash) for matching.
+
+    Examples:
+        ragnarok dataset diff baseline.json current.json
+        ragnarok dataset diff v1.json v2.json --fail-on-change
+        ragnarok dataset diff old.json new.json --output diff.json
+        ragnarok dataset diff a.json b.json --key id --show 20
+    """
+    from ragnarok_ai.dataset import diff_testsets, load_testset
+
+    # Load datasets
+    try:
+        testset_v1 = load_testset(v1_path)
+    except FileNotFoundError:
+        if state["json"]:
+            typer.echo(json_response("dataset diff", "error", errors=[f"File not found: {v1_path}"]))
+        else:
+            typer.echo(f"Error: File not found: {v1_path}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+    except ValueError as e:
+        if state["json"]:
+            typer.echo(json_response("dataset diff", "error", errors=[str(e)]))
+        else:
+            typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    try:
+        testset_v2 = load_testset(v2_path)
+    except FileNotFoundError:
+        if state["json"]:
+            typer.echo(json_response("dataset diff", "error", errors=[f"File not found: {v2_path}"]))
+        else:
+            typer.echo(f"Error: File not found: {v2_path}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+    except ValueError as e:
+        if state["json"]:
+            typer.echo(json_response("dataset diff", "error", errors=[str(e)]))
+        else:
+            typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    # Configure key function based on --key option
+    key_fn = None
+    if key == "id":
+
+        def key_fn(q: Any) -> str:
+            if not q.metadata or "id" not in q.metadata:
+                raise ValueError(f"Query missing 'id' in metadata: {q.text[:50]}...")
+            return str(q.metadata["id"])
+
+    # Run diff
+    try:
+        report = diff_testsets(
+            testset_v1,
+            testset_v2,
+            key_fn=key_fn,
+            ignore_metadata=ignore_metadata,
+        )
+    except ValueError as e:
+        if state["json"]:
+            typer.echo(json_response("dataset diff", "error", errors=[str(e)]))
+        else:
+            typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    # Prepare output data
+    summary = report.summary()
+    data = {
+        "v1": {"path": v1_path, "hash": report.v1_hash, "items": report.total_items_v1},
+        "v2": {"path": v2_path, "hash": report.v2_hash, "items": report.total_items_v2},
+        "has_changes": report.has_changes,
+        "summary": summary,
+    }
+
+    if report.has_changes:
+        data["details"] = {
+            "added": report.added[:show] if show else report.added,
+            "removed": report.removed[:show] if show else report.removed,
+            "modified": [
+                {
+                    "key": m.key,
+                    "fields_changed": m.fields_changed,
+                }
+                for m in report.modified[:show]
+            ]
+            if show
+            else [{"key": m.key, "fields_changed": m.fields_changed} for m in report.modified],
+        }
+        if len(report.added) > show:
+            data["details"]["added_truncated"] = len(report.added) - show
+        if len(report.removed) > show:
+            data["details"]["removed_truncated"] = len(report.removed) - show
+        if len(report.modified) > show:
+            data["details"]["modified_truncated"] = len(report.modified) - show
+
+    # Determine exit status
+    exit_code = 0
+    status = "no_changes"
+    if report.has_changes:
+        status = "changes_detected"
+        if fail_on_change:
+            exit_code = 1
+            data["fail_reason"] = "Changes detected and --fail-on-change is set"
+
+    # Output results
+    if state["json"]:
+        typer.echo(json_response("dataset diff", status, data=data))
+    else:
+        typer.echo()
+        typer.echo("  RAGnarok-AI Dataset Diff")
+        typer.echo("  " + "=" * 40)
+        typer.echo()
+        typer.echo(f"  v1: {v1_path}")
+        typer.echo(f"      hash={report.v1_hash}  items={report.total_items_v1}")
+        typer.echo(f"  v2: {v2_path}")
+        typer.echo(f"      hash={report.v2_hash}  items={report.total_items_v2}")
+        typer.echo()
+
+        if not report.has_changes:
+            typer.echo("  No changes detected.")
+        else:
+            typer.echo("  " + "-" * 40)
+            typer.echo("  Summary")
+            typer.echo("  " + "-" * 40)
+            typer.echo(f"    Added:     {summary['added']}")
+            typer.echo(f"    Removed:   {summary['removed']}")
+            typer.echo(f"    Modified:  {summary['modified']}")
+            typer.echo(f"    Unchanged: {summary['unchanged']}")
+
+            # Show details
+            if report.added:
+                typer.echo()
+                typer.echo("  Added items:")
+                for key in report.added[:show]:
+                    typer.echo(f"    + {key}")
+                if len(report.added) > show:
+                    typer.echo(f"    ... and {len(report.added) - show} more")
+
+            if report.removed:
+                typer.echo()
+                typer.echo("  Removed items:")
+                for key in report.removed[:show]:
+                    typer.echo(f"    - {key}")
+                if len(report.removed) > show:
+                    typer.echo(f"    ... and {len(report.removed) - show} more")
+
+            if report.modified:
+                typer.echo()
+                typer.echo("  Modified items:")
+                for item in report.modified[:show]:
+                    fields = ", ".join(item.fields_changed)
+                    typer.echo(f"    ~ {item.key}: [{fields}]")
+                if len(report.modified) > show:
+                    typer.echo(f"    ... and {len(report.modified) - show} more")
+
+        typer.echo()
+
+        if fail_on_change and report.has_changes:
+            typer.echo("  FAIL: Changes detected (--fail-on-change)", err=True)
+
+    # Save to file if requested
+    if output:
+        output_path = Path(output)
+        output_data = {"status": status, **data, "full_report": report.to_dict()}
+        output_path.write_text(json.dumps(output_data, indent=2))
+        if not state["json"]:
+            typer.echo(f"  Report saved to: {output}")
+            typer.echo()
+
+    sys.exit(exit_code)
+
+
+@dataset_app.command("info")
+def dataset_info(
+    path: Annotated[
+        str,
+        typer.Argument(help="Path to dataset file."),
+    ],
+) -> None:
+    """Show information about a dataset file.
+
+    Displays name, version, hash, and query count.
+
+    Examples:
+        ragnarok dataset info testset.json
+    """
+    from ragnarok_ai.dataset import load_testset
+
+    try:
+        testset = load_testset(path)
+    except FileNotFoundError:
+        if state["json"]:
+            typer.echo(json_response("dataset info", "error", errors=[f"File not found: {path}"]))
+        else:
+            typer.echo(f"Error: File not found: {path}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+    except ValueError as e:
+        if state["json"]:
+            typer.echo(json_response("dataset info", "error", errors=[str(e)]))
+        else:
+            typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    data = {
+        "path": path,
+        "name": testset.name,
+        "description": testset.description,
+        "schema_version": testset.schema_version,
+        "dataset_version": testset.dataset_version,
+        "author": testset.author,
+        "source": testset.source,
+        "hash": testset.hash_short,
+        "hash_full": testset.compute_hash(),
+        "queries": len(testset.queries),
+        "created_at": testset.created_at.isoformat() if testset.created_at else None,
+    }
+
+    if state["json"]:
+        typer.echo(json_response("dataset info", "success", data=data))
+    else:
+        typer.echo()
+        typer.echo("  Dataset Information")
+        typer.echo("  " + "=" * 40)
+        typer.echo()
+        typer.echo(f"  Path:            {path}")
+        typer.echo(f"  Name:            {testset.name or '(unnamed)'}")
+        if testset.description:
+            typer.echo(f"  Description:     {testset.description}")
+        typer.echo(f"  Schema version:  {testset.schema_version}")
+        typer.echo(f"  Dataset version: {testset.dataset_version}")
+        if testset.author:
+            typer.echo(f"  Author:          {testset.author}")
+        if testset.source:
+            typer.echo(f"  Source:          {testset.source}")
+        typer.echo()
+        typer.echo(f"  Hash:            {testset.hash_short}")
+        typer.echo(f"  Queries:         {len(testset.queries)}")
+        typer.echo()
+
+
 if __name__ == "__main__":
     app()
