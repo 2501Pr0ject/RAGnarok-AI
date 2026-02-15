@@ -127,9 +127,7 @@ class TestDiffTestsetsNoChanges:
         assert len(report.modified) == 0
         assert len(report.unchanged) == 3
 
-    def test_identical_content_different_order(
-        self, query_a: Query, query_b: Query, query_c: Query
-    ) -> None:
+    def test_identical_content_different_order(self, query_a: Query, query_b: Query, query_c: Query) -> None:
         """Reordering items doesn't produce changes."""
         v1 = TestSet(queries=[query_a, query_b, query_c])
         v2 = TestSet(queries=[query_c, query_a, query_b])

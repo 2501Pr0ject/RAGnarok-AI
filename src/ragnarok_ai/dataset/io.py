@@ -213,10 +213,13 @@ def save_testset(testset: TestSet, path: str | Path) -> None:
 
     # Remove None values for cleaner output
     data = {k: v for k, v in data.items() if v is not None}
-    for q in data.get("queries", []):
-        if q.get("metadata") is None:
-            del q["metadata"]
-        if q.get("expected_answer") is None:
-            del q["expected_answer"]
+    queries_list = data.get("queries")
+    if isinstance(queries_list, list):
+        for q in queries_list:
+            if isinstance(q, dict):
+                if q.get("metadata") is None:
+                    del q["metadata"]
+                if q.get("expected_answer") is None:
+                    del q["expected_answer"]
 
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")

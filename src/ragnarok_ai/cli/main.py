@@ -1858,7 +1858,7 @@ def dataset_diff(
     }
 
     if report.has_changes:
-        data["details"] = {
+        details: dict[str, Any] = {
             "added": report.added[:show] if show else report.added,
             "removed": report.removed[:show] if show else report.removed,
             "modified": [
@@ -1872,11 +1872,12 @@ def dataset_diff(
             else [{"key": m.key, "fields_changed": m.fields_changed} for m in report.modified],
         }
         if len(report.added) > show:
-            data["details"]["added_truncated"] = len(report.added) - show
+            details["added_truncated"] = len(report.added) - show
         if len(report.removed) > show:
-            data["details"]["removed_truncated"] = len(report.removed) - show
+            details["removed_truncated"] = len(report.removed) - show
         if len(report.modified) > show:
-            data["details"]["modified_truncated"] = len(report.modified) - show
+            details["modified_truncated"] = len(report.modified) - show
+        data["details"] = details
 
     # Determine exit status
     exit_code = 0
