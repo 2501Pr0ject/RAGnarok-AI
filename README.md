@@ -588,6 +588,17 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.4.1 — Dataset Versioning</strong></summary>
+
+- [x] **Shared hashing utilities**: Canonical JSON, SHA256, content-based keys
+- [x] **TestSet versioning**: `schema_version`, `dataset_version`, `created_at`, `author`, `source`
+- [x] **Dataset diff**: `ragnarok dataset diff` CLI command
+- [x] **Stable item keys**: `metadata.id` or content hash fallback
+- [x] **Diff report**: Added/removed/modified/unchanged detection
+
+</details>
+
 ### Planned
 
 #### v1.5+
@@ -620,7 +631,7 @@ display_comparison([
 
 - [ ] Streaming evaluation
 - [ ] A/B testing support
-- [ ] Dataset versioning
+- [x] Dataset versioning
 - [ ] Fine-tuning recommendations
 - [ ] Multi-modal evaluation (images, audio)
 
