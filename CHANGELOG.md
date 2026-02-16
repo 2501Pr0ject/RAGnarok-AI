@@ -5,6 +5,32 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-02-16
+
+### Added
+- **Production Monitoring MVP**
+  - `MonitorClient` for instrumenting RAG pipelines with sampling
+  - Monitor daemon with HTTP endpoints:
+    - `POST /ingest` - Receive traces from clients
+    - `GET /metrics` - Prometheus scrape endpoint
+    - `GET /health` - Health check
+    - `GET /stats` - JSON statistics for CLI
+  - SQLite storage with automatic retention (7 days traces, 90 days aggregates)
+  - Prometheus metrics export (request counts, success rate, latency percentiles)
+  - CLI commands:
+    - `ragnarok monitor start` - Start daemon (background or foreground)
+    - `ragnarok monitor stop` - Stop running daemon
+    - `ragnarok monitor status` - Show daemon status and metrics
+    - `ragnarok monitor stats` - Detailed statistics (1h, 24h, 7d periods)
+  - Sampling support (configurable rate, force option for important queries)
+  - PII-safe query hashing (SHA256)
+  - Custom metadata support for tenant/route slicing
+  - Documentation at `docs/user-guide/monitoring.md`
+- **New Export**: `MonitorClient` available from `ragnarok_ai` package root
+
+### Changed
+- Roadmap updated: Production Monitoring MVP marked as complete
+
 ## [1.5.0] - 2026-02-16
 
 ### Added

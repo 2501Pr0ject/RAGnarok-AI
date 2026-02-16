@@ -2024,5 +2024,358 @@ def dataset_info(
         typer.echo()
 
 
+# =============================================================================
+# Monitor Command
+# =============================================================================
+
+# Create monitor subcommand group
+monitor_app = typer.Typer(
+    name="monitor",
+    help="Production monitoring daemon commands.",
+    no_args_is_help=True,
+)
+app.add_typer(monitor_app, name="monitor")
+
+
+@monitor_app.command("start")
+def monitor_start(
+    port: Annotated[
+        int,
+        typer.Option(
+            "--port",
+            "-p",
+            help="Port to listen on.",
+        ),
+    ] = 9090,
+    host: Annotated[
+        str,
+        typer.Option(
+            "--host",
+            help="Host to bind to.",
+        ),
+    ] = "0.0.0.0",
+    db: Annotated[
+        str | None,
+        typer.Option(
+            "--db",
+            help="Path to SQLite database.",
+        ),
+    ] = None,
+    retention: Annotated[
+        int,
+        typer.Option(
+            "--retention",
+            help="Days to keep raw traces.",
+        ),
+    ] = 7,
+    foreground: Annotated[
+        bool,
+        typer.Option(
+            "--foreground",
+            "-f",
+            help="Run in foreground (don't daemonize).",
+        ),
+    ] = False,
+) -> None:
+    """Start the production monitoring daemon.
+
+    The daemon collects traces from MonitorClient and exposes
+    Prometheus metrics at /metrics.
+
+    Examples:
+        ragnarok monitor start
+        ragnarok monitor start --port 8080
+        ragnarok monitor start --foreground
+    """
+    from ragnarok_ai.monitor.daemon import (
+        DEFAULT_DB_PATH,
+        daemonize,
+        is_daemon_running,
+        run_daemon,
+    )
+
+    # Check if already running
+    if is_daemon_running():
+        if state["json"]:
+            typer.echo(json_response("monitor start", "error", errors=["Monitor daemon is already running."]))
+        else:
+            typer.echo("Error: Monitor daemon is already running.", err=True)
+            typer.echo("Use 'ragnarok monitor stop' to stop it first.", err=True)
+        raise typer.Exit(EXIT_FAILURE)
+
+    db_path = db if db else str(DEFAULT_DB_PATH)
+
+    if state["json"]:
+        data = {
+            "host": host,
+            "port": port,
+            "db": db_path,
+            "retention_days": retention,
+            "foreground": foreground,
+        }
+        typer.echo(json_response("monitor start", "starting", data=data))
+    else:
+        typer.echo()
+        typer.echo("  RAGnarok-AI Monitor Daemon")
+        typer.echo("  " + "=" * 40)
+        typer.echo()
+        typer.echo(f"  Host:      {host}")
+        typer.echo(f"  Port:      {port}")
+        typer.echo(f"  Database:  {db_path}")
+        typer.echo(f"  Retention: {retention} days")
+        typer.echo()
+
+    if not foreground:
+        if not state["json"]:
+            typer.echo("  Starting daemon in background...")
+
+        # Daemonize
+        try:
+            daemonize()
+        except RuntimeError as e:
+            if state["json"]:
+                typer.echo(json_response("monitor start", "error", errors=[str(e)]))
+            else:
+                typer.echo(f"Error: {e}", err=True)
+            raise typer.Exit(EXIT_FAILURE) from None
+
+    if not state["json"]:
+        typer.echo(f"  Listening on http://{host}:{port}")
+        typer.echo()
+        typer.echo("  Endpoints:")
+        typer.echo("    POST /ingest  - Receive traces")
+        typer.echo("    GET  /metrics - Prometheus scrape")
+        typer.echo("    GET  /health  - Health check")
+        typer.echo("    GET  /stats   - JSON statistics")
+        typer.echo()
+
+    # Run the daemon
+    asyncio.run(
+        run_daemon(
+            host=host,
+            port=port,
+            db_path=db_path,
+            retention_days=retention,
+        )
+    )
+
+
+@monitor_app.command("stop")
+def monitor_stop() -> None:
+    """Stop the running monitor daemon.
+
+    Examples:
+        ragnarok monitor stop
+    """
+    from ragnarok_ai.monitor.daemon import is_daemon_running, stop_daemon
+
+    if not is_daemon_running():
+        if state["json"]:
+            typer.echo(json_response("monitor stop", "error", errors=["Monitor daemon is not running."]))
+        else:
+            typer.echo("Monitor daemon is not running.", err=True)
+        raise typer.Exit(EXIT_FAILURE)
+
+    if stop_daemon():
+        if state["json"]:
+            typer.echo(json_response("monitor stop", "success", data={"message": "Daemon stopped"}))
+        else:
+            typer.echo("Monitor daemon stopped.")
+    else:
+        if state["json"]:
+            typer.echo(json_response("monitor stop", "error", errors=["Failed to stop daemon."]))
+        else:
+            typer.echo("Failed to stop daemon.", err=True)
+        raise typer.Exit(EXIT_FAILURE)
+
+
+@monitor_app.command("status")
+def monitor_status() -> None:
+    """Show monitor daemon status.
+
+    Examples:
+        ragnarok monitor status
+    """
+    from ragnarok_ai.monitor.daemon import is_daemon_running, read_pid
+
+    if not is_daemon_running():
+        if state["json"]:
+            typer.echo(json_response("monitor status", "success", data={"status": "stopped"}))
+        else:
+            typer.echo()
+            typer.echo("  Monitor Status: STOPPED")
+            typer.echo()
+        return
+
+    pid = read_pid()
+
+    # Try to fetch stats from daemon
+    try:
+        import socket
+
+        host = "127.0.0.1"
+        port = 9090  # Default port
+
+        request = "GET /stats HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(2.0)
+            sock.connect((host, port))
+            sock.sendall(request.encode())
+            response = sock.recv(4096).decode()
+
+        # Parse JSON from response
+        body_start = response.find("\r\n\r\n")
+        if body_start > 0:
+            body = response[body_start + 4 :]
+            stats = json.loads(body)
+        else:
+            stats = {}
+
+    except Exception:
+        stats = {}
+
+    uptime_sec = stats.get("uptime_seconds", 0)
+    uptime_str = _format_uptime(uptime_sec)
+    traces = stats.get("traces_total", 0)
+    success_rate = stats.get("success_rate", 1.0)
+    latency = stats.get("latency", {})
+
+    data = {
+        "status": "running",
+        "pid": pid,
+        "uptime_seconds": uptime_sec,
+        "traces_total": traces,
+        "success_rate": success_rate,
+        "latency": latency,
+    }
+
+    if state["json"]:
+        typer.echo(json_response("monitor status", "success", data=data))
+    else:
+        typer.echo()
+        typer.echo("  Monitor Status: RUNNING")
+        typer.echo("  " + "-" * 40)
+        typer.echo(f"    PID:              {pid}")
+        typer.echo(f"    Uptime:           {uptime_str}")
+        typer.echo(f"    Traces collected: {traces:,}")
+        typer.echo(f"    Success rate:     {success_rate * 100:.1f}%")
+        if latency:
+            typer.echo(f"    Latency P50:      {latency.get('p50', 0) * 1000:.0f}ms")
+            typer.echo(f"    Latency P99:      {latency.get('p99', 0) * 1000:.0f}ms")
+        typer.echo()
+
+
+def _format_uptime(seconds: float) -> str:
+    """Format uptime in human-readable format."""
+    if seconds < 60:
+        return f"{seconds:.0f}s"
+    elif seconds < 3600:
+        minutes = seconds / 60
+        return f"{minutes:.0f}m"
+    else:
+        hours = seconds / 3600
+        minutes = (seconds % 3600) / 60
+        return f"{hours:.0f}h {minutes:.0f}m"
+
+
+@monitor_app.command("stats")
+def monitor_stats(
+    period: Annotated[
+        str,
+        typer.Option(
+            "--period",
+            "-p",
+            help="Time period: 1h, 24h, 7d.",
+        ),
+    ] = "24h",
+) -> None:
+    """Show monitoring statistics.
+
+    Examples:
+        ragnarok monitor stats
+        ragnarok monitor stats --period 1h
+        ragnarok monitor stats --period 7d --json
+    """
+    from ragnarok_ai.monitor.daemon import is_daemon_running
+
+    if not is_daemon_running():
+        if state["json"]:
+            typer.echo(json_response("monitor stats", "error", errors=["Monitor daemon is not running."]))
+        else:
+            typer.echo("Error: Monitor daemon is not running.", err=True)
+            typer.echo("Start it with: ragnarok monitor start", err=True)
+        raise typer.Exit(EXIT_FAILURE)
+
+    # Parse period
+    valid_periods = {"1h": 1, "24h": 24, "7d": 168}
+    if period not in valid_periods:
+        if state["json"]:
+            typer.echo(
+                json_response(
+                    "monitor stats", "error", errors=[f"Invalid period: {period}. Valid: {', '.join(valid_periods)}"]
+                )
+            )
+        else:
+            typer.echo(f"Error: Invalid period '{period}'.", err=True)
+            typer.echo(f"Valid: {', '.join(valid_periods)}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
+
+    # Fetch stats from daemon
+    try:
+        import socket
+
+        request = "GET /stats HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(5.0)
+            sock.connect(("127.0.0.1", 9090))
+            sock.sendall(request.encode())
+            response = sock.recv(4096).decode()
+
+        body_start = response.find("\r\n\r\n")
+        if body_start > 0:
+            body = response[body_start + 4 :]
+            stats = json.loads(body)
+        else:
+            raise ValueError("Invalid response from daemon")
+
+    except Exception as e:
+        if state["json"]:
+            typer.echo(json_response("monitor stats", "error", errors=[f"Cannot connect to daemon: {e}"]))
+        else:
+            typer.echo(f"Error: Cannot connect to daemon: {e}", err=True)
+        raise typer.Exit(EXIT_FAILURE) from None
+
+    data = {
+        "period": period,
+        "traces_total": stats.get("traces_total", 0),
+        "traces_last_hour": stats.get("traces_last_hour", 0),
+        "success_rate": stats.get("success_rate", 1.0),
+        "latency": stats.get("latency", {}),
+    }
+
+    if state["json"]:
+        typer.echo(json_response("monitor stats", "success", data=data))
+    else:
+        success_rate = stats.get("success_rate", 1.0)
+        error_rate = 1.0 - success_rate
+        latency = stats.get("latency", {})
+
+        typer.echo()
+        typer.echo(f"  RAGnarok Monitor Stats (last {period})")
+        typer.echo("  " + "=" * 40)
+        typer.echo()
+        typer.echo(f"  Requests:     {stats.get('traces_total', 0):,} total")
+        typer.echo(f"  Success Rate: {success_rate * 100:.1f}%")
+        typer.echo(f"  Errors:       {error_rate * 100:.1f}%")
+        typer.echo()
+        typer.echo("  Latency:")
+        typer.echo(f"    P50:  {latency.get('p50', 0) * 1000:.0f}ms")
+        typer.echo(f"    P95:  {latency.get('p95', 0) * 1000:.0f}ms")
+        typer.echo(f"    P99:  {latency.get('p99', 0) * 1000:.0f}ms")
+        typer.echo()
+
+
 if __name__ == "__main__":
     app()

@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.5.0 is now available!** Enterprise-ready with Helm charts and air-gapped deployment. Install with `pip install ragnarok-ai`
+> **v1.6.0 is now available!** Production Monitoring with Prometheus metrics. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -102,6 +102,7 @@ results.export("report.html")
 | Feature | Description |
 |---------|-------------|
 | **100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
+| **Production Monitoring** | Collect traces, export Prometheus metrics, track latency and success rates in production. |
 | **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness. |
 | **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
 | **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
@@ -110,6 +111,7 @@ results.export("report.html")
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
 | **Test Generation** | Auto-generate diverse test sets from your knowledge base. |
 | **CI/CD Ready** | CLI-first design, JSON output, exit codes for pipeline integration. |
+| **Enterprise Ready** | Kubernetes Helm charts, air-gapped deployment, data sovereignty. |
 | **Lightweight** | Minimal dependencies. No torch/transformers in core. |
 
 ---
@@ -609,10 +611,24 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.6.0 — Production Monitoring</strong></summary>
+
+- [x] **MonitorClient**: Instrument RAG pipelines with configurable sampling
+- [x] **Monitor Daemon**: HTTP server with `/ingest`, `/metrics`, `/health`, `/stats`
+- [x] **Prometheus Export**: Request counts, success rate, latency percentiles
+- [x] **SQLite Storage**: 7-day trace retention, 90-day aggregate retention
+- [x] **CLI Commands**: `ragnarok monitor start|stop|status|stats`
+- [x] **PII Safety**: Query hashing (SHA256)
+- [x] **Custom Metadata**: Tenant/route slicing support
+
+</details>
+
 ### Planned
 
-#### v1.6+
-- [ ] Production monitoring mode
+#### v1.7+
+- [ ] Alerting (webhooks, Slack, email)
+- [ ] Drift detection
 - [ ] Web UI dashboard
 
 ### Future

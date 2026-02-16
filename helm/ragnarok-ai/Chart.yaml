@@ -3,7 +3,7 @@ name: ragnarok-ai
 description: Local-first RAG evaluation framework for LLM applications
 type: application
 version: 0.1.0
-appVersion: "1.5.0"
+appVersion: "1.6.0"
 home: https://github.com/2501Pr0ject/RAGnarok-AI
 sources:
   - https://github.com/2501Pr0ject/RAGnarok-AI

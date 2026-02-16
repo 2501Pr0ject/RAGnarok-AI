@@ -385,6 +385,95 @@ CLI options override config file values.
 
 ---
 
+## monitor
+
+Production monitoring daemon commands.
+
+### monitor start
+
+Start the monitoring daemon.
+
+```bash
+ragnarok monitor start [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--port`, `-p` | Port to listen on (default: 9090) |
+| `--host` | Host to bind to (default: 0.0.0.0) |
+| `--db` | Path to SQLite database |
+| `--retention` | Days to keep raw traces (default: 7) |
+| `--foreground`, `-f` | Run in foreground |
+
+**Examples:**
+
+```bash
+# Start in background
+ragnarok monitor start
+
+# Start on custom port
+ragnarok monitor start --port 8080
+
+# Run in foreground for debugging
+ragnarok monitor start --foreground
+```
+
+### monitor stop
+
+Stop the running daemon.
+
+```bash
+ragnarok monitor stop
+```
+
+### monitor status
+
+Show daemon status and basic metrics.
+
+```bash
+ragnarok monitor status
+```
+
+**Output:**
+
+```
+Monitor Status: RUNNING
+------------------------------------
+  PID:              12345
+  Uptime:           2h 34m
+  Traces collected: 12,566
+  Success rate:     99.8%
+  Latency P50:      234ms
+  Latency P99:      1234ms
+```
+
+### monitor stats
+
+Show detailed statistics.
+
+```bash
+ragnarok monitor stats [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--period`, `-p` | Time period: 1h, 24h, 7d (default: 24h) |
+
+**Examples:**
+
+```bash
+# Last 24 hours (default)
+ragnarok monitor stats
+
+# Last hour
+ragnarok monitor stats --period 1h
+
+# Last 7 days, JSON output
+ragnarok monitor stats --period 7d --json
+```
+
+---
+
 ## Environment Variables
 
 | Variable | Description |
@@ -396,5 +485,6 @@ CLI options override config file values.
 
 ## Next Steps
 
+- [Monitoring Guide](../user-guide/monitoring.md) — Production monitoring setup
 - [GitHub Action](github-action.md) — CI/CD integration
 - [Quick Start](../getting-started/quickstart.md) — Getting started

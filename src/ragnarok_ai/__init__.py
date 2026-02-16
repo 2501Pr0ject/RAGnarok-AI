@@ -12,9 +12,10 @@ from ragnarok_ai.loaders.forge_bundle import (
     load_forge_bundle,
     load_forge_documents,
 )
+from ragnarok_ai.monitor import MonitorClient
 from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __all__ = [
     "BatchConfig",
     "BatchEvaluator",
@@ -28,6 +29,7 @@ __all__ = [
     "JudgeResult",
     "JudgeResults",
     "LLMJudge",
+    "MonitorClient",
     "PiiMode",
     "__version__",
     "compare",
