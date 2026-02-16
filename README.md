@@ -644,7 +644,7 @@ display_comparison([
 - [ ] Role-based access control
 - [ ] Audit logging
 - [ ] Air-gapped deployment guide
-- [ ] Docker/Kubernetes helm charts
+- [x] Docker/Kubernetes helm charts
 
 </details>
 
