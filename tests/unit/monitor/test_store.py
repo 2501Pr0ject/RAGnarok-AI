@@ -130,7 +130,7 @@ class TestMonitorStoreMetrics:
         ]
         store.insert_batch(old_traces + recent_traces)
 
-        # Overall: 50% success
+        # Total success rate should be 50%
         assert store.get_success_rate() == 0.5
 
         # Last hour: 100% success
@@ -163,7 +163,7 @@ class TestMonitorStoreMetrics:
         ]
         store.insert_batch(traces)
 
-        p50, p95, p99 = store.get_latency_percentiles()
+        _p50, _p95, p99 = store.get_latency_percentiles()
         # With few samples, p95/p99 should be max value
         assert p99 == 200.0
 

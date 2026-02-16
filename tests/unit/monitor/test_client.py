@@ -1,8 +1,6 @@
 """Tests for monitor client."""
 
-import pytest
-
-from ragnarok_ai.monitor.client import MonitorClient, TraceContext
+from ragnarok_ai.monitor.client import MonitorClient
 
 
 class TestMonitorClient:
@@ -128,10 +126,13 @@ class TestTraceContext:
     def test_trace_exception_handling(self) -> None:
         """Test that exceptions are recorded."""
         client = MonitorClient(sample_rate=1.0)
+        trace_ctx = client.trace("Test")
+        ctx = trace_ctx.__enter__()
 
-        with pytest.raises(RuntimeError):
-            with client.trace("Test") as ctx:
-                raise RuntimeError("Test error")
+        try:
+            raise RuntimeError("Test error")
+        except RuntimeError:
+            trace_ctx.__exit__(RuntimeError, RuntimeError("Test error"), None)
 
         # Error should be recorded
         assert ctx.success is False
@@ -206,7 +207,7 @@ class TestMonitorClientBuffer:
 
         client = MonitorClient(sample_rate=1.0)
 
-        with client.trace("Test") as ctx:
+        with client.trace("Test"):
             time.sleep(0.01)  # 10ms
 
         # Check last trace in buffer

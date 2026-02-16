@@ -2,13 +2,11 @@
 
 import asyncio
 import json
-from datetime import datetime, timezone
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest
 
 from ragnarok_ai.monitor.daemon import MonitorDaemon
-from ragnarok_ai.monitor.models import TraceEvent
 
 
 @pytest.fixture
@@ -246,7 +244,7 @@ class TestMonitorDaemonLifecycle:
         await asyncio.sleep(0.1)
 
         port = get_daemon_port(daemon)
-        status, _, body = await http_request(
+        _, _, body = await http_request(
             "127.0.0.1", port, "GET", "/health"
         )
 

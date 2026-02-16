@@ -2088,11 +2088,11 @@ def monitor_start(
         ragnarok monitor start --foreground
     """
     from ragnarok_ai.monitor.daemon import (
-        DEFAULT_DB_PATH,
         daemonize,
         is_daemon_running,
         run_daemon,
     )
+    from ragnarok_ai.monitor.store import DEFAULT_DB_PATH
 
     # Check if already running
     if is_daemon_running():

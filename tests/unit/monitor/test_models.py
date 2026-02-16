@@ -2,8 +2,6 @@
 
 from datetime import datetime, timezone
 
-import pytest
-
 from ragnarok_ai.monitor.models import (
     AggregateMetrics,
     IngestRequest,
