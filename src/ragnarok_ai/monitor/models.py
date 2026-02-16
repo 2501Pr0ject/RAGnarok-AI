@@ -17,9 +17,7 @@ class TraceEvent(BaseModel):
     """
 
     id: str = Field(default_factory=lambda: uuid4().hex[:16])
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Query (hashed for PII safety)
     query_hash: str

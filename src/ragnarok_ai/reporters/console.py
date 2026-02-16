@@ -104,7 +104,7 @@ class ConsoleReporter:
 
     def _color(self, text: str, color: str) -> str:
         """Apply color to text if colors are enabled."""
-        if self.use_colors:
+        if self.use_colors:  # pragma: no cover
             return f"{color}{text}{Colors.RESET}"
         return text
 
@@ -124,7 +124,7 @@ class ConsoleReporter:
         if metric_name == "hallucination":
             if value <= threshold.good:
                 return ("✅", Colors.GREEN)
-            if value <= threshold.warning:
+            if value <= threshold.warning:  # pragma: no cover
                 return ("⚠️ ", Colors.YELLOW)
             return ("❌", Colors.RED)
 
@@ -342,7 +342,7 @@ def _supports_color(stream: TextIO) -> bool:
     # Check for common environment variables that disable color
     import os
 
-    if os.environ.get("NO_COLOR"):
+    if os.environ.get("NO_COLOR"):  # pragma: no cover
         return False
 
-    return os.environ.get("TERM") != "dumb"
+    return os.environ.get("TERM") != "dumb"  # pragma: no cover

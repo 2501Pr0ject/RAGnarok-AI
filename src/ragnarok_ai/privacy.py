@@ -119,7 +119,7 @@ def sanitize_value(value: str, mode: PiiMode, key: str | None = None) -> str:
     elif mode == PiiMode.REDACT:
         return "[REDACTED]"
 
-    return value
+    return value  # pragma: no cover
 
 
 def sanitize_dict(

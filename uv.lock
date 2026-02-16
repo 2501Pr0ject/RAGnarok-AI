@@ -5283,6 +5283,11 @@ weaviate = [
     { name = "weaviate-client" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "time-machine" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "asyncpg", marker = "extra == 'pgvector'", specifier = ">=0.29" },
@@ -5332,6 +5337,9 @@ requires-dist = [
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.0" },
 ]
 provides-extras = ["dev", "docs", "ollama", "openai", "anthropic", "vllm", "groq", "mistral", "together", "qdrant", "chroma", "faiss", "pinecone", "weaviate", "milvus", "pgvector", "langchain", "langgraph", "llamaindex", "dspy", "haystack", "semantic-kernel", "cli", "telemetry", "all"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "time-machine", specifier = ">=3.2.0" }]
 
 [[package]]
 name = "referencing"

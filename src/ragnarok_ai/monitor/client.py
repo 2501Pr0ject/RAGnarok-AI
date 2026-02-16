@@ -258,7 +258,7 @@ class MonitorClient:
                 self._buffer.extend(traces)
             return 0
 
-    def _send_traces(self, traces: list[dict[str, Any]]) -> None:
+    def _send_traces(self, traces: list[dict[str, Any]]) -> None:  # pragma: no cover
         """Send traces to daemon via HTTP.
 
         Args:

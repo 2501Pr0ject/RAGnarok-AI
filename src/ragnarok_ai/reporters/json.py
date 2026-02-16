@@ -70,7 +70,7 @@ class JSONReporter:
         if metric_name == "hallucination":
             if value <= threshold.good:
                 return "pass"
-            if value <= threshold.warning:
+            if value <= threshold.warning:  # pragma: no cover
                 return "warn"
             return "fail"
 

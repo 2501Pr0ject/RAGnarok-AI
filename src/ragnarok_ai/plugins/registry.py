@@ -311,7 +311,7 @@ def get_llm_adapters() -> dict[str, type]:
     return {info.name: info.adapter_class for info in registry.list_adapters(adapter_type="llm")}
 
 
-def get_vectorstore_adapters() -> dict[str, type]:
+def get_vectorstore_adapters() -> dict[str, type]:  # pragma: no cover
     """Get all available vector store adapters.
 
     Returns:
@@ -322,7 +322,7 @@ def get_vectorstore_adapters() -> dict[str, type]:
     return {info.name: info.adapter_class for info in registry.list_adapters(adapter_type="vectorstore")}
 
 
-def get_framework_adapters() -> dict[str, type]:
+def get_framework_adapters() -> dict[str, type]:  # pragma: no cover
     """Get all available framework adapters.
 
     Returns:

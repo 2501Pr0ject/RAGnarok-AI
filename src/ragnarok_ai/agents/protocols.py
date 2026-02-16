@@ -42,7 +42,7 @@ class AgentProtocol(Protocol):
         - AgentResponse: The return type containing trajectory
     """
 
-    async def query(self, question: str) -> AgentResponse:
+    async def query(self, question: str) -> AgentResponse:  # pragma: no cover
         """Execute agent and return response with trajectory.
 
         This is the only method required by the protocol. Implement your

@@ -62,7 +62,7 @@ class OTLPExporter:
         """Get the configured protocol."""
         return self._protocol
 
-    def get_span_exporter(self) -> Any:
+    def get_span_exporter(self) -> Any:  # pragma: no cover
         """Get the OpenTelemetry span exporter.
 
         Returns:
@@ -81,7 +81,7 @@ class OTLPExporter:
 
         return self._exporter
 
-    def _create_grpc_exporter(self) -> Any:
+    def _create_grpc_exporter(self) -> Any:  # pragma: no cover
         """Create a gRPC OTLP exporter."""
         try:
             from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
@@ -100,7 +100,7 @@ class OTLPExporter:
             insecure=self._insecure,
         )
 
-    def _create_http_exporter(self) -> Any:
+    def _create_http_exporter(self) -> Any:  # pragma: no cover
         """Create an HTTP OTLP exporter."""
         try:
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import (

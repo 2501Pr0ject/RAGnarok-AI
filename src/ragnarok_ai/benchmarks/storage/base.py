@@ -25,7 +25,7 @@ class StorageProtocol(Protocol):
         True
     """
 
-    async def save(self, record: BenchmarkRecord) -> None:
+    async def save(self, record: BenchmarkRecord) -> None:  # pragma: no cover
         """Save a benchmark record.
 
         Args:
@@ -33,7 +33,7 @@ class StorageProtocol(Protocol):
         """
         ...
 
-    async def get(self, record_id: str) -> BenchmarkRecord | None:
+    async def get(self, record_id: str) -> BenchmarkRecord | None:  # pragma: no cover
         """Get a record by ID.
 
         Args:
@@ -44,7 +44,7 @@ class StorageProtocol(Protocol):
         """
         ...
 
-    async def list(
+    async def list(  # pragma: no cover
         self,
         config_name: str | None = None,
         limit: int = 100,
@@ -60,7 +60,7 @@ class StorageProtocol(Protocol):
         """
         ...
 
-    async def delete(self, record_id: str) -> bool:
+    async def delete(self, record_id: str) -> bool:  # pragma: no cover
         """Delete a record.
 
         Args:
@@ -71,7 +71,7 @@ class StorageProtocol(Protocol):
         """
         ...
 
-    async def set_baseline(self, record_id: str) -> None:
+    async def set_baseline(self, record_id: str) -> None:  # pragma: no cover
         """Mark a record as baseline for its config.
 
         This will unset any existing baseline for the same config.
@@ -84,7 +84,7 @@ class StorageProtocol(Protocol):
         """
         ...
 
-    async def get_baseline(self, config_name: str) -> BenchmarkRecord | None:
+    async def get_baseline(self, config_name: str) -> BenchmarkRecord | None:  # pragma: no cover
         """Get the baseline record for a config.
 
         Args:

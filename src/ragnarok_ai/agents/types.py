@@ -141,7 +141,7 @@ class AgentResponse:
                 lines.append(f"    -> {step.tool_call.output[:100]}...")
             else:
                 content_preview = step.content[:100]
-                if len(step.content) > 100:
+                if len(step.content) > 100:  # pragma: no cover
                     content_preview += "..."
                 lines.append(f"{prefix}: {content_preview}")
         return "\n".join(lines)

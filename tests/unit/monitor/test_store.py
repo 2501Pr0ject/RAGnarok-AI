@@ -42,8 +42,7 @@ class TestMonitorStoreBasics:
     def test_insert_batch(self, store: MonitorStore) -> None:
         """Test batch insertion."""
         traces = [
-            TraceEvent(query_hash=f"hash{i}", query_length=i * 10, total_latency_ms=float(i * 100))
-            for i in range(10)
+            TraceEvent(query_hash=f"hash{i}", query_length=i * 10, total_latency_ms=float(i * 100)) for i in range(10)
         ]
         inserted = store.insert_batch(traces)
         assert inserted == 10
@@ -73,8 +72,7 @@ class TestMonitorStoreMetrics:
     def test_success_rate_all_success(self, store: MonitorStore) -> None:
         """Test success rate with all successful traces."""
         traces = [
-            TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=100.0, success=True)
-            for i in range(10)
+            TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=100.0, success=True) for i in range(10)
         ]
         store.insert_batch(traces)
 
@@ -139,10 +137,7 @@ class TestMonitorStoreMetrics:
     def test_latency_percentiles(self, store: MonitorStore) -> None:
         """Test latency percentile calculation."""
         # Insert 100 traces with latencies 1-100ms
-        traces = [
-            TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=float(i + 1))
-            for i in range(100)
-        ]
+        traces = [TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=float(i + 1)) for i in range(100)]
         store.insert_batch(traces)
 
         p50, p95, p99 = store.get_latency_percentiles()
@@ -157,10 +152,7 @@ class TestMonitorStoreMetrics:
 
     def test_latency_percentiles_few_samples(self, store: MonitorStore) -> None:
         """Test percentiles with few samples."""
-        traces = [
-            TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=float(i * 100))
-            for i in range(3)
-        ]
+        traces = [TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=float(i * 100)) for i in range(3)]
         store.insert_batch(traces)
 
         _p50, _p95, p99 = store.get_latency_percentiles()

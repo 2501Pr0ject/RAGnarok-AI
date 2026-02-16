@@ -327,3 +327,8 @@ exclude_lines = [
 ]
 fail_under = 80
 show_missing = true
+
+[dependency-groups]
+dev = [
+    "time-machine>=3.2.0",
+]

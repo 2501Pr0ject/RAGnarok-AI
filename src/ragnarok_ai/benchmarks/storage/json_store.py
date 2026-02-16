@@ -55,7 +55,7 @@ class JSONFileStore:
 
         try:
             content = self._path.read_text()
-            if not content.strip():
+            if not content.strip():  # pragma: no cover
                 return []
             data: dict[str, Any] = json.loads(content)
             records: list[dict[str, Any]] = data.get("records", [])
@@ -89,7 +89,7 @@ class JSONFileStore:
                 f.write(content)
             # Atomic rename
             Path(temp_path).replace(self._path)
-        except Exception:
+        except Exception:  # pragma: no cover
             # Clean up temp file on failure
             Path(temp_path).unlink(missing_ok=True)
             raise

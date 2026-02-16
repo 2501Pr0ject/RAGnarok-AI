@@ -57,10 +57,7 @@ class TestPrometheusExporter:
 
     def test_export_format_valid_prometheus(self, store: MonitorStore) -> None:
         """Test that export produces valid Prometheus format."""
-        traces = [
-            TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=100.0)
-            for i in range(5)
-        ]
+        traces = [TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=100.0) for i in range(5)]
         store.insert_batch(traces)
 
         exporter = PrometheusExporter(store)
@@ -76,9 +73,7 @@ class TestPrometheusExporter:
 
     def test_format_prometheus_metrics_function(self, store: MonitorStore) -> None:
         """Test convenience function."""
-        traces = [
-            TraceEvent(query_hash="h1", query_length=10, total_latency_ms=100.0)
-        ]
+        traces = [TraceEvent(query_hash="h1", query_length=10, total_latency_ms=100.0)]
         store.insert_batch(traces)
 
         metrics = format_prometheus_metrics(store)
@@ -88,9 +83,7 @@ class TestPrometheusExporter:
 
     def test_export_includes_last_trace_info(self, store: MonitorStore) -> None:
         """Test that last trace time is included."""
-        traces = [
-            TraceEvent(query_hash="h1", query_length=10, total_latency_ms=100.0)
-        ]
+        traces = [TraceEvent(query_hash="h1", query_length=10, total_latency_ms=100.0)]
         store.insert_batch(traces)
 
         exporter = PrometheusExporter(store)
@@ -100,10 +93,7 @@ class TestPrometheusExporter:
 
     def test_export_latency_in_seconds(self, store: MonitorStore) -> None:
         """Test that latency is exported in seconds, not milliseconds."""
-        traces = [
-            TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=500.0)
-            for i in range(10)
-        ]
+        traces = [TraceEvent(query_hash=f"h{i}", query_length=10, total_latency_ms=500.0) for i in range(10)]
         store.insert_batch(traces)
 
         exporter = PrometheusExporter(store)

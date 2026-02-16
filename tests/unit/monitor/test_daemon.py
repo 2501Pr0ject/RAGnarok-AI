@@ -32,9 +32,7 @@ def get_daemon_port(daemon: MonitorDaemon) -> int:
     return sockets[0].getsockname()[1]
 
 
-async def http_request(
-    host: str, port: int, method: str, path: str, body: str | None = None
-) -> tuple[int, str, str]:
+async def http_request(host: str, port: int, method: str, path: str, body: str | None = None) -> tuple[int, str, str]:
     """Make a simple HTTP request.
 
     Returns:
@@ -97,9 +95,7 @@ class TestMonitorDaemonEndpoints:
     async def test_health_endpoint(self, daemon: MonitorDaemon) -> None:
         """Test GET /health."""
         port = get_daemon_port(daemon)
-        status, content_type, body = await http_request(
-            "127.0.0.1", port, "GET", "/health"
-        )
+        status, content_type, body = await http_request("127.0.0.1", port, "GET", "/health")
 
         assert status == 200
         assert "application/json" in content_type
@@ -113,9 +109,7 @@ class TestMonitorDaemonEndpoints:
     async def test_metrics_endpoint(self, daemon: MonitorDaemon) -> None:
         """Test GET /metrics."""
         port = get_daemon_port(daemon)
-        status, content_type, body = await http_request(
-            "127.0.0.1", port, "GET", "/metrics"
-        )
+        status, content_type, body = await http_request("127.0.0.1", port, "GET", "/metrics")
 
         assert status == 200
         assert "text/plain" in content_type
@@ -126,9 +120,7 @@ class TestMonitorDaemonEndpoints:
     async def test_stats_endpoint(self, daemon: MonitorDaemon) -> None:
         """Test GET /stats."""
         port = get_daemon_port(daemon)
-        status, content_type, body = await http_request(
-            "127.0.0.1", port, "GET", "/stats"
-        )
+        status, content_type, body = await http_request("127.0.0.1", port, "GET", "/stats")
 
         assert status == 200
         assert "application/json" in content_type
@@ -156,9 +148,7 @@ class TestMonitorDaemonEndpoints:
         ]
         body = json.dumps({"traces": traces})
 
-        status, content_type, resp_body = await http_request(
-            "127.0.0.1", port, "POST", "/ingest", body
-        )
+        status, content_type, resp_body = await http_request("127.0.0.1", port, "POST", "/ingest", body)
 
         assert status == 200
         assert "application/json" in content_type
@@ -185,9 +175,7 @@ class TestMonitorDaemonEndpoints:
         ]
         body = json.dumps({"traces": traces})
 
-        status, _, resp_body = await http_request(
-            "127.0.0.1", port, "POST", "/ingest", body
-        )
+        status, _, resp_body = await http_request("127.0.0.1", port, "POST", "/ingest", body)
 
         assert status == 200
         data = json.loads(resp_body)
@@ -200,9 +188,7 @@ class TestMonitorDaemonEndpoints:
         """Test POST /ingest with invalid JSON."""
         port = get_daemon_port(daemon)
 
-        status, _, _ = await http_request(
-            "127.0.0.1", port, "POST", "/ingest", "not json"
-        )
+        status, _, _ = await http_request("127.0.0.1", port, "POST", "/ingest", "not json")
 
         assert status == 400
 
@@ -211,9 +197,7 @@ class TestMonitorDaemonEndpoints:
         """Test 404 for unknown path."""
         port = get_daemon_port(daemon)
 
-        status, _, _ = await http_request(
-            "127.0.0.1", port, "GET", "/unknown"
-        )
+        status, _, _ = await http_request("127.0.0.1", port, "GET", "/unknown")
 
         assert status == 404
 
@@ -244,9 +228,7 @@ class TestMonitorDaemonLifecycle:
         await asyncio.sleep(0.1)
 
         port = get_daemon_port(daemon)
-        _, _, body = await http_request(
-            "127.0.0.1", port, "GET", "/health"
-        )
+        _, _, body = await http_request("127.0.0.1", port, "GET", "/health")
 
         data = json.loads(body)
         assert data["uptime_seconds"] >= 0.1

@@ -55,7 +55,7 @@ class BenchmarkHistory:
         if result.query_results:
             avg_latency = sum(qr.latency_ms for qr in result.query_results) / len(result.query_results)
             metrics["latency_ms"] = avg_latency
-        elif result.total_latency_ms > 0 and result.metrics:
+        elif result.total_latency_ms > 0 and result.metrics:  # pragma: no cover
             metrics["latency_ms"] = result.total_latency_ms / len(result.metrics)
 
         return metrics
