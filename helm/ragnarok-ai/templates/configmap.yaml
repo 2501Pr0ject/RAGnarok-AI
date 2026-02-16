@@ -1,0 +1,11 @@
+{{- if .Values.config.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ragnarok-ai.fullname" . }}-config
+  labels:
+    {{- include "ragnarok-ai.labels" . | nindent 4 }}
+data:
+  ragnarok.yaml: |
+    {{- .Values.config.ragnarokYaml | nindent 4 }}
+{{- end }}

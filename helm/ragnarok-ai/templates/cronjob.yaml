@@ -1,0 +1,84 @@
+{{- if eq .Values.mode "cronjob" }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "ragnarok-ai.fullname" . }}
+  labels:
+    {{- include "ragnarok-ai.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  concurrencyPolicy: {{ .Values.cronjob.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "ragnarok-ai.selectorLabels" . | nindent 12 }}
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "ragnarok-ai.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          restartPolicy: Never
+          containers:
+            - name: {{ .Chart.Name }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              image: {{ include "ragnarok-ai.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: {{ toYaml .Values.cronjob.command | nindent 16 }}
+              args: {{ toYaml .Values.cronjob.args | nindent 16 }}
+              env:
+                {{- range $key, $value := .Values.env }}
+                - name: {{ $key }}
+                  value: {{ $value | quote }}
+                {{- end }}
+                {{- if .Values.ollama.enabled }}
+                - name: RAGNAROK_OLLAMA_BASE_URL
+                  value: {{ .Values.ollama.url | quote }}
+                {{- end }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+              volumeMounts:
+                {{- if .Values.config.enabled }}
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                {{- end }}
+                {{- if .Values.persistence.enabled }}
+                - name: data
+                  mountPath: /data
+                {{- end }}
+          volumes:
+            {{- if .Values.config.enabled }}
+            - name: config
+              configMap:
+                name: {{ include "ragnarok-ai.fullname" . }}-config
+            {{- end }}
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ .Values.persistence.existingClaim | default (printf "%s-data" (include "ragnarok-ai.fullname" .)) }}
+            {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

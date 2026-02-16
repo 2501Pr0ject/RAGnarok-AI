@@ -1,0 +1,99 @@
+# RAGnarok-AI Helm Chart Values
+
+# Image configuration
+image:
+  repository: ghcr.io/2501pr0ject/ragnarok-ai
+  tag: ""  # Defaults to Chart appVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Deployment mode: "job" (one-shot), "cronjob" (scheduled), or "deployment" (persistent)
+mode: job
+
+# Job configuration (for mode: job)
+job:
+  command: ["ragnarok"]
+  args: ["evaluate", "--demo"]
+  restartPolicy: Never
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+
+# CronJob configuration (for mode: cronjob)
+cronjob:
+  schedule: "0 6 * * *"
+  command: ["ragnarok"]
+  args: ["evaluate", "--config", "/config/ragnarok.yaml", "--output", "/data/results.json"]
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+# Ollama configuration
+ollama:
+  enabled: false
+  url: "http://ollama:11434"
+
+# RAGnarok configuration (mounted as ConfigMap)
+config:
+  enabled: false
+  ragnarokYaml: |
+    testset: /data/testset.json
+    output: /data/results.json
+    fail_under: 0.7
+    metrics:
+      - precision
+      - recall
+      - mrr
+
+# Environment variables
+env:
+  PYTHONUNBUFFERED: "1"
+
+# Persistence for data
+persistence:
+  enabled: false
+  existingClaim: ""
+  storageClass: ""
+  size: 1Gi
+  accessMode: ReadWriteOnce
+
+# Resources
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Service account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
