@@ -6,10 +6,11 @@ WORKDIR /app
 # Install uv
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files (README.md needed by hatchling)
+# Copy all files needed for install (README.md needed by hatchling)
 COPY pyproject.toml uv.lock README.md ./
+COPY src/ ./src/
 
-# Install dependencies
+# Install package with dependencies
 RUN uv sync --frozen --no-dev --extra cli --extra ollama
 
 # Runtime stage
@@ -17,11 +18,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy virtual environment from builder
+# Copy virtual environment and source from builder
 COPY --from=builder /app/.venv /app/.venv
-
-# Copy source code
-COPY src/ ./src/
+COPY --from=builder /app/src /app/src
 
 # Set environment
 ENV PATH="/app/.venv/bin:$PATH"
