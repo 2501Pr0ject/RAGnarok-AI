@@ -643,7 +643,7 @@ display_comparison([
 - [ ] SSO support (SAML, OIDC)
 - [ ] Role-based access control
 - [ ] Audit logging
-- [ ] Air-gapped deployment guide
+- [x] Air-gapped deployment guide
 - [x] Docker/Kubernetes helm charts
 
 </details>

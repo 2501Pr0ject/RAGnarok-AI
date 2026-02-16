@@ -95,6 +95,8 @@ nav:
   - CI/CD:
     - GitHub Action: ci-cd/github-action.md
     - CLI Reference: ci-cd/cli-reference.md
+  - Deployment:
+    - Air-Gapped: deployment/air-gapped.md
   - API Reference:
     - Core Types: api/types.md
     - Evaluators: api/evaluators.md
