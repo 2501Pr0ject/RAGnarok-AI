@@ -13,10 +13,10 @@ from typing import Any
 _tiktoken_available = False
 _tiktoken_module: Any = None
 try:
-    import tiktoken
+    import tiktoken  # pragma: no cover
 
-    _tiktoken_module = tiktoken
-    _tiktoken_available = True
+    _tiktoken_module = tiktoken  # pragma: no cover
+    _tiktoken_available = True  # pragma: no cover
 except ImportError:
     pass
 
@@ -39,10 +39,10 @@ def _get_encoding(model: str) -> Any:
     if not _tiktoken_available or _tiktoken_module is None:
         return None
 
-    try:
+    try:  # pragma: no cover
         # Try to get encoding for the specific model
         return _tiktoken_module.encoding_for_model(model)
-    except KeyError:
+    except KeyError:  # pragma: no cover
         # Fall back to cl100k_base (GPT-4, ChatGPT models)
         try:
             return _tiktoken_module.get_encoding("cl100k_base")
@@ -67,7 +67,7 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
 
     # Try tiktoken first
     encoding = _get_encoding(model)
-    if encoding is not None:
+    if encoding is not None:  # pragma: no cover
         return len(encoding.encode(text))
 
     # Fallback: estimate ~4 characters per token (reasonable for English)

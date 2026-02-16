@@ -119,6 +119,15 @@ class TestComputeCacheKey:
         key = compute_cache_key(query)
         assert len(key) == 32
 
+    def test_extra_config_affects_key(self) -> None:
+        """Test that extra configuration affects the key."""
+        query = Query(text="What is X?", ground_truth_docs=["doc_1"])
+        key1 = compute_cache_key(query)
+        key2 = compute_cache_key(query, extra={"model": "gpt-4"})
+        key3 = compute_cache_key(query, extra={"model": "gpt-3.5"})
+        assert key1 != key2
+        assert key2 != key3
+
 
 # ============================================================================
 # MemoryCache Tests

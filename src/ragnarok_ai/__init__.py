@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ragnarok_ai.alerts import AlertManager, AlertRule, AlertSeverity
 from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult
 from ragnarok_ai.core.compare import ComparisonResult, compare
 from ragnarok_ai.core.evaluate import EvaluationResult, evaluate, evaluate_stream
@@ -15,8 +16,11 @@ from ragnarok_ai.loaders.forge_bundle import (
 from ragnarok_ai.monitor import MonitorClient
 from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
-__version__ = "1.6.0"
+__version__ = "1.7.0"
 __all__ = [
+    "AlertManager",
+    "AlertRule",
+    "AlertSeverity",
     "BatchConfig",
     "BatchEvaluator",
     "BatchProgress",

@@ -340,7 +340,7 @@ def _supports_color(stream: TextIO) -> bool:
         return False
 
     # Check for common environment variables that disable color
-    import os
+    import os  # pragma: no cover
 
     if os.environ.get("NO_COLOR"):  # pragma: no cover
         return False

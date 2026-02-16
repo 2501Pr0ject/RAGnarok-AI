@@ -37,4 +37,4 @@ class QuestionGeneratorProtocol(Protocol):
         Returns:
             TestSet with generated queries.
         """
-        ...
+        ...  # pragma: no cover

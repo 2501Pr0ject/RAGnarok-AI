@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.6.0 is now available!** Production Monitoring with Prometheus metrics. Install with `pip install ragnarok-ai`
+> **v1.7.0 is now available!** Alerting system with Webhook and Slack adapters. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -624,10 +624,22 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.7.0 — Alerting</strong></summary>
+
+- [x] **AlertManager**: Multi-channel alert dispatch with concurrent sending
+- [x] **AlertRule**: Threshold-based rules with cooldown support
+- [x] **WebhookAlertAdapter**: Generic HTTP webhook notifications
+- [x] **SlackAlertAdapter**: Slack notifications with Block Kit formatting
+- [x] **Alert Protocols**: Alert, AlertResult, AlertSeverity (INFO, WARNING, CRITICAL)
+- [x] **Public Exports**: AlertManager, AlertRule, AlertSeverity from package root
+
+</details>
+
 ### Planned
 
-#### v1.7+
-- [ ] Alerting (webhooks, Slack, email)
+#### v1.8+
+- [ ] More alert adapters (Discord, Email)
 - [ ] Drift detection
 - [ ] Web UI dashboard
 

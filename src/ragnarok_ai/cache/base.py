@@ -27,7 +27,7 @@ class CacheProtocol(Protocol):
         Returns:
             Cached QueryResult or None if not found.
         """
-        ...
+        ...  # pragma: no cover
 
     async def set(self, key: str, result: QueryResult) -> None:
         """Store a result in the cache.
@@ -36,7 +36,7 @@ class CacheProtocol(Protocol):
             key: Cache key.
             result: QueryResult to cache.
         """
-        ...
+        ...  # pragma: no cover
 
     async def has(self, key: str) -> bool:
         """Check if a key exists in the cache.
@@ -47,7 +47,7 @@ class CacheProtocol(Protocol):
         Returns:
             True if key exists, False otherwise.
         """
-        ...
+        ...  # pragma: no cover
 
     async def delete(self, key: str) -> None:
         """Delete a cached result.
@@ -55,11 +55,11 @@ class CacheProtocol(Protocol):
         Args:
             key: Cache key.
         """
-        ...
+        ...  # pragma: no cover
 
     async def clear(self) -> None:
         """Clear all cached results."""
-        ...
+        ...  # pragma: no cover
 
     def stats(self) -> CacheStats:
         """Get cache statistics.
@@ -67,7 +67,7 @@ class CacheProtocol(Protocol):
         Returns:
             CacheStats with hit/miss counts.
         """
-        ...
+        ...  # pragma: no cover
 
 
 class CacheStats:

@@ -50,7 +50,7 @@ class LLMProtocol(Protocol):
         Raises:
             LLMConnectionError: If the LLM provider is unreachable.
         """
-        ...
+        ...  # pragma: no cover
 
     async def embed(self, text: str) -> list[float]:
         """Generate an embedding vector for the given text.
@@ -64,7 +64,7 @@ class LLMProtocol(Protocol):
         Raises:
             LLMConnectionError: If the LLM provider is unreachable.
         """
-        ...
+        ...  # pragma: no cover
 
 
 @runtime_checkable
@@ -113,7 +113,7 @@ class VectorStoreProtocol(Protocol):
         Raises:
             ConnectionError: If the vector store is unreachable.
         """
-        ...
+        ...  # pragma: no cover
 
     async def add(self, documents: list[Document]) -> None:
         """Add documents to the vector store.
@@ -124,7 +124,7 @@ class VectorStoreProtocol(Protocol):
         Raises:
             ConnectionError: If the vector store is unreachable.
         """
-        ...
+        ...  # pragma: no cover
 
 
 @runtime_checkable
@@ -163,7 +163,7 @@ class EvaluatorProtocol(Protocol):
         Raises:
             EvaluationError: If evaluation fails.
         """
-        ...
+        ...  # pragma: no cover
 
 
 @runtime_checkable
@@ -179,4 +179,4 @@ class RAGProtocol(Protocol):
         Returns:
             RAGResponse containing the answer and retrieved documents.
         """
-        ...
+        ...  # pragma: no cover

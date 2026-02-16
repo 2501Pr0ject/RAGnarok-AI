@@ -5,6 +5,36 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-02-16
+
+### Added
+- **Alerting System**
+  - `AlertManager` for multi-channel alert dispatch
+    - Concurrent sending to multiple adapters via `asyncio.gather`
+    - Rule-based alerting with `check_and_alert()` method
+    - Adapter and rule management (add/remove/list)
+  - `AlertRule` for threshold-based alerting
+    - Conditions: `lt`, `gt`, `lte`, `gte`, `eq`, `neq`
+    - Configurable severity (INFO, WARNING, CRITICAL)
+    - Cooldown support to prevent alert fatigue
+  - `WebhookAlertAdapter` for generic HTTP notifications
+    - POST requests with JSON payload
+    - Custom headers support
+    - Timeout configuration
+  - `SlackAlertAdapter` for Slack notifications
+    - Block Kit formatting with severity colors
+    - Emoji indicators per severity level
+    - Channel/webhook URL configuration
+  - Core protocols and types
+    - `Alert` dataclass (title, message, severity, source, metadata, timestamp)
+    - `AlertResult` for delivery status tracking
+    - `AlertSeverity` enum (INFO, WARNING, CRITICAL)
+    - `AlertAdapter` protocol for custom adapter implementations
+- **New Exports**: `AlertManager`, `AlertRule`, `AlertSeverity` available from `ragnarok_ai` package root
+
+### Changed
+- Roadmap updated: Alerting marked as complete, v1.8+ planned items updated
+
 ## [1.6.0] - 2026-02-16
 
 ### Added
@@ -422,6 +452,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.7.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.1...v1.4.0
