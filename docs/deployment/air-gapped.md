@@ -49,15 +49,15 @@ RAGnarok-AI gives you the choice: use cloud services when convenient, or go full
 
 ```bash
 # Pull and save RAGnarok-AI image
-docker pull ghcr.io/2501pr0ject/ragnarok-ai:1.4.1
-docker save ghcr.io/2501pr0ject/ragnarok-ai:1.4.1 -o ragnarok-ai-1.4.1.tar
+docker pull ghcr.io/2501pr0ject/ragnarok-ai:1.5.0
+docker save ghcr.io/2501pr0ject/ragnarok-ai:1.5.0 -o ragnarok-ai-1.5.0.tar
 
 # Pull and save Ollama image
 docker pull ollama/ollama:latest
 docker save ollama/ollama:latest -o ollama-latest.tar
 
 # Compress for transfer (optional)
-gzip ragnarok-ai-1.4.1.tar
+gzip ragnarok-ai-1.5.0.tar
 gzip ollama-latest.tar
 ```
 
@@ -82,7 +82,7 @@ pip download ragnarok-ai[all] --dest .
 
 ```bash
 ls -la *.whl
-# Should include: ragnarok_ai-1.4.1-py3-none-any.whl, pydantic, typer, httpx, etc.
+# Should include: ragnarok_ai-1.5.0-py3-none-any.whl, pydantic, typer, httpx, etc.
 ```
 
 ### 2.3 Export Ollama Models
@@ -137,7 +137,7 @@ EOF
 ```bash
 # Create final transfer package
 mkdir air-gapped-bundle
-mv ragnarok-ai-1.4.1.tar.gz air-gapped-bundle/
+mv ragnarok-ai-1.5.0.tar.gz air-gapped-bundle/
 mv ollama-latest.tar.gz air-gapped-bundle/
 mv ollama-models.tar.gz air-gapped-bundle/
 mv ragnarok-wheels/ air-gapped-bundle/
@@ -152,7 +152,7 @@ echo "=== RAGnarok-AI Air-Gapped Installation ==="
 
 # Load Docker images
 echo "[1/4] Loading Docker images..."
-gunzip -c ragnarok-ai-1.4.1.tar.gz | docker load
+gunzip -c ragnarok-ai-1.5.0.tar.gz | docker load
 gunzip -c ollama-latest.tar.gz | docker load
 
 # Install Python package
@@ -208,8 +208,8 @@ If you have a private Docker registry accessible from the air-gapped network:
 
 ```bash
 # On internet machine: push to private registry
-docker tag ghcr.io/2501pr0ject/ragnarok-ai:1.4.1 registry.internal/ragnarok-ai:1.4.1
-docker push registry.internal/ragnarok-ai:1.4.1
+docker tag ghcr.io/2501pr0ject/ragnarok-ai:1.5.0 registry.internal/ragnarok-ai:1.5.0
+docker push registry.internal/ragnarok-ai:1.5.0
 
 docker tag ollama/ollama:latest registry.internal/ollama:latest
 docker push registry.internal/ollama:latest
@@ -259,7 +259,7 @@ Or manually:
 **Load Docker images:**
 
 ```bash
-gunzip -c ragnarok-ai-1.4.1.tar.gz | docker load
+gunzip -c ragnarok-ai-1.5.0.tar.gz | docker load
 gunzip -c ollama-latest.tar.gz | docker load
 
 # Verify
@@ -292,14 +292,14 @@ For Kubernetes deployments:
 
 ```bash
 # Load images into cluster nodes or push to internal registry
-docker load -i ragnarok-ai-1.4.1.tar.gz
-docker tag ghcr.io/2501pr0ject/ragnarok-ai:1.4.1 internal-registry/ragnarok-ai:1.4.1
-docker push internal-registry/ragnarok-ai:1.4.1
+docker load -i ragnarok-ai-1.5.0.tar.gz
+docker tag ghcr.io/2501pr0ject/ragnarok-ai:1.5.0 internal-registry/ragnarok-ai:1.5.0
+docker push internal-registry/ragnarok-ai:1.5.0
 
 # Install Helm chart with internal registry
 helm install ragnarok ./helm/ragnarok-ai \
   --set image.repository=internal-registry/ragnarok-ai \
-  --set image.tag=1.4.1
+  --set image.tag=1.5.0
 ```
 
 ---
@@ -311,7 +311,7 @@ helm install ragnarok ./helm/ragnarok-ai \
 ```bash
 # Version check
 ragnarok version
-# Expected: ragnarok-ai v1.4.1
+# Expected: ragnarok-ai v1.5.0
 
 # List plugins
 ragnarok plugins --list
@@ -347,7 +347,7 @@ ragnarok evaluate \
 cat > docker-compose-airgap.yml << 'EOF'
 services:
   ragnarok:
-    image: ghcr.io/2501pr0ject/ragnarok-ai:1.4.1
+    image: ghcr.io/2501pr0ject/ragnarok-ai:1.5.0
     depends_on:
       - ollama
     environment:
@@ -392,11 +392,11 @@ pip install --no-index --find-links=/path/to/ragnarok-wheels/ ragnarok-ai[cli,ol
 
 ```bash
 # Check file integrity
-gunzip -t ragnarok-ai-1.4.1.tar.gz
+gunzip -t ragnarok-ai-1.5.0.tar.gz
 
 # Try without compression
-gunzip ragnarok-ai-1.4.1.tar.gz
-docker load -i ragnarok-ai-1.4.1.tar
+gunzip ragnarok-ai-1.5.0.tar.gz
+docker load -i ragnarok-ai-1.5.0.tar
 ```
 
 ---
@@ -409,7 +409,7 @@ Always verify image digests match expected values:
 
 ```bash
 # Check digest after loading
-docker inspect ghcr.io/2501pr0ject/ragnarok-ai:1.4.1 --format='{{.Id}}'
+docker inspect ghcr.io/2501pr0ject/ragnarok-ai:1.5.0 --format='{{.Id}}'
 ```
 
 ### Network Isolation

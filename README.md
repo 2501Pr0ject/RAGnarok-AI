@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.4.1 is now available!** Includes dataset versioning, diff command, and unified artifact schema. Install with `pip install ragnarok-ai`
+> **v1.5.0 is now available!** Enterprise-ready with Helm charts and air-gapped deployment. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -599,9 +599,19 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.5.0 — Enterprise Deployment</strong></summary>
+
+- [x] **Kubernetes Helm Chart**: Job and CronJob modes, ConfigMap, PVC support
+- [x] **Air-Gapped Deployment Guide**: Complete documentation for offline environments
+- [x] **Docker improvements**: Fixed Dockerfile for proper module installation
+- [x] **Data Sovereignty**: Full support for GDPR, HIPAA, defense environments
+
+</details>
+
 ### Planned
 
-#### v1.5+
+#### v1.6+
 - [ ] Production monitoring mode
 - [ ] Web UI dashboard
 

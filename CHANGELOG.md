@@ -5,6 +5,38 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-02-16
+
+### Added
+- **Kubernetes Helm Chart**
+  - Full Helm chart in `helm/ragnarok-ai/`
+  - Job mode for one-shot evaluations (default)
+  - CronJob mode for scheduled evaluations
+  - ConfigMap support for `ragnarok.yaml` configuration
+  - PVC support for testset/results persistence
+  - Ollama URL configuration via environment variables
+  - Security context (non-root, read-only filesystem, dropped capabilities)
+  - Resource limits and requests
+  - ServiceAccount with configurable annotations
+- **Air-Gapped Deployment Guide**
+  - Complete documentation at `docs/deployment/air-gapped.md`
+  - Prerequisites and component sizing
+  - Preparation steps (Docker save, pip download, Ollama model export)
+  - Transfer options (USB, private registry, data diode)
+  - Installation on air-gapped machines
+  - Verification and troubleshooting
+  - Security considerations
+- **Enterprise Deployment Stack**
+  - Docker + Helm + Air-gapped = complete enterprise offering
+  - Data sovereignty and regulatory compliance support
+  - Local-first architecture for GDPR, HIPAA, defense environments
+
+### Fixed
+- **Dockerfile**: Source files now correctly copied to runtime image (fixes `ModuleNotFoundError`)
+
+### Changed
+- Roadmap updated: Docker/Kubernetes helm charts and Air-gapped deployment guide marked as complete
+
 ## [1.4.1] - 2026-02-15
 
 ### Added
@@ -364,6 +396,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.5.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.3.0...v1.3.1
