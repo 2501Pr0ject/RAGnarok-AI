@@ -48,6 +48,7 @@ class MonitorStore:
         self.aggregate_retention_days = aggregate_retention_days
         self._persistent_conn: sqlite3.Connection | None = None
 
+        self.db_path: str | Path
         if self._is_memory:
             self.db_path = ":memory:"
             # Create a persistent connection for in-memory database
@@ -264,7 +265,7 @@ class MonitorStore:
             if not row or row["total"] == 0:
                 return 1.0  # No traces = 100% success (no failures)
 
-            return row["successes"] / row["total"]
+            return float(row["successes"]) / float(row["total"])
 
     def get_latency_percentiles(
         self, since: datetime | None = None

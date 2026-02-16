@@ -76,8 +76,8 @@ class MonitorDaemon:
             if not request_line:
                 return
 
-            request_line = request_line.decode("utf-8").strip()
-            parts = request_line.split(" ")
+            request_line_str = request_line.decode("utf-8").strip()
+            parts = request_line_str.split(" ")
             if len(parts) < 2:
                 await self._send_response(writer, HTTPStatus.BAD_REQUEST, "Bad Request")
                 return
@@ -88,12 +88,12 @@ class MonitorDaemon:
             headers: dict[str, str] = {}
             content_length = 0
             while True:
-                line = await reader.readline()
-                if line == b"\r\n" or line == b"\n" or not line:
+                line_bytes = await reader.readline()
+                if line_bytes == b"\r\n" or line_bytes == b"\n" or not line_bytes:
                     break
-                line = line.decode("utf-8").strip()
-                if ":" in line:
-                    key, value = line.split(":", 1)
+                line_str = line_bytes.decode("utf-8").strip()
+                if ":" in line_str:
+                    key, value = line_str.split(":", 1)
                     headers[key.strip().lower()] = value.strip()
                     if key.strip().lower() == "content-length":
                         content_length = int(value.strip())

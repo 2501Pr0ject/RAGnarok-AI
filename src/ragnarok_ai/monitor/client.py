@@ -291,7 +291,7 @@ class MonitorClient:
             # Read response (basic validation)
             response = sock.recv(1024)
             if b"200" not in response:
-                raise RuntimeError(f"Ingest failed: {response[:100]}")
+                raise RuntimeError(f"Ingest failed: {response[:100].decode('utf-8', errors='replace')}")
 
     def __enter__(self) -> MonitorClient:
         """Context manager entry."""
