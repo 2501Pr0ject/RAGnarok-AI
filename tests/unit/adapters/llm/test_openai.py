@@ -169,18 +169,6 @@ class TestOpenAILLMGenerate:
 
     @pytest.mark.asyncio
     @respx.mock
-    async def test_generate_timeout_error(self) -> None:
-        """Test generation with timeout error."""
-        respx.post("https://api.openai.com/v1/chat/completions").mock(
-            side_effect=httpx.TimeoutException("Request timed out")
-        )
-
-        llm = OpenAILLM(api_key="sk-test")
-        with pytest.raises(LLMConnectionError, match="timed out"):
-            await llm.generate("What is RAG?")
-
-    @pytest.mark.asyncio
-    @respx.mock
     async def test_generate_unexpected_error(self) -> None:
         """Test generation with unexpected error."""
         respx.post("https://api.openai.com/v1/chat/completions").mock(

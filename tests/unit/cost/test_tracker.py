@@ -230,8 +230,8 @@ class TestGlobalTracker:
 
     def test_get_global_tracker_creates_instance(self):
         """Test get_global_tracker creates instance on first call."""
-        from ragnarok_ai.cost.tracker import get_global_tracker, _global_tracker
         import ragnarok_ai.cost.tracker as tracker_module
+        from ragnarok_ai.cost.tracker import get_global_tracker
 
         # Reset global tracker
         tracker_module._global_tracker = None

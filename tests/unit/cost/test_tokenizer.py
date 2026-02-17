@@ -1,7 +1,5 @@
 """Tests for tokenizer module."""
 
-from unittest.mock import patch
-
 from ragnarok_ai.cost.tokenizer import (
     _get_encoding,
     count_tokens,

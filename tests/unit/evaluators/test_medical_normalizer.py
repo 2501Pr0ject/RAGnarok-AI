@@ -155,7 +155,7 @@ class TestDottedAbbreviations:
     def test_dotted_qd(self) -> None:
         """Test q.d. (once daily) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Take medication q.d.")
+        text, _expansions = normalizer.normalize_text("Take medication q.d.")
         # q.d. should be expanded
         assert "q.d" not in text.lower() or "once" in text.lower() or "daily" in text.lower()
 
@@ -191,13 +191,13 @@ class TestSlashAbbreviations:
     def test_slash_wo(self) -> None:
         """Test w/o (without) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Exam w/o issues")
+        text, _expansions = normalizer.normalize_text("Exam w/o issues")
         assert "without" in text.lower()
 
     def test_slash_co(self) -> None:
         """Test c/o (complains of) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Patient c/o pain")
+        text, _expansions = normalizer.normalize_text("Patient c/o pain")
         assert "complains" in text.lower() or "complaint" in text.lower()
 
     def test_slash_nvd(self) -> None:
@@ -214,7 +214,7 @@ class TestAmpersandAbbreviations:
     def test_ampersand_id(self) -> None:
         """Test I&D (incision and drainage) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Performed I&D")
+        text, _expansions = normalizer.normalize_text("Performed I&D")
         assert "incision and drainage" in text.lower()
 
     def test_ampersand_dc(self) -> None:
@@ -230,19 +230,19 @@ class TestDegreeAbbreviations:
     def test_degree_first(self) -> None:
         """Test 1° (first-degree/primary) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("1° burn on arm")
+        text, _expansions = normalizer.normalize_text("1° burn on arm")
         assert "first" in text.lower() or "primary" in text.lower()
 
     def test_degree_second(self) -> None:
         """Test 2° (second-degree/secondary) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("2° infection")
+        text, _expansions = normalizer.normalize_text("2° infection")
         assert "second" in text.lower() or "secondary" in text.lower()
 
     def test_degree_third(self) -> None:
         """Test 3° (third-degree/tertiary) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("3° burn")
+        text, _expansions = normalizer.normalize_text("3° burn")
         assert "third" in text.lower() or "tertiary" in text.lower()
 
 
@@ -252,25 +252,25 @@ class TestMixedCaseAbbreviations:
     def test_mixed_dx(self) -> None:
         """Test Dx (diagnosis) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Dx: pneumonia")
+        text, _expansions = normalizer.normalize_text("Dx: pneumonia")
         assert "diagnosis" in text.lower()
 
     def test_mixed_tx(self) -> None:
         """Test Tx (treatment) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Tx with antibiotics")
+        text, _expansions = normalizer.normalize_text("Tx with antibiotics")
         assert "treatment" in text.lower()
 
     def test_mixed_spo2(self) -> None:
         """Test SpO2 (oxygen saturation) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("SpO2 at 98%")
+        text, _expansions = normalizer.normalize_text("SpO2 at 98%")
         assert "oxygen saturation" in text.lower()
 
     def test_mixed_hba1c(self) -> None:
         """Test HbA1c (hemoglobin A1c) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("HbA1c level elevated")
+        text, _expansions = normalizer.normalize_text("HbA1c level elevated")
         assert "hemoglobin" in text.lower() or "HbA1c" in text
 
 
@@ -280,13 +280,13 @@ class TestBarNotation:
     def test_bar_c(self) -> None:
         """Test c̄ (with) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("c̄ meals")
+        text, _expansions = normalizer.normalize_text("c̄ meals")
         assert "with" in text.lower()
 
     def test_bar_s(self) -> None:
         """Test s̄ (without) normalization."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("s̄ complications")
+        text, _expansions = normalizer.normalize_text("s̄ complications")
         assert "without" in text.lower()
 
 
@@ -327,7 +327,7 @@ class TestCustomAbbreviations:
         normalizer = MedicalAbbreviationNormalizer(
             custom_abbreviations={"CUSTOM": "custom expansion text"}
         )
-        text, expansions = normalizer.normalize_text("Patient has CUSTOM")
+        text, _expansions = normalizer.normalize_text("Patient has CUSTOM")
         assert "custom expansion text" in text.lower()
 
     def test_custom_overrides_builtin(self) -> None:
@@ -392,13 +392,13 @@ class TestFalsePositives:
     def test_false_positive_us(self) -> None:
         """Test that US is not expanded."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("Patient from US")
+        text, _expansions = normalizer.normalize_text("Patient from US")
         assert "US" in text
 
     def test_false_positive_it(self) -> None:
         """Test that IT is not expanded."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("IT department")
+        text, _expansions = normalizer.normalize_text("IT department")
         assert "IT" in text
 
 
@@ -423,7 +423,7 @@ class TestEdgeCases:
     def test_abbreviation_only(self) -> None:
         """Test text that is only an abbreviation."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, expansions = normalizer.normalize_text("CHF")
+        text, _expansions = normalizer.normalize_text("CHF")
         assert "congestive heart failure" in text.lower()
 
     def test_resolve_unknown_returns_none(self) -> None:

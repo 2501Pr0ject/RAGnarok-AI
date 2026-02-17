@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ragnarok_ai.generators.parsing import parse_json_array, parse_json_object
 
 

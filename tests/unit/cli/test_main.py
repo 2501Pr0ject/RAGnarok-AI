@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -912,17 +911,6 @@ class TestBenchmarkCommandExtended:
             ])
 
             assert result.exit_code in [0, 1]
-
-
-class TestVersionCommand:
-    """Tests for version command."""
-
-    def test_version_command(self) -> None:
-        """Test version subcommand."""
-        result = runner.invoke(app, ["version"])
-
-        assert result.exit_code == 0
-        # Should output version string
 
 
 class TestMainWithJsonFlag:

@@ -338,9 +338,11 @@ class TestFAISSVectorStoreErrors:
             store = FAISSVectorStore()
             store._index = None
 
-            with patch("builtins.__import__", side_effect=ImportError("No module named 'faiss'")):
-                with pytest.raises(VectorStoreConnectionError, match="faiss-cpu is not installed"):
-                    await store._ensure_index()
+            with (
+                patch("builtins.__import__", side_effect=ImportError("No module named 'faiss'")),
+                pytest.raises(VectorStoreConnectionError, match="faiss-cpu is not installed"),
+            ):
+                await store._ensure_index()
 
     @pytest.mark.asyncio
     async def test_generic_exception_raises_connection_error(self, mock_faiss) -> None:
@@ -576,12 +578,11 @@ class TestFAISSVectorStoreSave:
     @pytest.mark.asyncio
     async def test_save_success(self, mock_faiss) -> None:
         """Test successful save writes index and metadata."""
-        FAISSVectorStore = mock_faiss["FAISSVectorStore"]
-        mock_faiss_module = mock_faiss["faiss"]
-
-        import tempfile
         import json
+        import tempfile
         from pathlib import Path
+
+        FAISSVectorStore = mock_faiss["FAISSVectorStore"]
 
         with tempfile.TemporaryDirectory() as tmpdir:
             index_path = f"{tmpdir}/test_index"
@@ -634,12 +635,12 @@ class TestFAISSVectorStoreLoad:
     @pytest.mark.asyncio
     async def test_load_existing_index(self, mock_faiss) -> None:
         """Test loading existing index and metadata."""
+        import json
+        import tempfile
+        from pathlib import Path
+
         FAISSVectorStore = mock_faiss["FAISSVectorStore"]
         mock_faiss_module = mock_faiss["faiss"]
-
-        import tempfile
-        import json
-        from pathlib import Path
 
         with tempfile.TemporaryDirectory() as tmpdir:
             index_path = f"{tmpdir}/test_index"

@@ -353,9 +353,11 @@ class TestChromaVectorStoreErrors:
                 store = ChromaVectorStore()
                 store._client = None
 
-                with patch("builtins.__import__", side_effect=ImportError("No module named 'chromadb'")):
-                    with pytest.raises(VectorStoreConnectionError, match="chromadb is not installed"):
-                        await store._ensure_client()
+                with (
+                    patch("builtins.__import__", side_effect=ImportError("No module named 'chromadb'")),
+                    pytest.raises(VectorStoreConnectionError, match="chromadb is not installed"),
+                ):
+                    await store._ensure_client()
 
     @pytest.mark.asyncio
     async def test_generic_exception_raises_connection_error(self, mock_chromadb) -> None:

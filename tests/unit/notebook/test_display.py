@@ -6,8 +6,6 @@ import sys
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from ragnarok_ai.notebook.display import (
     _display_cost_summary,
     _format_number,

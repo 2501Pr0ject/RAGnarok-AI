@@ -397,8 +397,9 @@ class TestLLMJudgeModelDiscovery:
 
     def test_get_available_models_success(self):
         """Test _get_available_models with successful response."""
-        import httpx
         from unittest.mock import patch
+
+        import httpx
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -418,8 +419,9 @@ class TestLLMJudgeModelDiscovery:
 
     def test_get_available_models_failure(self):
         """Test _get_available_models with failed request."""
-        import httpx
         from unittest.mock import patch
+
+        import httpx
 
         with patch.object(httpx, "get", side_effect=Exception("Connection failed")):
             judge = LLMJudge.__new__(LLMJudge)
@@ -429,8 +431,9 @@ class TestLLMJudgeModelDiscovery:
 
     def test_get_available_models_non_200(self):
         """Test _get_available_models with non-200 response."""
-        import httpx
         from unittest.mock import patch
+
+        import httpx
 
         mock_response = MagicMock()
         mock_response.status_code = 500
