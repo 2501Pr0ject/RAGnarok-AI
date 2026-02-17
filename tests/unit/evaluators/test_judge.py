@@ -330,6 +330,192 @@ Explanation: Covers main point but misses details."""
 # =============================================================================
 
 
+class TestLLMJudgeMedicalMode:
+    """Tests for LLMJudge with medical_mode enabled."""
+
+    @pytest.fixture
+    def mock_llm(self):
+        """Create a mock LLM."""
+        llm = MagicMock()
+        llm.generate = AsyncMock()
+        return llm
+
+    @pytest.fixture
+    def medical_judge(self, mock_llm):
+        """Create judge with medical mode enabled."""
+        return LLMJudge(llm=mock_llm, medical_mode=True)
+
+    @pytest.mark.asyncio
+    async def test_faithfulness_with_medical_mode(self, medical_judge, mock_llm):
+        """Test that medical mode normalizes abbreviations in faithfulness eval."""
+        mock_llm.generate.return_value = """Score: 5
+Verdict: PASS
+Explanation: All claims supported."""
+
+        result = await medical_judge.evaluate_faithfulness(
+            context="Patient has CHF",
+            question="What condition?",
+            answer="Patient has congestive heart failure",
+        )
+
+        assert result.verdict == "PASS"
+        # Verify the normalizer was used (both texts should be normalized)
+        assert medical_judge._normalizer is not None
+
+    @pytest.mark.asyncio
+    async def test_hallucination_with_medical_mode(self, medical_judge, mock_llm):
+        """Test that medical mode normalizes abbreviations in hallucination detection."""
+        mock_llm.generate.return_value = """Score: 5
+Verdict: PASS
+Explanation: No hallucinations."""
+
+        result = await medical_judge.detect_hallucination(
+            context="Patient diagnosed with MI",
+            answer="Patient has myocardial infarction",
+        )
+
+        assert result.verdict == "PASS"
+
+    @pytest.mark.asyncio
+    async def test_completeness_with_medical_mode(self, medical_judge, mock_llm):
+        """Test that medical mode normalizes abbreviations in completeness eval."""
+        mock_llm.generate.return_value = """Score: 4
+Verdict: PASS
+Explanation: Complete answer."""
+
+        result = await medical_judge.evaluate_completeness(
+            question="What does patient have?",
+            answer="Patient has congestive heart failure",
+            context="Patient has CHF",
+        )
+
+        assert result.verdict == "PASS"
+
+
+class TestLLMJudgeModelDiscovery:
+    """Tests for model discovery and fallback logic."""
+
+    def test_get_available_models_success(self):
+        """Test _get_available_models with successful response."""
+        import httpx
+        from unittest.mock import patch
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "models": [
+                {"name": "llama3.2"},
+                {"name": "mistral"},
+            ]
+        }
+
+        with patch.object(httpx, "get", return_value=mock_response):
+            judge = LLMJudge.__new__(LLMJudge)
+            models = judge._get_available_models("http://localhost:11434")
+
+        assert "llama3.2" in models
+        assert "mistral" in models
+
+    def test_get_available_models_failure(self):
+        """Test _get_available_models with failed request."""
+        import httpx
+        from unittest.mock import patch
+
+        with patch.object(httpx, "get", side_effect=Exception("Connection failed")):
+            judge = LLMJudge.__new__(LLMJudge)
+            models = judge._get_available_models("http://localhost:11434")
+
+        assert models == []
+
+    def test_get_available_models_non_200(self):
+        """Test _get_available_models with non-200 response."""
+        import httpx
+        from unittest.mock import patch
+
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+
+        with patch.object(httpx, "get", return_value=mock_response):
+            judge = LLMJudge.__new__(LLMJudge)
+            models = judge._get_available_models("http://localhost:11434")
+
+        assert models == []
+
+    def test_find_fallback_model_prometheus_alias(self):
+        """Test _find_fallback_model finds Prometheus aliases."""
+        judge = LLMJudge.__new__(LLMJudge)
+        available = ["some-model", "prometheus2:latest", "llama3"]
+
+        result = judge._find_fallback_model(available)
+
+        assert result == "prometheus2:latest"
+
+    def test_find_fallback_model_general(self):
+        """Test _find_fallback_model falls back to general models."""
+        judge = LLMJudge.__new__(LLMJudge)
+        available = ["some-model", "mistral:7b", "other"]
+
+        result = judge._find_fallback_model(available)
+
+        assert result == "mistral:7b"
+
+    def test_find_fallback_model_none(self):
+        """Test _find_fallback_model returns None when no suitable model."""
+        judge = LLMJudge.__new__(LLMJudge)
+        available = ["unknown-model", "another-unknown"]
+
+        result = judge._find_fallback_model(available)
+
+        assert result is None
+
+    def test_find_fallback_model_llama(self):
+        """Test _find_fallback_model finds llama models."""
+        judge = LLMJudge.__new__(LLMJudge)
+        available = ["llama3.2:latest"]
+
+        result = judge._find_fallback_model(available)
+
+        assert result == "llama3.2:latest"
+
+
+class TestLLMJudgeInit:
+    """Tests for LLMJudge initialization."""
+
+    def test_init_with_custom_llm(self):
+        """Test initialization with custom LLM."""
+        mock_llm = MagicMock()
+        mock_llm.model = "custom-model"
+
+        judge = LLMJudge(llm=mock_llm)
+
+        assert judge.llm == mock_llm
+        assert judge.model == "custom-model"
+
+    def test_init_with_custom_llm_no_model_attr(self):
+        """Test initialization with custom LLM without model attribute."""
+        mock_llm = MagicMock(spec=[])  # No attributes
+
+        judge = LLMJudge(llm=mock_llm)
+
+        assert judge.model == "custom"
+
+    def test_medical_mode_disabled(self):
+        """Test that medical mode is disabled by default."""
+        mock_llm = MagicMock()
+        judge = LLMJudge(llm=mock_llm)
+
+        assert judge.medical_mode is False
+        assert judge._normalizer is None
+
+    def test_medical_mode_enabled(self):
+        """Test that medical mode initializes normalizer."""
+        mock_llm = MagicMock()
+        judge = LLMJudge(llm=mock_llm, medical_mode=True)
+
+        assert judge.medical_mode is True
+        assert judge._normalizer is not None
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_judge_with_prometheus():

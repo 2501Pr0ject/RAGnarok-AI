@@ -1,10 +1,15 @@
-"""Tests for notebook display module."""
+"""Tests for notebook display functions."""
+
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass, field
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ragnarok_ai.core.evaluate import EvaluationResult
-from ragnarok_ai.cost.tracker import CostSummary, ProviderUsage
 from ragnarok_ai.notebook.display import (
+    _display_cost_summary,
     _format_number,
     _in_notebook,
     _progress_bar,
@@ -15,239 +20,597 @@ from ragnarok_ai.notebook.display import (
 )
 
 
-class TestHelperFunctions:
-    """Tests for helper functions."""
+@dataclass
+class MockProviderUsage:
+    """Mock provider usage for testing."""
 
-    def test_format_number_zero(self):
-        """Test formatting zero."""
-        assert _format_number(0) == "0"
+    provider: str
+    model: str = "test-model"
+    total_tokens: int = 1000
+    cost: float = 0.01
+    is_local: bool = False
 
-    def test_format_number_small(self):
-        """Test formatting small numbers."""
-        result = _format_number(0.001)
-        assert "0.001" in result
 
-    def test_format_number_normal(self):
-        """Test formatting normal numbers."""
-        assert _format_number(0.85) == "0.85"
-        assert _format_number(0.857, decimals=3) == "0.857"
+@dataclass
+class MockCostSummary:
+    """Mock cost summary for testing."""
 
-    def test_progress_bar_contains_html(self):
-        """Test progress bar returns HTML."""
-        html = _progress_bar(0.75)
-        assert "<span" in html
-        assert "0.75" in html
+    total_cost: float = 0.05
+    total_tokens: int = 5000
+    by_provider: dict = field(default_factory=dict)
 
-    def test_progress_bar_colors(self):
-        """Test progress bar uses different colors (terminal theme)."""
-        low = _progress_bar(0.25)
-        mid = _progress_bar(0.60)
-        high = _progress_bar(0.90)
+    def __post_init__(self) -> None:
+        if not self.by_provider:
+            self.by_provider = {
+                "openai": MockProviderUsage("openai"),
+                "anthropic": MockProviderUsage("anthropic", cost=0.02),
+            }
 
-        # Low should be red (terminal theme)
-        assert "#f85149" in low
-        # Mid should be yellow (terminal theme)
-        assert "#d29922" in mid
-        # High should be green (terminal theme)
-        assert "#3fb950" in high
+
+@dataclass
+class MockEvaluationResult:
+    """Mock evaluation result for testing."""
+
+    total_latency_ms: float = 1500.0
+    cost: MockCostSummary | None = None
+    errors: list = field(default_factory=list)
+    _summary: dict = field(default_factory=dict)
+
+    def summary(self) -> dict:
+        return self._summary
 
 
 class TestInNotebook:
-    """Tests for notebook detection."""
+    """Tests for _in_notebook detection."""
 
-    def test_in_notebook_returns_bool(self):
-        """Test that _in_notebook returns a boolean."""
-        result = _in_notebook()
-        assert isinstance(result, bool)
+    def test_not_in_notebook_terminal(self) -> None:
+        """Test detection in terminal IPython."""
+        mock_shell = MagicMock()
+        mock_shell.__class__.__name__ = "TerminalInteractiveShell"
 
-    def test_in_notebook_outside_notebook(self):
-        """Test detection outside notebook environment."""
-        # In test environment, we're not in a notebook
-        assert _in_notebook() is False
+        with patch("IPython.get_ipython", return_value=mock_shell):
+            result = _in_notebook()
+            assert result is False
+
+    def test_in_notebook_zmq(self) -> None:
+        """Test detection in Jupyter notebook."""
+        mock_shell = MagicMock()
+        mock_shell.__class__.__name__ = "ZMQInteractiveShell"
+
+        with patch("IPython.get_ipython", return_value=mock_shell):
+            result = _in_notebook()
+            assert result is True
+
+    def test_not_in_notebook_none_shell(self) -> None:
+        """Test detection when get_ipython returns None."""
+        with patch("IPython.get_ipython", return_value=None):
+            result = _in_notebook()
+            assert result is False
+
+    def test_not_in_notebook_unknown_shell(self) -> None:
+        """Test detection with unknown shell type."""
+        mock_shell = MagicMock()
+        mock_shell.__class__.__name__ = "UnknownShell"
+
+        with patch("IPython.get_ipython", return_value=mock_shell):
+            result = _in_notebook()
+            assert result is False
+
+    def test_not_in_notebook_import_error(self) -> None:
+        """Test detection when IPython not installed."""
+        with patch.dict("sys.modules", {"IPython": None}):
+            # This will cause ImportError inside _in_notebook
+            result = _in_notebook()
+            # Should return False when IPython not available
+            assert result is False
+
+
+class TestFormatNumber:
+    """Tests for _format_number function."""
+
+    def test_format_zero(self) -> None:
+        """Test formatting zero."""
+        assert _format_number(0) == "0"
+
+    def test_format_small_number(self) -> None:
+        """Test formatting very small numbers."""
+        result = _format_number(0.001)
+        assert "0.0010" in result
+
+    def test_format_normal_number(self) -> None:
+        """Test formatting normal numbers."""
+        result = _format_number(0.85)
+        assert result == "0.85"
+
+    def test_format_integer(self) -> None:
+        """Test formatting integer value."""
+        result = _format_number(1.0)
+        assert result == "1.00"
+
+    def test_format_custom_decimals(self) -> None:
+        """Test formatting with custom decimal places."""
+        result = _format_number(0.12345, decimals=3)
+        assert result == "0.123"
+
+
+class TestProgressBar:
+    """Tests for _progress_bar function."""
+
+    def test_progress_bar_full(self) -> None:
+        """Test full progress bar."""
+        result = _progress_bar(1.0)
+        assert "█" in result
+        assert result.count("█") == 20
+
+    def test_progress_bar_empty(self) -> None:
+        """Test empty progress bar."""
+        result = _progress_bar(0.0)
+        assert "░" in result
+        assert result.count("░") == 20
+
+    def test_progress_bar_half(self) -> None:
+        """Test half-filled progress bar."""
+        result = _progress_bar(0.5)
+        assert "█" in result
+        assert "░" in result
+        assert result.count("█") == 10
+
+    def test_progress_bar_low_value_red(self) -> None:
+        """Test progress bar color for low values."""
+        result = _progress_bar(0.3)
+        assert "#f85149" in result
+
+    def test_progress_bar_medium_value_yellow(self) -> None:
+        """Test progress bar color for medium values."""
+        result = _progress_bar(0.6)
+        assert "#d29922" in result
+
+    def test_progress_bar_high_value_green(self) -> None:
+        """Test progress bar color for high values."""
+        result = _progress_bar(0.9)
+        assert "#3fb950" in result
+
+    def test_progress_bar_clamped_over_max(self) -> None:
+        """Test progress bar with value over max."""
+        result = _progress_bar(1.5)
+        assert result.count("█") == 20
+
+    def test_progress_bar_custom_max(self) -> None:
+        """Test progress bar with custom max value."""
+        result = _progress_bar(50, max_value=100)
+        assert "█" in result
+        assert "░" in result
+        assert result.count("█") == 10
+
+
+class TestDisplayHtml:
+    """Tests for _display_html function."""
+
+    def test_display_html_not_in_notebook(self, capsys) -> None:
+        """Test HTML display fallback outside notebook."""
+        import sys
+
+        # Get the actual module from sys.modules
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        from ragnarok_ai.notebook.display import _display_html
+
+        # Patch at module level
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+        try:
+            _display_html("<p>Test</p>")
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_html_in_notebook(self) -> None:
+        """Test HTML display in notebook environment."""
+        import sys
+        from unittest.mock import MagicMock
+
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        from ragnarok_ai.notebook.display import _display_html
+
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: True
+
+        # Mock IPython display module
+        mock_display_func = MagicMock()
+        mock_html_class = MagicMock()
+        mock_ipython_display = MagicMock()
+        mock_ipython_display.display = mock_display_func
+        mock_ipython_display.HTML = mock_html_class
+
+        try:
+            with patch.dict("sys.modules", {"IPython.display": mock_ipython_display}):
+                _display_html("<p>Test</p>")
+                # Verify display was called
+                mock_display_func.assert_called_once()
+        finally:
+            display_module._in_notebook = original_in_notebook
 
 
 class TestDisplayMetrics:
     """Tests for display_metrics function."""
 
-    @pytest.fixture
-    def mock_result(self):
-        """Create a mock EvaluationResult."""
-        from ragnarok_ai.core.types import TestSet
-        from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
+    def test_display_metrics_with_data(self, capsys) -> None:
+        """Test displaying metrics with data."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
 
-        metrics = [
-            RetrievalMetrics(precision=0.8, recall=0.7, mrr=0.9, ndcg=0.85, k=10),
-            RetrievalMetrics(precision=0.7, recall=0.8, mrr=0.8, ndcg=0.75, k=10),
-        ]
-
-        testset = TestSet(queries=[])
-
-        return EvaluationResult(
-            testset=testset,
-            metrics=metrics,
-            responses=["answer1", "answer2"],
-            total_latency_ms=1500.0,
+        result = MockEvaluationResult(
+            _summary={
+                "precision": 0.8,
+                "recall": 0.7,
+                "mrr": 0.9,
+                "ndcg": 0.85,
+                "num_queries": 10,
+            }
         )
 
-    def test_display_metrics_generates_html(self, mock_result, capsys):
-        """Test that display_metrics works without errors."""
-        # Should not raise
-        display_metrics(mock_result)
+        try:
+            display_metrics(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
         captured = capsys.readouterr()
-        # Outside notebook, should print fallback message
-        assert "HTML" in captured.out or captured.out == ""
+        assert "HTML output available" in captured.out
+
+    def test_display_metrics_empty_summary(self, capsys) -> None:
+        """Test displaying metrics with empty summary."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        result = MockEvaluationResult(_summary={})
+
+        try:
+            display_metrics(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
 
 
 class TestDisplayCost:
     """Tests for display_cost function."""
 
-    @pytest.fixture
-    def result_with_cost(self):
-        """Create result with cost tracking."""
-        from ragnarok_ai.core.types import TestSet
+    def test_display_cost_with_tracking(self, capsys) -> None:
+        """Test displaying cost when tracking is enabled."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
 
-        testset = TestSet(queries=[])
+        result = MockEvaluationResult(cost=MockCostSummary())
 
-        cost = CostSummary(
-            total_input_tokens=1000,
-            total_output_tokens=500,
-            total_cost=0.01,
+        try:
+            display_cost(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_cost_no_tracking(self, capsys) -> None:
+        """Test displaying cost when tracking is disabled."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        result = MockEvaluationResult(cost=None)
+
+        try:
+            display_cost(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+
+class TestDisplayCostSummary:
+    """Tests for _display_cost_summary function."""
+
+    def test_display_cost_summary(self, capsys) -> None:
+        """Test displaying cost summary."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        cost = MockCostSummary()
+
+        try:
+            _display_cost_summary(cost)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_cost_summary_with_local_provider(self, capsys) -> None:
+        """Test displaying cost summary with local provider."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        cost = MockCostSummary(
             by_provider={
-                "openai:gpt-4o": ProviderUsage(
-                    provider="openai",
-                    model="gpt-4o",
-                    input_tokens=1000,
-                    output_tokens=500,
-                    cost=0.01,
-                    call_count=5,
-                ),
+                "ollama": MockProviderUsage("ollama", is_local=True, cost=0.0),
+            }
+        )
+
+        try:
+            _display_cost_summary(cost)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_cost_summary_zero_cost(self, capsys) -> None:
+        """Test displaying cost summary with zero total cost."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        cost = MockCostSummary(
+            total_cost=0.0,
+            by_provider={
+                "ollama": MockProviderUsage("ollama", is_local=True, cost=0.0),
             },
         )
 
-        return EvaluationResult(
-            testset=testset,
-            metrics=[],
-            responses=[],
-            cost=cost,
-        )
+        try:
+            _display_cost_summary(cost)
+        finally:
+            display_module._in_notebook = original_in_notebook
 
-    @pytest.fixture
-    def result_without_cost(self):
-        """Create result without cost tracking."""
-        from ragnarok_ai.core.types import TestSet
-
-        testset = TestSet(queries=[])
-
-        return EvaluationResult(
-            testset=testset,
-            metrics=[],
-            responses=[],
-            cost=None,
-        )
-
-    def test_display_cost_with_tracking(self, result_with_cost, capsys):
-        """Test display_cost with cost tracking enabled."""
-        display_cost(result_with_cost)
         captured = capsys.readouterr()
-        assert "HTML" in captured.out or captured.out == ""
-
-    def test_display_cost_without_tracking(self, result_without_cost, capsys):
-        """Test display_cost without cost tracking."""
-        display_cost(result_without_cost)
-        captured = capsys.readouterr()
-        assert "HTML" in captured.out or captured.out == ""
+        assert "HTML output available" in captured.out
 
 
 class TestDisplay:
-    """Tests for main display function."""
+    """Tests for display function."""
 
-    @pytest.fixture
-    def full_result(self):
-        """Create a full EvaluationResult."""
-        from ragnarok_ai.core.types import TestSet
-        from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
+    def test_display_full_result(self, capsys) -> None:
+        """Test full display with all data."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
 
-        metrics = [
-            RetrievalMetrics(precision=0.8, recall=0.7, mrr=0.9, ndcg=0.85, k=10),
-        ]
-
-        testset = TestSet(queries=[])
-
-        cost = CostSummary(
-            total_input_tokens=5000,
-            total_output_tokens=2000,
-            total_cost=0.05,
-            by_provider={
-                "openai:gpt-4o": ProviderUsage(
-                    provider="openai",
-                    model="gpt-4o",
-                    input_tokens=3000,
-                    output_tokens=1000,
-                    cost=0.05,
-                    call_count=10,
-                ),
-                "ollama:llama2": ProviderUsage(
-                    provider="ollama",
-                    model="llama2",
-                    input_tokens=2000,
-                    output_tokens=1000,
-                    cost=0.0,
-                    call_count=5,
-                ),
+        result = MockEvaluationResult(
+            total_latency_ms=2500.0,
+            cost=MockCostSummary(),
+            _summary={
+                "precision": 0.8,
+                "recall": 0.7,
+                "mrr": 0.9,
+                "ndcg": 0.85,
+                "num_queries": 10,
             },
         )
 
-        return EvaluationResult(
-            testset=testset,
-            metrics=metrics,
-            responses=["answer"],
-            total_latency_ms=2500.0,
-            cost=cost,
+        try:
+            display(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_without_cost(self, capsys) -> None:
+        """Test display without cost tracking."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        result = MockEvaluationResult(
+            _summary={
+                "precision": 0.8,
+                "recall": 0.7,
+                "num_queries": 5,
+            }
         )
 
-    def test_display_full_result(self, full_result, capsys):
-        """Test display with full result."""
-        display(full_result)
+        try:
+            display(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
         captured = capsys.readouterr()
-        # Should work without errors
-        assert "HTML" in captured.out or captured.out == ""
+        assert "HTML output available" in captured.out
+
+    def test_display_with_errors(self, capsys) -> None:
+        """Test display with errors."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        result = MockEvaluationResult(
+            errors=["Error 1", "Error 2"],
+            _summary={"num_queries": 5},
+        )
+
+        try:
+            display(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_zero_cost(self, capsys) -> None:
+        """Test display with zero cost."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        result = MockEvaluationResult(
+            cost=MockCostSummary(
+                total_cost=0.0,
+                by_provider={
+                    "local": MockProviderUsage("local", is_local=True, cost=0.0),
+                },
+            ),
+            _summary={"num_queries": 5},
+        )
+
+        try:
+            display(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_empty_summary(self, capsys) -> None:
+        """Test display with empty summary."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        result = MockEvaluationResult(_summary={})
+
+        try:
+            display(result)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
 
 
 class TestDisplayComparison:
     """Tests for display_comparison function."""
 
-    @pytest.fixture
-    def comparison_results(self):
-        """Create multiple results for comparison."""
-        from ragnarok_ai.core.types import TestSet
-        from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
+    def test_display_comparison_multiple_results(self, capsys) -> None:
+        """Test comparing multiple results."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
 
-        testset = TestSet(queries=[])
+        results = [
+            (
+                "Baseline",
+                MockEvaluationResult(
+                    total_latency_ms=1000.0,
+                    cost=MockCostSummary(total_cost=0.05),
+                    _summary={"precision": 0.7, "recall": 0.6, "mrr": 0.8, "ndcg": 0.75},
+                ),
+            ),
+            (
+                "New Model",
+                MockEvaluationResult(
+                    total_latency_ms=800.0,
+                    cost=MockCostSummary(total_cost=0.03),
+                    _summary={"precision": 0.85, "recall": 0.75, "mrr": 0.9, "ndcg": 0.88},
+                ),
+            ),
+        ]
 
-        result1 = EvaluationResult(
-            testset=testset,
-            metrics=[RetrievalMetrics(precision=0.7, recall=0.6, mrr=0.8, ndcg=0.7, k=10)],
-            responses=["a"],
-            total_latency_ms=1000.0,
-        )
+        try:
+            display_comparison(results)
+        finally:
+            display_module._in_notebook = original_in_notebook
 
-        result2 = EvaluationResult(
-            testset=testset,
-            metrics=[RetrievalMetrics(precision=0.9, recall=0.8, mrr=0.95, ndcg=0.9, k=10)],
-            responses=["b"],
-            total_latency_ms=1500.0,
-        )
-
-        return [("Baseline", result1), ("Improved", result2)]
-
-    def test_display_comparison(self, comparison_results, capsys):
-        """Test display_comparison works."""
-        display_comparison(comparison_results)
         captured = capsys.readouterr()
-        assert "HTML" in captured.out or captured.out == ""
+        assert "HTML output available" in captured.out
 
-    def test_display_comparison_empty(self, capsys):
-        """Test display_comparison with empty list."""
-        display_comparison([])
+    def test_display_comparison_empty_results(self, capsys) -> None:
+        """Test comparing empty results."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        try:
+            display_comparison([])
+        finally:
+            display_module._in_notebook = original_in_notebook
+
         captured = capsys.readouterr()
-        assert "HTML" in captured.out or captured.out == ""
+        assert "HTML output available" in captured.out
+
+    def test_display_comparison_single_result(self, capsys) -> None:
+        """Test comparing single result."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        results = [
+            (
+                "Only Result",
+                MockEvaluationResult(
+                    total_latency_ms=1000.0,
+                    _summary={"precision": 0.8, "recall": 0.7, "mrr": 0.85, "ndcg": 0.8},
+                ),
+            ),
+        ]
+
+        try:
+            display_comparison(results)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_comparison_without_cost(self, capsys) -> None:
+        """Test comparing results without cost tracking."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        results = [
+            (
+                "Model A",
+                MockEvaluationResult(
+                    total_latency_ms=1000.0,
+                    cost=None,
+                    _summary={"precision": 0.8},
+                ),
+            ),
+            (
+                "Model B",
+                MockEvaluationResult(
+                    total_latency_ms=1200.0,
+                    cost=None,
+                    _summary={"precision": 0.75},
+                ),
+            ),
+        ]
+
+        try:
+            display_comparison(results)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out
+
+    def test_display_comparison_zero_metrics(self, capsys) -> None:
+        """Test comparing results with zero metrics."""
+        display_module = sys.modules["ragnarok_ai.notebook.display"]
+        original_in_notebook = display_module._in_notebook
+        display_module._in_notebook = lambda: False
+
+        results = [
+            (
+                "Empty",
+                MockEvaluationResult(
+                    total_latency_ms=100.0,
+                    _summary={"precision": 0, "recall": 0, "mrr": 0, "ndcg": 0},
+                ),
+            ),
+        ]
+
+        try:
+            display_comparison(results)
+        finally:
+            display_module._in_notebook = original_in_notebook
+
+        captured = capsys.readouterr()
+        assert "HTML output available" in captured.out

@@ -335,6 +335,28 @@ class TestDiskCache:
             cache = DiskCache(tmpdir)
             assert isinstance(cache, CacheProtocol)
 
+    @pytest.mark.asyncio
+    async def test_get_invalid_json_file(self) -> None:
+        """Test getting a key with corrupted JSON file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = DiskCache(tmpdir)
+            # Create a corrupted cache file
+            (Path(tmpdir) / "corrupted_key.json").write_text("not valid json {")
+            result = await cache.get("corrupted_key")
+            assert result is None
+            assert cache.stats().misses == 1
+
+    @pytest.mark.asyncio
+    async def test_get_missing_required_keys(self) -> None:
+        """Test getting a key with missing required fields in JSON."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = DiskCache(tmpdir)
+            # Create a cache file with missing required keys
+            (Path(tmpdir) / "incomplete_key.json").write_text('{"query": {}}')
+            result = await cache.get("incomplete_key")
+            assert result is None
+            assert cache.stats().misses == 1
+
 
 # ============================================================================
 # Integration with Evaluate Tests

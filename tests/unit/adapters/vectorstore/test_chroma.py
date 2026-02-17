@@ -285,3 +285,222 @@ class TestChromaVectorStoreContextManager:
         # After exit, references should be cleared
         assert store._client is None
         assert store._collection is None
+
+
+# ============================================================================
+# In-Memory Mode Tests
+# ============================================================================
+
+
+class TestChromaVectorStoreInMemory:
+    """Tests for in-memory mode."""
+
+    @pytest.mark.asyncio
+    async def test_in_memory_uses_client_not_persistent(self, mock_chromadb) -> None:
+        """Test that in-memory mode uses Client() instead of PersistentClient()."""
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_module = mock_chromadb["module"]
+
+        store = ChromaVectorStore(persist_directory=None)
+        await store._ensure_client()
+
+        mock_module.Client.assert_called_once()
+        mock_module.PersistentClient.assert_not_called()
+
+
+# ============================================================================
+# Error Handling Tests
+# ============================================================================
+
+
+class TestChromaVectorStoreErrors:
+    """Tests for error handling."""
+
+    @pytest.mark.asyncio
+    async def test_ensure_client_already_initialized(self, mock_chromadb) -> None:
+        """Test _ensure_client returns early if client already exists."""
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_module = mock_chromadb["module"]
+
+        store = ChromaVectorStore()
+        await store._ensure_client()
+
+        # Reset call count
+        mock_module.PersistentClient.reset_mock()
+
+        # Call again - should return early
+        await store._ensure_client()
+
+        mock_module.PersistentClient.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_import_error_raises_connection_error(self) -> None:
+        """Test that ImportError raises VectorStoreConnectionError."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        # Temporarily remove chromadb from sys.modules
+        with patch.dict(sys.modules, {"chromadb": None}):
+            if "ragnarok_ai.adapters.vectorstore.chroma" in sys.modules:
+                del sys.modules["ragnarok_ai.adapters.vectorstore.chroma"]
+
+            # Force re-import with chromadb not available
+            with patch.dict(sys.modules):
+                sys.modules["chromadb"] = None
+
+                # Create store but don't init yet
+                from ragnarok_ai.adapters.vectorstore.chroma import ChromaVectorStore
+
+                store = ChromaVectorStore()
+                store._client = None
+
+                with patch("builtins.__import__", side_effect=ImportError("No module named 'chromadb'")):
+                    with pytest.raises(VectorStoreConnectionError, match="chromadb is not installed"):
+                        await store._ensure_client()
+
+    @pytest.mark.asyncio
+    async def test_generic_exception_raises_connection_error(self, mock_chromadb) -> None:
+        """Test that generic exception raises VectorStoreConnectionError."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_module = mock_chromadb["module"]
+
+        mock_module.PersistentClient.side_effect = RuntimeError("Unexpected error")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Failed to initialize ChromaDB"):
+            await store._ensure_client()
+
+        mock_module.PersistentClient.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_search_generic_error(self, mock_chromadb) -> None:
+        """Test search raises VectorStoreConnectionError on generic error."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.query.side_effect = RuntimeError("Search failed")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Failed to search"):
+            await store.search([0.1, 0.2, 0.3], k=5)
+
+        mock_collection.query.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_search_reraises_vectorstore_connection_error(self, mock_chromadb) -> None:
+        """Test search re-raises VectorStoreConnectionError."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.query.side_effect = VectorStoreConnectionError("Original error")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Original error"):
+            await store.search([0.1, 0.2, 0.3], k=5)
+
+        mock_collection.query.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_add_generic_error(self, mock_chromadb) -> None:
+        """Test add raises VectorStoreConnectionError on generic error."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.upsert.side_effect = RuntimeError("Add failed")
+
+        store = ChromaVectorStore()
+        docs = [Document(id="doc1", content="Content", metadata={"embedding": [0.1, 0.2]})]
+
+        with pytest.raises(VectorStoreConnectionError, match="Failed to add"):
+            await store.add(docs)
+
+        mock_collection.upsert.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_add_reraises_value_error(self, mock_chromadb) -> None:
+        """Test add re-raises ValueError."""
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+
+        store = ChromaVectorStore()
+        docs = [Document(id="doc1", content="Content", metadata={})]
+
+        with pytest.raises(ValueError, match="missing 'embedding'"):
+            await store.add(docs)
+
+    @pytest.mark.asyncio
+    async def test_delete_generic_error(self, mock_chromadb) -> None:
+        """Test delete raises VectorStoreConnectionError on generic error."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.delete.side_effect = RuntimeError("Delete failed")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Failed to delete"):
+            await store.delete(["doc1"])
+
+        mock_collection.delete.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_delete_reraises_vectorstore_connection_error(self, mock_chromadb) -> None:
+        """Test delete re-raises VectorStoreConnectionError."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.delete.side_effect = VectorStoreConnectionError("Original error")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Original error"):
+            await store.delete(["doc1"])
+
+        mock_collection.delete.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_count_generic_error(self, mock_chromadb) -> None:
+        """Test count raises VectorStoreConnectionError on generic error."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.count.side_effect = RuntimeError("Count failed")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Failed to get count"):
+            await store.count()
+
+        mock_collection.count.side_effect = None
+
+    @pytest.mark.asyncio
+    async def test_count_reraises_vectorstore_connection_error(self, mock_chromadb) -> None:
+        """Test count re-raises VectorStoreConnectionError."""
+        from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+        ChromaVectorStore = mock_chromadb["ChromaVectorStore"]
+        mock_collection = mock_chromadb["collection"]
+
+        mock_collection.count.side_effect = VectorStoreConnectionError("Original error")
+
+        store = ChromaVectorStore()
+
+        with pytest.raises(VectorStoreConnectionError, match="Original error"):
+            await store.count()
+
+        mock_collection.count.side_effect = None

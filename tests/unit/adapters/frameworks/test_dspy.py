@@ -165,6 +165,52 @@ class TestPassageConversion:
         assert docs[1].id == "dict1"
         assert docs[2].id == "obj1"
 
+    def test_convert_object_with_content_attr(self) -> None:
+        """Test converting object with 'content' attribute instead of 'text'."""
+
+        class ContentPassage:
+            def __init__(self) -> None:
+                self.content = "Content from content attr"
+                self.id = "content_id"
+
+        doc = _convert_passage_to_document(ContentPassage(), 0)
+        assert doc.content == "Content from content attr"
+        assert doc.id == "content_id"
+
+    def test_convert_object_with_passage_attr(self) -> None:
+        """Test converting object with 'passage' attribute."""
+
+        class PassageAttrObject:
+            def __init__(self) -> None:
+                self.passage = "Content from passage attr"
+                self.pid = "passage_pid"
+
+        doc = _convert_passage_to_document(PassageAttrObject(), 0)
+        assert doc.content == "Content from passage attr"
+        assert doc.id == "passage_pid"
+
+    def test_convert_object_fallback_to_str(self) -> None:
+        """Test converting object falls back to str() when no known attrs."""
+
+        class UnknownObject:
+            def __str__(self) -> str:
+                return "String representation"
+
+        doc = _convert_passage_to_document(UnknownObject(), 5)
+        assert doc.content == "String representation"
+        assert doc.id == "5"  # Falls back to index
+
+    def test_convert_dict_with_long_text(self) -> None:
+        """Test converting dict with long_text metadata."""
+        passage = {
+            "id": "doc_with_long",
+            "text": "Short text",
+            "long_text": "This is a much longer version of the text",
+        }
+        doc = _convert_passage_to_document(passage, 0)
+        assert doc.content == "Short text"
+        assert doc.metadata.get("long_text") == "This is a much longer version of the text"
+
 
 # ============================================================================
 # DSPyRetrieverAdapter Tests
@@ -235,6 +281,37 @@ class TestDSPyRetrieverAdapter:
         adapter = DSPyRetrieverAdapter(retriever)
 
         assert adapter.retriever is retriever
+
+    @pytest.mark.asyncio
+    async def test_query_returns_list_directly(self) -> None:
+        """Test query when retriever returns list directly (no .passages attr)."""
+
+        class ListRetriever:
+            def __call__(self, query: str) -> list:  # noqa: ARG002
+                return ["Passage 1", "Passage 2"]
+
+        adapter = DSPyRetrieverAdapter(ListRetriever())
+        response = await adapter.query("test")
+
+        assert len(response.retrieved_docs) == 2
+        assert response.retrieved_docs[0].content == "Passage 1"
+
+    @pytest.mark.asyncio
+    async def test_query_returns_iterable(self) -> None:
+        """Test query when retriever returns iterable (generator, etc)."""
+
+        def passage_generator():
+            yield "Generated passage 1"
+            yield "Generated passage 2"
+
+        class IterableRetriever:
+            def __call__(self, query: str):  # noqa: ARG002
+                return passage_generator()
+
+        adapter = DSPyRetrieverAdapter(IterableRetriever())
+        response = await adapter.query("test")
+
+        assert len(response.retrieved_docs) == 2
 
 
 # ============================================================================
@@ -314,6 +391,62 @@ class TestDSPyModuleAdapter:
         adapter = DSPyModuleAdapter(module)
 
         assert adapter.module is module
+
+    @pytest.mark.asyncio
+    async def test_query_single_passage_value(self) -> None:
+        """Test query when passages field returns single value (not list)."""
+
+        class SinglePassageResult:
+            def __init__(self) -> None:
+                self.answer = "Single passage answer"
+                self.context = "Single context passage"
+
+        class SinglePassageModule:
+            def __call__(self, **kwargs: Any) -> SinglePassageResult:  # noqa: ARG002
+                return SinglePassageResult()
+
+        adapter = DSPyModuleAdapter(SinglePassageModule(), passages_field="context")
+        response = await adapter.query("test")
+
+        assert response.answer == "Single passage answer"
+        assert len(response.retrieved_docs) == 1
+        assert response.retrieved_docs[0].content == "Single context passage"
+
+    @pytest.mark.asyncio
+    async def test_query_string_context_field(self) -> None:
+        """Test query when context is a joined string."""
+
+        class StringContextResult:
+            def __init__(self) -> None:
+                self.answer = "String context answer"
+                self.context = "Combined context string"
+
+        class StringContextModule:
+            def __call__(self, **kwargs: Any) -> StringContextResult:  # noqa: ARG002
+                return StringContextResult()
+
+        adapter = DSPyModuleAdapter(StringContextModule())
+        response = await adapter.query("test")
+
+        assert len(response.retrieved_docs) == 1
+        assert response.retrieved_docs[0].content == "Combined context string"
+
+    @pytest.mark.asyncio
+    async def test_query_fallback_answer(self) -> None:
+        """Test query falls back to str(result) when no answer field."""
+
+        class NoAnswerResult:
+            def __str__(self) -> str:
+                return "Fallback string representation"
+
+        class NoAnswerModule:
+            def __call__(self, **kwargs: Any) -> NoAnswerResult:  # noqa: ARG002
+                return NoAnswerResult()
+
+        adapter = DSPyModuleAdapter(NoAnswerModule())
+        response = await adapter.query("test")
+
+        assert response.answer == "Fallback string representation"
 
 
 # ============================================================================

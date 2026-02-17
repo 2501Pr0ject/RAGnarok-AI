@@ -119,6 +119,28 @@ class TestOllamaLLMGenerate:
         request_data = json.loads(route.calls[0].request.content)
         assert request_data["model"] == "llama2"
 
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_timeout_error(self) -> None:
+        """Timeout error raises LLMConnectionError."""
+        respx.post("http://localhost:11434/api/generate").mock(side_effect=httpx.TimeoutException("Request timed out"))
+
+        llm = OllamaLLM()
+
+        with pytest.raises(LLMConnectionError, match="timed out"):
+            await llm.generate("prompt")
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_unexpected_error(self) -> None:
+        """Unexpected error raises LLMConnectionError."""
+        respx.post("http://localhost:11434/api/generate").mock(side_effect=ValueError("Unexpected"))
+
+        llm = OllamaLLM()
+
+        with pytest.raises(LLMConnectionError, match="Unexpected error"):
+            await llm.generate("prompt")
+
 
 class TestOllamaLLMEmbed:
     """Tests for OllamaLLM.embed method."""
@@ -204,6 +226,28 @@ class TestOllamaLLMEmbed:
 
         request_data = json.loads(route.calls[0].request.content)
         assert request_data["model"] == "mxbai-embed-large"
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_embed_timeout_error(self) -> None:
+        """Timeout error raises LLMConnectionError."""
+        respx.post("http://localhost:11434/api/embed").mock(side_effect=httpx.TimeoutException("Request timed out"))
+
+        llm = OllamaLLM()
+
+        with pytest.raises(LLMConnectionError, match="timed out"):
+            await llm.embed("text")
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_embed_unexpected_error(self) -> None:
+        """Unexpected error raises LLMConnectionError."""
+        respx.post("http://localhost:11434/api/embed").mock(side_effect=ValueError("Unexpected"))
+
+        llm = OllamaLLM()
+
+        with pytest.raises(LLMConnectionError, match="Unexpected error"):
+            await llm.embed("text")
 
 
 class TestOllamaLLMIsAvailable:

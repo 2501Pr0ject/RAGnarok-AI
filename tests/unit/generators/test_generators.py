@@ -318,6 +318,141 @@ class TestSyntheticQuestionGeneratorGenerate:
         assert len(result.queries) == 1
         assert result.queries[0].text == "What is the capital of France?"
 
+    @pytest.mark.asyncio
+    async def test_generate_stops_at_target_questions(
+        self, mock_llm: MagicMock, sample_documents: list[Document]
+    ) -> None:
+        """Test that generation stops when target is reached."""
+        mock_llm.generate = AsyncMock(
+            side_effect=[
+                # First doc generates many questions
+                '["Q1", "Q2", "Q3", "Q4", "Q5"]',
+                "A1", "A2",  # Only need answers for 2 questions
+            ]
+        )
+
+        generator = SyntheticQuestionGenerator(mock_llm)
+        result = await generator.generate(
+            documents=sample_documents,
+            num_questions=2,
+            validate=False,
+        )
+
+        assert len(result.queries) <= 2
+
+    @pytest.mark.asyncio
+    async def test_generate_with_dict_question_and_answer(
+        self, mock_llm: MagicMock, sample_documents: list[Document]
+    ) -> None:
+        """Test generation when LLM returns dict with question and answer."""
+        mock_llm.generate = AsyncMock(
+            side_effect=[
+                '[{"question": "What is Paris?", "answer": "Capital of France"}]',
+            ]
+        )
+
+        generator = SyntheticQuestionGenerator(mock_llm)
+        result = await generator.generate(
+            documents=[sample_documents[0]],
+            num_questions=1,
+            validate=False,
+        )
+
+        assert len(result.queries) == 1
+        assert result.queries[0].text == "What is Paris?"
+        assert result.queries[0].expected_answer == "Capital of France"
+
+    @pytest.mark.asyncio
+    async def test_generate_skips_empty_dict_question(
+        self, mock_llm: MagicMock, sample_documents: list[Document]
+    ) -> None:
+        """Test generation skips dict with empty question."""
+        mock_llm.generate = AsyncMock(
+            side_effect=[
+                '[{"question": "", "answer": "Something"}, {"question": "Valid question?", "answer": "Answer"}]',
+            ]
+        )
+
+        generator = SyntheticQuestionGenerator(mock_llm)
+        result = await generator.generate(
+            documents=[sample_documents[0]],
+            num_questions=2,
+            validate=False,
+        )
+
+        # Empty question should be skipped
+        assert len(result.queries) == 1
+        assert result.queries[0].text == "Valid question?"
+
+    @pytest.mark.asyncio
+    async def test_generate_skips_invalid_item_types(
+        self, mock_llm: MagicMock, sample_documents: list[Document]
+    ) -> None:
+        """Test generation skips items that are not dict or str."""
+        mock_llm.generate = AsyncMock(
+            side_effect=[
+                '[123, null, "Valid question?"]',
+                "Valid answer",
+            ]
+        )
+
+        generator = SyntheticQuestionGenerator(mock_llm)
+        result = await generator.generate(
+            documents=[sample_documents[0]],
+            num_questions=3,
+            validate=False,
+        )
+
+        # Only the string question should be processed
+        assert len(result.queries) == 1
+        assert result.queries[0].text == "Valid question?"
+
+    @pytest.mark.asyncio
+    async def test_generate_skips_whitespace_only_questions(
+        self, mock_llm: MagicMock, sample_documents: list[Document]
+    ) -> None:
+        """Test generation skips whitespace-only questions."""
+        mock_llm.generate = AsyncMock(
+            side_effect=[
+                '["   ", "Valid question?"]',
+                "Valid answer",
+            ]
+        )
+
+        generator = SyntheticQuestionGenerator(mock_llm)
+        result = await generator.generate(
+            documents=[sample_documents[0]],
+            num_questions=2,
+            validate=False,
+        )
+
+        assert len(result.queries) == 1
+        assert result.queries[0].text == "Valid question?"
+
+    @pytest.mark.asyncio
+    async def test_generate_continues_on_answer_generation_error(
+        self, mock_llm: MagicMock, sample_documents: list[Document]
+    ) -> None:
+        """Test that generation continues when answer generation fails."""
+        mock_llm.generate = AsyncMock(
+            side_effect=[
+                '["Question 1?", "Question 2?"]',
+                Exception("Answer generation error"),  # First answer fails
+                "Answer 2",  # Second answer succeeds
+            ]
+        )
+
+        generator = SyntheticQuestionGenerator(mock_llm)
+        result = await generator.generate(
+            documents=[sample_documents[0]],
+            num_questions=2,
+            validate=False,
+        )
+
+        # Should still have result from second question
+        assert len(result.queries) == 1
+        assert result.queries[0].text == "Question 2?"
+
 
 class TestSyntheticQuestionGeneratorClassify:
     """Tests for question type classification."""

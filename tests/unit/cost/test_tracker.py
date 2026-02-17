@@ -164,6 +164,112 @@ class TestCostTracker:
         assert "by_provider" in result
 
 
+class TestCostSummaryDisplay:
+    """Tests for CostSummary display methods."""
+
+    def test_summary_local_provider_badge(self):
+        """Test summary shows local badge for local providers."""
+        usage = ProviderUsage(
+            provider="ollama",
+            model="llama2",
+            input_tokens=1000,
+            output_tokens=500,
+            cost=0.0,
+        )
+        summary = CostSummary(
+            total_input_tokens=1000,
+            total_output_tokens=500,
+            total_cost=0.0,
+            by_provider={"ollama:llama2": usage},
+        )
+        text = summary.summary()
+        assert "(local)" in text
+        assert "ollama" in text
+
+    def test_summary_truncates_long_provider_name(self):
+        """Test summary truncates very long provider names."""
+        usage = ProviderUsage(
+            provider="very_long_provider_name_that_exceeds",
+            model="model",
+            input_tokens=1000,
+            output_tokens=500,
+            cost=0.01,
+        )
+        summary = CostSummary(
+            total_input_tokens=1000,
+            total_output_tokens=500,
+            total_cost=0.01,
+            by_provider={"key": usage},
+        )
+        text = summary.summary()
+        assert "..." in text
+
+    def test_str_method(self):
+        """Test __str__ method returns summary."""
+        summary = CostSummary(
+            total_input_tokens=100,
+            total_output_tokens=50,
+            total_cost=0.001,
+            by_provider={
+                "test": ProviderUsage(
+                    provider="test",
+                    model="model",
+                    input_tokens=100,
+                    output_tokens=50,
+                    cost=0.001,
+                )
+            },
+        )
+        text = str(summary)
+        assert "test" in text
+        assert "Total" in text
+
+
+class TestGlobalTracker:
+    """Tests for global tracker functions."""
+
+    def test_get_global_tracker_creates_instance(self):
+        """Test get_global_tracker creates instance on first call."""
+        from ragnarok_ai.cost.tracker import get_global_tracker, _global_tracker
+        import ragnarok_ai.cost.tracker as tracker_module
+
+        # Reset global tracker
+        tracker_module._global_tracker = None
+
+        tracker = get_global_tracker()
+        assert tracker is not None
+        assert isinstance(tracker, CostTracker)
+
+        # Second call returns same instance
+        tracker2 = get_global_tracker()
+        assert tracker is tracker2
+
+    def test_reset_global_tracker(self):
+        """Test reset_global_tracker clears usage."""
+        from ragnarok_ai.cost.tracker import (
+            get_global_tracker,
+            reset_global_tracker,
+        )
+
+        tracker = get_global_tracker()
+        tracker.track("openai", "gpt-4o", input_tokens=1000, output_tokens=500)
+        assert tracker.total_tokens > 0
+
+        reset_global_tracker()
+        assert tracker.total_tokens == 0
+
+    def test_reset_global_tracker_when_none(self):
+        """Test reset_global_tracker when tracker is None."""
+        import ragnarok_ai.cost.tracker as tracker_module
+        from ragnarok_ai.cost.tracker import reset_global_tracker
+
+        # Set to None
+        tracker_module._global_tracker = None
+
+        # Should not raise
+        reset_global_tracker()
+
+
 class TestCostTrackingContext:
     """Tests for cost_tracking context manager."""
 
