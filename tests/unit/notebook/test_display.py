@@ -68,7 +68,11 @@ class TestInNotebook:
         mock_shell = MagicMock()
         mock_shell.__class__.__name__ = "TerminalInteractiveShell"
 
-        with patch("IPython.get_ipython", return_value=mock_shell):
+        # Create a mock IPython module with get_ipython function
+        mock_ipython = MagicMock()
+        mock_ipython.get_ipython = MagicMock(return_value=mock_shell)
+
+        with patch.dict(sys.modules, {"IPython": mock_ipython}):
             result = _in_notebook()
             assert result is False
 
@@ -77,13 +81,19 @@ class TestInNotebook:
         mock_shell = MagicMock()
         mock_shell.__class__.__name__ = "ZMQInteractiveShell"
 
-        with patch("IPython.get_ipython", return_value=mock_shell):
+        mock_ipython = MagicMock()
+        mock_ipython.get_ipython = MagicMock(return_value=mock_shell)
+
+        with patch.dict(sys.modules, {"IPython": mock_ipython}):
             result = _in_notebook()
             assert result is True
 
     def test_not_in_notebook_none_shell(self) -> None:
         """Test detection when get_ipython returns None."""
-        with patch("IPython.get_ipython", return_value=None):
+        mock_ipython = MagicMock()
+        mock_ipython.get_ipython = MagicMock(return_value=None)
+
+        with patch.dict(sys.modules, {"IPython": mock_ipython}):
             result = _in_notebook()
             assert result is False
 
@@ -92,13 +102,16 @@ class TestInNotebook:
         mock_shell = MagicMock()
         mock_shell.__class__.__name__ = "UnknownShell"
 
-        with patch("IPython.get_ipython", return_value=mock_shell):
+        mock_ipython = MagicMock()
+        mock_ipython.get_ipython = MagicMock(return_value=mock_shell)
+
+        with patch.dict(sys.modules, {"IPython": mock_ipython}):
             result = _in_notebook()
             assert result is False
 
     def test_not_in_notebook_import_error(self) -> None:
         """Test detection when IPython not installed."""
-        with patch.dict("sys.modules", {"IPython": None}):
+        with patch.dict(sys.modules, {"IPython": None}):
             # This will cause ImportError inside _in_notebook
             result = _in_notebook()
             # Should return False when IPython not available

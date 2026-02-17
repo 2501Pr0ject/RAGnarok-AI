@@ -428,13 +428,20 @@ class TestFAISSVectorStoreSearchResults:
     @pytest.mark.asyncio
     async def test_search_returns_documents(self) -> None:
         """Test search returns documents with scores."""
-        import numpy as np
-
-        # Import with mocked modules
+        # Import with fully mocked modules (no real numpy needed)
         mock_faiss_module = MagicMock()
         mock_np_module = MagicMock()
-        mock_np_module.array.return_value = np.array([[0.1, 0.2, 0.3]], dtype=np.float32)
-        mock_np_module.float32 = np.float32
+
+        # Create mock arrays that behave like numpy arrays
+        mock_query_array = MagicMock()
+        mock_np_module.array.return_value = mock_query_array
+        mock_np_module.float32 = "float32"
+
+        # Mock search results as indexable mock objects
+        mock_distances = MagicMock()
+        mock_distances.__getitem__ = MagicMock(return_value=[0.95, 0.85])
+        mock_indices = MagicMock()
+        mock_indices.__getitem__ = MagicMock(return_value=[0, 1])
 
         with patch.dict(sys.modules, {"faiss": mock_faiss_module, "numpy": mock_np_module}):
             if "ragnarok_ai.adapters.vectorstore.faiss" in sys.modules:
@@ -446,10 +453,7 @@ class TestFAISSVectorStoreSearchResults:
             mock_index = MagicMock()
             mock_index.ntotal = 2
             # FAISS returns (distances, indices) - code unpacks as distances, indices
-            mock_index.search.return_value = (
-                np.array([[0.95, 0.85]]),  # distances (scores)
-                np.array([[0, 1]]),  # indices
-            )
+            mock_index.search.return_value = (mock_distances, mock_indices)
 
             store = FAISSVectorStore(dimension=3)
             # Set up the store with mock data directly (bypass _ensure_index)
@@ -468,12 +472,19 @@ class TestFAISSVectorStoreSearchResults:
     @pytest.mark.asyncio
     async def test_search_handles_negative_index(self) -> None:
         """Test search handles negative indices (not found)."""
-        import numpy as np
-
+        # Import with fully mocked modules (no real numpy needed)
         mock_faiss_module = MagicMock()
         mock_np_module = MagicMock()
-        mock_np_module.array.return_value = np.array([[0.1, 0.2, 0.3]], dtype=np.float32)
-        mock_np_module.float32 = np.float32
+
+        mock_query_array = MagicMock()
+        mock_np_module.array.return_value = mock_query_array
+        mock_np_module.float32 = "float32"
+
+        # Mock search results - first index is -1 (not found), second is 0
+        mock_distances = MagicMock()
+        mock_distances.__getitem__ = MagicMock(return_value=[-1, 0])
+        mock_indices = MagicMock()
+        mock_indices.__getitem__ = MagicMock(return_value=[0.0, 0.85])
 
         with patch.dict(sys.modules, {"faiss": mock_faiss_module, "numpy": mock_np_module}):
             if "ragnarok_ai.adapters.vectorstore.faiss" in sys.modules:
@@ -484,10 +495,7 @@ class TestFAISSVectorStoreSearchResults:
             # Create a mock index
             mock_index = MagicMock()
             mock_index.ntotal = 2
-            mock_index.search.return_value = (
-                np.array([[-1, 0]]),  # -1 means not found
-                np.array([[0.0, 0.85]]),
-            )
+            mock_index.search.return_value = (mock_distances, mock_indices)
 
             store = FAISSVectorStore(dimension=3)
             store._documents = {
