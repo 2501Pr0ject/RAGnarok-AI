@@ -638,53 +638,24 @@ display_comparison([
 
 ### Planned
 
-#### v1.8+
-- [ ] More alert adapters (Discord, Email)
-- [ ] Drift detection
-- [ ] Web UI dashboard
+#### v1.8.0 — Production Intelligence
+- [ ] Drift detection (baseline comparison, alerting)
+- [ ] A/B testing support (compare configs live)
+- [ ] Discord alert adapter
 
-### Future
-
-<details>
-<summary><strong>Web UI</strong></summary>
-
-- [ ] Basic Web UI (read-only dashboard)
-- [ ] Full Web UI dashboard
-
-</details>
-
-<details>
-<summary><strong>Developer Experience</strong></summary>
-
-- [x] GitHub Action ([`2501Pr0ject/ragnarok-evaluate-action`](https://github.com/2501Pr0ject/ragnarok-evaluate-action))
-- [ ] VS Code extension
-- [ ] Interactive CLI (TUI)
-- [ ] Rust acceleration for hot paths
-
-</details>
-
-
-<details>
-<summary><strong>Advanced Features</strong></summary>
-
+#### v1.9.0 — Developer Experience
+- [ ] Interactive TUI (textual)
 - [ ] Streaming evaluation
-- [ ] A/B testing support
-- [x] Dataset versioning
-- [ ] Fine-tuning recommendations
-- [ ] Multi-modal evaluation (images, audio)
+- [ ] Email alert adapter
 
-</details>
+#### v2.0.0 — Visualization
+- [ ] Basic Web UI dashboard
 
-<details>
-<summary><strong>Enterprise (On-Premise)</strong></summary>
+### Future (on-demand)
 
-- [ ] SSO support (SAML, OIDC)
-- [ ] Role-based access control
-- [ ] Audit logging
-- [x] Air-gapped deployment guide
-- [x] Docker/Kubernetes helm charts
-
-</details>
+- [ ] VS Code extension
+- [ ] Multi-modal evaluation
+- [ ] Enterprise (SSO, RBAC, Audit)
 
 ---
 
