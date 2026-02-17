@@ -305,9 +305,7 @@ class TestAmbiguousAbbreviations:
     def test_ambiguous_ms_cardio_context(self) -> None:
         """Test MS disambiguation with cardiac context."""
         normalizer = MedicalAbbreviationNormalizer()
-        text, _ = normalizer.normalize_text(
-            "Patient with MS and heart murmur on cardiac auscultation"
-        )
+        text, _ = normalizer.normalize_text("Patient with MS and heart murmur on cardiac auscultation")
         # With cardio keywords, might prefer mitral stenosis
         assert "stenosis" in text.lower() or "sclerosis" in text.lower() or "MS" in text
 
@@ -324,17 +322,13 @@ class TestCustomAbbreviations:
 
     def test_custom_abbreviation_added(self) -> None:
         """Test that custom abbreviations are used."""
-        normalizer = MedicalAbbreviationNormalizer(
-            custom_abbreviations={"CUSTOM": "custom expansion text"}
-        )
+        normalizer = MedicalAbbreviationNormalizer(custom_abbreviations={"CUSTOM": "custom expansion text"})
         text, _expansions = normalizer.normalize_text("Patient has CUSTOM")
         assert "custom expansion text" in text.lower()
 
     def test_custom_overrides_builtin(self) -> None:
         """Test that custom can override built-in abbreviations."""
-        normalizer = MedicalAbbreviationNormalizer(
-            custom_abbreviations={"CHF": "overridden heart failure"}
-        )
+        normalizer = MedicalAbbreviationNormalizer(custom_abbreviations={"CHF": "overridden heart failure"})
         text, _ = normalizer.normalize_text("Has CHF")
         assert "overridden heart failure" in text.lower()
 

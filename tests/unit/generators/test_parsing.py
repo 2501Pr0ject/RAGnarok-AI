@@ -95,7 +95,7 @@ class TestParseJsonArray:
     def test_parse_array_with_malformed_object(self) -> None:
         """Test array extraction when matched content has invalid inner object."""
         # Regex matches but inner content is malformed
-        result = parse_json_array('found [{bad: json}] end')
+        result = parse_json_array("found [{bad: json}] end")
         assert result == []
 
 
@@ -176,5 +176,5 @@ class TestParseJsonObject:
     def test_parse_object_with_malformed_content(self) -> None:
         """Test object extraction when matched content has invalid structure."""
         # Regex matches but content is not valid JSON
-        result = parse_json_object('found {key: unquoted} end')
+        result = parse_json_object("found {key: unquoted} end")
         assert result == {}

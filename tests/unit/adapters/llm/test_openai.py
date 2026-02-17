@@ -171,9 +171,7 @@ class TestOpenAILLMGenerate:
     @respx.mock
     async def test_generate_unexpected_error(self) -> None:
         """Test generation with unexpected error."""
-        respx.post("https://api.openai.com/v1/chat/completions").mock(
-            side_effect=ValueError("Unexpected")
-        )
+        respx.post("https://api.openai.com/v1/chat/completions").mock(side_effect=ValueError("Unexpected"))
 
         llm = OpenAILLM(api_key="sk-test")
         with pytest.raises(LLMConnectionError, match="Unexpected error"):
@@ -260,9 +258,7 @@ class TestOpenAILLMEmbed:
     @respx.mock
     async def test_embed_timeout_error(self) -> None:
         """Test embedding with timeout error."""
-        respx.post("https://api.openai.com/v1/embeddings").mock(
-            side_effect=httpx.TimeoutException("Request timed out")
-        )
+        respx.post("https://api.openai.com/v1/embeddings").mock(side_effect=httpx.TimeoutException("Request timed out"))
 
         llm = OpenAILLM(api_key="sk-test")
         with pytest.raises(LLMConnectionError, match="timed out"):
@@ -272,9 +268,7 @@ class TestOpenAILLMEmbed:
     @respx.mock
     async def test_embed_unexpected_error(self) -> None:
         """Test embedding with unexpected error."""
-        respx.post("https://api.openai.com/v1/embeddings").mock(
-            side_effect=ValueError("Unexpected")
-        )
+        respx.post("https://api.openai.com/v1/embeddings").mock(side_effect=ValueError("Unexpected"))
 
         llm = OpenAILLM(api_key="sk-test")
         with pytest.raises(LLMConnectionError, match="Unexpected error"):

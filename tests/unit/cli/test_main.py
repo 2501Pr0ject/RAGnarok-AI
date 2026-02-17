@@ -465,9 +465,7 @@ metrics:
   - recall
 """)
 
-            result = runner.invoke(
-                app, ["evaluate", "--demo", "--limit", "2", "--config", str(config_path)]
-            )
+            result = runner.invoke(app, ["evaluate", "--demo", "--limit", "2", "--config", str(config_path)])
 
             assert result.exit_code == 0
 
@@ -520,9 +518,7 @@ class TestBenchmarkCommand:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = Path(tmpdir) / "benchmarks.json"
 
-            result = runner.invoke(
-                app, ["--json", "benchmark", "--demo", "--storage", str(storage_path)]
-            )
+            result = runner.invoke(app, ["--json", "benchmark", "--demo", "--storage", str(storage_path)])
 
             assert result.exit_code == 0
             data = json.loads(result.output)
@@ -576,10 +572,14 @@ class TestDatasetDiffCommand:
         """Test diff of identical datasets."""
         with tempfile.TemporaryDirectory() as tmpdir:
             dataset_path = Path(tmpdir) / "dataset.json"
-            dataset_path.write_text(json.dumps([
-                {"text": "Q1", "ground_truth_docs": ["d1"]},
-                {"text": "Q2", "ground_truth_docs": ["d2"]},
-            ]))
+            dataset_path.write_text(
+                json.dumps(
+                    [
+                        {"text": "Q1", "ground_truth_docs": ["d1"]},
+                        {"text": "Q2", "ground_truth_docs": ["d2"]},
+                    ]
+                )
+            )
 
             result = runner.invoke(app, ["dataset", "diff", str(dataset_path), str(dataset_path)])
 
@@ -591,14 +591,22 @@ class TestDatasetDiffCommand:
             v1_path = Path(tmpdir) / "v1.json"
             v2_path = Path(tmpdir) / "v2.json"
 
-            v1_path.write_text(json.dumps([
-                {"text": "Q1", "ground_truth_docs": ["d1"]},
-                {"text": "Q2", "ground_truth_docs": ["d2"]},
-            ]))
-            v2_path.write_text(json.dumps([
-                {"text": "Q1", "ground_truth_docs": ["d1"]},
-                {"text": "Q3", "ground_truth_docs": ["d3"]},
-            ]))
+            v1_path.write_text(
+                json.dumps(
+                    [
+                        {"text": "Q1", "ground_truth_docs": ["d1"]},
+                        {"text": "Q2", "ground_truth_docs": ["d2"]},
+                    ]
+                )
+            )
+            v2_path.write_text(
+                json.dumps(
+                    [
+                        {"text": "Q1", "ground_truth_docs": ["d1"]},
+                        {"text": "Q3", "ground_truth_docs": ["d3"]},
+                    ]
+                )
+            )
 
             result = runner.invoke(app, ["dataset", "diff", str(v1_path), str(v2_path)])
 
@@ -672,10 +680,7 @@ class TestDatasetInfoCommand:
         """Test dataset info command."""
         with tempfile.TemporaryDirectory() as tmpdir:
             dataset_path = Path(tmpdir) / "dataset.json"
-            dataset_path.write_text(json.dumps({
-                "name": "test_dataset",
-                "queries": [{"text": "Q1"}, {"text": "Q2"}]
-            }))
+            dataset_path.write_text(json.dumps({"name": "test_dataset", "queries": [{"text": "Q1"}, {"text": "Q2"}]}))
 
             result = runner.invoke(app, ["dataset", "info", str(dataset_path)])
 
@@ -801,11 +806,9 @@ class TestJudgeCommand:
 
     def test_judge_missing_testset(self) -> None:
         """Test judge command with missing testset file."""
-        result = runner.invoke(app, [
-            "judge",
-            "--testset", "/nonexistent/testset.json",
-            "--results", "/nonexistent/results.json"
-        ])
+        result = runner.invoke(
+            app, ["judge", "--testset", "/nonexistent/testset.json", "--results", "/nonexistent/results.json"]
+        )
 
         assert result.exit_code == 2
 
@@ -815,11 +818,9 @@ class TestJudgeCommand:
             testset_path = Path(tmpdir) / "testset.json"
             testset_path.write_text(json.dumps([{"text": "Q1"}]))
 
-            result = runner.invoke(app, [
-                "judge",
-                "--testset", str(testset_path),
-                "--results", "/nonexistent/results.json"
-            ])
+            result = runner.invoke(
+                app, ["judge", "--testset", str(testset_path), "--results", "/nonexistent/results.json"]
+            )
 
             assert result.exit_code == 2
 
@@ -851,16 +852,12 @@ class TestEvaluateCommandExtended:
             output_path = Path(tmpdir) / "output.json"
 
             # Create a valid testset
-            testset_path.write_text(json.dumps([
-                {"text": "What is AI?", "ground_truth_answer": "AI is artificial intelligence"}
-            ]))
+            testset_path.write_text(
+                json.dumps([{"text": "What is AI?", "ground_truth_answer": "AI is artificial intelligence"}])
+            )
 
             # This will still fail because there's no model, but it tests the parsing
-            result = runner.invoke(app, [
-                "evaluate",
-                "--testset", str(testset_path),
-                "--output", str(output_path)
-            ])
+            result = runner.invoke(app, ["evaluate", "--testset", str(testset_path), "--output", str(output_path)])
 
             # Exit code might vary based on model availability
             assert result.exit_code in [0, 1, 2]
@@ -871,11 +868,7 @@ class TestEvaluateCommandExtended:
             testset_path = Path(tmpdir) / "testset.json"
             testset_path.write_text(json.dumps([{"text": "Test question"}]))
 
-            result = runner.invoke(app, [
-                "evaluate",
-                "--testset", str(testset_path),
-                "--fail-under", "0.9"
-            ])
+            result = runner.invoke(app, ["evaluate", "--testset", str(testset_path), "--fail-under", "0.9"])
 
             # Will fail due to missing model, but tests argument parsing
             assert result.exit_code in [0, 1, 2]
@@ -890,11 +883,9 @@ class TestBenchmarkCommandExtended:
             testset_path = Path(tmpdir) / "testset.json"
             testset_path.write_text(json.dumps([{"text": "Q1"}]))
 
-            result = runner.invoke(app, [
-                "benchmark",
-                "--testset", str(testset_path),
-                "--compare", "/nonexistent/baseline.json"
-            ])
+            result = runner.invoke(
+                app, ["benchmark", "--testset", str(testset_path), "--compare", "/nonexistent/baseline.json"]
+            )
 
             assert result.exit_code == 2
 
@@ -904,11 +895,7 @@ class TestBenchmarkCommandExtended:
             storage_path = Path(tmpdir) / "benchmarks.json"
             storage_path.write_text("{}")
 
-            result = runner.invoke(app, [
-                "benchmark",
-                "--list",
-                "--storage", str(storage_path)
-            ])
+            result = runner.invoke(app, ["benchmark", "--list", "--storage", str(storage_path)])
 
             assert result.exit_code in [0, 1]
 
@@ -942,12 +929,9 @@ class TestConfigFileOptions:
             testset_path = Path(tmpdir) / "testset.json"
             testset_path.write_text(json.dumps([{"text": "Q1"}]))
 
-            result = runner.invoke(app, [
-                "evaluate",
-                "--testset", str(testset_path),
-                "--metrics", "precision",
-                "--metrics", "recall"
-            ])
+            result = runner.invoke(
+                app, ["evaluate", "--testset", str(testset_path), "--metrics", "precision", "--metrics", "recall"]
+            )
 
             # Will fail due to missing model but tests arg parsing
             assert result.exit_code in [0, 1, 2]

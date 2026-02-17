@@ -448,7 +448,9 @@ class TestQdrantVectorStoreErrors:
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response([])
         # Simulate UnexpectedResponse during collection creation
-        mock_client.create_collection.side_effect = mock_qdrant_client.http.exceptions.UnexpectedResponse("Collection error")
+        mock_client.create_collection.side_effect = mock_qdrant_client.http.exceptions.UnexpectedResponse(
+            "Collection error"
+        )
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()

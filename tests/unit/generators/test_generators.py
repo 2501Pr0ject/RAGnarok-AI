@@ -327,7 +327,8 @@ class TestSyntheticQuestionGeneratorGenerate:
             side_effect=[
                 # First doc generates many questions
                 '["Q1", "Q2", "Q3", "Q4", "Q5"]',
-                "A1", "A2",  # Only need answers for 2 questions
+                "A1",
+                "A2",  # Only need answers for 2 questions
             ]
         )
 
