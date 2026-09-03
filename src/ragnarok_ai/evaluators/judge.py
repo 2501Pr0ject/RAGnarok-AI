@@ -335,6 +335,7 @@ class LLMJudge:
         timeout: float = 300.0,
         llm: LLMProtocol | None = None,
         medical_mode: bool = False,
+        disambiguation_llm: LLMProtocol | None = None,
     ) -> None:
         """Initialize LLMJudge.
 
@@ -345,6 +346,10 @@ class LLMJudge:
             llm: Optional pre-configured LLM instance. If provided, model/base_url are ignored.
             medical_mode: If True, normalize medical abbreviations before evaluation.
                          Reduces false positives from abbreviation ambiguity in medical contexts.
+            disambiguation_llm: Optional small LLM (e.g. Ollama qwen2.5:0.5b) used to
+                         resolve ambiguous medical abbreviations when the surrounding
+                         context gives the keyword scorer no signal. Only used when
+                         medical_mode is True.
         """
         if llm is not None:
             self.llm = llm
@@ -381,7 +386,12 @@ class LLMJudge:
         if medical_mode:
             from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
 
-            self._normalizer = MedicalAbbreviationNormalizer()
+            disambiguator = None
+            if disambiguation_llm is not None:
+                from ragnarok_ai.evaluators.medical.disambiguation import SLMDisambiguator
+
+                disambiguator = SLMDisambiguator(disambiguation_llm)
+            self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
 
     def _get_available_models(self, base_url: str) -> list[str]:
         """Get list of available Ollama models.
@@ -445,8 +455,8 @@ class LLMJudge:
         """
         # Normalize medical abbreviations if medical_mode is enabled
         if self.medical_mode and self._normalizer:
-            context, _ = self._normalizer.normalize_text(context)
-            answer, _ = self._normalizer.normalize_text(answer)
+            context, _ = await self._normalizer.normalize_text_async(context)
+            answer, _ = await self._normalizer.normalize_text_async(answer)
 
         prompt = FAITHFULNESS_PROMPT.format(
             context=context,
@@ -493,8 +503,8 @@ class LLMJudge:
         """
         # Normalize medical abbreviations if medical_mode is enabled
         if self.medical_mode and self._normalizer:
-            context, _ = self._normalizer.normalize_text(context)
-            answer, _ = self._normalizer.normalize_text(answer)
+            context, _ = await self._normalizer.normalize_text_async(context)
+            answer, _ = await self._normalizer.normalize_text_async(answer)
 
         prompt = HALLUCINATION_PROMPT.format(
             context=context,
@@ -521,8 +531,8 @@ class LLMJudge:
         """
         # Normalize medical abbreviations if medical_mode is enabled
         if self.medical_mode and self._normalizer:
-            context, _ = self._normalizer.normalize_text(context)
-            answer, _ = self._normalizer.normalize_text(answer)
+            context, _ = await self._normalizer.normalize_text_async(context)
+            answer, _ = await self._normalizer.normalize_text_async(answer)
 
         prompt = COMPLETENESS_PROMPT.format(
             context=context,

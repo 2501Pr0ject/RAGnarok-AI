@@ -4,8 +4,11 @@ This package provides medical-specific evaluation tools including
 abbreviation normalization and medical terminology handling.
 """
 
+from ragnarok_ai.evaluators.medical.disambiguation import DisambiguationStrategy, SLMDisambiguator
 from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
 
 __all__ = [
+    "DisambiguationStrategy",
     "MedicalAbbreviationNormalizer",
+    "SLMDisambiguator",
 ]

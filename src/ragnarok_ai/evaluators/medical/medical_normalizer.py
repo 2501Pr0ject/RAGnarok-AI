@@ -23,6 +23,7 @@ Integration:
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 from .abbreviations import (
     ABBREVIATIONS,
@@ -35,6 +36,9 @@ from .abbreviations import (
     SLASH_ABBREVIATIONS,
     AmbiguousEntry,
 )
+
+if TYPE_CHECKING:
+    from .disambiguation import DisambiguationStrategy
 
 # ========================== Normalizer ======================================
 
@@ -51,6 +55,8 @@ class MedicalAbbreviationNormalizer:
     Features:
         - Context-aware disambiguation for ambiguous abbreviations
           (e.g. ``MS`` → multiple sclerosis vs. mitral stenosis).
+        - Optional SLM escalation via ``normalize_text_async`` when the
+          keyword scorer has no context signal (see ``disambiguation``).
         - False-positive filtering (``OR``, ``US``, ``IT``, etc.).
         - Explicit-definition detection: ``CHF (Congestive Heart Failure)``
           is left untouched.
@@ -97,6 +103,7 @@ class MedicalAbbreviationNormalizer:
         *,
         custom_abbreviations: dict[str, str] | None = None,
         context_window: int = 10,
+        disambiguator: DisambiguationStrategy | None = None,
     ) -> None:
         """Initialize the normalizer.
 
@@ -105,8 +112,14 @@ class MedicalAbbreviationNormalizer:
                 merge into the built-in dictionary (unambiguous only).
             context_window: Number of surrounding words to consider when
                 disambiguating ambiguous abbreviations.
+            disambiguator: Optional escalation strategy (e.g.
+                ``SLMDisambiguator``) consulted by ``normalize_text_async``
+                when an ambiguous abbreviation has no context-keyword hit.
+                Without it, such cases fall back to the highest-priority
+                meaning.
         """
         self._context_window = context_window
+        self._disambiguator = disambiguator
 
         self._abbreviations: dict[str, str | list[AmbiguousEntry]] = {
             **ABBREVIATIONS,
@@ -140,6 +153,80 @@ class MedicalAbbreviationNormalizer:
         Returns:
             A ``(normalized_text, expansions)`` tuple where *expansions*
             is a list of strings like ``"CHF → congestive heart failure"``.
+        """
+        normalized, expansions, seen, explicit_defs = self._apply_static_passes(text)
+
+        # ── Pass 7: Standard uppercase abbreviations (CHF, MI, etc.) ─────
+        for abbrev in self._ABBREV_RE.findall(normalized):
+            if abbrev in seen or abbrev in explicit_defs:
+                continue
+            seen.add(abbrev)
+            if abbrev in FALSE_POSITIVES:
+                continue
+
+            full_form = self._resolve(abbrev, self._get_context(normalized, abbrev))
+            if full_form is None:
+                continue
+
+            normalized = re.sub(rf"\b{re.escape(abbrev)}\b", full_form, normalized)
+            expansions.append(f"{abbrev} → {full_form}")
+
+        return normalized, expansions
+
+    async def normalize_text_async(self, text: str) -> tuple[str, list[str]]:
+        """Expand medical abbreviations, escalating uncertain cases.
+
+        Behaves exactly like ``normalize_text`` except that ambiguous
+        abbreviations with **no** context-keyword hit are handed to the
+        configured ``disambiguator`` instead of silently falling back to
+        the highest-priority meaning. Expansions resolved this way are
+        tagged ``[slm]`` (e.g. ``"MS → mitral stenosis [slm]"``).
+
+        Without a disambiguator this is equivalent to ``normalize_text``.
+
+        Args:
+            text: Clinical / medical text that may contain abbreviations.
+
+        Returns:
+            A ``(normalized_text, expansions)`` tuple.
+        """
+        if self._disambiguator is None:
+            return self.normalize_text(text)
+
+        normalized, expansions, seen, explicit_defs = self._apply_static_passes(text)
+
+        # ── Pass 7 (escalating variant) ─────────────────────────────────
+        for abbrev in self._ABBREV_RE.findall(normalized):
+            if abbrev in seen or abbrev in explicit_defs:
+                continue
+            seen.add(abbrev)
+            if abbrev in FALSE_POSITIVES:
+                continue
+
+            context = self._get_context(normalized, abbrev)
+            full_form, confident = self._resolve_with_confidence(abbrev, context)
+            provenance = ""
+            if full_form is not None and not confident:
+                entry = self._abbreviations.get(abbrev)
+                if isinstance(entry, list) and len(entry) > 1:
+                    choice = await self._disambiguator.resolve(abbrev, entry, context)
+                    if choice is not None:
+                        full_form = choice
+                        provenance = " [slm]"
+            if full_form is None:
+                continue
+
+            normalized = re.sub(rf"\b{re.escape(abbrev)}\b", full_form, normalized)
+            expansions.append(f"{abbrev} → {full_form}{provenance}")
+
+        return normalized, expansions
+
+    def _apply_static_passes(self, text: str) -> tuple[str, list[str], set[str], dict[str, str]]:
+        """Run passes 1-6 (everything except standard uppercase expansion).
+
+        Returns:
+            ``(normalized, expansions, seen, explicit_defs)`` — the working
+            state that pass 7 (sync or async) continues from.
         """
         explicit_defs = self._extract_explicit_defs(text)
         normalized = text
@@ -230,43 +317,38 @@ class MedicalAbbreviationNormalizer:
             normalized = normalized.replace(raw, full_form)
             expansions.append(f"{raw} → {full_form}")
 
-        # ── Pass 7: Standard uppercase abbreviations (CHF, MI, etc.) ─────
-        for abbrev in self._ABBREV_RE.findall(normalized):
-            if abbrev in seen or abbrev in explicit_defs:
-                continue
-            seen.add(abbrev)
-
-            # Skip common English false positives
-            if abbrev in FALSE_POSITIVES and abbrev not in self._abbreviations:
-                continue
-            if abbrev in FALSE_POSITIVES:
-                continue
-
-            full_form = self._resolve(abbrev, self._get_context(normalized, abbrev))
-            if full_form is None:
-                continue
-
-            normalized = re.sub(rf"\b{re.escape(abbrev)}\b", full_form, normalized)
-            expansions.append(f"{abbrev} → {full_form}")
-
-        return normalized, expansions
+        return normalized, expansions, seen, explicit_defs
 
     # ── Resolution ─────────────────────────────────────────────────────
 
     def _resolve(self, abbrev: str, context: str) -> str | None:
         """Return the best expansion for *abbrev* given surrounding *context*."""
+        full_form, _ = self._resolve_with_confidence(abbrev, context)
+        return full_form
+
+    def _resolve_with_confidence(self, abbrev: str, context: str) -> tuple[str | None, bool]:
+        """Resolve *abbrev* and report whether the choice is context-backed.
+
+        Returns:
+            ``(full_form, confident)``. *confident* is ``True`` for
+            unambiguous abbreviations and for ambiguous ones where at least
+            one context keyword matched; ``False`` when the resolution is a
+            blind fall-back to the highest-priority meaning — the case a
+            ``DisambiguationStrategy`` should double-check.
+        """
         entry = self._abbreviations.get(abbrev)
         if entry is None:
-            return None
+            return None, True
 
         # Unambiguous
         if isinstance(entry, str):
-            return entry
+            return entry, True
 
         # Ambiguous — score each candidate by context-keyword overlap
         context_lower = context.lower()
         best: AmbiguousEntry | None = None
         best_score = -1
+        best_hits = 0
 
         for candidate in entry:
             hits = sum(1 for kw in candidate.context_keywords if kw in context_lower)
@@ -274,8 +356,11 @@ class MedicalAbbreviationNormalizer:
             if score > best_score:
                 best_score = score
                 best = candidate
+                best_hits = hits
 
-        return best.full_form if best else None
+        if best is None:
+            return None, True
+        return best.full_form, best_hits > 0
 
     # ── Helpers ─────────────────────────────────────────────────────────
 

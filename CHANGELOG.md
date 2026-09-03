@@ -5,6 +5,21 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **SLM-based medical abbreviation disambiguation** (#95)
+  - `SLMDisambiguator`: resolves ambiguous medical abbreviations (MS, PE, CP...)
+    with a small local model via closed-set classification over the dictionary's
+    own candidate meanings
+  - Escalation only when the keyword scorer has zero context hits; decisions
+    cached per (abbreviation, context window); abstention and errors fall back
+    to the existing priority default
+  - `MedicalAbbreviationNormalizer.normalize_text_async()` and a pluggable
+    `DisambiguationStrategy` protocol
+  - New `disambiguation_llm` parameter on `LLMJudge` and `FaithfulnessEvaluator`
+  - Expansions resolved by the SLM are tagged `[slm]` for traceability
+
 ## [1.7.0] - 2026-02-16
 
 ### Added
