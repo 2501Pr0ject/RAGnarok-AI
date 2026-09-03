@@ -5,6 +5,26 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Production Drift Detection**
+  - `build_baseline()`: record a self-contained, PII-free snapshot of
+    production behavior (bucketized distributions + health metrics) from
+    monitor traces; JSON save/load via `DriftBaseline`
+  - `DriftDetector`: compare a window of traces against the baseline
+    - Distribution drift via Population Stability Index (PSI) on
+      `total_latency_ms`, `query_length`, `answer_length`, `retrieval_count`
+    - Metric drift on success rate (absolute drop) and p95 latency
+      (relative increase), with warning/critical escalation
+    - `min_samples` guard: small windows are flagged `insufficient_data`
+      instead of producing noisy findings
+  - Alerting integration: `DriftReport.to_alerts()` (source="drift") and
+    `DriftDetector.check_and_alert()` dispatch through `AlertManager`
+  - `MonitorStore.get_traces()`: fetch raw traces for a time window
+  - Configurable `DriftThresholds`; public exports from package root
+  - Documentation at `docs/user-guide/drift.md`
+
 ## [1.8.0] - 2026-09-03
 
 ### Added

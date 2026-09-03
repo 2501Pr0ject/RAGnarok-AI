@@ -429,6 +429,60 @@ class MonitorStore:
                 generation_latency_avg=row["generation_latency_avg"],
             )
 
+    def get_traces(
+        self,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int | None = None,
+    ) -> list[TraceEvent]:
+        """Fetch raw traces for a time window, oldest first.
+
+        Args:
+            since: Only traces at or after this time (inclusive).
+            until: Only traces before this time (exclusive).
+            limit: Maximum number of traces to return.
+
+        Returns:
+            List of TraceEvent, ordered by timestamp ascending.
+        """
+        query = "SELECT * FROM traces"
+        conditions: list[str] = []
+        params: list[str | int] = []
+        if since is not None:
+            conditions.append("timestamp >= ?")
+            params.append(since.isoformat())
+        if until is not None:
+            conditions.append("timestamp < ?")
+            params.append(until.isoformat())
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY timestamp ASC"
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+
+        with self._connect() as conn:
+            rows = conn.execute(query, params).fetchall()
+
+        return [
+            TraceEvent(
+                id=row["id"],
+                timestamp=datetime.fromisoformat(row["timestamp"]),
+                query_hash=row["query_hash"],
+                query_length=row["query_length"],
+                retrieval_latency_ms=row["retrieval_latency_ms"],
+                retrieval_count=row["retrieval_count"],
+                generation_latency_ms=row["generation_latency_ms"],
+                answer_length=row["answer_length"],
+                total_latency_ms=row["total_latency_ms"],
+                model_version=row["model_version"],
+                success=bool(row["success"]),
+                error_type=row["error_type"],
+                metadata=json.loads(row["metadata"]) if row["metadata"] else {},
+            )
+            for row in rows
+        ]
+
     def purge_old_traces(self) -> int:
         """Remove traces older than retention period.
 

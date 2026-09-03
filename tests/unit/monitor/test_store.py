@@ -317,3 +317,65 @@ class TestMonitorStorePurge:
         assert last is not None
         # Most recent should be 'now' (i=0)
         assert abs((last - now).total_seconds()) < 1
+
+
+class TestGetTraces:
+    """Tests for get_traces window queries."""
+
+    def test_returns_all_traces_oldest_first(self, store: MonitorStore) -> None:
+        """Traces come back complete and ordered by timestamp."""
+        base = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        for i in [2, 0, 1]:
+            store.insert(
+                TraceEvent(
+                    query_hash=f"h{i}",
+                    query_length=10,
+                    total_latency_ms=100.0 + i,
+                    timestamp=base + timedelta(hours=i),
+                )
+            )
+
+        traces = store.get_traces()
+
+        assert [t.query_hash for t in traces] == ["h0", "h1", "h2"]
+
+    def test_window_filters_are_applied(self, store: MonitorStore) -> None:
+        """since is inclusive, until is exclusive."""
+        base = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        for i in range(4):
+            store.insert(
+                TraceEvent(
+                    query_hash=f"h{i}",
+                    query_length=10,
+                    total_latency_ms=100.0,
+                    timestamp=base + timedelta(hours=i),
+                )
+            )
+
+        traces = store.get_traces(since=base + timedelta(hours=1), until=base + timedelta(hours=3))
+
+        assert [t.query_hash for t in traces] == ["h1", "h2"]
+
+    def test_limit_and_roundtrip_fields(self, store: MonitorStore, sample_trace: TraceEvent) -> None:
+        """A stored trace round-trips field-for-field; limit caps results."""
+        sample_trace.metadata = {"tenant": "acme"}
+        store.insert(sample_trace)
+        store.insert(
+            TraceEvent(
+                query_hash="other",
+                query_length=1,
+                total_latency_ms=1.0,
+                timestamp=sample_trace.timestamp + timedelta(seconds=1),
+            )
+        )
+
+        traces = store.get_traces(limit=1)
+
+        assert len(traces) == 1
+        loaded = traces[0]
+        assert loaded.query_hash == sample_trace.query_hash
+        assert loaded.retrieval_latency_ms == sample_trace.retrieval_latency_ms
+        assert loaded.answer_length == sample_trace.answer_length
+        assert loaded.model_version == sample_trace.model_version
+        assert loaded.success is True
+        assert loaded.metadata == {"tenant": "acme"}
