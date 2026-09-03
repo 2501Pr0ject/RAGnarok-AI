@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ragnarok_ai.ab import ABAnalyzer, ABTestConfig, ABTestReport, Experiment
 from ragnarok_ai.alerts import AlertManager, AlertRule, AlertSeverity
 from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult
 from ragnarok_ai.core.compare import ComparisonResult, compare
@@ -19,6 +20,9 @@ from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
 __version__ = "1.8.0"
 __all__ = [
+    "ABAnalyzer",
+    "ABTestConfig",
+    "ABTestReport",
     "AlertManager",
     "AlertRule",
     "AlertSeverity",
@@ -34,6 +38,7 @@ __all__ = [
     "DriftReport",
     "DriftThresholds",
     "EvaluationResult",
+    "Experiment",
     "ForgeLoadError",
     "JudgeResult",
     "JudgeResults",
