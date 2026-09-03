@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.8.0 is now available!** SLM-based medical abbreviation disambiguation for sparse contexts. Install with `pip install ragnarok-ai`
+> **v1.9.0 is now available!** Production Intelligence: drift detection, live A/B testing, and root-cause diagnosis. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -103,6 +103,7 @@ results.export("report.html")
 |---------|-------------|
 | **100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
 | **Production Monitoring** | Collect traces, export Prometheus metrics, track latency and success rates in production. |
+| **Production Intelligence** | Drift detection against a recorded baseline, live A/B testing, root-cause diagnosis of failures. |
 | **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness. |
 | **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
 | **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
@@ -648,18 +649,22 @@ display_comparison([
 
 </details>
 
-### Planned
+<details>
+<summary><strong>v1.9.0 — Production Intelligence</strong></summary>
 
-#### v1.9.0 — Production Intelligence
-- [x] Drift detection (baseline comparison, alerting)
-- [x] A/B testing support (compare configs live)
-- [x] Root-cause diagnosis (failure classification, actionable recommendations)
-- [ ] Discord alert adapter
+- [x] **Drift Detection**: PSI-based distribution drift + metric drift against a recorded, PII-free baseline, wired into alerting
+- [x] **Live A/B Testing**: deterministic traffic splitting, z-test / Welch comparison, conservative winner rule
+- [x] **Root-Cause Diagnosis**: classify evaluation failures (retrieval miss, ranking, hallucination...) with actionable recommendations
+- [x] **MonitorStore.get_traces**: window queries over raw production traces
+
+</details>
+
+### Planned
 
 #### v1.10.0 — Developer Experience
 - [ ] Interactive TUI (textual)
 - [ ] Streaming evaluation
-- [ ] Email alert adapter
+- [ ] Discord & email alert adapters
 
 #### v2.0.0 — Visualization
 - [ ] Basic Web UI dashboard

@@ -24,7 +24,7 @@ from ragnarok_ai.loaders.forge_bundle import (
 from ragnarok_ai.monitor import MonitorClient
 from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
-__version__ = "1.8.0"
+__version__ = "1.9.0"
 __all__ = [
     "ABAnalyzer",
     "ABTestConfig",
