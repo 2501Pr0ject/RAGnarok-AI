@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Live A/B Testing**
+  - `Experiment`: deterministic, stateless traffic splitting between named
+    variants (hash-based bucketing with configurable weights and salt);
+    `tag()` records assignments into monitor trace metadata
+  - `ABAnalyzer`: compare two variants from monitor traces
+    - Success rate via two-proportion z-test, mean latency via Welch's
+      t-test (normal approximation, no scipy dependency)
+    - Overall winner only when a variant is significantly better on at
+      least one metric and worse on none
+    - `min_samples` guard flags underpowered windows as `insufficient_data`
+  - `ABTestConfig` (alpha, min_samples), `ABTestReport.to_dict()` export
+  - Public exports from package root; documentation at
+    `docs/user-guide/ab-testing.md`
 - **Production Drift Detection**
   - `build_baseline()`: record a self-contained, PII-free snapshot of
     production behavior (bucketized distributions + health metrics) from

@@ -652,7 +652,7 @@ display_comparison([
 
 #### v1.9.0 — Production Intelligence
 - [x] Drift detection (baseline comparison, alerting)
-- [ ] A/B testing support (compare configs live)
+- [x] A/B testing support (compare configs live)
 - [ ] Discord alert adapter
 
 #### v1.10.0 — Developer Experience
