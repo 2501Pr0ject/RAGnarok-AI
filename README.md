@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.7.0 is now available!** Alerting system with Webhook and Slack adapters. Install with `pip install ragnarok-ai`
+> **v1.8.0 is now available!** SLM-based medical abbreviation disambiguation for sparse contexts. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -636,14 +636,26 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.8.0 — Medical Disambiguation</strong></summary>
+
+- [x] **SLMDisambiguator**: Resolve ambiguous medical abbreviations (MS, PE, CP...) with a small local model via closed-set classification
+- [x] **Tiered Escalation**: Keyword scorer first, SLM only on zero context hits, priority fallback on abstention
+- [x] **Decision Caching**: Per (abbreviation, context window) LRU cache
+- [x] **DisambiguationStrategy Protocol**: Pluggable resolution backends
+- [x] **Evaluator Integration**: `disambiguation_llm` parameter on LLMJudge and FaithfulnessEvaluator
+- [x] **Traceability**: SLM-resolved expansions tagged `[slm]`
+
+</details>
+
 ### Planned
 
-#### v1.8.0 — Production Intelligence
+#### v1.9.0 — Production Intelligence
 - [ ] Drift detection (baseline comparison, alerting)
 - [ ] A/B testing support (compare configs live)
 - [ ] Discord alert adapter
 
-#### v1.9.0 — Developer Experience
+#### v1.10.0 — Developer Experience
 - [ ] Interactive TUI (textual)
 - [ ] Streaming evaluation
 - [ ] Email alert adapter
