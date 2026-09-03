@@ -8,6 +8,12 @@ from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, B
 from ragnarok_ai.core.compare import ComparisonResult, compare
 from ragnarok_ai.core.evaluate import EvaluationResult, evaluate, evaluate_stream
 from ragnarok_ai.cost.tracker import CostSummary, CostTracker
+from ragnarok_ai.diagnosis import (
+    DiagnosisReport,
+    DiagnosisThresholds,
+    FailureCause,
+    RAGDiagnostician,
+)
 from ragnarok_ai.drift import DriftBaseline, DriftDetector, DriftReport, DriftThresholds, build_baseline
 from ragnarok_ai.evaluators.judge import JudgeResult, JudgeResults, LLMJudge
 from ragnarok_ai.loaders.forge_bundle import (
@@ -33,18 +39,22 @@ __all__ = [
     "ComparisonResult",
     "CostSummary",
     "CostTracker",
+    "DiagnosisReport",
+    "DiagnosisThresholds",
     "DriftBaseline",
     "DriftDetector",
     "DriftReport",
     "DriftThresholds",
     "EvaluationResult",
     "Experiment",
+    "FailureCause",
     "ForgeLoadError",
     "JudgeResult",
     "JudgeResults",
     "LLMJudge",
     "MonitorClient",
     "PiiMode",
+    "RAGDiagnostician",
     "__version__",
     "build_baseline",
     "compare",

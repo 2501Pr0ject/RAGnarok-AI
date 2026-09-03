@@ -24,13 +24,25 @@ if TYPE_CHECKING:
 
 @dataclass
 class QueryResult:
-    """Result of evaluating a single query."""
+    """Result of evaluating a single query.
+
+    Attributes:
+        query: The evaluated query.
+        metric: Retrieval metrics for this query.
+        answer: The generated answer.
+        latency_ms: Total evaluation latency in milliseconds.
+        error: The error, if evaluation failed.
+        retrieved_doc_ids: IDs of the retrieved documents, in rank order.
+            Enables root-cause diagnosis (retrieval miss vs. ranking vs.
+            generation failure).
+    """
 
     query: Query
     metric: RetrievalMetrics
     answer: str
     latency_ms: float
     error: Exception | None = None
+    retrieved_doc_ids: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -566,6 +578,7 @@ async def _evaluate_single_query(
                 metric=metric,
                 answer=response.answer,
                 latency_ms=total_latency,
+                retrieved_doc_ids=[doc.id for doc in response.retrieved_docs],
             )
 
         except Exception as e:

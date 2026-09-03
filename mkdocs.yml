@@ -90,6 +90,7 @@ nav:
     - Quick Start: getting-started/quickstart.md
   - User Guide:
     - Evaluation: user-guide/evaluation.md
+    - Root-Cause Diagnosis: user-guide/diagnosis.md
     - LLM-as-Judge: user-guide/judge.md
     - Benchmarking: user-guide/benchmarking.md
     - Monitoring: user-guide/monitoring.md
