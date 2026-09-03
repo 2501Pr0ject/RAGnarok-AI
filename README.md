@@ -653,6 +653,7 @@ display_comparison([
 #### v1.9.0 — Production Intelligence
 - [x] Drift detection (baseline comparison, alerting)
 - [x] A/B testing support (compare configs live)
+- [x] Root-cause diagnosis (failure classification, actionable recommendations)
 - [ ] Discord alert adapter
 
 #### v1.10.0 — Developer Experience

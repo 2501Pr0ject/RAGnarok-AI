@@ -76,6 +76,7 @@ class DiskCache:
                 answer=data["answer"],
                 latency_ms=data["latency_ms"],
                 error=None,
+                retrieved_doc_ids=data.get("retrieved_doc_ids", []),
             )
         except (json.JSONDecodeError, KeyError):
             self._stats.misses += 1
@@ -102,6 +103,7 @@ class DiskCache:
             },
             "answer": result.answer,
             "latency_ms": result.latency_ms,
+            "retrieved_doc_ids": result.retrieved_doc_ids,
         }
 
         path.write_text(json.dumps(data, indent=2))

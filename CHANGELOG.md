@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Root-Cause Diagnosis**
+  - `RAGDiagnostician`: classify every failing query of an evaluation into
+    a failure cause — `pipeline_error`, `retrieval_miss`,
+    `retrieval_ranking`, `context_insufficient`,
+    `generation_hallucination`, `generation_incomplete`
+  - Two tiers: heuristic (free, from metrics + ground truth vs. retrieved
+    doc IDs) and LLM-assisted (opt-in closed YES/NO checks on the
+    generation side, requires the document corpus)
+  - `DiagnosisReport`: cause breakdown, failure-rate patterns per query
+    metadata (e.g. by question type), recommendations ordered by dominant
+    cause, `summary()` and `to_dict()`
+  - `QueryResult.retrieved_doc_ids`: evaluation now records retrieved
+    document IDs (backward-compatible; round-tripped by the disk cache)
+  - Public exports from package root; documentation at
+    `docs/user-guide/diagnosis.md`
 - **Live A/B Testing**
   - `Experiment`: deterministic, stateless traffic splitting between named
     variants (hash-based bucketing with configurable weights and salt);
