@@ -187,3 +187,42 @@ class TestPublicAPI:
         assert PiiMode is not None
         assert sanitize_dict is not None
         assert sanitize_value is not None
+
+
+class TestScrubText:
+    """Tests for inline free-text PII scrubbing."""
+
+    def test_redacts_inline_pii_keeping_the_sentence(self) -> None:
+        from ragnarok_ai.privacy import PiiMode, scrub_text
+
+        text = "email bob@corp.com or 10.0.0.1, card 4111 1111 1111 1111, ssn 123-45-6789, file /home/alice/x.txt"
+        scrubbed = scrub_text(text, PiiMode.REDACT)
+
+        assert "bob@corp.com" not in scrubbed
+        assert "10.0.0.1" not in scrubbed
+        assert "4111" not in scrubbed
+        assert "123-45-6789" not in scrubbed
+        assert "/home/alice" not in scrubbed
+        assert "email" in scrubbed and "card" in scrubbed
+
+    def test_clean_text_passes_through(self) -> None:
+        from ragnarok_ai.privacy import PiiMode, scrub_text
+
+        text = "What is the treatment for CHF in elderly patients?"
+        assert scrub_text(text, PiiMode.REDACT) == text
+
+    def test_hash_mode_is_deterministic(self) -> None:
+        from ragnarok_ai.privacy import PiiMode, scrub_text
+
+        a = scrub_text("contact bob@corp.com", PiiMode.HASH)
+        b = scrub_text("contact bob@corp.com", PiiMode.HASH)
+
+        assert a == b
+        assert "bob@corp.com" not in a
+        assert "[REDACTED]" not in a
+
+    def test_full_mode_is_a_no_op(self) -> None:
+        from ragnarok_ai.privacy import PiiMode, scrub_text
+
+        text = "contact bob@corp.com"
+        assert scrub_text(text, PiiMode.FULL) == text

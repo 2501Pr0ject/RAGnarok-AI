@@ -379,3 +379,37 @@ class TestGetTraces:
         assert loaded.model_version == sample_trace.model_version
         assert loaded.success is True
         assert loaded.metadata == {"tenant": "acme"}
+
+
+class TestQueryTextMigration:
+    """The query_text column is added to pre-existing databases."""
+
+    def test_old_database_is_migrated(self, tmp_path) -> None:
+        import sqlite3
+
+        db = tmp_path / "old.db"
+        conn = sqlite3.connect(db)
+        conn.execute(
+            """CREATE TABLE traces (
+                id TEXT PRIMARY KEY, timestamp TEXT NOT NULL,
+                query_hash TEXT NOT NULL, query_length INTEGER,
+                retrieval_latency_ms REAL, retrieval_count INTEGER,
+                generation_latency_ms REAL, answer_length INTEGER,
+                total_latency_ms REAL NOT NULL, model_version TEXT,
+                success INTEGER NOT NULL DEFAULT 1, error_type TEXT, metadata TEXT
+            )"""
+        )
+        conn.execute(
+            "INSERT INTO traces (id, timestamp, query_hash, query_length, total_latency_ms)"
+            " VALUES ('t1', '2026-09-01T00:00:00+00:00', 'h1', 5, 100.0)"
+        )
+        conn.commit()
+        conn.close()
+
+        store = MonitorStore(db_path=db)
+        traces = store.get_traces()
+
+        assert len(traces) == 1
+        assert traces[0].query_text is None
+        store.insert(TraceEvent(query_hash="h2", query_length=5, query_text="hello", total_latency_ms=1.0))
+        assert store.get_traces()[-1].query_text == "hello"

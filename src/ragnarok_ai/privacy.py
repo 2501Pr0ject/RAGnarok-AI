@@ -161,3 +161,57 @@ def sanitize_dict(
             result[key] = value
 
     return result
+
+
+# ── Free-text scrubbing ─────────────────────────────────────────────────────
+#
+# The patterns above match whole values (anchored) — suited to metadata
+# fields. Free text (e.g. captured user queries) needs *inline* scrubbing:
+# "email me at bob@corp.com" must keep the sentence and lose the address.
+# Patterns are deliberately conservative to avoid mangling legitimate text.
+
+_INLINE_PII_PATTERNS: list[re.Pattern[str]] = [
+    # Email addresses
+    re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"),
+    # IPv4 addresses
+    re.compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b"),
+    # US SSN-like sequences
+    re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
+    # Long digit runs (card/account numbers): 13-19 digits with optional separators
+    re.compile(r"\b(?:\d[ -]?){13,19}\b"),
+    # Unix home paths embedded in text
+    re.compile(r"(?:^|(?<=\s))/(?:home|Users)/[^\s]+"),
+]
+
+
+def scrub_text(text: str, mode: PiiMode = PiiMode.REDACT) -> str:
+    """Scrub inline PII from free text.
+
+    Unlike ``sanitize_value``, which classifies whole values, this replaces
+    PII *occurrences inside* the text (email addresses, IPs, SSN-like and
+    card-like numbers, home paths) while keeping the rest intact.
+
+    Args:
+        text: The free text to scrub.
+        mode: FULL passes through unchanged; HASH replaces each occurrence
+            with a short hash; REDACT (default) with ``[REDACTED]``.
+
+    Returns:
+        The scrubbed text.
+
+    Example:
+        >>> scrub_text("email me at bob@corp.com about CHF", PiiMode.REDACT)
+        'email me at [REDACTED] about CHF'
+    """
+    if mode == PiiMode.FULL:
+        return text
+
+    def _replace(match: re.Match[str]) -> str:
+        if mode == PiiMode.HASH:
+            return _hash_value(match.group())[:12]
+        return "[REDACTED]"
+
+    scrubbed = text
+    for pattern in _INLINE_PII_PATTERNS:
+        scrubbed = pattern.sub(_replace, scrubbed)
+    return scrubbed

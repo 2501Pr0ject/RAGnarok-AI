@@ -22,6 +22,9 @@ class TraceEvent(BaseModel):
     # Query (hashed for PII safety)
     query_hash: str
     query_length: int
+    # Raw query text, only when the client opts into capture_queries;
+    # scrubbed of inline PII before it leaves the client
+    query_text: str | None = None
 
     # Retrieval metrics
     retrieval_latency_ms: float | None = None

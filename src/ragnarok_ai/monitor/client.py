@@ -30,6 +30,8 @@ from uuid import uuid4
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+    from ragnarok_ai.privacy import PiiMode
+
 # Default configuration
 DEFAULT_ENDPOINT = "http://localhost:9090"
 DEFAULT_SAMPLE_RATE = 0.1  # 10% sampling
@@ -47,6 +49,7 @@ class TraceContext:
     query_length: int
     is_sampled: bool
     force: bool = False
+    query_text: str | None = None
 
     # Timing
     start_time: float = field(default_factory=time.perf_counter)
@@ -144,6 +147,8 @@ class MonitorClient:
         endpoint: str = DEFAULT_ENDPOINT,
         sample_rate: float = DEFAULT_SAMPLE_RATE,
         enabled: bool = True,
+        capture_queries: bool = False,
+        pii_mode: PiiMode | None = None,
     ) -> None:
         """Initialize the monitor client.
 
@@ -151,10 +156,20 @@ class MonitorClient:
             endpoint: Monitor daemon URL (e.g., "http://localhost:9090").
             sample_rate: Fraction of traces to sample (0.0-1.0).
             enabled: Whether monitoring is enabled.
+            capture_queries: If True, store the query text alongside its
+                hash (scrubbed of inline PII before leaving the client).
+                Enables mining production traffic into evaluation test
+                sets. Off by default: only the hash is kept.
+            pii_mode: Scrubbing mode for captured queries (default REDACT).
+                Only used when capture_queries is True.
         """
+        from ragnarok_ai.privacy import PiiMode
+
         self.endpoint = endpoint.rstrip("/")
         self.sample_rate = max(0.0, min(1.0, sample_rate))
         self.enabled = enabled
+        self.capture_queries = capture_queries
+        self.pii_mode = pii_mode if pii_mode is not None else PiiMode.REDACT
         self._buffer: list[dict[str, Any]] = []
         self._buffer_size = 100  # Batch size before flush
 
@@ -193,12 +208,19 @@ class MonitorClient:
         """
         is_sampled = force or (self.enabled and self._should_sample())
 
+        query_text: str | None = None
+        if self.capture_queries and is_sampled:
+            from ragnarok_ai.privacy import scrub_text
+
+            query_text = scrub_text(query, self.pii_mode)
+
         ctx = TraceContext(
             client=self,
             query_hash=self._hash_query(query),
             query_length=len(query),
             is_sampled=is_sampled,
             force=force,
+            query_text=query_text,
         )
 
         try:
@@ -221,6 +243,7 @@ class MonitorClient:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "query_hash": ctx.query_hash,
             "query_length": ctx.query_length,
+            "query_text": ctx.query_text,
             "retrieval_latency_ms": ctx.retrieval_latency_ms,
             "retrieval_count": ctx.retrieval_count,
             "generation_latency_ms": ctx.generation_latency_ms,
