@@ -92,6 +92,8 @@ nav:
     - Evaluation: user-guide/evaluation.md
     - LLM-as-Judge: user-guide/judge.md
     - Benchmarking: user-guide/benchmarking.md
+    - Monitoring: user-guide/monitoring.md
+    - Drift Detection: user-guide/drift.md
   - CI/CD:
     - GitHub Action: ci-cd/github-action.md
     - CLI Reference: ci-cd/cli-reference.md

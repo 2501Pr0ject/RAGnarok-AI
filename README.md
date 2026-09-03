@@ -651,7 +651,7 @@ display_comparison([
 ### Planned
 
 #### v1.9.0 — Production Intelligence
-- [ ] Drift detection (baseline comparison, alerting)
+- [x] Drift detection (baseline comparison, alerting)
 - [ ] A/B testing support (compare configs live)
 - [ ] Discord alert adapter
 
