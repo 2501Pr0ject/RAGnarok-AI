@@ -103,13 +103,22 @@ class FaithfulnessEvaluator:
         ...     print(f"Faithfulness: {score:.2f}")
     """
 
-    def __init__(self, llm: LLMProtocol, medical_mode: bool = False) -> None:
+    def __init__(
+        self,
+        llm: LLMProtocol,
+        medical_mode: bool = False,
+        disambiguation_llm: LLMProtocol | None = None,
+    ) -> None:
         """Initialize FaithfulnessEvaluator.
 
         Args:
             llm: The LLM provider implementing LLMProtocol.
             medical_mode: If True, normalize medical abbreviations before evaluation.
                          Reduces false positives from abbreviation ambiguity.
+            disambiguation_llm: Optional small LLM (e.g. Ollama qwen2.5:0.5b) used to
+                         resolve ambiguous medical abbreviations when the surrounding
+                         context gives the keyword scorer no signal. Only used when
+                         medical_mode is True.
         """
         self.llm = llm
         self.medical_mode = medical_mode
@@ -118,7 +127,12 @@ class FaithfulnessEvaluator:
         if medical_mode:
             from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
 
-            self._normalizer = MedicalAbbreviationNormalizer()
+            disambiguator = None
+            if disambiguation_llm is not None:
+                from ragnarok_ai.evaluators.medical.disambiguation import SLMDisambiguator
+
+                disambiguator = SLMDisambiguator(disambiguation_llm)
+            self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
 
     async def evaluate(
         self,
@@ -161,8 +175,8 @@ class FaithfulnessEvaluator:
         """
         # Normalize medical abbreviations if medical_mode is enabled
         if self.medical_mode and self._normalizer:
-            context, _ = self._normalizer.normalize_text(context)
-            response, _ = self._normalizer.normalize_text(response)
+            context, _ = await self._normalizer.normalize_text_async(context)
+            response, _ = await self._normalizer.normalize_text_async(response)
 
         # Handle empty response
         if not response.strip():

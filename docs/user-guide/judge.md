@@ -173,6 +173,28 @@ Features:
 - Context-aware disambiguation
 - Multiple formats: dotted (q.d.), slash (s/p), mixed-case (SpO2)
 
+### SLM disambiguation
+
+Some abbreviations are ambiguous (`MS` → multiple sclerosis, mitral stenosis, morphine sulfate...). By default they are resolved with context keywords, falling back to the most common meaning when the context gives no signal. For sparse or unconventional contexts, you can hand those uncertain cases to a small local model:
+
+```python
+from ragnarok_ai.adapters import OllamaLLM
+
+judge = LLMJudge(
+    medical_mode=True,
+    disambiguation_llm=OllamaLLM(model="qwen2.5:0.5b"),
+)
+```
+
+How it works:
+
+- Only ambiguous abbreviations with **zero** context-keyword hits are escalated — everything else stays free
+- The SLM picks among the dictionary's own candidate meanings (closed-set classification), so it can never invent an expansion
+- Decisions are cached per (abbreviation, context), so batch evaluations pay each resolution once
+- If the SLM is unreachable or cannot tell, the priority fallback applies — behavior degrades to the default, never worse
+
+The same parameter exists on `FaithfulnessEvaluator`.
+
 ---
 
 ## Scoring
