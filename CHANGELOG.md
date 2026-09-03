@@ -5,6 +5,23 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Production-Mined Testsets**
+  - `TestsetMiner`: build evaluation test sets from real production
+    traffic — strategies `frequent` (most-asked), `failures` (highest
+    failure rate), `slow` (highest latency); dedup by query hash,
+    production stats (frequency, failure rate, latency, first/last seen)
+    in query metadata
+  - Opt-in query capture: `MonitorClient(capture_queries=True)` records
+    query text scrubbed of inline PII client-side (emails, IPs, SSN/card
+    numbers, home paths) via the new `privacy.scrub_text()`
+  - `TraceEvent.query_text` (nullable) with automatic SQLite schema
+    migration for existing monitor databases
+  - Public export from package root; documentation at
+    `docs/user-guide/production-testsets.md`
+
 ## [1.9.0] - 2026-09-03
 
 ### Added

@@ -21,6 +21,7 @@ from ragnarok_ai.loaders.forge_bundle import (
     load_forge_bundle,
     load_forge_documents,
 )
+from ragnarok_ai.mining import TestsetMiner
 from ragnarok_ai.monitor import MonitorClient
 from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
@@ -55,6 +56,7 @@ __all__ = [
     "MonitorClient",
     "PiiMode",
     "RAGDiagnostician",
+    "TestsetMiner",
     "__version__",
     "build_baseline",
     "compare",

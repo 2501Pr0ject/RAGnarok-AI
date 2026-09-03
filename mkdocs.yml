@@ -96,6 +96,7 @@ nav:
     - Monitoring: user-guide/monitoring.md
     - Drift Detection: user-guide/drift.md
     - A/B Testing: user-guide/ab-testing.md
+    - Production Testsets: user-guide/production-testsets.md
   - CI/CD:
     - GitHub Action: ci-cd/github-action.md
     - CLI Reference: ci-cd/cli-reference.md

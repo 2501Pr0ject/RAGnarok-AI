@@ -110,7 +110,7 @@ results.export("report.html")
 | **Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
 | **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
-| **Test Generation** | Auto-generate diverse test sets from your knowledge base. |
+| **Test Generation** | Auto-generate diverse test sets from your knowledge base — or mine them from real production traffic. |
 | **CI/CD Ready** | CLI-first design, JSON output, exit codes for pipeline integration. |
 | **Enterprise Ready** | Kubernetes Helm charts, air-gapped deployment, data sovereignty. |
 | **Lightweight** | Minimal dependencies. No torch/transformers in core. |

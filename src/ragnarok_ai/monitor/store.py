@@ -109,6 +109,7 @@ class MonitorStore:
                     timestamp TEXT NOT NULL,
                     query_hash TEXT NOT NULL,
                     query_length INTEGER,
+                    query_text TEXT,
                     retrieval_latency_ms REAL,
                     retrieval_count INTEGER,
                     generation_latency_ms REAL,
@@ -140,6 +141,10 @@ class MonitorStore:
                 );
             """
             )
+            # Migration: query_text was added in v1.10 (opt-in query capture)
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(traces)").fetchall()}
+            if "query_text" not in columns:
+                conn.execute("ALTER TABLE traces ADD COLUMN query_text TEXT")
 
     def insert(self, trace: TraceEvent) -> None:
         """Insert a single trace event.
@@ -151,17 +156,18 @@ class MonitorStore:
             conn.execute(
                 """
                 INSERT INTO traces (
-                    id, timestamp, query_hash, query_length,
+                    id, timestamp, query_hash, query_length, query_text,
                     retrieval_latency_ms, retrieval_count,
                     generation_latency_ms, answer_length,
                     total_latency_ms, model_version, success, error_type, metadata
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     trace.id,
                     trace.timestamp.isoformat(),
                     trace.query_hash,
                     trace.query_length,
+                    trace.query_text,
                     trace.retrieval_latency_ms,
                     trace.retrieval_count,
                     trace.generation_latency_ms,
@@ -190,11 +196,11 @@ class MonitorStore:
             conn.executemany(
                 """
                 INSERT INTO traces (
-                    id, timestamp, query_hash, query_length,
+                    id, timestamp, query_hash, query_length, query_text,
                     retrieval_latency_ms, retrieval_count,
                     generation_latency_ms, answer_length,
                     total_latency_ms, model_version, success, error_type, metadata
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     (
@@ -202,6 +208,7 @@ class MonitorStore:
                         t.timestamp.isoformat(),
                         t.query_hash,
                         t.query_length,
+                        t.query_text,
                         t.retrieval_latency_ms,
                         t.retrieval_count,
                         t.generation_latency_ms,
@@ -470,6 +477,7 @@ class MonitorStore:
                 timestamp=datetime.fromisoformat(row["timestamp"]),
                 query_hash=row["query_hash"],
                 query_length=row["query_length"],
+                query_text=row["query_text"],
                 retrieval_latency_ms=row["retrieval_latency_ms"],
                 retrieval_count=row["retrieval_count"],
                 generation_latency_ms=row["generation_latency_ms"],
