@@ -89,7 +89,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.10.0 is now available!** Trustworthy Evaluation: testsets mined from real production traffic, and judge calibration against your own labels. Install with `pip install ragnarok-ai`
+> **v1.11.0 is now available!** Developer Experience: evaluate your own pipeline from the CLI with live streaming results, and browse them in an interactive TUI. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -664,12 +664,25 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.11.0 — Developer Experience</strong></summary>
+
+- [x] **Real Test Set Evaluation**: `ragnarok evaluate --testset t.json --pipeline module:attr` runs your own pipeline
+- [x] **Streaming Evaluation**: results appear as each query completes, with running metric averages
+- [x] **Live Terminal Panel**: progress, running metrics, latest queries; plain-line fallback in CI logs
+- [x] **Interactive Results TUI**: `ragnarok view results.json` (textual, optional `[tui]` extra)
+- [x] **README Repositioning**: identity led by ragnarok-ai's own guarantees
+
+</details>
+
 ### Planned
 
-#### v1.11.0 — Developer Experience
-- [x] Interactive TUI (textual)
-- [x] Streaming evaluation
-- [x] Real test set evaluation in the CLI (`--pipeline module:attr`)
+#### Next — Evaluation Study (feature freeze)
+- [ ] Public reproducible benchmark: human-labeled sample set, multiple local judges
+- [ ] Judge reliability study using the calibration module (human agreement per judge model)
+- [ ] Technical write-up of methodology and results
+
+#### On-demand
 - [ ] Discord & email alert adapters
 
 #### v2.0.0 — Visualization
