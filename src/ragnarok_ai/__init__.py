@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ragnarok_ai.ab import ABAnalyzer, ABTestConfig, ABTestReport, Experiment
 from ragnarok_ai.alerts import AlertManager, AlertRule, AlertSeverity
+from ragnarok_ai.calibration import CalibrationSample, CalibrationSet, JudgeCalibrator
 from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult
 from ragnarok_ai.core.compare import ComparisonResult, compare
 from ragnarok_ai.core.evaluate import EvaluationResult, evaluate, evaluate_stream
@@ -37,6 +38,8 @@ __all__ = [
     "BatchEvaluator",
     "BatchProgress",
     "BatchResult",
+    "CalibrationSample",
+    "CalibrationSet",
     "ComparisonResult",
     "CostSummary",
     "CostTracker",
@@ -50,6 +53,7 @@ __all__ = [
     "Experiment",
     "FailureCause",
     "ForgeLoadError",
+    "JudgeCalibrator",
     "JudgeResult",
     "JudgeResults",
     "LLMJudge",

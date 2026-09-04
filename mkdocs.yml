@@ -92,6 +92,7 @@ nav:
     - Evaluation: user-guide/evaluation.md
     - Root-Cause Diagnosis: user-guide/diagnosis.md
     - LLM-as-Judge: user-guide/judge.md
+    - Judge Calibration: user-guide/calibration.md
     - Benchmarking: user-guide/benchmarking.md
     - Monitoring: user-guide/monitoring.md
     - Drift Detection: user-guide/drift.md
