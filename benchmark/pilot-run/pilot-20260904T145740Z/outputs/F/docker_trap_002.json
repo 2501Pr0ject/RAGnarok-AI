@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "docker_trap_002",
+  "question": "Why does a container with the `unless-stopped` restart policy start again after a daemon restart even when I had manually stopped it?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/body-multiple-params.md::2",
+      "score": 0.0,
+      "text": "/// note\n\nNotice that even though the `item` was declared the same way as before, it is now expected to be inside of the body with a key `item`.\n\n///\n\n**FastAPI** will do the automatic conversion from the request, so that the parameter `item` receives its specific content and the same for `user`.\n\nIt will perform the validation of the compound data, and will document it like that for the OpenAPI schema and automatic docs.\n\n## Singular values in body { #singular-values-in-body }\n\nThe same way there is a `Query` and `Path` to define extra data for query and path parameters, **FastAPI** provides an equivalent `Body`.\n\nFor example, extending the previous model, you could decide that you want to have another key `importance` in the same body, besides the `item` and `user`.\n\nIf you declare it as is, because it is a singular value, **FastAPI** will assume that it is a query parameter.\n\nBut you can instruct **FastAPI** to treat it as another body key using `Body`:"
+    },
+    {
+      "id": "docker/manuals/engine/storage/drivers/device-mapper-driver.md::16",
+      "score": 0.0,
+      "text": "ommand.\n\n    ```console\n    $ sudo lvconvert -y \\\n    --zero n \\\n    -c 512K \\\n    --thinpool docker/thinpool \\\n    --poolmetadata docker/thinpoolmeta\n\n    WARNING: Converting logical volume docker/thinpool and docker/thinpoolmeta to\n    thin pool's data and metadata volumes with metadata wiping.\n    THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)\n    Converted docker/thinpool to thin pool.\n    ```\n\n8.  Configure autoextension of thin pools via an `lvm` profile.\n\n    ```console\n    $ sudo vi /etc/lvm/profile/docker-thinpool.profile\n    ```\n\n9.  Specify `thin_pool_autoextend_threshold` and `thin_pool_autoextend_percent`\n    values.\n\n    `thin_pool_autoextend_threshold` is the percentage of space used before `lvm`\n    attempts to autoextend the available space (100 = disabled, not recommended).\n\n    `thin_pool_autoextend_percent` is the amount of space to add to the device\n    when automatically extending (0 = disabled)."
+    },
+    {
+      "id": "docker/manuals/engine/storage/drivers/overlayfs-driver.md::5",
+      "score": 0.0,
+      "text": "ers to the lower directory\nas `lowerdir` and the upper directory as `upperdir`. The unified view is exposed\nthrough its own directory called `merged`.\n\nThe `overlay2` driver natively supports up to 128 lower OverlayFS layers. This\ncapability provides better performance for layer-related Docker commands such\nas `docker build` and `docker commit`, and consumes fewer inodes on the backing\nfilesystem.\n\n### Image and container layers on-disk\n\nAfter downloading a five-layer image using `docker pull ubuntu`, you can see\nsix directories under `/var/lib/docker/overlay2`.\n\n> [!WARNING]\n>\n> Don't directly manipulate any files or directories within\n> `/var/lib/docker/`. These files and directories are managed by Docker.\n\n```console\n$ ls -l /var/lib/docker/overlay2"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::1",
+      "score": 0.0,
+      "text": "t(0, x)`` inserts at the front of\n   the list, and ``a.insert(len(a), x)`` is equivalent to ``a.append(x)``.\n\n\n.. method:: list.remove(x)\n   :noindex:\n\n   Remove the first item from the list whose value is equal to *x*.  It raises a\n   :exc:`ValueError` if there is no such item.\n\n\n.. method:: list.pop([i])\n   :noindex:\n\n   Remove the item at the given position in the list, and return it.  If no index\n   is specified, ``a.pop()`` removes and returns the last item in the list.\n   It raises an :exc:`IndexError` if the list is empty or the index is\n   outside the list range.\n\n\n.. method:: list.clear()\n   :noindex:\n\n   Remove all items from the list.  Equivalent to ``del a[:]``.\n\n\n.. method:: list.index(x[, start[, end]])\n   :noindex:\n\n   Return zero-based index in the list of the first item whose value is equal to *x*.\n   Raises a :exc:`ValueError` if there is no such item."
+    },
+    {
+      "id": "docker/manuals/engine/swarm/ingress.md::10",
+      "score": 0.0,
+      "text": "d the nodes in\nthe swarm. The swarm nodes can reside on a private network that is accessible to\nthe proxy server, but that is not publicly accessible.\n\nYou can configure the load balancer to balance requests between every node in\nthe swarm even if there are no tasks scheduled on the node. For example, you\ncould have the following HAProxy configuration in `/etc/haproxy/haproxy.cfg`:\n\n```bash\nglobal\n        log /dev/log    local0\n        log /dev/log    local1 notice\n...snip...\n\n# Configure HAProxy to listen on port 80\nfrontend http_front\n   bind *:80\n   stats uri /haproxy?stats\n   default_backend http_back\n\n# Configure HAProxy to route requests to swarm nodes on port 8080\nbackend http_back\n   balance roundrobin\n   server node1 192.168.99.100:8080 check\n   server node2 192.168.99.101:8080 check\n   server node3 192.168.99.102:8080 check\n```"
+    }
+  ],
+  "answer": "The information provided in the context does not contain an answer to the question about the `unless-stopped` restart policy. Therefore, based on the given documentation, the relevant information is not present.",
+  "prompt_sha256": "3ffedabd66aa870ff41faa87d195f1dab6cd46936cb093b36324d65eab36dc9b",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 26.09
+  }
+}

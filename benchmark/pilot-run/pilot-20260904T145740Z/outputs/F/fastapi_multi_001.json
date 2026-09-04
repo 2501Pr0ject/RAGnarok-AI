@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "fastapi_multi_001",
+  "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/topology-spread-constraints.md::20",
+      "score": 0.0,
+      "text": "oneB\"\n        p3(Pod) --> n3(Node3)\n        n4(Node4)\n    end\n    subgraph \"zoneA\"\n        p1(Pod) --> n1(Node1)\n        p2(Pod) --> n2(Node2)\n    end\n\n    classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;\n    classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;\n    classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;\n    class n1,n2,n3,n4,p1,p2,p3 k8s;\n    class zoneA,zoneB cluster;\n{{< /mermaid >}}\n\nIf you want an incoming Pod to be evenly spread with existing Pods across zones, you\ncan use a manifest similar to:\n\n{{% code_sample file=\"pods/topology-spread-constraints/one-constraint.yaml\" %}}"
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::183",
+      "score": 0.0,
+      "text": "g.DEBUG)\n        h = BufferingSMTPHandler(options.host, options.port, options.user,\n                                 options.password, options.sender,\n                                 options.to, options.subject, 10)\n        logger.addHandler(h)\n        for i in range(102):\n            logger.info(\"Info index = %d\", i)\n        h.flush()\n        h.close()\n\nIf you run this script and your SMTP server is correctly set up, you should find that\nit sends eleven emails to the addressee you specify. The first ten emails will each\nhave ten log messages, and the eleventh will have two messages. That makes up 102\nmessages as specified in the script.\n\n.. _utc-formatting:\n\nFormatting times using UTC (GMT) via configuration\n--------------------------------------------------\n\nSometimes you want to format times using UTC, which can be done using a class\nsuch as ``UTCFormatter``, shown below::\n\n    import logging\n    import time"
+    },
+    {
+      "id": "python/howto/enum.rst::15",
+      "score": 0.0,
+      "text": "rations can have arbitrary values.\n\nEnumerations are Python classes, and can have methods and special methods as\nusual.  If we have this enumeration::\n\n    >>> class Mood(Enum):\n    ...     FUNKY = 1\n    ...     HAPPY = 3\n    ...\n    ...     def describe(self):\n    ...         # self is the member here\n    ...         return self.name, self.value\n    ...\n    ...     def __str__(self):\n    ...         return 'my custom str! {0}'.format(self.value)\n    ...\n    ...     @classmethod\n    ...     def favorite_mood(cls):\n    ...         # cls here is the enumeration\n    ...         return cls.HAPPY\n    ...\n\nThen::\n\n    >>> Mood.favorite_mood()\n    <Mood.HAPPY: 3>\n    >>> Mood.HAPPY.describe()\n    ('HAPPY', 3)\n    >>> str(Mood.FUNKY)\n    'my custom str! 1'"
+    },
+    {
+      "id": "kubernetes/concepts/policy/resource-quotas.md::25",
+      "score": 0.0,
+      "text": "er, this does *not*\nautomatically give each namespace the ability to consume more resources.\n\nSometimes more complex policies may be desired, such as:\n\n- Proportionally divide total cluster resources among several teams.\n- Allow each tenant to grow resource usage as needed, but have a generous\n  limit to prevent accidental resource exhaustion.\n- Detect demand from one namespace, add nodes, and increase quota.\n\nSuch policies could be implemented using `ResourceQuotas` as building blocks, by\nwriting a \"controller\" that watches the quota usage and adjusts the quota\nhard limits of each namespace according to other signals.\n\nNote that resource quota divides up aggregate cluster resources, but it creates no\nrestrictions around nodes: pods from several namespaces may run on the same node.\n\n## Quota scopes\n\nEach quota can have an associated set of `scopes`. A quota will only measure usage for a resource if it matches\nthe intersection of enumerated scopes."
+    },
+    {
+      "id": "docker/get-started/docker-concepts/running-containers/sharing-local-files.md::5",
+      "score": 0.0,
+      "text": "o start a container using a bind mount and map it to the container file location.\n\n```console\n$ docker run -v /HOST/PATH:/CONTAINER/PATH -it nginx\n```\n\nThe `--mount` flag offers more advanced features and granular control, making it suitable for complex mount scenarios or production deployments. By default, if you use `--mount` to bind-mount a file or directory that doesn't yet exist on the Docker host, the `docker run` command doesn't automatically create it for you but generates an error.\n\n```console\n$ docker run --mount type=bind,source=/HOST/PATH,target=/CONTAINER/PATH,readonly nginx\n```\n\n> [!NOTE]\n>\n> Docker recommends using the `--mount` syntax instead of `-v`. It provides better control over the mounting process and avoids potential issues with missing directories.\n\n### File permissions for Docker access to host files"
+    }
+  ],
+  "answer": "The provided context does not contain any information about FastAPI or the differences between path parameters and query parameters. Therefore, the necessary details to answer the question cannot be derived from the given documentation.",
+  "prompt_sha256": "42f1aaafd6179e51bc05d1f73846ee2e06f22035d785f1e47c47486f6f26d4cf",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 24.31
+  }
+}

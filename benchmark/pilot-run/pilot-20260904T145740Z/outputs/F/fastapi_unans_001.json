@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "fastapi_unans_001",
+  "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/topology-spread-constraints.md::27",
+      "score": 0.0,
+      "text": "(Node3)\n        p5(Pod) --> n3\n    end\n    subgraph \"zoneA\"\n        p1(Pod) --> n1(Node1)\n        p2(Pod) --> n1\n        p3(Pod) --> n2(Node2)\n    end\n\n    classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;\n    classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;\n    classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;\n    class n1,n2,n3,n4,p1,p2,p3,p4,p5 k8s;\n    class zoneA,zoneB cluster;\n{{< /mermaid >}}\n\nIf you were to apply\n[`two-constraints.yaml`](https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/pods/topology-spread-constraints/two-constraints.yaml)\n(the manifest from the previous example)\nto **this** cluster, you would see that the Pod `mypod` stays in the `Pending` state.\nThis happens because: to satisfy the first constraint, the Pod `mypod` can only\nbe placed into zone `B`; while in terms of the second constraint, the Pod `mypod`"
+    },
+    {
+      "id": "kubernetes/concepts/extend-kubernetes/api-extension/custom-resources.md::6",
+      "score": 0.0,
+      "text": "reuse [Kubernetes API support features](#common-features).  | You don't need those features. |\n\n### Declarative APIs\n\nIn a Declarative API, typically:\n\n- Your API consists of a relatively small number of relatively small objects (resources).\n- The objects define configuration of applications or infrastructure.\n- The objects are updated relatively infrequently.\n- Humans often need to read and write the objects.\n- The main operations on the objects are CRUD-y (creating, reading, updating and deleting).\n- Transactions across objects are not required: the API represents a desired state, not an exact state.\n\nImperative APIs are not declarative.\nSigns that your API might not be declarative include:"
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/podgroup-scheduling.md::20",
+      "score": 0.0,
+      "text": "cycle succeeds, the condition is set to `True` with reason\n`Scheduled`. For `gang` policy PodGroups, this means at least `minCount` Pods were\nplaced.\n\nWhen scheduling fails, the condition is set to `False` with one of the following\nreasons:\n\n* `Unschedulable` \u2014 the group could not be placed due to resource constraints,\n  affinity or anti-affinity rules, or insufficient capacity for the gang.\n* `SchedulerError` \u2014 scheduling failed because of an internal scheduler error\n  (for example, while parsing scheduling constraints such as `nodeAffinity`).\n\nOnce this condition is set to `True`, it never changes.\n\nYou can check conditions with:\n\n```shell\nkubectl get podgroup <name> -o jsonpath='{.status.conditions}'\n```\n\n## CompositePodGroup conditions\n\n{{< feature-state feature_gate_name=\"CompositePodGroup\" >}}\n\nCompositePodGroup API exposes the `status.conditions` field as well.\n\nIn v1.37, the scheduler does not populate this field, however.\n\n## {{% heading \"whatsnext\" %}}"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::37",
+      "score": 0.0,
+      "text": "u've decided to undo the current rollout and rollback to the previous revision:\n   ```shell\n   kubectl rollout undo deployment/nginx-deployment\n   ```\n\n   The output is similar to this:\n   ```\n   deployment.apps/nginx-deployment rolled back\n   ```\n   Alternatively, you can rollback to a specific revision by specifying it with `--to-revision`:\n\n   ```shell\n   kubectl rollout undo deployment/nginx-deployment --to-revision=2\n   ```\n\n   The output is similar to this:\n   ```\n   deployment.apps/nginx-deployment rolled back\n   ```\n\n   For more details about rollout related commands, read [`kubectl rollout`](/docs/reference/generated/kubectl/kubectl-commands#rollout).\n\n   The Deployment is now rolled back to a previous stable revision. As you can see, a `DeploymentRollback` event\n   for rolling back to revision 2 is generated from Deployment controller."
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubernetes-api.md::3",
+      "score": 0.0,
+      "text": "le resources and it does not\n  detail specific schema for the resources. For reference about resource schemas,\n  please refer to the OpenAPI document.\n\n- The [Kubernetes OpenAPI Document](#openapi-interface-definition) provides (full)\n  [OpenAPI v2.0 and 3.0 schemas](https://www.openapis.org/) for all Kubernetes API\nendpoints.\n  The OpenAPI v3 is the preferred method for accessing OpenAPI as it\nprovides\n  a more comprehensive and accurate view of the API. It includes all the available\n  API paths, as well as all resources consumed and produced for every operations\n  on every endpoints. It also includes any extensibility components that a cluster supports.\n  The data is a complete specification and is significantly larger than that from the\n  Discovery API.\n\n## Discovery API\n\nKubernetes publishes a list of all group versions and resources supported via\nthe Discovery API. This includes the following for each resource:"
+    }
+  ],
+  "answer": "The information provided in the given context does not contain any details about Uvicorn workers or FastAPI documentation recommendations for production environments. Therefore, I cannot provide an answer to the question based on the given context.",
+  "prompt_sha256": "519e0beffc2ec1bf1cab256a9d26c2207cf530c3a31a99cdf2fdadea0807a3e1",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 25.15
+  }
+}

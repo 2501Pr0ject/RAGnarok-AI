@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_context_001",
+  "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::25",
+      "score": 0.9071,
+      "text": "restart policy. Docker restarts the container if it exits or if the daemon"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::35",
+      "score": 0.89777,
+      "text": "until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop."
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::20",
+      "score": 0.87971,
+      "text": "it's restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/_index.md::244",
+      "score": 0.85496,
+      "text": "Setting the `Always` restart policy ensures that the containers where you set it are"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::34",
+      "score": 0.85198,
+      "text": "which doesn't start at all from going into a restart loop.\n\n- If you manually stop a container, the restart policy is ignored"
+    }
+  ],
+  "answer": "When the Docker daemon restarts, the container with the `Always` restart policy will be restarted because the policy is not ignored in this scenario. However, if you manually stopped the container before the Docker daemon restarts, the container will remain stopped and the restart policy will be ignored until it is manually started again.",
+  "prompt_sha256": "9a8c7d2d975aabe5052a6fa8d0ee54c16ab9be25ce59945a2aa7b5e7fd871392",
+  "timings_s": {
+    "retrieve": 6.96,
+    "generate": 12.5
+  }
+}

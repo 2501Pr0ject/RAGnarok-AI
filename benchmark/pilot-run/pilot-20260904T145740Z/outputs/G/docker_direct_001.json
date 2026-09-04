@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "docker_direct_001",
+  "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/build.md::3",
+      "score": 0.84175,
+      "text": "this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file.\n- A Docker image is built using the `custom` directory with the user's `$HOME` as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n\n- A relative path to the Compose file's folder. This path must be a directory and must contain a `Dockerfile`"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::4",
+      "score": 0.84084,
+      "text": "t using the `custom` directory with the user's HOME as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n- A relative path to the Compose file's parent folder. This path must be a directory and must contain a `Dockerfile`\n\n  ```yml\n  services:\n    webapp:\n      build: ./dir\n  ```"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::7",
+      "score": 0.814,
+      "text": "directory and Git repository URLs, like [context](#context) does. Other context flavours\nmust be prefixed to avoid ambiguity with a `type://` prefix.\n\nCompose warns you if the image builder does not support additional contexts and may list\nthe unused contexts.\n\nIllustrative examples of how this is used in Buildx can be found\n[here](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-additional-build-contexts---build-context).\n\n### args\n\n`args` define build arguments, i.e. Dockerfile `ARG` values.\n\nUsing the following Dockerfile as an example:\n\n```Dockerfile\nARG GIT_COMMIT\nRUN echo \"Based on commit: $GIT_COMMIT\"\n```\n\n`args` can be set in the Compose file under the `build` key to define `GIT_COMMIT`. `args` can be set as a mapping or a list:\n\n```yml\nbuild:\n  context: .\n  args:\n    GIT_COMMIT: cdc3b19\n```\n\n```yml\nbuild:\n  context: .\n  args:\n    - GIT_COMMIT=cdc3b19\n```"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::8",
+      "score": 0.80362,
+      "text": "a mapping or a list:\n\n```yml\nbuild:\n  context: .\n  args:\n    GIT_COMMIT: cdc3b19\n```\n\n```yml\nbuild:\n  context: .\n  args:\n    - GIT_COMMIT=cdc3b19\n```\n\nValues can be omitted when specifying a build argument, in which case its value at build time must be obtained by user interaction,\notherwise the build arg won't be set when building the Docker image.\n\n```yml\nargs:\n  - GIT_COMMIT\n```\n\n### context\n\n`context` defines either a path to a directory containing a Dockerfile, or a URL to a git repository.\n\nWhen the value supplied is a relative path, it is interpreted as relative to the location of the Compose file.\nCompose warns you about the absolute path used to define the build context as those prevent the Compose file\nfrom being portable.\n\n```yml\nbuild:\n  context: ./dir\n```\n\n```yml\nservices:\n  webapp:\n    build: https://github.com/mycompany/webapp.git\n```\n\nIf not set explicitly, `context` defaults to project directory (`.`). \n\n### cache_from"
+    },
+    {
+      "id": "docker/reference/compose-file/build.md::0",
+      "score": 0.80052,
+      "text": "---\ntitle: Compose Build Specification\ndescription: Learn about the Compose Build Specification\nkeywords: compose, compose specification, compose file reference, compose build specification\naliases:\n  - /compose/compose-file/build/\nweight: 130\n---\n\n{{% include \"compose/build.md\" %}}\n\nWhen `build` is specified as a string, the whole path is used as a\nDocker context to execute a Docker build, looking for a canonical\n`Dockerfile` at the root of the directory.\n\nWhen `build` is specified as a detailed structure, build arguments can\nbe specified, including an alternate `Dockerfile` location.\n\nIn both cases, the path can be absolute or relative. If it is relative,\nit is resolved from the directory containing your Compose file. If it is\nabsolute, the path prevents the Compose file from being portable so\nCompose displays a warning.\n\n## Using `build` and `image`"
+    }
+  ],
+  "answer": "In a Docker Compose file, if you do not set the `context` explicitly, it defaults to the project directory (`.`). This means that Compose will consider the current working directory (the directory containing the Compose file) as the build context. However, using an absolute path for the context is non-portable and may result in warnings from Compose, as this practice can prevent the Compose file from being used across different environments without adjustments.",
+  "prompt_sha256": "3ec5f90895b1d2cb720982866fcd1904108bae001e21770074f36c2667b580bd",
+  "timings_s": {
+    "retrieve": 1.38,
+    "generate": 44.86
+  }
+}

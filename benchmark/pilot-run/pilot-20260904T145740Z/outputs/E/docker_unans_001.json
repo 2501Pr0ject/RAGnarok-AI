@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "docker_unans_001",
+  "question": "What are the main changes introduced in Docker Engine version 28?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/install/_index.md::7",
+      "score": 0.7276,
+      "text": "ons released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability.\n\nUse the test channel with caution. Pre-release versions include experimental and\nearly-access features that are subject to breaking changes.\n\n## Support\n\nDocker Engine is an open source project, supported by the Moby project maintainers\nand community members. Docker doesn't provide support for Docker Engine.\nDocker provides support for Docker products, including Docker Desktop, which uses\nDocker Engine as one of its components.\n\nFor information about the open source project, refer to the\n[Moby project website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing"
+    },
+    {
+      "id": "docker/manuals/engine/_index.md::1",
+      "score": 0.69215,
+      "text": "rces.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon.\n  icon: adjustments-horizontal\n  link: /config/daemon\n- title: Rootless mode\n  description: Run Docker without root privileges.\n  icon: shield-check\n  link: /engine/security/rootless\n- title: Deprecated features\n  description: Find out what features of Docker Engine you should stop using.\n  icon: folder-minus\n  link: /engine/deprecated/\n- title: Release notes\n  description: Read the release notes for the latest version.\n  icon: document-plus\n  link: /engine/release-notes\naliases:\n- /edge/\n- /engine/ce-ee-node-activate/\n- /engine/migration/\n- /engine/misc/\n- /linux/\n---\n\nDocker Engine is an open source containerization technology for building and\ncontainerizing your applications. Docker Engine acts as a client-server\napplication with:"
+    },
+    {
+      "id": "docker/manuals/engine/install/_index.md::8",
+      "score": 0.68889,
+      "text": "website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing\n\nCommercial use of Docker Engine obtained via Docker Desktop\nwithin larger enterprises (exceeding 250 employees OR with annual revenue surpassing\n$10 million USD), requires a [paid subscription](https://www.docker.com/pricing?ref=Docs&refAction=DocsEngineInstall).\nApache License, Version 2.0. See [LICENSE](https://github.com/moby/moby/blob/master/LICENSE) for the full license.\n\n## Reporting security issues\n\nIf you discover a security issue, we request that you bring it to our attention immediately.\n\nDO NOT file a public issue. Instead, submit your report privately to security@docker.com.\n\nSecurity reports are greatly appreciated, and Docker will publicly thank you for it.\n\n## Get started\n\nAfter setting up Docker, you can learn the basics with\n[Getting started with Docker](/get-started/introduction/_index.md)."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::31",
+      "score": 0.0,
+      "text": "configured\nfor NodePort use.\n\nHere is an example manifest for a Service of `type: NodePort` that specifies\na NodePort value (30007, in this example):\n\n```yaml\napiVersion: v1\nkind: Service\nmetadata:\n  name: my-service\nspec:\n  type: NodePort\n  selector:\n    app.kubernetes.io/name: MyApp\n  ports:\n    - port: 80\n      # By default and for convenience, the `targetPort` is set to\n      # the same value as the `port` field.\n      targetPort: 80\n      # Optional field\n      # By default and for convenience, the Kubernetes control plane\n      # will allocate a port from a range (default: 30000-32767)\n      nodePort: 30007\n```\n\n#### Reserve Nodeport ranges to avoid collisions  {#avoid-nodeport-collisions}\n\n{{< feature-state for_k8s_version=\"v1.28\" state=\"beta\" >}}"
+    },
+    {
+      "id": "docker/get-started/docker-concepts/building-images/build-tag-and-publish-an-image.md::14",
+      "score": 0.0,
+      "text": "should be pushed to Docker Hub.\n\n## Additional resources\n\nTo learn more about building, tagging, and publishing images, visit the following resources:\n\n* [What is a build context?](/build/concepts/context/#what-is-a-build-context)\n* [docker build reference](/reference/cli/docker/buildx/build/)\n* [docker image tag reference](/reference/cli/docker/image/tag/)\n* [docker push reference](/reference/cli/docker/image/push/)\n* [What is a registry?](/get-started/docker-concepts/the-basics/what-is-a-registry/)\n\n## Next steps\n\nNow that you have learned about building and publishing images, it's time to learn how to speed up the build process using the Docker build cache.\n\n{{< button text=\"Using the build cache\" url=\"using-the-build-cache\" >}}"
+    }
+  ],
+  "answer": "The provided context does not contain specific information about main changes introduced in Docker Engine version 28. Therefore, I cannot answer what the main changes were for that particular version based on the given documentation.",
+  "prompt_sha256": "0fe9eabe05dca859d37959c54cb3f20832ead819f9c0511ab55a1330517d4474",
+  "timings_s": {
+    "retrieve": 0.7,
+    "generate": 23.8
+  }
+}

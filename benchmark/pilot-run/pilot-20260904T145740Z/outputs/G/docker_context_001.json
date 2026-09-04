@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "docker_context_001",
+  "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::84",
+      "score": 0.88234,
+      "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::4",
+      "score": 0.8619,
+      "text": "cy details](#restart-policy-details))                                                                                                                |\n| `unless-stopped`           | Similar to `always`, except that when the container is stopped (manually or otherwise), it isn't restarted even after Docker daemon restarts.                                                                                                                                                                                                                         |\n\nThe following command starts a Redis container with the `unless-stopped`\nrestart policy. Docker restarts the container if it exits or if the daemon\nrestarts, but not if you stopped the container yourself.\n\n```console\n$ docker run -d --name redis --restart unless-stopped redis\n```\n\nThe following command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::6",
+      "score": 0.85936,
+      "text": "a container, the restart policy is ignored until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop.\n\n- Restart policies only apply to containers. To configure restart policies for\n  Swarm services, see\n  [flags related to service restart](/reference/cli/docker/service/create/).\n\n### Restarting foreground containers\n\nWhen you run a container in the foreground, stopping a container causes the\nattached CLI to exit as well, regardless of the restart policy of the\ncontainer. This behavior is illustrated in the following example.\n\n1. Create a Dockerfile that prints the numbers 1 to 5 and then exits.\n\n   ```dockerfile\n   FROM busybox:latest\n   COPY --chmod=755 <<\"EOF\" /start.sh\n   echo \"Starting...\"\n   for i in $(seq 1 5); do\n     echo \"$i\"\n     sleep 1\n   done\n   echo \"Exiting...\"\n   exit 1\n   EOF\n   ENTRYPOINT /start.sh\n   ```\n\n2. Build an image from the Dockerfile.\n\n   ```console\n   $ docker build -t startstop .\n   ```"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::3",
+      "score": 0.85755,
+      "text": "|\n| `on-failure[:max-retries]` | Restart the container if it exits due to an error, which manifests as a non-zero exit code. Optionally, limit the number of times the Docker daemon attempts to restart the container using the `:max-retries` option. The `on-failure` policy only prompts a restart if the container exits with a failure. It doesn't restart the container if the daemon restarts. |\n| `always`                   | Always restart the container if it stops. If it's manually stopped, it's restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in [restart policy details](#restart-policy-details))                                                                                                                |"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::5",
+      "score": 0.84518,
+      "text": "wing command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```\n\nThe following command ensures all running containers restart.\n\n```console\n$ docker update --restart unless-stopped $(docker ps -q)\n```\n\n### Restart policy details\n\nKeep the following in mind when using restart policies:\n\n- A restart policy only takes effect after a container starts successfully. In\n  this case, starting successfully means that the container is up for at least\n  10 seconds and Docker has started monitoring it. This prevents a container\n  which doesn't start at all from going into a restart loop.\n\n- If you manually stop a container, the restart policy is ignored until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop."
+    }
+  ],
+  "answer": "When you manually stop a container with a `restart` policy of `always`, and then the Docker daemon restarts, the container will not be automatically restarted unless you start it again. The reason is that manually stopping a container bypasses the normal monitoring mechanism used by the Docker daemon to apply restart policies.\n\nHere\u2019s a detailed explanation:\n\n- **Restart Policy `always`:** This policy always restarts the container if it stops for any reason, including failure, until the container is manually stopped.\n  \n- **Manual Stop:** When you manually stop a container using commands like `docker stop`, the Docker daemon no longer considers this container as needing to be restarted by the specified policy. The manual stop overrides the default behavior of restart policies.\n\n- **Daemon Restart:** After the Docker daemon restarts, it will begin monitoring containers again but won't automatically restart a container that was manually stopped before the daemon was restarted.\n\nTo restart such a container after a Docker daemon restart, you need to start the container using the appropriate `docker start` command or recreate the container with `docker run`.\n\nFor example:\n```console\n$ docker start <container_name>\n```\nor if the container configuration needs to be recreated:\n```console\n$ docker run --name <container_name> -d --restart always <image_name>\n```\n\nIn summary, when a container with a `always` restart policy is manually stopped and then the Docker daemon restarts, it won't automatically restart until you manually start the container.",
+  "prompt_sha256": "95f138ab0735e6977b73c84a9ec9c562252257e658659cfda2107209a0469764",
+  "timings_s": {
+    "retrieve": 0.65,
+    "generate": 79.99
+  }
+}

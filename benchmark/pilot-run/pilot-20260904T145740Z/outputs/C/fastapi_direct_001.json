@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "fastapi_direct_001",
+  "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/first-steps.md::5",
+      "score": 0.73861,
+      "text": "\"message\": \"Hello World\"}\n```\n\n### Interactive API docs { #interactive-api-docs }\n\nNow go to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).\n\nYou will see the automatic interactive API documentation (provided by [Swagger UI](https://github.com/swagger-api/swagger-ui)):\n\n![Swagger UI](https://fastapi.tiangolo.com/img/index/index-01-swagger-ui-simple.png)\n\n### Alternative API docs { #alternative-api-docs }\n\nAnd now, go to [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc).\n\nYou will see the alternative automatic documentation (provided by [ReDoc](https://github.com/Redocly/redoc)):\n\n![ReDoc](https://fastapi.tiangolo.com/img/index/index-02-redoc-simple.png)\n\n### OpenAPI { #openapi }\n\n**FastAPI** generates a \"schema\" with all your API using the **OpenAPI** standard for defining APIs.\n\n#### \"Schema\" { #schema }\n\nA \"schema\" is a definition or description of something. Not the code that implements it, but just an abstract description.\n\n#### API \"schema\" { #api-schema }"
+    },
+    {
+      "id": "fastapi/tutorial/path-params.md::3",
+      "score": 0.72393,
+      "text": "n didn't pass.\n\nThis is incredibly helpful while developing and debugging code that interacts with your API.\n\n///\n\n## Documentation { #documentation }\n\nAnd when you open your browser at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs), you will see an automatic, interactive, API documentation like:\n\n<img src=\"/img/tutorial/path-params/image01.png\">\n\n/// tip\n\nAgain, just with that same Python type declaration, **FastAPI** gives you automatic, interactive documentation (integrating Swagger UI).\n\nNotice that the path parameter is declared to be an integer.\n\n///\n\n## Standards-based benefits, alternative documentation { #standards-based-benefits-alternative-documentation }\n\nAnd because the generated schema is from the [OpenAPI](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md) standard, there are many compatible tools."
+    },
+    {
+      "id": "fastapi/tutorial/metadata.md::0",
+      "score": 0.65972,
+      "text": "# Metadata and Docs URLs { #metadata-and-docs-urls }\n\nYou can customize several metadata configurations in your **FastAPI** application.\n\n## Metadata for API { #metadata-for-api }\n\nYou can set the following fields that are used in the OpenAPI specification and the automatic API docs UIs:\n\n| Parameter | Type | Description |\n|------------|------|-------------|\n| `title` | `str` | The title of the API. |\n| `summary` | `str` | A short summary of the API. <small>Available since OpenAPI 3.1.0, FastAPI 0.99.0.</small> |\n| `description` | `str` | A short description of the API. It can use Markdown. |\n| `version` | `str` | The version of the API. This is the version of your own application, not of OpenAPI. For example `2.5.0`. |\n| `terms_of_service` | `str` | A URL to the Terms of Service for the API. If provided, this has to be a URL. |"
+    },
+    {
+      "id": "fastapi/tutorial/first-steps.md::7",
+      "score": 0.62784,
+      "text": "ta sent and received by your API using **JSON Schema**, the standard for JSON data schemas.\n\n#### Check the `openapi.json` { #check-the-openapi-json }\n\nIf you are curious about what the raw OpenAPI schema looks like, FastAPI automatically generates a JSON (schema) with the descriptions of all your API.\n\nYou can see it directly at: [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json).\n\nIt will show a JSON starting with something like:\n\n```JSON\n{\n    \"openapi\": \"3.1.0\",\n    \"info\": {\n        \"title\": \"FastAPI\",\n        \"version\": \"0.1.0\"\n    },\n    \"paths\": {\n        \"/items/\": {\n            \"get\": {\n                \"responses\": {\n                    \"200\": {\n                        \"description\": \"Successful Response\",\n                        \"content\": {\n                            \"application/json\": {\n\n\n\n...\n```\n\n#### What is OpenAPI for { #what-is-openapi-for }\n\nThe OpenAPI schema is what powers the two interactive documentation systems included."
+    },
+    {
+      "id": "fastapi/tutorial/schema-extra-example.md::9",
+      "score": 0.62729,
+      "text": "on with JSON Schema, for a while, Swagger UI, the tool that provides the automatic docs, didn't support OpenAPI 3.1.0 (it does since version 5.0.0 \ud83c\udf89).\n\nBecause of that, versions of FastAPI previous to 0.99.0 still used versions of OpenAPI lower than 3.1.0.\n\n///\n\n### Pydantic and FastAPI `examples` { #pydantic-and-fastapi-examples }\n\nWhen you add `examples` inside a Pydantic model, using `schema_extra` or `Field(examples=[\"something\"])` that example is added to the **JSON Schema** for that Pydantic model.\n\nAnd that **JSON Schema** of the Pydantic model is included in the **OpenAPI** of your API, and then it's used in the docs UI."
+    }
+  ],
+  "answer": "The alternative documentation UI provided by ReDoc is available at [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) when running the application locally.",
+  "prompt_sha256": "e2b4b1c4231fc9ecb7da77ba9704b337d382f2be387738202b7d2f4a07ca50bf",
+  "timings_s": {
+    "retrieve": 0.31,
+    "generate": 35.33
+  }
+}

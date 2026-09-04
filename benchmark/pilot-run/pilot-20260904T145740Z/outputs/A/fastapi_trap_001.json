@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "fastapi_trap_001",
+  "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::9",
+      "score": 0.7729,
+      "text": "tiple reasons. \ud83e\udd13\n\nThe **default** value of the **function parameter** is the **actual default** value, that's more intuitive with Python in general. \ud83d\ude0c\n\nYou could **call** that same function in **other places** without FastAPI, and it would **work as expected**. If there's a **required** parameter (without a default value), your **editor** will let you know with an error, **Python** will also complain if you run it without passing the required parameter.\n\nWhen you don't use `Annotated` and instead use the **(old) default value style**, if you call that function without FastAPI in **other place**, you have to **remember** to pass the arguments to the function for it to work correctly, otherwise the values will be different from what you expect (e.g. `QueryInfo` or something similar instead of `str`). And your editor won't complain, and Python won't complain running that function, only when the operations inside error out."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::4",
+      "score": 0.76753,
+      "text": "(so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }\n\nPrevious versions of FastAPI (before <dfn title=\"before 2023-03\">0.95.0</dfn>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n/// tip\n\nFor new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\n///\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n{* ../../docs_src/query_params_str_validations/tutorial002_py310.py hl[7] *}"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.75917,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::3",
+      "score": 0.75224,
+      "text": "_src/query_params_str_validations/tutorial002_an_py310.py hl[9] *}\n\nNotice that the default value is still `None`, so the parameter is still optional.\n\nBut now, having `Query(max_length=50)` inside of `Annotated`, we are telling FastAPI that we want it to have **additional validation** for this value, we want it to have maximum 50 characters. \ud83d\ude0e\n\n/// tip\n\nHere we are using `Query()` because this is a **query parameter**. Later we will see others like `Path()`, `Body()`, `Header()`, and `Cookie()`, that also accept the same arguments as `Query()`.\n\n///\n\nFastAPI will now:\n\n* **Validate** the data making sure that the max length is 50 characters\n* Show a **clear error** for the client when the data is not valid\n* **Document** the parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::5",
+      "score": 0.74421,
+      "text": "parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</abbr>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n!!! tip\n    For new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002.py!}\n    ```"
+    }
+  ],
+  "answer": "In FastAPI, a query parameter stays required if you do not provide a default value for it. This means that when defining the function parameter, if no default value is provided and the parameter is marked as `required`, then calling the function without providing a value for this parameter will result in an error.\n\nHowever, giving a query parameter a default value of `None` (or any other type) makes the parameter optional. If you provide a default value like `= None`, FastAPI understands that this parameter can be omitted when making requests to your API endpoint, and it won't enforce its presence unless explicitly required by business logic within the function.\n\nIn summary, providing a default value such as `None` for a query parameter in FastAPI makes it optional, whereas not providing any default value keeps it required.",
+  "prompt_sha256": "0c26240aa57f917b06bfbe3f21353a35702cb24f467529361f23b411da346958",
+  "timings_s": {
+    "retrieve": 3.45,
+    "generate": 77.69
+  }
+}

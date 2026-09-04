@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "fastapi_context_001",
+  "question": "In FastAPI, what makes a query parameter required rather than optional?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::2",
+      "score": 0.79787,
+      "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.77786,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::0",
+      "score": 0.76735,
+      "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::7",
+      "score": 0.76258,
+      "text": "t declares it explicitly as being a query parameter.\n\n!!! info\n    Have in mind that the most important part to make a parameter optional is the part:\n\n    ```Python\n    = None\n    ```\n\n    or the:\n\n    ```Python\n    = Query(default=None)\n    ```\n\n    as it will use that `None` as the default value, and that way make the parameter **not required**.\n\n    The `Union[str, None]` part allows your editor to provide better support, but it is not what tells FastAPI that this parameter is not required.\n\nThen, we can pass more parameters to `Query`. In this case, the `max_length` parameter that applies to strings:\n\n```Python\nq: Union[str, None] = Query(default=None, max_length=50)\n```\n\nThis will validate the data, show a clear error when the data is not valid, and document the parameter in the OpenAPI schema *path operation*.\n\n### `Query` as the default value or in `Annotated`\n\nHave in mind that when using `Query` inside of `Annotated` you cannot use the `default` parameter for `Query`."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::5",
+      "score": 0.7495,
+      "text": "parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</abbr>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n!!! tip\n    For new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002.py!}\n    ```"
+    }
+  ],
+  "answer": "In FastAPI, a query parameter is considered **required** if it does not have a default value set to `None`. If the parameter has a default value of `None`, then it is considered **optional**. The presence or absence of the `default=None` in the parameter declaration dictates whether the parameter is required or optional.\n\nFor example, from the context provided:\n\n```python\nq: Union[str, None] = Query(default=None, max_length=50)\n```\n\nHere, `q` is an optional query parameter because it has a default value of `None`. If you want to make `q` a required query parameter, you would remove or change the default value:\n\n```python\nq: str = Query(max_length=50)\n```\n\nIn this case, `q` must be provided with a value when making a request.",
+  "prompt_sha256": "0713ec0ed48b1a9ec508d788f92a8c1ee4cbac058e8d0cbf49bddbd032a69b9c",
+  "timings_s": {
+    "retrieve": 2.75,
+    "generate": 87.0
+  }
+}

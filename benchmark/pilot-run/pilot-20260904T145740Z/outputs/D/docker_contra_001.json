@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_contra_001",
+  "question": "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::11",
+      "score": 0.76865,
+      "text": "the value is `[]` (empty list) or `''` (empty string), the default command declared by the image is ignored, or in other words overridden to be empty.\n\n> [!NOTE]\n>\n> Unlike the `CMD` instruction in a Dockerfile, the `command` field doesn't automatically run within the context of the [`SHELL`](/reference/dockerfile.md#shell-form) instruction defined in the image. If your `command` relies on shell-specific features, such as environment variable expansion, you need to explicitly run it within a shell. For example:\n>\n> ```yaml\n> command: /bin/sh -c 'echo \"hello $$HOSTNAME\"'\n> ```\n\nThe value can also be a list, similar to the [exec-form syntax](/reference/dockerfile.md#exec-form)\nused by the [Dockerfile](/reference/dockerfile.md#exec-form).\n\n### `configs`\n\n`configs` let services adapt their behaviour without the need to rebuild a Docker image.\nServices can only access configs when explicitly granted by the `configs` attribute. Two different syntax variants are supported."
+    }
+  ],
+  "answer": "No, the `command` field in Docker Compose does not automatically run within the context of the `SHELL` instruction defined in the image. If your command relies on shell-specific features, such as environment variable expansion, you need to explicitly run it within a shell, similar to how it is done in a Dockerfile using `/bin/sh -c`.",
+  "prompt_sha256": "2ec98f9bd714850b9f0e542d358da918372c98d2a4e21255c1c172cbf7621f1c",
+  "timings_s": {
+    "retrieve": 0.57,
+    "generate": 7.47
+  }
+}

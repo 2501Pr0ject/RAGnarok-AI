@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_multi_001",
+  "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/datastructures.rst::6",
+      "score": 0.64408,
+      "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::7",
+      "score": 0.57251,
+      "text": "shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::\n\n   >>> from collections import deque\n   >>> queue = deque([\"Eric\", \"John\", \"Michael\"])\n   >>> queue.append(\"Terry\")           # Terry arrives\n   >>> queue.append(\"Graham\")          # Graham arrives\n   >>> queue.popleft()                 # The first to arrive now leaves\n   'Eric'\n   >>> queue.popleft()                 # The second to arrive now leaves\n   'John'\n   >>> queue                           # Remaining queue in order of arrival\n   deque(['Michael', 'Terry', 'Graham'])\n\n\n.. _tut-listcomps:\n\nList Comprehensions\n-------------------\n\nList comprehensions provide a concise way to create lists.\nCommon applications are to make new lists where each element is the result of\nsome operations applied to each member of another sequence or iterable, or to\ncreate a subsequence of those elements that satisfy a certain condition."
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::5",
+      "score": 0.51432,
+      "text": "7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\n\nThe list methods make it very easy to use a list as a stack, where the last\nelement added is the first element retrieved (\"last-in, first-out\").  To add an\nitem to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the\ntop of the stack, use :meth:`~list.pop` without an explicit index.  For example::\n\n   >>> stack = [3, 4, 5]\n   >>> stack.append(6)\n   >>> stack.append(7)\n   >>> stack\n   [3, 4, 5, 6, 7]\n   >>> stack.pop()\n   7\n   >>> stack\n   [3, 4, 5, 6]\n   >>> stack.pop()\n   6\n   >>> stack.pop()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "python/tutorial/stdlib2.rst::15",
+      "score": 0.46541,
+      "text": "ed\n   Traceback (most recent call last):\n     File \"<stdin>\", line 1, in <module>\n       d['primary']                # entry was automatically removed\n     File \"C:/python312/lib/weakref.py\", line 46, in __getitem__\n       o = self.data[key]()\n   KeyError: 'primary'\n\n\n.. _tut-list-tools:\n\nTools for Working with Lists\n============================\n\nMany data structure needs can be met with the built-in list type. However,\nsometimes there is a need for alternative implementations with different\nperformance trade-offs.\n\nThe :mod:`array` module provides an :class:`~array.array` object that is like\na list that stores only homogeneous data and stores it more compactly.  The\nfollowing example shows an array of numbers stored as two byte unsigned binary\nnumbers (typecode ``\"H\"``) rather than the usual 16 bytes per entry for regular\nlists of Python int objects::"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::15",
+      "score": 0.46049,
+      "text": "until another value\nis assigned to it).  We'll find other uses for :keyword:`del` later.\n\n\n.. _tut-tuples:\n\nTuples and Sequences\n====================\n\nWe saw that lists and strings have many common properties, such as indexing and\nslicing operations.  They are two examples of *sequence* data types (see\n:ref:`typesseq`).  Since Python is an evolving language, other sequence data\ntypes may be added.  There is also another standard sequence data type: the\n*tuple*.\n\nA tuple consists of a number of values separated by commas, for instance::"
+    }
+  ],
+  "answer": "In Python, a plain list can be used as a stack because you can efficiently append items to the end using `list.append()` and pop items from the end using `list.pop()`, which is fast. However, using a list as a queue is not efficient because popping items from the beginning of the list (using `list.pop(0)`) is slow due to the need to shift all other elements by one.\n\nInstead of using a plain list for implementing a queue, you should use `collections.deque`, which was designed to have fast appends and pops from both ends. This makes it more suitable for implementing queues efficiently.",
+  "prompt_sha256": "0adc47d3d0778c565bc3a8d0116c48a5ea59210c86f34281a9081487434d3486",
+  "timings_s": {
+    "retrieve": 0.38,
+    "generate": 44.88
+  }
+}

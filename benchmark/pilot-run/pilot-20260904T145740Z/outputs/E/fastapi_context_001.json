@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "fastapi_context_001",
+  "question": "In FastAPI, what makes a query parameter required rather than optional?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::2",
+      "score": 0.79787,
+      "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.77786,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::0",
+      "score": 0.76735,
+      "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+    },
+    {
+      "id": "docker/manuals/engine/swarm/admin_guide.md::18",
+      "score": 0.0,
+      "text": "of a swarm with auto-lock enabled, the unlock key is also the\n    > same as on the old swarm, and the unlock key is needed to restore the\n    > swarm.\n\n4.  Start Docker on the new node. Unlock the swarm if necessary. Re-initialize\n    the swarm using the following command, so that this node does not attempt\n    to connect to nodes that were part of the old swarm, and presumably no\n    longer exist.\n\n    ```console\n    $ docker swarm init --force-new-cluster\n    ```\n\n5.  Verify that the state of the swarm is as expected. This may include\n    application-specific tests or simply checking the output of\n    `docker service ls` to be sure that all expected services are present.\n\n6.  If you use auto-lock,\n    [rotate the unlock key](swarm_manager_locking.md#rotate-the-unlock-key).\n\n7.  Add manager and worker nodes to bring your new swarm up to operating\n    capacity.\n\n8.  Reinstate your previous backup regimen on the new swarm.\n\n### Recover from losing the quorum"
+    },
+    {
+      "id": "fastapi/tutorial/security/simple-oauth2.md::10",
+      "score": 0.0,
+      "text": "cs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).\n\n### Authenticate { #authenticate }\n\nClick the \"Authorize\" button.\n\nUse the credentials:\n\nUser: `johndoe`\n\nPassword: `secret`\n\n<img src=\"/img/tutorial/security/image04.png\">\n\nAfter authenticating in the system, you will see it like:\n\n<img src=\"/img/tutorial/security/image05.png\">\n\n### Get your own user data { #get-your-own-user-data }\n\nNow use the operation `GET` with the path `/users/me`.\n\nYou will get your user's data, like:\n\n```JSON\n{\n  \"username\": \"johndoe\",\n  \"email\": \"johndoe@example.com\",\n  \"full_name\": \"John Doe\",\n  \"disabled\": false,\n  \"hashed_password\": \"fakehashedsecret\"\n}\n```\n\n<img src=\"/img/tutorial/security/image06.png\">\n\nIf you click the lock icon and logout, and then try the same operation again, you will get an HTTP 401 error of:\n\n```JSON\n{\n  \"detail\": \"Not authenticated\"\n}\n```\n\n### Inactive user { #inactive-user }\n\nNow try with an inactive user, authenticate with:\n\nUser: `alice`\n\nPassword: `secret2`"
+    }
+  ],
+  "answer": "In FastAPI, a query parameter is considered optional if it has a default value set to `None` (or another specific value that indicates it's not required). If no default value is provided or the parameter does not have a default value of `None`, then it would be considered required. However, based on the information given in the context, there are no examples where a query parameter is declared without a default value, so we cannot provide an explicit example from this context alone.",
+  "prompt_sha256": "db3a3236f35a934879ff8c948798a01deb004b615cbcadc84dc2f575eeae2e46",
+  "timings_s": {
+    "retrieve": 0.63,
+    "generate": 39.46
+  }
+}

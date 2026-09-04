@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "python_multi_001",
+  "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/datastructures.rst::6",
+      "score": 0.73257,
+      "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::5",
+      "score": 0.71467,
+      "text": "7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\n\nThe list methods make it very easy to use a list as a stack, where the last\nelement added is the first element retrieved (\"last-in, first-out\").  To add an\nitem to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the\ntop of the stack, use :meth:`~list.pop` without an explicit index.  For example::\n\n   >>> stack = [3, 4, 5]\n   >>> stack.append(6)\n   >>> stack.append(7)\n   >>> stack\n   [3, 4, 5, 6, 7]\n   >>> stack.pop()\n   7\n   >>> stack\n   [3, 4, 5, 6]\n   >>> stack.pop()\n   6\n   >>> stack.pop()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::4",
+      "score": 0.7095,
+      "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "python/tutorial/appetite.rst::2",
+      "score": 0.68684,
+      "text": "st-draft\nprogram.  Python is simpler to use, available on Windows, macOS, and Unix\noperating systems, and will help you get the job done more quickly.\n\nPython is simple to use, but it is a real programming language, offering much\nmore structure and support for large programs than shell scripts or batch files\ncan offer.  On the other hand, Python also offers much more error checking than\nC, and, being a *very-high-level language*, it has high-level data types built\nin, such as flexible arrays and dictionaries.  Because of its more general data\ntypes Python is applicable to a much larger problem domain than Awk or even\nPerl, yet many things are at least as easy in Python as in those languages."
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::108",
+      "score": 0.68358,
+      "text": "and QueueListener- a ZeroMQ example\n------------------------------------------------------------\n\nSubclass ``QueueHandler``\n^^^^^^^^^^^^^^^^^^^^^^^^^\n\nYou can use a :class:`QueueHandler` subclass to send messages to other kinds\nof queues, for example a ZeroMQ 'publish' socket. In the example below,the\nsocket is created separately and passed to the handler (as its 'queue')::\n\n    import zmq   # using pyzmq, the Python binding for ZeroMQ\n    import json  # for serializing records portably\n\n    ctx = zmq.Context()\n    sock = zmq.Socket(ctx, zmq.PUB)  # or zmq.PUSH, or other suitable value\n    sock.bind('tcp://*:5556')        # or wherever\n\n    class ZeroMQSocketHandler(QueueHandler):\n        def enqueue(self, record):\n            self.queue.send_json(record.__dict__)\n\n\n    handler = ZeroMQSocketHandler(sock)\n\n\nOf course there are other ways of organizing this, for example passing in the\ndata needed by the handler to create the socket::"
+    }
+  ],
+  "answer": "In Python, a plain list can be used effectively as a stack because the append() method adds elements to the end of the list (which acts as the top of the stack), and the pop() method removes elements from the end of the list (retrieving items in LIFO - last-in-first-out order). This makes it straightforward to use lists for stack operations.\n\nHowever, a plain list is not recommended for queue implementations because:\n- **Pop Operation:** Popping an item from the beginning of the list requires shifting all preceding elements by one position, which has a time complexity of O(n) where n is the number of items in the list.\n- **Insertion:** Inserting an element at the beginning (front of the queue) also involves shifting other elements, again with a time complexity of O(n).\n\nFor efficient queue operations, especially when you need to maintain the first-in-first-out (FIFO) order without the overheads associated with list manipulations, the `collections.deque` class is recommended. Deques support fast appends and pops from both ends, making them ideal for implementing queues.\n\nHere's an example of using a deque as a queue:\n\n```python\nfrom collections import deque\n\n# Initialize a deque as a queue\nqueue = deque()\n\n# Add elements to the queue\nqueue.append('apple')\nqueue.append('banana')\n\n# Remove elements from the front (FIFO)\nprint(queue.popleft())  # Output: apple\nprint(queue.popleft())  # Output: banana\n\n# The queue is now empty\n```\n\nUsing `collections.deque` for queue operations ensures that both adding and removing elements are efficient, with a time complexity of O(1) for these operations.",
+  "prompt_sha256": "cbb743a25224a68044594f135604022bf09535748638657eaa3dc7252db8824f",
+  "timings_s": {
+    "retrieve": 0.74,
+    "generate": 92.29
+  }
+}

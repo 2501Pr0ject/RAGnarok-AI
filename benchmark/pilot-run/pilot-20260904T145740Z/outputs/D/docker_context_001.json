@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_context_001",
+  "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::84",
+      "score": 0.88234,
+      "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+    }
+  ],
+  "answer": "When the Docker daemon restarts, a container with the `always` restart policy will be automatically restarted. Since you manually stopped the container but the `always` policy is still in effect, the container will resume operation upon the next Docker daemon start.",
+  "prompt_sha256": "06431d62ecda628ca1dce8682727256b0d6284d22e538c22ae6ae86008abb53d",
+  "timings_s": {
+    "retrieve": 0.65,
+    "generate": 14.25
+  }
+}

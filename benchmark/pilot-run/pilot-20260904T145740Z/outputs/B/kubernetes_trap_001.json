@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_trap_001",
+  "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::9",
+      "score": 0.79494,
+      "text": "The `kubectl` tool is the primary interface for creating, inspecting, updating, and deleting Kubernetes objects."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::70",
+      "score": 0.7915,
+      "text": "a new image or image tag. `kubectl` supports several update operations, each of which is applicable\nto different scenarios."
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::156",
+      "score": 0.78971,
+      "text": "For more information, please see [kubectl label](/docs/reference/generated/kubectl/kubectl-commands/#label)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::68",
+      "score": 0.77723,
+      "text": "[Command line tool (kubectl)](/docs/reference/kubectl/).\n\n## Updating your application without an outage"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::146",
+      "score": 0.777,
+      "text": "new resources. This can be done with `kubectl label`.\nFor example, if you want to label all your NGINX Pods as frontend tier, r"
+    }
+  ],
+  "answer": "The information provided does not specify a kubectl command for updating the label selector of an existing Kubernetes Deployment. The context mentions using `kubectl label` to add labels but does not address updating the label selectors of Deployments specifically. Therefore, based on the given context, I cannot provide a specific kubectl command for this purpose.",
+  "prompt_sha256": "1dda7d8ce266f73a222b0b00c4b04b63d9e840ff6640bf7d001d64c99f5b393b",
+  "timings_s": {
+    "retrieve": 7.98,
+    "generate": 17.42
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_contra_001",
+  "question": "Is the Kubernetes Endpoints API deprecated?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::135",
+      "score": 0.84849,
+      "text": "### Endpoints\n\nIn the Kubernetes API, an\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::134",
+      "score": 0.80557,
+      "text": "The EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::135",
+      "score": 0.80466,
+      "text": ")\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::131",
+      "score": 0.79899,
+      "text": "all contain at least 100 endpoints. Kubernetes does not make the new EndpointSlice\nuntil an extra endpoint needs to be added."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::133",
+      "score": 0.79899,
+      "text": "all contain at least 100 endpoints. Kubernetes does not make the new EndpointSlice\nuntil an extra endpoint needs to be added."
+    }
+  ],
+  "answer": "Yes, the Kubernetes Endpoints API is deprecated according to the provided context.",
+  "prompt_sha256": "c13de58c51e7027eedcb4ba610392baa825b6be8af9da2c3c2e3f8b312226257",
+  "timings_s": {
+    "retrieve": 9.35,
+    "generate": 4.57
+  }
+}

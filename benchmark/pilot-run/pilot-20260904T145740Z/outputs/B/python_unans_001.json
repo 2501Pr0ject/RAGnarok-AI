@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_unans_001",
+  "question": "What are the parameters of str.split() and what are their default values?",
+  "retrieved": [
+    {
+      "id": "python/howto/regex.rst::553",
+      "score": 0.73944,
+      "text": ":meth:`~str.split` method of strings but provides much more generality in the"
+    },
+    {
+      "id": "python/howto/regex.rst::541",
+      "score": 0.73248,
+      "text": "| ``split()``      | Split the string into a list, splitting it    |"
+    },
+    {
+      "id": "docker/manuals/engine/cli/formatting.md::19",
+      "score": 0.69889,
+      "text": "`split` slices a string into a list of strings separated by a separator."
+    },
+    {
+      "id": "python/howto/regex.rst::556",
+      "score": 0.6872,
+      "text": ".. method:: .split(string [, maxsplit=0])\n   :noindex:\n\n   Split *string* by the matches of the regular expression.  If captur"
+    },
+    {
+      "id": "python/howto/regex.rst::555",
+      "score": 0.67893,
+      "text": "whitespace or by a fixed string.  As you'd expect, there's a module-level\n:func:`re.split` function, too."
+    }
+  ],
+  "answer": "The `split` method described has two parameters:\n\n1. `string`: The separator according to which the string is split.\n2. `maxsplit`: The maximum number of splits to perform (default value is 0, meaning no limit). \n\nThese parameters apply to both the `str.split()` method and the module-level `re.split` function mentioned in the context.",
+  "prompt_sha256": "1330ac4053883947b923f85eb15557aea54052a4329ff68826c6dfbeea09c07b",
+  "timings_s": {
+    "retrieve": 7.51,
+    "generate": 20.94
+  }
+}

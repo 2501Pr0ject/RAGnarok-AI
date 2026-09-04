@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "fastapi_contra_001",
+  "question": "What is the recommended way to add string validation to a query parameter in FastAPI \u2014 for example a max length on q?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::0",
+      "score": 0.832,
+      "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+    }
+  ],
+  "answer": "To add string validation to a query parameter like `q` in FastAPI, you should use the `Query` and `Annotated` imports. Specifically, you can define the maximum length of the string by using these tools as shown in the provided context:\n\n```python\nfrom fastapi import Query, Annotated\n\n# Example usage:\nq: Annotated[str | None, Query(max_length=50)] = None\n```\n\nThis configuration tells FastAPI that `q` is an optional query parameter which, if provided, must be a string with a maximum length of 50 characters.",
+  "prompt_sha256": "d12b9c5e147e46e7cba62fbec66050c7f19c6b23a3a5bfc74694e2eacfd6d441",
+  "timings_s": {
+    "retrieve": 0.66,
+    "generate": 8.82
+  }
+}

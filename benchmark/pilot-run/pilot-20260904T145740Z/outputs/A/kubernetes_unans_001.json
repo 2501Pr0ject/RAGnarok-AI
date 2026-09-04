@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "kubernetes_unans_001",
+  "question": "What are the steps to install kubectl on my machine?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/management.md::9",
+      "score": 0.71466,
+      "text": "rning more about `kubectl`, go ahead and read\n[Command line tool (kubectl)](/docs/reference/kubectl/).\n\n## Updating your application without an outage\n\nAt some point, you'll eventually need to update your deployed application, typically by specifying\na new image or image tag. `kubectl` supports several update operations, each of which is applicable\nto different scenarios.\n\nYou can run multiple copies of your app, and use a _rollout_ to gradually shift the traffic to\nnew healthy Pods. Eventually, all the running Pods would have the new software.\n\nThis section of the page guides you through how to create and update applications with Deployments.\n\nLet's say you were running version 1.14.2 of nginx:\n\n```shell\nkubectl create deployment my-nginx --image=nginx:1.14.2\n```\n\n```none\ndeployment.apps/my-nginx created\n```\n\nEnsure that there is 1 replica:\n\n```shell\nkubectl scale --replicas 1 deployments/my-nginx --subresource='scale' --type='merge' -p '{\"spec\":{\"replicas\": 1}}'\n```"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::1",
+      "score": 0.70842,
+      "text": "variable or by setting the\n[`--kubeconfig`](/docs/concepts/configuration/organize-cluster-access-kubeconfig/) flag.\n\n<!-- body -->\n\n## Role of kubectl\n\nThe `kubectl` tool is the primary interface for creating, inspecting, updating, and deleting Kubernetes objects.\nIt complements the [Kubernetes Components](/docs/concepts/overview/components/) that run inside your cluster\nand the [Kubernetes API](/docs/concepts/overview/kubernetes-api/) that those components implement.\nWhether you run `kubectl` from your laptop or from a Pod inside the cluster, it sends requests to the API server.\nOther clients, such as [client libraries](/docs/reference/using-api/client-libraries/) and web dashboards\nlike [Headlamp](https://headlamp.dev/), also communicate through the same API.\n\n## How kubectl works"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::5",
+      "score": 0.70739,
+      "text": "ines.\n\nFor syntax, command reference, and examples, see the [kubectl reference documentation](/docs/reference/kubectl/).\n\n## Declarative vs imperative\n\nFor production workloads, prefer [declarative object management](/docs/concepts/overview/working-with-objects/object-management/)\nusing `kubectl apply` with version-controlled configuration files.\nDeclarative management helps you track changes, collaborate, and integrate with GitOps workflows.\nImperative commands (such as `kubectl create` or `kubectl run`) are useful for development and experimentation,\nbut are harder to reproduce and audit.\n\n## Extending kubectl with plugins\n\nYou can extend `kubectl` with [plugins](/docs/tasks/extend-kubectl/kubectl-plugins/) that add new\nsub-commands. Plugins are standalone binaries that follow the `kubectl-<plugin-name>` naming convention.\nThe Kubernetes community maintains many plugins, and you can manage them with the\n[Krew](https://krew.sigs.k8s.io/) plugin manager.\n\n## Version compatibility"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::7",
+      "score": 0.69489,
+      "text": "patible version avoids unexpected behavior. See the\n[version skew policy](/releases/version-skew-policy/) for details.\n\n## {{% heading \"whatsnext\" %}}\n\n* Read the [kubectl reference](/docs/reference/kubectl/) for syntax and command details.\n* [Install kubectl](/docs/tasks/tools/#kubectl) on your machine.\n* Learn about [The Kubernetes API](/docs/concepts/overview/kubernetes-api/) that `kubectl` uses.\n* Review [Kubernetes Components](/docs/concepts/overview/components/) that make up a cluster.\n* Explore [Object Management](/docs/concepts/overview/working-with-objects/object-management/) and declarative configuration.\n* Check the [version skew policy](/releases/version-skew-policy/) for supported version combinations."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::17",
+      "score": 0.69414,
+      "text": "nt.\n\n## In-place updates of resources\n\nSometimes it's necessary to make narrow, non-disruptive updates to resources you've created.\n\n### kubectl apply\n\nIt is suggested to maintain a set of configuration files in source control\n(see [configuration as code](https://martinfowler.com/bliki/InfrastructureAsCode.html)),\nso that they can be maintained and versioned along with the code for the resources they configure.\nThen, you can use [`kubectl apply`](/docs/reference/kubectl/generated/kubectl_apply/)\nto push your configuration changes to the cluster.\n\nThis command will compare the version of the configuration that you're pushing with the previous\nversion and apply the changes you've made, without overwriting any automated changes to properties\nyou haven't specified.\n\n```shell\nkubectl apply -f https://k8s.io/examples/application/nginx/nginx-deployment.yaml\n```\n\n```none\ndeployment.apps/my-nginx configured\n```"
+    }
+  ],
+  "answer": "* Install kubectl on your machine.",
+  "prompt_sha256": "672415029f910348f1dded04a2c7e54170dfbb347805a03576a70ad1bd611e55",
+  "timings_s": {
+    "retrieve": 3.16,
+    "generate": 26.68
+  }
+}

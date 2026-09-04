@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "python_trap_001",
+  "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/modules.rst::5",
+      "score": 0.81612,
+      "text": "r).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace.\n\nThere is a variant of the :keyword:`import` statement that imports names from a\nmodule directly into the importing module's namespace.  For example::\n\n   >>> from fibo import fib, fib2\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis does not introduce the module name from which the imports are taken in the\nlocal namespace (so in the example, ``fibo`` is not defined).\n\nThere is even a variant to import all names that a module defines::\n\n   >>> from fibo import *\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis imports all names except those beginning with an underscore (``_``).\nIn most cases Python programmers do not use this facility since it introduces\nan unknown set of names into the interpreter, possibly hiding some things\nyou have already defined."
+    },
+    {
+      "id": "python/tutorial/modules.rst::7",
+      "score": 0.77686,
+      "text": ":`from` with similar effects::\n\n   >>> from fibo import fib as fibonacci\n   >>> fibonacci(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\n\n.. note::\n\n   For efficiency reasons, each module is only imported once per interpreter\n   session.  Therefore, if you change your modules, you must restart the\n   interpreter -- or, if it's just one module you want to test interactively,\n   use :func:`importlib.reload`, e.g. ``import importlib;\n   importlib.reload(modulename)``.\n\n\n.. _tut-modulesasscripts:\n\nExecuting modules as scripts\n----------------------------\n\nWhen you run a Python module with ::\n\n   python fibo.py <arguments>\n\nthe code in the module will be executed, just as if you imported it, but with\nthe ``__name__`` set to ``\"__main__\"``.  That means that by adding this code at\nthe end of your module::\n\n   if __name__ == \"__main__\":\n       import sys\n       fib(int(sys.argv[1]))"
+    },
+    {
+      "id": "python/tutorial/modules.rst::29",
+      "score": 0.76508,
+      "text": "could take a\nlong time and importing sub-modules might have unwanted side-effects that should\nonly happen when the sub-module is explicitly imported.\n\nThe only solution is for the package author to provide an explicit index of the\npackage.  The :keyword:`import` statement uses the following convention: if a package's\n:file:`__init__.py` code defines a list named ``__all__``, it is taken to be the\nlist of module names that should be imported when ``from package import *`` is\nencountered.  It is up to the package author to keep this list up-to-date when a\nnew version of the package is released.  Package authors may also decide not to\nsupport it, if they don't see a use for importing \\* from their package.  For\nexample, the file :file:`sound/effects/__init__.py` could contain the following\ncode::\n\n   __all__ = [\"echo\", \"surround\", \"reverse\"]\n\nThis would mean that ``from sound.effects import *`` would import the three\nnamed submodules of the :mod:`!sound.effects` package."
+    },
+    {
+      "id": "python/tutorial/modules.rst::4",
+      "score": 0.76087,
+      "text": "re executed only\nthe *first* time the module name is encountered in an import statement. [#]_\n(They are also run if the file is executed as a script.)\n\nEach module has its own private namespace, which is used as the global namespace\nby all functions defined in the module. Thus, the author of a module can\nuse global variables in the module without worrying about accidental clashes\nwith a user's global variables. On the other hand, if you know what you are\ndoing you can touch a module's global variables with the same notation used to\nrefer to its functions, ``modname.itemname``.\n\nModules can import other modules.  It is customary but not required to place all\n:keyword:`import` statements at the beginning of a module (or script, for that\nmatter).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace."
+    },
+    {
+      "id": "python/tutorial/modules.rst::28",
+      "score": 0.7424,
+      "text": "variable defined in the previous\nitem.\n\n\n.. _tut-pkg-import-star:\n\nImporting \\* From a Package\n---------------------------\n\n.. index:: single: __all__\n\nNow what happens when the user writes ``from sound.effects import *``?  Ideally,\none would hope that this somehow goes out to the filesystem, finds which\nsubmodules are present in the package, and imports them all.  This could take a\nlong time and importing sub-modules might have unwanted side-effects that should\nonly happen when the sub-module is explicitly imported."
+    }
+  ],
+  "answer": "The context provided does not contain specific information about why names starting with an underscore are imported when using `from module import *`. The context mentions that such names are generally not imported by this statement but does not provide a reason for them being included. Therefore, the information needed to answer the question is not present in the provided documentation.",
+  "prompt_sha256": "3e923ccaa5a3c0007d03bc446b8f829b8ac2c34ae0c41e294abad1a895d24e52",
+  "timings_s": {
+    "retrieve": 3.19,
+    "generate": 45.99
+  }
+}

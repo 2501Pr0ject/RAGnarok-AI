@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "docker_unans_001",
+  "question": "What are the main changes introduced in Docker Engine version 28?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/security/rootless/troubleshoot.md::26",
+      "score": 0.0,
+      "text": "debugging\n\n**Entering into `dockerd` namespaces**\n\nThe `dockerd-rootless.sh` script executes `dockerd` in its own user, mount, and network namespaces.\n\nFor debugging, you can enter the namespaces by running\n`nsenter -U --preserve-credentials -n -m -t $(cat $XDG_RUNTIME_DIR/docker.pid)`.\n\n## Uninstall\n\nTo remove the systemd service of the Docker daemon, run `dockerd-rootless-setuptool.sh uninstall`:\n\n```console\n$ dockerd-rootless-setuptool.sh uninstall\n+ systemctl --user stop docker.service\n+ systemctl --user disable docker.service\nRemoved /home/testuser/.config/systemd/user/default.target.wants/docker.service.\n[INFO] Uninstalled docker.service\n[INFO] This uninstallation tool does NOT remove Docker binaries and data.\n[INFO] To remove data, run: `/usr/bin/rootlesskit rm -rf /home/testuser/.local/share/docker`\n```\n\nUnset environment variables PATH and DOCKER_HOST if you have added them to `~/.bashrc`.\n\nTo remove the data directory, run `rootlesskit rm -rf ~/.local/share/docker`."
+    },
+    {
+      "id": "kubernetes/concepts/storage/volume-snapshots.md::0",
+      "score": 0.0,
+      "text": "---\nreviewers:\n- saad-ali\n- thockin\n- msau42\n- jingxu97\n- xing-yang\n- yuxiangqian\ntitle: Volume Snapshots\ncontent_type: concept\nweight: 60\n---\n\n<!-- overview -->\n\nIn Kubernetes, a _VolumeSnapshot_ represents a snapshot of a volume on a storage\nsystem. This document assumes that you are already familiar with Kubernetes\n[persistent volumes](/docs/concepts/storage/persistent-volumes/).\n\n<!-- body -->\n\n## Introduction\n\nSimilar to how API resources `PersistentVolume` and `PersistentVolumeClaim` are\nused to provision volumes for users and administrators, `VolumeSnapshotContent`\nand `VolumeSnapshot` API resources are provided to create volume snapshots for\nusers and administrators.\n\nA `VolumeSnapshotContent` is a snapshot taken from a volume in the cluster that\nhas been provisioned by an administrator. It is a resource in the cluster just\nlike a PersistentVolume is a cluster resource."
+    },
+    {
+      "id": "python/howto/enum.rst::17",
+      "score": 0.0,
+      "text": "h:`__new__` and/or :meth:`__init__`,\nany value(s) given to the enum member will be passed into those methods.\nSee `Planet`_ for an example.\n\n.. note::\n\n    The :meth:`__new__` method, if defined, is used during creation of the Enum\n    members; it is then replaced by Enum's :meth:`__new__` which is used after\n    class creation for lookup of existing members.  See :ref:`new-vs-init` for\n    more details.\n\n\nRestricted Enum subclassing\n---------------------------\n\nA new :class:`Enum` class must have one base enum class, up to one concrete\ndata type, and as many :class:`object`-based mixin classes as needed.  The\norder of these base classes is::\n\n    class EnumName([mix-in, ...,] [data-type,] base-enum):\n        pass\n\nAlso, subclassing an enumeration is allowed only if the enumeration does not define\nany members.  So this is forbidden::"
+    },
+    {
+      "id": "kubernetes/concepts/architecture/cgroups.md::3",
+      "score": 0.0,
+      "text": "use the [systemd cgroup driver](/docs/setup/production-environment/container-runtimes#systemd-cgroup-driver)\n\n### Linux Distribution cgroup v2 support\n\nFor a list of Linux distributions that use cgroup v2, refer to the [cgroup v2 documentation](https://github.com/opencontainers/runc/blob/main/docs/cgroup-v2.md)\n\n<!-- the list should be kept in sync with https://github.com/opencontainers/runc/blob/main/docs/cgroup-v2.md -->\n* Container Optimized OS (since M97)\n* Ubuntu (since 21.10, 22.04+ recommended)\n* Debian GNU/Linux (since Debian 11 bullseye)\n* Fedora (since 31)\n* Arch Linux (since April 2021)\n* RHEL and RHEL-like distributions (since 9)\n\nTo check if your distribution is using cgroup v2, refer to your distribution's\ndocumentation or follow the instructions in [Identify the cgroup version on Linux nodes](#check-cgroup-version)."
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::69",
+      "score": 0.0,
+      "text": "tax\n\nThe short syntax is a colon-separated string to set the host IP, host port, and container port\nin the form:\n\n`[HOST:]CONTAINER[/PROTOCOL]` where:\n\n- `HOST` is `[IP:](port | range)` (optional). If it is not set, it binds to all network interfaces (`0.0.0.0`).\n- `CONTAINER` is `port | range`.\n- `PROTOCOL` restricts ports to a specified protocol either `tcp` or `udp`(optional). Default is `tcp`.\n\n> [!WARNING]\n>\n> If you do not specify a host IP (such as `127.0.0.1`), Docker binds to all interfaces (`0.0.0.0`), bypassing host firewall rules. This can expose the container directly to the internet if the host has a public IP address. For more information, see [Port publishing and mapping](/manuals/engine/network/port-publishing.md).\n\nPorts can be either a single value or a range. `HOST` and `CONTAINER` must use equivalent ranges."
+    }
+  ],
+  "answer": "The provided context does not contain any information about Docker Engine version 28 or its changes. Therefore, I cannot answer the question based on the given documentation.",
+  "prompt_sha256": "dfe2b87b59ef09a86193757488ed7f925aa173d9b754e3475bc8e5551f49dc8d",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 25.52
+  }
+}

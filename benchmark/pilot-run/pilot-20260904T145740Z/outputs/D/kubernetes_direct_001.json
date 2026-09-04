@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_direct_001",
+  "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::2",
+      "score": 0.80184,
+      "text": "efault` namespace. Instead, make other namespaces and use those.\n{{< /note >}}\n\n## Initial namespaces\n\nKubernetes starts with four initial namespaces:\n\n`default`\n: Kubernetes includes this namespace so that you can start using your new cluster without first creating a namespace.\n\n`kube-node-lease`\n: This namespace holds [Lease](/docs/concepts/architecture/leases/) objects associated with each node. Node leases allow the kubelet to send [heartbeats](/docs/concepts/architecture/nodes/#node-heartbeats) so that the control plane can detect node failure.\n\n`kube-public`\n: This namespace is readable by *all* clients (including those not authenticated). This namespace is mostly reserved for cluster usage, in case that some resources should be visible and readable publicly throughout the whole cluster. The public aspect of this namespace is only a convention, not a requirement.\n\n`kube-system`\n: The namespace for objects created by the Kubernetes system.\n\n## Working with Namespaces"
+    }
+  ],
+  "answer": "A fresh Kubernetes cluster starts with four initial namespaces:\n\n- `default`: Kubernetes includes this namespace so that you can start using your new cluster without first creating a namespace.\n- `kube-node-lease`: This namespace holds Lease objects associated with each node. Node leases allow the kubelet to send heartbeats so that the control plane can detect node failure.\n- `kube-public`: This namespace is readable by all clients (including those not authenticated). It is mostly reserved for cluster usage, in case that some resources should be visible and readable publicly throughout the whole cluster.\n- `kube-system`: The namespace for objects created by the Kubernetes system.",
+  "prompt_sha256": "fccfc00dee8781731957d3084b88403dc5ec8bd4afc8f1c7396b0978560b5b35",
+  "timings_s": {
+    "retrieve": 0.74,
+    "generate": 28.6
+  }
+}

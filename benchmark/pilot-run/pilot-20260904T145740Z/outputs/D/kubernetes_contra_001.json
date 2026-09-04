@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_contra_001",
+  "question": "Is the Kubernetes Endpoints API deprecated?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::19",
+      "score": 0.81128,
+      "text": "ices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}\n\nThe EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:\n\n  - It does not support dual-stack clusters.\n  - It does not contain information needed to support newer features, such as\n    [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution).\n  - It will truncate the list of endpoints if it is too long to fit in a single object.\n\nBecause of this, it is recommended that all clients use the\nEndpointSlice API rather than Endpoints.\n\n#### Over-capacity endpoints"
+    }
+  ],
+  "answer": "Yes, the Kubernetes Endpoints API is deprecated.",
+  "prompt_sha256": "fb3e64942d804b82200bb4e56e44be67d7e17461211d3bdb90d5e0f4eacb223b",
+  "timings_s": {
+    "retrieve": 0.57,
+    "generate": 2.22
+  }
+}

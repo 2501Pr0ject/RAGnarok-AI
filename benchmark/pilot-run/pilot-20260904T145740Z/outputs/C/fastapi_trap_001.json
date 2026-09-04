@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "fastapi_trap_001",
+  "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::3",
+      "score": 0.69077,
+      "text": "_src/query_params_str_validations/tutorial002_an_py310.py hl[9] *}\n\nNotice that the default value is still `None`, so the parameter is still optional.\n\nBut now, having `Query(max_length=50)` inside of `Annotated`, we are telling FastAPI that we want it to have **additional validation** for this value, we want it to have maximum 50 characters. \ud83d\ude0e\n\n/// tip\n\nHere we are using `Query()` because this is a **query parameter**. Later we will see others like `Path()`, `Body()`, `Header()`, and `Cookie()`, that also accept the same arguments as `Query()`.\n\n///\n\nFastAPI will now:\n\n* **Validate** the data making sure that the max length is 50 characters\n* Show a **clear error** for the client when the data is not valid\n* **Document** the parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::4",
+      "score": 0.66167,
+      "text": "\"Python 3.10+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_an_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"10\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_an.py!}\n    ```\n\nNotice that the default value is still `None`, so the parameter is still optional.\n\nBut now, having `Query(max_length=50)` inside of `Annotated`, we are telling FastAPI that we want it to extract this value from the query parameters (this would have been the default anyway \ud83e\udd37) and that we want to have **additional validation** for this value (that's why we do this, to get the additional validation). \ud83d\ude0e\n\nFastAPI will now:\n\n* **Validate** the data making sure that the max length is 50 characters\n* Show a **clear error** for the client when the data is not valid\n* **Document** the parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::4",
+      "score": 0.64597,
+      "text": "(so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }\n\nPrevious versions of FastAPI (before <dfn title=\"before 2023-03\">0.95.0</dfn>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n/// tip\n\nFor new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\n///\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n{* ../../docs_src/query_params_str_validations/tutorial002_py310.py hl[7] *}"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::7",
+      "score": 0.6434,
+      "text": "t declares it explicitly as being a query parameter.\n\n!!! info\n    Have in mind that the most important part to make a parameter optional is the part:\n\n    ```Python\n    = None\n    ```\n\n    or the:\n\n    ```Python\n    = Query(default=None)\n    ```\n\n    as it will use that `None` as the default value, and that way make the parameter **not required**.\n\n    The `Union[str, None]` part allows your editor to provide better support, but it is not what tells FastAPI that this parameter is not required.\n\nThen, we can pass more parameters to `Query`. In this case, the `max_length` parameter that applies to strings:\n\n```Python\nq: Union[str, None] = Query(default=None, max_length=50)\n```\n\nThis will validate the data, show a clear error when the data is not valid, and document the parameter in the OpenAPI schema *path operation*.\n\n### `Query` as the default value or in `Annotated`\n\nHave in mind that when using `Query` inside of `Annotated` you cannot use the `default` parameter for `Query`."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::0",
+      "score": 0.63293,
+      "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+    }
+  ],
+  "answer": "In FastAPI, a query parameter stays required unless explicitly marked as optional by providing a `default` value. However, simply having a type like `str | None` or setting the default to `None` is not enough for FastAPI to recognize that the parameter can be omitted in requests. Additional validation using `Query()` within `Annotated` helps FastAPI understand and enforce this optional nature while also applying specific validations such as maximum length.\n\nFor example, consider a query parameter `q`:\n\n```python\nfrom fastapi import Query, Annotated\n\nq: Annotated[str | None, Query(max_length=50)] = None\n```\n\nHere, even though the default value is `None`, indicating it's optional, the `Query(max_length=50)` ensures that when `q` is provided in a request, its length does not exceed 50 characters. This setup makes both the requirement and validation clear to FastAPI.",
+  "prompt_sha256": "e307c76529d66e21d9fce5aa0ff8c1ce52350fe845c1dc94f0b62e83b1708bb7",
+  "timings_s": {
+    "retrieve": 0.35,
+    "generate": 62.84
+  }
+}

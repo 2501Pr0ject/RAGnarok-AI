@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_multi_002",
+  "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::2",
+      "score": 0.79154,
+      "text": "orage.\n\nSecrets are similar to {{< glossary_tooltip text=\"ConfigMaps\" term_id=\"configmap\" >}}\nbut are specifically intended to hold confidential data.\n\n{{< caution >}}\nKubernetes Secrets are, by default, stored unencrypted in the API server's underlying data store\n(etcd). Anyone with API access can retrieve or modify a Secret, and so can anyone with access to etcd.\nAdditionally, anyone who is authorized to create a Pod in a namespace can use that access to read\nany Secret in that namespace; this includes indirect access such as the ability to create a\nDeployment.\n\nIn order to safely use Secrets, take at least the following steps:"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::43",
+      "score": 0.76741,
+      "text": "## Information security for Secrets\n\nAlthough ConfigMap and Secret work similarly, Kubernetes applies some additional\nprotection for Secret objects.\n\nSecrets often hold values that span a spectrum of importance, many of which can\ncause escalations within Kubernetes (e.g. service account tokens) and to\nexternal systems. Even if an individual app can reason about the power of the\nSecrets it expects to interact with, other apps within the same namespace can\nrender those assumptions invalid.\n\nAuthorization configuration affects how Secret data can be accessed within a namespace. \nFor example, granting **list** or **watch** permissions on Secrets allows a subject\nto read all Secret data in that namespace, not only the Secrets explicitly \nreferenced by its Pods. Restrict access to the minimum set of permissions \nrequired for a workload to function, and avoid granting broad roles such as \n`cluster-admin` unless required for administrative purposes."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::1",
+      "score": 0.75277,
+      "text": "ry_tooltip text=\"container image\" term_id=\"image\" >}}. Using a\nSecret means that you don't need to include confidential data in your\napplication code.\n\nBecause Secrets can be created independently of the Pods that use them, there\nis less risk of the Secret (and its data) being exposed during the workflow of\ncreating, viewing, and editing Pods. Kubernetes, and applications that run in\nyour cluster, can also take additional precautions with Secrets, such as avoiding\nwriting sensitive data to nonvolatile storage.\n\nSecrets are similar to {{< glossary_tooltip text=\"ConfigMaps\" term_id=\"configmap\" >}}\nbut are specifically intended to hold confidential data."
+    },
+    {
+      "id": "docker/manuals/engine/storage/drivers/vfs-driver.md::3",
+      "score": 0.0,
+      "text": "onstructs\n\nThe following `docker pull` command shows a Docker host downloading a Docker\nimage comprising five layers.\n\n```console\n$ docker pull ubuntu\n\nUsing default tag: latest\nlatest: Pulling from library/ubuntu\ne0a742c2abfd: Pull complete\n486cb8339a27: Pull complete\ndc6f0d824617: Pull complete\n4f7a5649a30e: Pull complete\n672363445ad2: Pull complete\nDigest: sha256:84c334414e2bfdcae99509a6add166bbb4fa4041dc3fa6af08046a66fed3005f\nStatus: Downloaded newer image for ubuntu:latest\n```\n\nAfter pulling, each of these layers is represented as a subdirectory of\n`/var/lib/docker/vfs/dir/`. The directory names do not correlate with the\nimage layer IDs shown in the `docker pull` command. To see the size taken up on\ndisk by each layer, you can use the `du -sh` command, which gives the size as a\nhuman-readable value.\n\n```console\n$ ls -l /var/lib/docker/vfs/dir/"
+    },
+    {
+      "id": "docker/manuals/engine/install/linux-postinstall.md::3",
+      "score": 0.0,
+      "text": "re-evaluated.\n\n   > If you're running Linux in a virtual machine, it may be necessary to\n   > restart the virtual machine for changes to take effect.\n\n   You can also run the following command to activate the changes to groups:\n\n   ```console\n   $ newgrp docker\n   ```\n\n4. Verify that you can run `docker` commands without `sudo`.\n\n   ```console\n   $ docker run hello-world\n   ```\n\n   This command downloads a test image and runs it in a container. When the\n   container runs, it prints a message and exits.\n\n   If you initially ran Docker CLI commands using `sudo` before adding your user\n   to the `docker` group, you may see the following error:\n\n   ```text\n   WARNING: Error loading config file: /home/user/.docker/config.json -\n   stat /home/user/.docker/config.json: permission denied\n   ```\n\n   This error indicates that the permission settings for the `~/.docker/`\n   directory are incorrect, due to having used the `sudo` command earlier."
+    }
+  ],
+  "answer": "You should put the API token in a Secret. Secrets are specifically intended to hold confidential data such as API tokens, whereas ConfigMaps are more general-purpose and not designed with confidentiality in mind. Storing the API token in a Secret provides additional protection by default, aligning better with security best practices for sensitive information.",
+  "prompt_sha256": "58a6ef9612bd42f61f552a0f9449ae49509e4291b2d1a9ad578f944526281196",
+  "timings_s": {
+    "retrieve": 0.67,
+    "generate": 28.53
+  }
+}

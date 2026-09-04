@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_unans_001",
+  "question": "What are the steps to install kubectl on my machine?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::46",
+      "score": 0.86011,
+      "text": "* [Install kubectl](/docs/tasks/tools/#kubectl) on your machine."
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/_index.md::83",
+      "score": 0.77168,
+      "text": "explains how to use `kubectl` to manage objects.\nYou might need to [install kubectl](/docs/tasks/tools/#kubectl) if you don't a"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::9",
+      "score": 0.76983,
+      "text": "The `kubectl` tool is the primary interface for creating, inspecting, updating, and deleting Kubernetes objects."
+    },
+    {
+      "id": "kubernetes/concepts/windows/_index.md::5",
+      "score": 0.76838,
+      "text": "as a worker node to a Kubernetes cluster.\n\nYou can [install and set up kubectl on Windows](/docs/tasks/tools/install-kubectl-wi"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/organize-cluster-access-kubeconfig.md::12",
+      "score": 0.76063,
+      "text": "For step-by-step instructions on creating and specifying kubeconfig files, see"
+    }
+  ],
+  "answer": "The provided context does not contain explicit step-by-step installation instructions for `kubectl`. It only provides links to where you can find information on how to install `kubectl` on your machine. For detailed installation steps, you should follow the link suggested: [Install kubectl](/docs/tasks/tools/#kubectl).",
+  "prompt_sha256": "054b2a6939f8e9180a0cb69dabddc46f7e1431112bd8a0075ac6b21a46c881ef",
+  "timings_s": {
+    "retrieve": 8.59,
+    "generate": 15.44
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_unans_002",
+  "question": "How do I install Python on Windows?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/interpreter.rst::7",
+      "score": 0.77843,
+      "text": "On Windows machines where you have installed Python from the :ref:`Microsoft Store"
+    },
+    {
+      "id": "python/tutorial/appetite.rst::15",
+      "score": 0.75456,
+      "text": "program.  Python is simpler to use, available on Windows, macOS, and Unix"
+    },
+    {
+      "id": "python/tutorial/interpreter.rst::8",
+      "score": 0.72795,
+      "text": "<windows-store>`, the :file:`python3.12` command will be available. If you have"
+    },
+    {
+      "id": "fastapi/tutorial/debugging.md::17",
+      "score": 0.72711,
+      "text": "* Go to the \"Debug\" panel.\n* \"Add configuration...\".\n* Select \"Python\""
+    },
+    {
+      "id": "python/howto/curses.rst::31",
+      "score": 0.7069,
+      "text": "The Windows version of Python doesn't include the :mod:`curses`"
+    }
+  ],
+  "answer": "The provided context does not contain explicit steps for installing Python on Windows. It mentions that Python can be installed from the Microsoft Store and provides some configuration details after installation, but it does not detail the installation process itself. Therefore, the information about how to install Python on Windows is not present in the given documentation.",
+  "prompt_sha256": "6e061415e4f46342346d307e43e86cc28b98b77d2b026a06b43deee92298bdbd",
+  "timings_s": {
+    "retrieve": 7.44,
+    "generate": 13.46
+  }
+}

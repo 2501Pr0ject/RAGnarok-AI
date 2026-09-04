@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "python_contra_002",
+  "question": "Which Python version does venv install into a new virtual environment?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::2",
+      "score": 0.78093,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::2",
+      "score": 0.78039,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will install the Python version from which\nthe command was run (as reported by the :option:`--version` option).\nFor instance, executing the command with ``python3.12`` will install\nversion 3.12.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::0",
+      "score": 0.77917,
+      "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::0",
+      "score": 0.77917,
+      "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+    },
+    {
+      "id": "python/tutorial/venv.rst::1",
+      "score": 0.72118,
+      "text": "lication B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run.\n\nThe solution for this problem is to create a :term:`virtual environment`, a\nself-contained directory tree that contains a Python installation for a\nparticular version of Python, plus a number of additional packages.\n\nDifferent applications can then use different virtual environments.\nTo resolve the earlier example of conflicting requirements,\napplication A can have its own virtual environment with version 1.0\ninstalled while application B has another virtual environment with version 2.0.\nIf application B requires a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n============================="
+    }
+  ],
+  "answer": "The `venv` module installs the Python version from which the command was run. For example, if you use `python3.12 -m venv tutorial-env`, it will create a virtual environment with Python 3.12.",
+  "prompt_sha256": "667630d1bcee60e1a0cb07eabd9c89505229c5ddfe4e255feb4eff50f0ae01cc",
+  "timings_s": {
+    "retrieve": 0.55,
+    "generate": 24.36
+  }
+}

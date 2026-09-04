@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "fastapi_contra_001",
+  "question": "What is the recommended way to add string validation to a query parameter in FastAPI \u2014 for example a max length on q?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/cluster-administration/node-autoscaling.md::17",
+      "score": 0.0,
+      "text": "grations directly, which means that they're a part\n  of the Kubernetes project. For Karpenter, the Kubernetes project publishes Karpenter as a library\n  that cloud providers can integrate with to build a Node autoscaler.\n* Cluster Autoscaler provides integrations with numerous cloud providers, including smaller and less\n  popular providers. There are fewer cloud providers that integrate with Karpenter, including\n  [AWS](https://github.com/aws/karpenter-provider-aws), and\n  [Azure](https://github.com/Azure/karpenter-provider-azure).\n\n## Combine workload and Node autoscaling\n\n### Horizontal workload autoscaling {#horizontal-workload-autoscaling}\n\nNode autoscaling usually works in response to Pods&mdash;it provisions new Nodes to accommodate\nunschedulable Pods, and then consolidates the Nodes once they're no longer needed."
+    },
+    {
+      "id": "fastapi/advanced/settings@0.100.0.md::0",
+      "score": 0.0,
+      "text": "# Settings and Environment Variables\n\nIn many cases your application could need some external settings or configurations, for example secret keys, database credentials, credentials for email services, etc.\n\nMost of these settings are variable (can change), like database URLs. And many could be sensitive, like secrets.\n\nFor this reason it's common to provide them in environment variables that are read by the application.\n\n## Environment Variables\n\n!!! tip\n    If you already know what \"environment variables\" are and how to use them, feel free to skip to the next section below.\n\nAn <a href=\"https://en.wikipedia.org/wiki/Environment_variable\" class=\"external-link\" target=\"_blank\">environment variable</a> (also known as \"env var\") is a variable that lives outside of the Python code, in the operating system, and could be read by your Python code (or by other programs as well).\n\nYou can create and use environment variables in the shell, without needing Python:"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/node-shutdown.md::21",
+      "score": 0.0,
+      "text": "encounter data corruption.\n\nThe forced storage detach behaviour is optional; users might opt to use the \"Non-graceful\nnode shutdown\" feature instead.\n\nForce storage detach on timeout can be disabled by setting the `disable-force-detach-on-timeout`\nconfig field in `kube-controller-manager`. Disabling the force detach on timeout feature means\nthat a volume that is hosted on a node that is unhealthy for more than 6 minutes will not have\nits associated\n[VolumeAttachment](/docs/reference/kubernetes-api/config-and-storage-resources/volume-attachment-v1/)\ndeleted.\n\nAfter this setting has been applied, unhealthy pods still attached to volumes must be recovered\nvia the [Non-Graceful Node Shutdown](#non-graceful-node-shutdown) procedure mentioned above.\n\n{{< note >}}\n\n- Caution must be taken while using the [Non-Graceful Node Shutdown](#non-graceful-node-shutdown) procedure.\n- Deviation from the steps documented above can result in data corruption.\n\n{{< /note >}}"
+    },
+    {
+      "id": "kubernetes/concepts/extend-kubernetes/_index.md::13",
+      "score": 0.0,
+      "text": "everal types of extensions.\n\n<!-- image source for flowchart: https://docs.google.com/drawings/d/1sdviU6lDz4BpnzJNHfNpQrqI9F19QZ07KnhnxVrp2yg/edit -->\n\n{{< figure src=\"/docs/concepts/extend-kubernetes/flowchart.svg\"\n    alt=\"Flowchart with questions about use cases and guidance for implementers. Green circles indicate yes; red circles indicate no.\"\n    class=\"diagram-large\" caption=\"Flowchart guide to select an extension approach\" >}}\n\n---\n\n## Client extensions\n\nPlugins for kubectl are separate binaries that add or replace the behavior of specific subcommands.\nThe `kubectl` tool can also integrate with [credential plugins](/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins)\nThese extensions only affect a individual user's local environment, and so cannot enforce site-wide policies.\n\nIf you want to extend the `kubectl` tool, read [Extend kubectl with plugins](/docs/tasks/extend-kubectl/kubectl-plugins/).\n\n## API extensions\n\n### Custom resource definitions"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::4",
+      "score": 0.0,
+      "text": "` to\nchange the active context.\n\n## What you can do with kubectl\n\nThe `kubectl` tool supports many operations, which fall into these broad categories:\n\n* **Manage resources** \u2013 Create, update, and delete objects such as Pods, Deployments, and Services.\n  Use `kubectl apply` for declarative management from configuration files.\n* **Inspect cluster state** \u2013 List and describe objects, view events, and check resource usage.\n* **Debug** \u2013 View logs from containers, execute commands inside a running container, or port-forward to a Pod.\n* **Cluster operations** \u2013 Drain nodes for maintenance, cordon nodes to prevent new workloads, and manage cluster configuration.\n* **Script and automate** \u2013 Format output as JSON, YAML, or custom columns using [JSONPath](/docs/reference/kubectl/jsonpath/) for use in scripts and pipelines.\n\nFor syntax, command reference, and examples, see the [kubectl reference documentation](/docs/reference/kubectl/).\n\n## Declarative vs imperative"
+    }
+  ],
+  "answer": "The information needed to answer the question about adding string validation to a query parameter in FastAPI is not present in the provided documentation.",
+  "prompt_sha256": "df3b9b3eb9811e5cdcdac8298039347e5b20ec971ecff0894464edbc9f9b6514",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 23.27
+  }
+}

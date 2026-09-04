@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "fastapi_contra_001",
+  "question": "What is the recommended way to add string validation to a query parameter in FastAPI \u2014 for example a max length on q?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.85838,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your para"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::43",
+      "score": 0.76551,
+      "text": "Then, we can pass more parameters to `Query`. In this case, the `max_length` parameter that applies to strings:"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::1",
+      "score": 0.76083,
+      "text": "**FastAPI** allows you to declare additional information and validation for your parameters."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::0",
+      "score": 0.73614,
+      "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }"
+    },
+    {
+      "id": "fastapi/tutorial/path-params.md::18",
+      "score": 0.7323,
+      "text": ".0.0.1:8000/items/4.2)\n\n/// tip\n\nSo, with the same Python type declaration, **FastAPI** gives you data validation."
+    }
+  ],
+  "answer": "To add string validation to a query parameter in FastAPI, such as setting a maximum length for `q`, you can use the `Query` parameter along with the `max_length` parameter. For example:\n\n```python\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n@app.get(\"/items/\")\nasync def read_items(q: str = Query(..., max_length=50)):\n    results = {\"items\": [{\"item_id\": \"Foo\"}, {\"item_id\": \"Bar\"}]}\n    if q:\n        results.update({\"q\": q})\n    return results\n```\n\nIn this example, the `max_length` parameter is set to 50, meaning that the string value of `q` cannot exceed 50 characters.",
+  "prompt_sha256": "54763de5bc4bcbc1d11c7de354eb330ea7a5a78b0da51082223926b9f953bc57",
+  "timings_s": {
+    "retrieve": 7.0,
+    "generate": 35.91
+  }
+}

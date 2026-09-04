@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_trap_002",
+  "question": "Why does a container with the `unless-stopped` restart policy start again after a daemon restart even when I had manually stopped it?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::4",
+      "score": 0.85468,
+      "text": "cy details](#restart-policy-details))                                                                                                                |\n| `unless-stopped`           | Similar to `always`, except that when the container is stopped (manually or otherwise), it isn't restarted even after Docker daemon restarts.                                                                                                                                                                                                                         |\n\nThe following command starts a Redis container with the `unless-stopped`\nrestart policy. Docker restarts the container if it exits or if the daemon\nrestarts, but not if you stopped the container yourself.\n\n```console\n$ docker run -d --name redis --restart unless-stopped redis\n```\n\nThe following command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```"
+    }
+  ],
+  "answer": "A container with the `unless-stopped` restart policy starts again after a daemon restart because this policy instructs Docker to restart the container if it exits or if the Docker daemon is restarted. However, it will not restart the container if you have stopped it manually. The key point is that \"stopped\" in this context means stopped due to an exit code (e.g., the application inside the container exited), not stopped by the user using `docker stop`.",
+  "prompt_sha256": "a02cbabc6ceda1dd21088e441de1deed524281701f186b3bd4d3714888f8d27b",
+  "timings_s": {
+    "retrieve": 0.7,
+    "generate": 22.67
+  }
+}

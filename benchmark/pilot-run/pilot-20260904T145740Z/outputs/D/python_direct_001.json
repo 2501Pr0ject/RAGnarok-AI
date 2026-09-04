@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "python_direct_001",
+  "question": "What command do I run to create a virtual environment called tutorial-env?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::3",
+      "score": 0.7738,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    }
+  ],
+  "answer": "The provided context does not contain the information needed to answer how to create a virtual environment called `tutorial-env`. It only describes how to activate an already created virtual environment.",
+  "prompt_sha256": "9885a32d792b9a948c1661acf7311749f3415a9b433380fba216304ff35006e0",
+  "timings_s": {
+    "retrieve": 1.67,
+    "generate": 11.08
+  }
+}

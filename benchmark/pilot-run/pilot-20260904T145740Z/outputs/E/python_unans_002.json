@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "python_unans_002",
+  "question": "How do I install Python on Windows?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/interpreter.rst::1",
+      "score": 0.71733,
+      "text": "places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)\n\nOn Windows machines where you have installed Python from the :ref:`Microsoft Store\n<windows-store>`, the :file:`python3.12` command will be available. If you have\nthe :ref:`py.exe launcher <launcher>` installed, you can use the :file:`py`\ncommand. See :ref:`setting-envvars` for other ways to launch Python.\n\nTyping an end-of-file character (:kbd:`Control-D` on Unix, :kbd:`Control-Z` on\nWindows) at the primary prompt causes the interpreter to exit with a zero exit\nstatus.  If that doesn't work, you can exit the interpreter by typing the\nfollowing command: ``quit()``."
+    },
+    {
+      "id": "python/tutorial/index.rst::0",
+      "score": 0.66682,
+      "text": ".. _tutorial-index:\n\n######################\n  The Python Tutorial\n######################\n\nPython is an easy to learn, powerful programming language. It has efficient\nhigh-level data structures and a simple but effective approach to\nobject-oriented programming. Python's elegant syntax and dynamic typing,\ntogether with its interpreted nature, make it an ideal language for scripting\nand rapid application development in many areas on most platforms.\n\nThe Python interpreter and the extensive standard library are freely available\nin source or binary form for all major platforms from the Python web site,\nhttps://www.python.org/, and may be freely distributed. The same site also\ncontains distributions of and pointers to many free third party Python modules,\nprograms and tools, and additional documentation."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::5",
+      "score": 0.65661,
+      "text": "ill install packages from the `Python\nPackage Index <https://pypi.org>`_.  You can browse the Python\nPackage Index by going to it in your web browser.\n\n``pip`` has a number of subcommands: \"install\", \"uninstall\",\n\"freeze\", etc.  (Consult the :ref:`installing-index` guide for\ncomplete documentation for ``pip``.)\n\nYou can install the latest version of a package by specifying a package's name:\n\n.. code-block:: bash\n\n  (tutorial-env) $ python -m pip install novas\n  Collecting novas\n    Downloading novas-3.1.1.3.tar.gz (136kB)\n  Installing collected packages: novas\n    Running setup.py install for novas\n  Successfully installed novas-3.1.1.3\n\nYou can also install a specific version of a package by giving the\npackage name  followed by ``==`` and the version number:\n\n.. code-block:: bash"
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::189",
+      "score": 0.0,
+      "text": "ck exit - you could do this if you don't need the handler any more.\n\nTo illustrate how it works, we can add the following block of code to the\nabove::\n\n    if __name__ == '__main__':\n        logger = logging.getLogger('foo')\n        logger.addHandler(logging.StreamHandler())\n        logger.setLevel(logging.INFO)\n        logger.info('1. This should appear just once on stderr.')\n        logger.debug('2. This should not appear.')\n        with LoggingContext(logger, level=logging.DEBUG):\n            logger.debug('3. This should appear once on stderr.')\n        logger.debug('4. This should not appear.')\n        h = logging.StreamHandler(sys.stdout)\n        with LoggingContext(logger, level=logging.DEBUG, handler=h, close=True):\n            logger.debug('5. This should appear twice - once on stderr and once on stdout.')\n        logger.info('6. This should appear just once on stderr.')\n        logger.debug('7. This should not appear.')"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::19",
+      "score": 0.0,
+      "text": "(the resource kind is plural) defines a list of network endpoints, typically\nreferenced by a Service to define which Pods the traffic can be sent to.\n\nThe EndpointSlice API is the recommended replacement for Endpoints.\n\n#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints\nobject. When there are over 1000 backing endpoints for a Service, Kubernetes\ntruncates the data in the Endpoints object. Because a Service can be linked\nwith more than one EndpointSlice, the 1000 backing endpoint limit only\naffects the legacy Endpoints API."
+    }
+  ],
+  "answer": "On Windows machines where you have installed Python from the Microsoft Store, the `python3.12` command will be available. If you have the py.exe launcher installed, you can use the `py` command.",
+  "prompt_sha256": "8cfc6394a6fb6888ce843fdf75b816549e0abfc42f273b111c337b96f3014606",
+  "timings_s": {
+    "retrieve": 0.75,
+    "generate": 22.66
+  }
+}

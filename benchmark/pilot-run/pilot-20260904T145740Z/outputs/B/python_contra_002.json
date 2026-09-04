@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_contra_002",
+  "question": "Which Python version does venv install into a new virtual environment?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::17",
+      "score": 0.81377,
+      "text": "ed\n:mod:`venv`.  :mod:`venv` will install the Python version from which"
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::17",
+      "score": 0.76387,
+      "text": "ed\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of"
+    },
+    {
+      "id": "python/tutorial/venv.rst::24",
+      "score": 0.7512,
+      "text": "A common directory location for a virtual environment is ``.venv``."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::24",
+      "score": 0.7512,
+      "text": "A common directory location for a virtual environment is ``.venv``."
+    },
+    {
+      "id": "python/tutorial/venv.rst::0",
+      "score": 0.72889,
+      "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************"
+    }
+  ],
+  "answer": "The provided context does not specify which Python version :mod:`venv` installs into a new virtual environment. It only indicates that :mod:`venv` will install the most recent version of Python from which it is run, but does not give a definitive answer for all cases. Therefore, based on the given information, the specific version cannot be determined.",
+  "prompt_sha256": "b9ca2a13338aaccacc2e90054a1f9895deffd5598313b6c7094b29bc428d48c3",
+  "timings_s": {
+    "retrieve": 7.62,
+    "generate": 14.44
+  }
+}

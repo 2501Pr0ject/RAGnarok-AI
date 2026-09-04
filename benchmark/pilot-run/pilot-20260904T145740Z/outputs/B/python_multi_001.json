@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_multi_001",
+  "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/datastructures.rst::48",
+      "score": 0.72332,
+      "text": "It is also possible to use a list as a queue, where the first element added is"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::47",
+      "score": 0.71856,
+      "text": ".. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::182",
+      "score": 0.69887,
+      "text": "You can also use `list` directly instead of `List[str]` (or `list[str]` in Python 3.9+):\n\n=== \"Python 3.9+\""
+    },
+    {
+      "id": "python/howto/sorting.rst::69",
+      "score": 0.69431,
+      "text": "used in Python\ndoes multiple sorts efficiently because it can take advantage of any ordering\nalready present in a dataset."
+    },
+    {
+      "id": "python/howto/enum.rst::301",
+      "score": 0.68965,
+      "text": "- ``_order_`` -- used in Python 2/3 code to ensure member order is consistent"
+    }
+  ],
+  "answer": "The provided context does not contain information about using lists as stacks or queues. Therefore, the necessary details to answer the question are not present in the given documentation.",
+  "prompt_sha256": "fd0298236ed0af96620601a4e221ce079f67f3cd589de407104839b3ae33a7c3",
+  "timings_s": {
+    "retrieve": 7.62,
+    "generate": 7.76
+  }
+}

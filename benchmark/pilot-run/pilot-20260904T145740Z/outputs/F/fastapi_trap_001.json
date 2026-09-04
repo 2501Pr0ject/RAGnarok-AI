@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "fastapi_trap_001",
+  "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::52",
+      "score": 0.0,
+      "text": "later decide to move your database into your cluster, you\ncan start its Pods, add appropriate selectors or endpoints, and change the\nService's `type`.\n\n{{< caution >}}\nYou may have trouble using ExternalName for some common protocols, including HTTP and HTTPS.\nIf you use ExternalName then the hostname used by clients inside your cluster is different from\nthe name that the ExternalName references.\n\nFor protocols that use hostnames this difference may lead to errors or unexpected responses.\nHTTP requests will have a `Host:` header that the origin server does not recognize;\nTLS servers will not be able to provide a certificate matching the hostname that the client connected to.\n{{< /caution >}}\n\n## Headless Services\n\nSometimes you don't need load-balancing and a single Service IP.  In\nthis case, you can create what are termed _headless Services_, by explicitly\nspecifying `\"None\"` for the cluster IP address (`.spec.clusterIP`)."
+    },
+    {
+      "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::17",
+      "score": 0.0,
+      "text": "a dependent service.\n\n#### Long syntax\n\nThe long form syntax enables the configuration of additional fields that can't be\nexpressed in the short form.\n\n- `restart`: When set to `true` Compose restarts this service after it updates the dependency service.\n  This applies to an explicit restart controlled by a Compose operation, and excludes automated restart by the container runtime\n  after the container dies. Introduced in Docker Compose version [2.17.0](/compose/release-notes.md#2170).\n\n- `condition`: Sets the condition under which dependency is considered satisfied\n  - `service_started`: An equivalent of the short syntax described above\n  - `service_healthy`: Specifies that a dependency is expected to be \"healthy\"\n    (as indicated by [healthcheck](#healthcheck)) before starting a dependent\n    service.\n  - `service_completed_successfully`: Specifies that a dependency is expected to run\n    to successful completion before starting a dependent service."
+    },
+    {
+      "id": "docker/manuals/engine/network/drivers/overlay.md::11",
+      "score": 0.0,
+      "text": "rm join --token <TOKEN> \\\n     --advertise-addr <IP-ADDRESS-OF-WORKER-1> \\\n     <IP-ADDRESS-OF-MANAGER>:2377\n   ```\n\n3. On `worker-2`, join the swarm:\n\n   ```console\n   $ docker swarm join --token <TOKEN> \\\n     --advertise-addr <IP-ADDRESS-OF-WORKER-2> \\\n     <IP-ADDRESS-OF-MANAGER>:2377\n   ```\n\n4. On `manager`, list all nodes:\n\n   ```console\n   $ docker node ls\n\n   ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS\n   d68ace5iraw6whp7llvgjpu48 *   ip-172-31-34-146    Ready               Active              Leader\n   nvp5rwavvb8lhdggo8fcf7plg     ip-172-31-35-151    Ready               Active\n   ouvx2l7qfcxisoyms8mtkgahw     ip-172-31-36-89     Ready               Active\n   ```\n\n   Filter by role if needed:\n\n   ```console\n   $ docker node ls --filter role=manager\n   $ docker node ls --filter role=worker\n   ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/job.md::88",
+      "score": 0.0,
+      "text": "OnFailure` or `Never`.\n\n{{< note >}}\nIf `RestartPolicy` is not set, the default value is `Always`.\n{{< /note >}}\n\n### Single Job starts controller Pod\n\nAnother pattern is for a single Job to create a Pod which then creates other Pods, acting as a sort\nof custom controller for those Pods. This allows the most flexibility, but may be somewhat\ncomplicated to get started with and offers less integration with Kubernetes.\n\nAn advantage of this approach is that the overall process gets the completion guarantee of a Job\nobject, but maintains complete control over what Pods are created and how work is assigned to them.\n\n## {{% heading \"whatsnext\" %}}"
+    },
+    {
+      "id": "fastapi/tutorial/path-params.md::11",
+      "score": 0.0,
+      "text": "/`) between `files` and `home`.\n\n///\n\n## Recap { #recap }\n\nWith **FastAPI**, by using short, intuitive and standard Python type declarations, you get:\n\n* Editor support: error checks, autocompletion, etc.\n* Data \"<dfn title=\"converting the string that comes from an HTTP request into Python data\">parsing</dfn>\"\n* Data validation\n* API annotation and automatic documentation\n\nAnd you only have to declare them once.\n\nThat's probably the main visible advantage of **FastAPI** compared to alternative frameworks (apart from the raw performance)."
+    }
+  ],
+  "answer": "The information provided in the context does not contain an answer to the question about why a query parameter stays required even after being given a default value in FastAPI. Therefore, based on the given documentation, this information is not present.",
+  "prompt_sha256": "19139237896d82c0660343774ae4e4922d21d1831654af5bdf151fb0af9ca7a5",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 25.18
+  }
+}

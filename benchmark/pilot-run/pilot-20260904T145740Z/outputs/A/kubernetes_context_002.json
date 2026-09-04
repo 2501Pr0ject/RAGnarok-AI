@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "kubernetes_context_002",
+  "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::16",
+      "score": 0.75384,
+      "text": "ner, though\nthe Pod is allowed to start.\n\n## Immutable ConfigMaps {#configmap-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nThe Kubernetes feature _Immutable Secrets and ConfigMaps_ provides an option to set\nindividual Secrets and ConfigMaps as immutable. For clusters that extensively use ConfigMaps\n(at least tens of thousands of unique ConfigMap to Pod mounts), preventing changes to their\ndata has the following advantages:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- improves performance of your cluster by significantly reducing load on kube-apiserver, by\n  closing watches for ConfigMaps marked as immutable.\n\nYou can create an immutable ConfigMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::17",
+      "score": 0.70991,
+      "text": "igMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```\n\nOnce a ConfigMap is marked as immutable, it is _not_ possible to revert this change\nnor to mutate the contents of the `data` or the `binaryData` field. You can\nonly delete and recreate the ConfigMap. Because existing Pods maintain a mount point\nto the deleted ConfigMap, it is recommended to recreate these pods.\n\n## {{% heading \"whatsnext\" %}}\n\n* Read about [Secrets](/docs/concepts/configuration/secret/).\n* Read [Configure a Pod to Use a ConfigMap](/docs/tasks/configure-pod-container/configure-pod-configmap/).\n* Read about [changing a ConfigMap (or any other Kubernetes object)](/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/)\n* Read [The Twelve-Factor App](https://12factor.net/) to understand the motivation for\n  separating code from configuration."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::41",
+      "score": 0.70676,
+      "text": "p text=\"static Pods\" term_id=\"static-pod\" >}}.\n\n## Immutable Secrets {#secret-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nKubernetes lets you mark specific Secrets (and ConfigMaps) as _immutable_.\nPreventing changes to the data of an existing Secret has the following benefits:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- (for clusters that extensively use Secrets - at least tens of thousands of unique Secret\n  to Pod mounts), switching to immutable Secrets improves the performance of your cluster\n  by significantly reducing load on kube-apiserver. The kubelet does not need to maintain\n  a [watch] on any Secrets that are marked as immutable.\n\n### Marking a Secret as immutable {#secret-immutable-create}\n\nYou can create an immutable Secret by setting the `immutable` field to `true`. For example,\n\n```yaml\napiVersion: v1\nkind: Secret\nmetadata: ...\ndata: ...\nimmutable: true\n```"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::3",
+      "score": 0.67134,
+      "text": "a` field must consist of\nalphanumeric characters, `-`, `_` or `.`. The keys stored in `data` must not\noverlap with the keys in the `binaryData` field.\n\nStarting from v1.19, you can add an `immutable` field to a ConfigMap\ndefinition to create an [immutable ConfigMap](#configmap-immutable).\n\n## ConfigMaps and Pods\n\nYou can write a Pod `spec` that refers to a ConfigMap and configures the container(s)\nin that Pod based on the data in the ConfigMap. The Pod and the ConfigMap must be in\nthe same {{< glossary_tooltip text=\"namespace\" term_id=\"namespace\" >}}.\n\n{{< note >}}\nThe `spec` of a {{< glossary_tooltip text=\"static Pod\" term_id=\"static-pod\" >}} cannot refer to a ConfigMap\nor any other API objects.\n{{< /note >}}\n\nHere's an example ConfigMap that has some keys with single values,\nand other keys where the value looks like a fragment of a configuration\nformat."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::42",
+      "score": 0.66702,
+      "text": "table Secret by setting the `immutable` field to `true`. For example,\n\n```yaml\napiVersion: v1\nkind: Secret\nmetadata: ...\ndata: ...\nimmutable: true\n```\n\nYou can also update any existing mutable Secret to make it immutable.\n\n{{< note >}}\nOnce a Secret or ConfigMap is marked as immutable, it is _not_ possible to revert this change\nnor to mutate the contents of the `data` field. You can only delete and recreate the Secret.\nExisting Pods maintain a mount point to the deleted Secret - it is recommended to recreate\nthese pods.\n{{< /note >}}\n\n## Information security for Secrets\n\nAlthough ConfigMap and Secret work similarly, Kubernetes applies some additional\nprotection for Secret objects."
+    }
+  ],
+  "answer": "By marking a Kubernetes ConfigMap as immutable, you gain the following:\n\n- Protection from accidental (or unwanted) updates that could cause application outages.\n- Improved performance of your cluster by significantly reducing load on kube-apiserver, especially for clusters that extensively use ConfigMaps (at least tens of thousands of unique ConfigMap to Pod mounts).",
+  "prompt_sha256": "60e61fa68211bbe4697e9aba4d7fa03837c887e5a20f41fefcedcfa7cc3b224f",
+  "timings_s": {
+    "retrieve": 0.91,
+    "generate": 51.46
+  }
+}

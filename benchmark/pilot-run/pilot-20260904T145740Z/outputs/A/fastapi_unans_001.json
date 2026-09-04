@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "fastapi_unans_001",
+  "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/index.md::0",
+      "score": 0.612,
+      "text": "# Tutorial - User Guide { #tutorial-user-guide }\n\nThis tutorial shows you how to use **FastAPI** with most of its features, step by step.\n\nEach section gradually builds on the previous ones, but it's structured to separate topics, so that you can go directly to any specific one to solve your specific API needs.\n\nIt is also built to work as a future reference so you can come back and see exactly what you need.\n\n## Run the code { #run-the-code }\n\nAll the code blocks can be copied and used directly (they are actually tested Python files).\n\nTo run any of the examples, copy the code to a file `main.py`, and start `fastapi dev` with `uv run`:\n\n<div class=\"termy\">\n\n```console\n$ <font color=\"#4E9A06\">uv run fastapi</font> dev\n\n  <span style=\"background-color:#009485\"><font color=\"#D3D7CF\"> FastAPI </font></span>  Starting development server \ud83d\ude80"
+    },
+    {
+      "id": "fastapi/tutorial/index.md::7",
+      "score": 0.60919,
+      "text": "deploy to [FastAPI Cloud](https://fastapicloud.com).\n\nIf you don't want to have those optional dependencies, you can instead install `uv add fastapi`.\n\nIf you want to install the standard dependencies but without the `fastapi-cloud-cli`, you can install with `uv add \"fastapi[standard-no-fastapi-cloud-cli]\"`.\n\n///\n\n/// details | Using `pip` instead\n\nIf you prefer to manage a virtual environment and packages manually, create and activate a virtual environment and then install FastAPI with `pip install \"fastapi[standard]\"`.\n\nRead the [Virtual Environments guide](https://tiangolo.com/guides/virtual-environments/) for the detailed steps.\n\n///\n\n## AI Agent Skills { #ai-agent-skills }\n\nFastAPI includes an official skill for AI coding agents. It is bundled with the package, so its guidance stays aligned with the version of FastAPI installed in your project and updates when you update FastAPI."
+    },
+    {
+      "id": "fastapi/tutorial/sql-databases.md::9",
+      "score": 0.60463,
+      "text": "console\n$ uv run fastapi dev\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\n```\n\n</div>\n\nThen go to the `/docs` UI, you will see that **FastAPI** is using these **models** to **document** the API, and it will use them to **serialize** and **validate** the data too.\n\n<div class=\"screenshot\">\n<img src=\"/img/tutorial/sql-databases/image01.png\">\n</div>\n\n## Update the App with Multiple Models { #update-the-app-with-multiple-models }\n\nNow let's **refactor** this app a bit to increase **security** and **versatility**.\n\nIf you check the previous app, in the UI you can see that, up to now, it lets the client decide the `id` of the `Hero` to create. \ud83d\ude31\n\nWe shouldn't let that happen, they could overwrite an `id` we already have assigned in the DB. Deciding the `id` should be done by the **backend** or the **database**, **not by the client**."
+    },
+    {
+      "id": "fastapi/tutorial/index.md::6",
+      "score": 0.60424,
+      "text": "e new project directory before adding FastAPI.\n\n`uv` will use a compatible Python version already installed on your system, or download one if needed.\n\nWhen you run `uv add`, it selects compatible versions of FastAPI and all the packages FastAPI depends on. It records the exact versions in `uv.lock`, making it possible to install the same package versions later on another computer or when deploying the application.\n\nCreating or updating this file is called [**locking** the project dependencies](https://docs.astral.sh/uv/concepts/projects/sync/). `uv` does this automatically when you add a package.\n\n///\n\n/// details | FastAPI installation options\n\nWhen you install with `uv add \"fastapi[standard]\"` it comes with some default optional standard dependencies, including `fastapi-cloud-cli`, which allows you to deploy to [FastAPI Cloud](https://fastapicloud.com).\n\nIf you don't want to have those optional dependencies, you can instead install `uv add fastapi`."
+    },
+    {
+      "id": "fastapi/tutorial/first-steps.md::3",
+      "score": 0.59506,
+      "text": "07166\"><font color=\"#D3D7CF\"> tip </font></span>  Running in development mode, for production use:\n             <b>fastapi run</b>\n\n             Logs:\n\n     <span style=\"background-color:#007166\"><font color=\"#D3D7CF\"> INFO </font></span>  Will watch for changes in these directories:\n             <b>[</b><font color=\"#4E9A06\">&apos;/home/user/code/awesomeapp&apos;</font><b>]</b>\n     <span style=\"background-color:#007166\"><font color=\"#D3D7CF\"> INFO </font></span>  Uvicorn running on <font color=\"#729FCF\"><u style=\"text-decoration-style:solid\">http://127.0.0.1:8000</u></font> <b>(</b>Press CTRL+C\n             to quit<b>)</b>\n     <span style=\"background-color:#007166\"><font color=\"#D3D7CF\"> INFO </font></span>  Started reloader process <b>[</b><font color=\"#34E2E2\"><b>383138</b></font><b>]</b> using WatchFiles\n     <span style=\"background-color:#007166\"><font color=\"#D3D7CF\"> INFO </font></span>  Started server process <b>[</b><font color=\"#34E2E2\"><b>383153</b></font><b>]</b>"
+    }
+  ],
+  "answer": "The provided context does not contain information about the number of Uvicorn workers recommended for production.",
+  "prompt_sha256": "f2112dd41763b8515b5e08437e6108db4a9c49e0ef5a1518f52dbe096a581a35",
+  "timings_s": {
+    "retrieve": 3.2,
+    "generate": 36.11
+  }
+}

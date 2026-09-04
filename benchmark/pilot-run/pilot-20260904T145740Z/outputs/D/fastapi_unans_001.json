@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "fastapi_unans_001",
+  "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/index.md::0",
+      "score": 0.612,
+      "text": "# Tutorial - User Guide { #tutorial-user-guide }\n\nThis tutorial shows you how to use **FastAPI** with most of its features, step by step.\n\nEach section gradually builds on the previous ones, but it's structured to separate topics, so that you can go directly to any specific one to solve your specific API needs.\n\nIt is also built to work as a future reference so you can come back and see exactly what you need.\n\n## Run the code { #run-the-code }\n\nAll the code blocks can be copied and used directly (they are actually tested Python files).\n\nTo run any of the examples, copy the code to a file `main.py`, and start `fastapi dev` with `uv run`:\n\n<div class=\"termy\">\n\n```console\n$ <font color=\"#4E9A06\">uv run fastapi</font> dev\n\n  <span style=\"background-color:#009485\"><font color=\"#D3D7CF\"> FastAPI </font></span>  Starting development server \ud83d\ude80"
+    }
+  ],
+  "answer": "The provided context does not contain information about the number of Uvicorn workers recommended for production use by the FastAPI documentation.",
+  "prompt_sha256": "445de51d02c0d23698b06ca2d72722cd60a971e73a7f0439b0f0508ca7aa34b3",
+  "timings_s": {
+    "retrieve": 0.56,
+    "generate": 2.98
+  }
+}

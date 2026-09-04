@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_contra_001",
+  "question": "On Windows, what command activates a virtual environment created with venv?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::28",
+      "score": 0.81425,
+      "text": "Once you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate"
+    },
+    {
+      "id": "python/tutorial/venv.rst::24",
+      "score": 0.81038,
+      "text": "A common directory location for a virtual environment is ``.venv``."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::24",
+      "score": 0.81038,
+      "text": "A common directory location for a virtual environment is ``.venv``."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::28",
+      "score": 0.80458,
+      "text": "Once you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat"
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::320",
+      "score": 0.79219,
+      "text": "log files, and a :file:`venv` subdirectory to contain a virtual environment"
+    }
+  ],
+  "answer": "On Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat",
+  "prompt_sha256": "66bc594a151738c4097ba33a23343a45e3f3c4e037342673bf420af42d272ef4",
+  "timings_s": {
+    "retrieve": 9.06,
+    "generate": 3.38
+  }
+}

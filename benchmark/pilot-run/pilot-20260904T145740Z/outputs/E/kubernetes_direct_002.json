@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_direct_002",
+  "question": "What is the maximum amount of data a Kubernetes ConfigMap can hold?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::1",
+      "score": 0.71177,
+      "text": ".\n\n\n\n<!-- body -->\n\n## Kubernetes default limits\n\nThe Kubernetes scheduler has default limits on the number of volumes\nthat can be attached to a Node:\n\n<table>\n  <tr><th>Cloud service</th><th>Maximum volumes per Node</th></tr>\n  <tr><td><a href=\"https://aws.amazon.com/ebs/\">Amazon Elastic Block Store (EBS)</a></td><td>39</td></tr>\n  <tr><td><a href=\"https://cloud.google.com/persistent-disk/\">Google Persistent Disk</a></td><td>16</td></tr>\n  <tr><td><a href=\"https://azure.microsoft.com/en-us/services/storage/main-disks/\">Microsoft Azure Disk Storage</a></td><td>16</td></tr>\n</table>\n\n## Dynamic volume limits\n\n{{< feature-state state=\"stable\" for_k8s_version=\"v1.17\" >}}\n\nDynamic volume limits are supported for following volume types.\n\n- Amazon EBS\n- Google Persistent Disk\n- Azure Disk\n- CSI\n\nFor volumes managed by in-tree volume plugins, Kubernetes automatically determines the Node\ntype and enforces the appropriate maximum number of volumes for the node. For example:"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/manage-resources-containers.md::41",
+      "score": 0.70255,
+      "text": "Memory Limits\n  ------------    ----------    ---------------    -------------\n  680m (34%)      400m (20%)    920Mi (11%)        1070Mi (13%)\n```\n\nIn the preceding output, you can see that if a Pod requests more than 1.120 CPUs\nor more than 6.23Gi of memory, that Pod will not fit on the node.\n\nBy looking at the \u201cPods\u201d section, you can see which Pods are taking up space on\nthe node.\n\nThe amount of resources available to Pods is less than the node capacity because\nsystem daemons use a portion of the available resources. Within the Kubernetes API,\neach Node has a `.status.allocatable` field\n(see [NodeStatus](/docs/reference/kubernetes-api/cluster-resources/node-v1/#NodeStatus)\nfor details)."
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::2",
+      "score": 0.70122,
+      "text": "ee volume plugins, Kubernetes automatically determines the Node\ntype and enforces the appropriate maximum number of volumes for the node. For example:\n\n* On\n<a href=\"https://cloud.google.com/compute/\">Google Compute Engine</a>,\nup to 127 volumes can be attached to a node, [depending on the node\ntype](https://cloud.google.com/compute/docs/disks/#pdnumberlimits).\n\n* For Amazon EBS disks on M5,C5,R5,T3 and Z1D instance types, Kubernetes allows only 25\nvolumes to be attached to a Node. For other instance types on\n<a href=\"https://aws.amazon.com/ec2/\">Amazon Elastic Compute Cloud (EC2)</a>,\nKubernetes allows 39 volumes to be attached to a Node.\n\n* On Azure, up to 64 disks can be attached to a node, depending on the node type. For more details, refer to [Sizes for virtual machines in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-condition.md::18",
+      "score": 0.0,
+      "text": "t meet the Kubernetes [label key format](/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).\n\n### Status for Pod readiness\n\nTo set these `status.conditions` for the Pod, applications and\n{{< glossary_tooltip term_id=\"operator-pattern\" text=\"operators\">}} should use\nthe `PATCH` action on the Pod's status subresource. You can use `kubectl patch`\nwith `--subresource=status`, or a [Kubernetes client library](/docs/reference/using-api/client-libraries/) to write\ncode that sets custom Pod conditions for Pod readiness.\n\nFor a Pod that uses custom conditions, that Pod is evaluated to be ready **only** when both the following statements apply:\n\n- All containers in the Pod are ready.\n- All conditions specified in `readinessGates` are `True`.\n\nWhen a Pod's containers are Ready but at least one custom condition is missing or `False`,\nthe kubelet sets the Pod's `Ready` condition to `status: \"False\"` with `reason: ReadinessGatesNotReady`.\n\n## {{% heading \"whatsnext\" %}}"
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/node-declared-features.md::6",
+      "score": 0.0,
+      "text": "lContainersOnContainerExits\n```\n\nA Pod requires this feature if one of its containers specifies a restart rule\nwith the `RestartAllContainers` action:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: example-pod\nspec:\n  containers:\n  - name: main\n    image: registry.k8s.io/busybox:1.27.2\n    restartPolicy: Never     # Container restart policy must be specified if rules are specified\n    restartPolicyRules:      # Restart the whole Pod in place on exit code 42\n    - action: RestartAllContainers\n      exitCodes:\n        operator: In\n        values: [42]\n```\n\nWhen scheduling this Pod, the kube-scheduler only considers nodes that list\n`RestartAllContainersOnContainerExits` in their `.status.declaredFeatures`.\nIn a cluster where only some nodes have that feature gate enabled (for\nexample, part way through a cluster upgrade), this prevents the Pod from being\nassigned to a node whose kubelet would ignore the restart rule."
+    }
+  ],
+  "answer": "The information provided in the context does not contain details about the maximum amount of data a Kubernetes ConfigMap can hold.",
+  "prompt_sha256": "c2f70b9e8cb011b6f02180254d7518a7a15b59ee8ed9c222ec4af6ad70f5ba87",
+  "timings_s": {
+    "retrieve": 1.99,
+    "generate": 23.2
+  }
+}

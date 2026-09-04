@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "fastapi_direct_001",
+  "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/path-params.md::27",
+      "score": 0.7748,
+      "text": "d) standard, there are many compatible tools.\n\nBecause of this, **FastAPI** itself provides an alternative API documentation (us"
+    },
+    {
+      "id": "fastapi/tutorial/dependencies/index.md::93",
+      "score": 0.76373,
+      "text": "**FastAPI** will take care of adding it all to the OpenAPI schema, so that it is shown in the interactive documentation system"
+    },
+    {
+      "id": "fastapi/tutorial/schema-extra-example.md::71",
+      "score": 0.75697,
+      "text": "of your API, and then it's used in the docs UI.\n\nIn versions of FastAPI before 0.99.0 (0.99.0 and above use the newer OpenAPI 3."
+    },
+    {
+      "id": "fastapi/tutorial/security/index.md::22",
+      "score": 0.74982,
+      "text": "**FastAPI** is based on **OpenAPI**.\n\nThat's what makes it possible to have multiple automatic interactive documentation inter"
+    },
+    {
+      "id": "fastapi/advanced/websockets.md::15",
+      "score": 0.74526,
+      "text": "**FastAPI** provides the same `WebSocket` directly just as a convenience for you, the developer. But it comes directly from St"
+    }
+  ],
+  "answer": "The provided context does not contain specific information about the URL where the alternative documentation UI is available when running FastAPI locally. Therefore, the information needed to answer the question is not present in the given documentation.",
+  "prompt_sha256": "27e334028e95ff1d648341bc01e8d7ed570d90f41e619137274bf11eba3849ac",
+  "timings_s": {
+    "retrieve": 7.6,
+    "generate": 9.75
+  }
+}

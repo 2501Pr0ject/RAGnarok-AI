@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_multi_001",
+  "question": "What is the difference between Docker volumes and bind mounts, and why are volumes the recommended option for persisting container data?",
+  "retrieved": [
+    {
+      "id": "docker/get-started/docker-concepts/running-containers/sharing-local-files.md::2",
+      "score": 0.88594,
+      "text": "storage options for persisting data and sharing files between the host machine and containers: volumes and bind mounts.\n\n### Volume versus bind mounts\n\nIf you want to ensure that data generated or modified inside the container persists even after the container stops running, you would opt for a volume. See [Persisting container data](/get-started/docker-concepts/running-containers/persisting-container-data/) to learn more about volumes and their use cases.\n\nIf you have specific files or directories on your host system that you want to directly share with your container, like configuration files or development code, then you would use a bind mount. It's like opening a direct portal between your host and container for sharing. Bind mounts are ideal for development environments where real-time file access and sharing between the host and container are crucial.\n\n### Sharing files between a host and container"
+    }
+  ],
+  "answer": "The difference between Docker volumes and bind mounts lies in their use cases and how they handle file sharing between the host machine and containers.\n\n- **Volumes** are designed to ensure that data generated or modified inside a container persists even after the container stops running. They provide a way for multiple containers to share data, and they are managed by Docker, which means you don't have to worry about managing the underlying storage on your host system. Volumes are recommended for persisting container data because they offer better isolation and portability.\n\n- **Bind mounts** allow you to directly share specific files or directories from the host system with a container. This is useful in development environments where real-time file access and sharing between the host and container are crucial. However, bind mounts do not provide the same level of isolation as volumes since they use the host's filesystem.\n\nVolumes are recommended for persisting container data because they manage the storage independently from the host system, ensuring that data remains safe even if the host or other containers change.",
+  "prompt_sha256": "bfa63afc25e2f5a7525b80db794ec60b599546d947c82cb9edb59eabc02b7cf0",
+  "timings_s": {
+    "retrieve": 0.57,
+    "generate": 45.38
+  }
+}

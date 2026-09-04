@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_context_001",
+  "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+  "retrieved": [
+    {
+      "id": "python/howto/sorting.rst::11",
+      "score": 0.71184,
+      "text": "ist, but including it gives two benefits:\n\n* The sort is stable -- if two items have the same key, their order will be\n  preserved in the sorted list.\n\n* The original items do not have to be comparable because the ordering of the\n  decorated tuples will be determined by at most the first two items. So for\n  example the original list could contain complex numbers which cannot be sorted\n  directly.\n\nAnother name for this idiom is\n`Schwartzian transform <https://en.wikipedia.org/wiki/Schwartzian_transform>`_\\,\nafter Randal L. Schwartz, who popularized it among Perl programmers.\n\nNow that Python sorting provides key-functions, this technique is not often needed.\n\nComparison Functions\n====================\n\nUnlike key functions that return an absolute value for sorting, a comparison\nfunction computes the relative ordering for two inputs."
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::4",
+      "score": 0.62747,
+      "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "python/howto/sorting.rst::0",
+      "score": 0.57684,
+      "text": ".. _sortinghowto:\n\nSorting Techniques\n******************\n\n:Author: Andrew Dalke and Raymond Hettinger\n\n\nPython lists have a built-in :meth:`list.sort` method that modifies the list\nin-place.  There is also a :func:`sorted` built-in function that builds a new\nsorted list from an iterable.\n\nIn this document, we explore the various techniques for sorting data using Python.\n\n\nSorting Basics\n==============\n\nA simple ascending sort is very easy: just call the :func:`sorted` function. It\nreturns a new sorted list:\n\n.. doctest::\n\n    >>> sorted([5, 2, 3, 1, 4])\n    [1, 2, 3, 4, 5]\n\nYou can also use the :meth:`list.sort` method. It modifies the list\nin-place (and returns ``None`` to avoid confusion). Usually it's less convenient\nthan :func:`sorted` - but if you don't need the original list, it's slightly\nmore efficient.\n\n.. doctest::\n\n    >>> a = [5, 2, 3, 1, 4]\n    >>> a.sort()\n    >>> a\n    [1, 2, 3, 4, 5]"
+    },
+    {
+      "id": "python/howto/sorting.rst::12",
+      "score": 0.57368,
+      "text": "================\n\nUnlike key functions that return an absolute value for sorting, a comparison\nfunction computes the relative ordering for two inputs.\n\nFor example, a `balance scale\n<https://upload.wikimedia.org/wikipedia/commons/1/17/Balance_\u00e0_tabac_1850.JPG>`_\ncompares two samples giving a relative ordering: lighter, equal, or heavier.\nLikewise, a comparison function such as ``cmp(a, b)`` will return a negative\nvalue for less-than, zero if the inputs are equal, or a positive value for\ngreater-than.\n\nIt is common to encounter comparison functions when translating algorithms from\nother languages.  Also, some libraries provide comparison functions as part of\ntheir API.  For example, :func:`locale.strcoll` is a comparison function.\n\nTo accommodate those situations, Python provides\n:class:`functools.cmp_to_key` to wrap the comparison function\nto make it usable as a key function::\n\n    sorted(words, key=cmp_to_key(strcoll))  # locale-aware sort order\n\nOdds and Ends\n============="
+    },
+    {
+      "id": "python/howto/sorting.rst::16",
+      "score": 0.56197,
+      "text": "= {'john': 'F', 'jane':'A', 'dave': 'C'}\n    >>> sorted(students, key=newgrades.__getitem__)\n    ['jane', 'dave', 'john']\n\nPartial Sorts\n=============\n\nSome applications require only some of the data to be ordered.  The standard\nlibrary provides several tools that do less work than a full sort:\n\n* :func:`min` and :func:`max` return the smallest and largest values,\n  respectively.  These functions make a single pass over the input data and\n  require almost no auxiliary memory.\n\n* :func:`heapq.nsmallest` and :func:`heapq.nlargest` return\n  the *n* smallest and largest values, respectively.  These functions\n  make a single pass over the data keeping only *n* elements in memory\n  at a time.  For values of *n* that are small relative to the number of\n  inputs, these functions make far fewer comparisons than a full sort."
+    }
+  ],
+  "answer": "The information provided in the context does not explicitly state what stability guarantees in Python's sorts or when it is useful. However, based on the given context, we can infer that a stable sort guarantees that if two items have the same key, their original order will be preserved in the sorted list. This is useful when sorting data that has multiple keys and you want to ensure that items with the same primary key retain their relative order from the unsorted list.",
+  "prompt_sha256": "3e71857f01fe554ba2433d2a9548c624db1666e4794d0eff498bce87f10e2829",
+  "timings_s": {
+    "retrieve": 0.37,
+    "generate": 38.01
+  }
+}

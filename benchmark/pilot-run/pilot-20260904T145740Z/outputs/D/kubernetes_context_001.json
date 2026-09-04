@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_context_001",
+  "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::42",
+      "score": 0.76883,
+      "text": "oyment --min=10 --max=15 --cpu-percent=80\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    }
+  ],
+  "answer": "The provided context does not contain information about whether scaling a Kubernetes Deployment triggers a rollout. Therefore, the information is not present in the provided documentation.",
+  "prompt_sha256": "f54865399d37cfd248e9268fd529be9f5aff4d55e5cb9fcd7aab4ffb70985856",
+  "timings_s": {
+    "retrieve": 0.63,
+    "generate": 10.87
+  }
+}

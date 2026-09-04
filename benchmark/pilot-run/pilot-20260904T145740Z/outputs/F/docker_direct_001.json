@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "docker_direct_001",
+  "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/replicationcontroller.md::14",
+      "score": 0.0,
+      "text": "scaling the number of replicas up or down, either manually or by an auto-scaling control agent, by updating the `replicas` field.\n\n### Rolling updates\n\nThe ReplicationController is designed to facilitate rolling updates to a service by replacing pods one-by-one.\n\nAs explained in [#1353](https://issue.k8s.io/1353), the recommended approach is to create a new ReplicationController with 1 replica, scale the new (+1) and old (-1) controllers one by one, and then delete the old controller after it reaches 0 replicas. This predictably updates the set of pods regardless of unexpected failures.\n\nIdeally, the rolling update controller would take application readiness into account, and would ensure that a sufficient number of pods were productively serving at any given time."
+    },
+    {
+      "id": "docker/manuals/engine/daemon/embedded-containerd.md::2",
+      "score": 0.0,
+      "text": "e same time.\n\n## Enable embedded containerd\n\nAdd the `embedded-containerd` feature to the\n[daemon configuration file](./_index.md#configuration-file):\n\n```json\n{\n  \"features\": {\n    \"embedded-containerd\": true\n  }\n}\n```\n\nRestart the Docker daemon:\n\n```console\n$ sudo systemctl restart docker\n```\n\nThe `embedded-containerd` feature takes precedence over a containerd address\nset with the `--containerd` daemon flag. This behavior means that packaged\nservice configurations that set a containerd address don't prevent embedded\ncontainerd from starting.\n\n> [!IMPORTANT]\n>\n> Embedded containerd keeps its state under the Docker data root, in\n> `/var/lib/docker/containerd/daemon` by default. A containerd installed on the\n> host keeps its own state elsewhere, such as `/var/lib/containerd`. If the\n> daemon used such a containerd before, the containers and images stored there\n> aren't available in embedded mode.\n\nYou can also enable the feature when starting `dockerd` manually:"
+    },
+    {
+      "id": "docker/manuals/engine/network/firewall-iptables.md::1",
+      "score": 0.0,
+      "text": "### Docker and iptables chains\n\nTo support bridge and overlay networks, Docker creates the following custom\n`iptables` chains in the `filter` table:\n\n* `DOCKER-USER`\n    * A placeholder for user-defined rules that will be processed before rules\n      in the `DOCKER-FORWARD` and `DOCKER` chains.\n* `DOCKER-FORWARD`\n    * The first stage of processing for Docker's networks. Rules that pass packets\n      that are not related to established connections to the other Docker chains,\n      as well as rules to accept packets that are part of established connections.\n* `DOCKER`, `DOCKER-BRIDGE`, `DOCKER-INTERNAL`\n    * Rules that determine whether a packet that is not part of an established \n      connection should be accepted, based on the port forwarding configuration\n      of running containers.\n* `DOCKER-CT`\n    * Per-bridge connection tracking rules.\n* `DOCKER-INGRESS`\n    * Rules related to Swarm networking."
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/resource-bin-packing.md::6",
+      "score": 0.0,
+      "text": "ation: 0\n            score: 0\n          - utilization: 100\n            score: 10\n        type: RequestedToCapacityRatio\n    name: NodeResourcesFit\n```\n\nIn this example, only the extended resources `intel.com/foo` and `intel.com/bar` are listed in\n`resources`. The `NodeResourcesFit` plugin therefore scores nodes based solely on the utilization\nof those two resources; CPU and memory do not contribute to the score from this plugin. Because the\nconfigured shape assigns a higher score as utilization increases (`score: 0` at `utilization: 0`\nrising to `score: 10` at `utilization: 100`), the scheduler prefers nodes where more of these\nextended resources are already in use, bin-packing requests for them onto as few nodes as possible.\n\nTo include CPU and memory in this scoring strategy, add them to the `resources` list. Note that all\nresources in the list share the same `shape` function, so doing so will apply the same bin-packing\ncurve to those resources as well."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/disruptions.md::13",
+      "score": 0.0,
+      "text": "------------:|\n| pod-a  *terminating* | pod-b *available*   | pod-c *available*  |\n| pod-x  *terminating* |                     |                    |\n\nThe deployment notices that one of the pods is terminating, so it creates a replacement\ncalled `pod-d`.  Since `node-1` is cordoned, it lands on another node.  Something has\nalso created `pod-y` as a replacement for `pod-x`.\n\n(Note: for a StatefulSet, `pod-a`, which would be called something like `pod-0`, would need\nto terminate completely before its replacement, which is also called `pod-0` but has a\ndifferent UID, could be created.  Otherwise, the example applies to a StatefulSet as well.)\n\nNow the cluster is in this state:\n\n|   node-1 *draining*  |       node-2        |       node-3       |\n|:--------------------:|:-------------------:|:------------------:|\n| pod-a  *terminating* | pod-b *available*   | pod-c *available*  |\n| pod-x  *terminating* | pod-d *starting*    | pod-y              |"
+    }
+  ],
+  "answer": "The provided context does not contain information about Docker Compose or build contexts. Therefore, the information needed to answer the question is not present in the provided documentation.",
+  "prompt_sha256": "5ac6d0ddd902e130fcacdec451ac4d5996928d11488481107dca199d42470bcb",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 24.68
+  }
+}

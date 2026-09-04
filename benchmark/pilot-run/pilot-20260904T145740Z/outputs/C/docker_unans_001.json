@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "docker_unans_001",
+  "question": "What are the main changes introduced in Docker Engine version 28?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/_index.md::0",
+      "score": 0.61309,
+      "text": "---\ntitle: Docker Engine\nweight: 10\ndescription: Find a comprehensive overview of Docker Engine, including how to install, storage details, networking, and more\nkeywords: Engine\nparams:\n  sidebar:\n    group: Application development\ngrid:\n- title: Install Docker Engine\n  description: Learn how to install the open source Docker Engine for your distribution.\n  icon: arrow-down-tray\n  link: /engine/install\n- title: Storage\n  description: Use persistent data with Docker containers.\n  icon: circle-stack\n  link: /storage\n- title: Networking\n  description: Manage network connections between containers.\n  icon: server-stack\n  link: /network\n- title: Container logs\n  description: Learn how to view and read container logs.\n  icon: document-text\n  link: /config/containers/logging/\n- title: Prune\n  description: Tidy up unused resources.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon."
+    },
+    {
+      "id": "docker/reference/compose-file/_index.md::2",
+      "score": 0.60614,
+      "text": "features and use cases of Docker Compose](/manuals/compose/intro/features-uses.md) or [try the quickstart guide](/manuals/compose/gettingstarted.md).\n\nThe Compose Specification is the latest and recommended version of the Compose file format. It helps you define a [Compose file](/manuals/compose/intro/compose-application-model.md) which is used to configure your Docker application\u2019s services, networks, volumes, and more.\n\nLegacy versions 2.x and 3.x of the Compose file format were merged into the Compose Specification. It is implemented in versions 1.27.0 and above (also known as Compose v2) of the Docker Compose CLI.\n\nThe Compose Specification on Docker Docs is the Docker Compose implementation. If you wish to implement your own version of the Compose Specification, see the [Compose Specification repository](https://github.com/compose-spec/compose-spec).\n\nUse the following links to navigate key sections of the Compose Specification."
+    },
+    {
+      "id": "docker/manuals/engine/_index.md::1",
+      "score": 0.59304,
+      "text": "rces.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon.\n  icon: adjustments-horizontal\n  link: /config/daemon\n- title: Rootless mode\n  description: Run Docker without root privileges.\n  icon: shield-check\n  link: /engine/security/rootless\n- title: Deprecated features\n  description: Find out what features of Docker Engine you should stop using.\n  icon: folder-minus\n  link: /engine/deprecated/\n- title: Release notes\n  description: Read the release notes for the latest version.\n  icon: document-plus\n  link: /engine/release-notes\naliases:\n- /edge/\n- /engine/ce-ee-node-activate/\n- /engine/migration/\n- /engine/misc/\n- /linux/\n---\n\nDocker Engine is an open source containerization technology for building and\ncontainerizing your applications. Docker Engine acts as a client-server\napplication with:"
+    },
+    {
+      "id": "docker/manuals/engine/install/_index.md::6",
+      "score": 0.57214,
+      "text": "n to find which Ubuntu release\n  corresponds with your derivative version.\n- Some Linux distributions provide a package of Docker Engine through their\n  package repositories. These packages are built and maintained by the Linux\n  distribution's package maintainers and may have differences in configuration\n  or are built from modified source code. Docker isn't involved in releasing these\n  packages and you should report any bugs or issues involving these packages to\n  your Linux distribution's issue tracker.\n\nDocker provides [binaries](binaries.md) for manual installation of Docker Engine.\nThese binaries are statically linked and you can use them on any Linux distribution.\n\n## Release channels\n\nDocker Engine has two types of update channels, **stable** and **test**:\n\n* The **stable** channel gives you the latest versions released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability."
+    },
+    {
+      "id": "docker/get-started/docker-overview.md::1",
+      "score": 0.56562,
+      "text": "roduction/understanding-docker/\n - /engine/understanding-docker/\n - /engine/docker-overview/\n - /get-started/overview/\n - /guides/docker-overview/\n---\n\nDocker is an open platform for developing, shipping, and running applications.\nDocker enables you to separate your applications from your infrastructure so\nyou can deliver software quickly. With Docker, you can manage your infrastructure\nin the same ways you manage your applications. By taking advantage of Docker's\nmethodologies for shipping, testing, and deploying code, you can\nsignificantly reduce the delay between writing code and running it in production.\n\n## The Docker platform"
+    }
+  ],
+  "answer": "The information provided does not contain details about specific changes introduced in Docker Engine version 28. There is no mention of version 28 or any detailed changelog within the given context.",
+  "prompt_sha256": "8818a04b800f5b3111897472fef90f0db3c63a61a7016341e2b0c207c446d414",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 23.9
+  }
+}

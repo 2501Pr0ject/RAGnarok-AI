@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_direct_001",
+  "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::2",
+      "score": 0.80184,
+      "text": "efault` namespace. Instead, make other namespaces and use those.\n{{< /note >}}\n\n## Initial namespaces\n\nKubernetes starts with four initial namespaces:\n\n`default`\n: Kubernetes includes this namespace so that you can start using your new cluster without first creating a namespace.\n\n`kube-node-lease`\n: This namespace holds [Lease](/docs/concepts/architecture/leases/) objects associated with each node. Node leases allow the kubelet to send [heartbeats](/docs/concepts/architecture/nodes/#node-heartbeats) so that the control plane can detect node failure.\n\n`kube-public`\n: This namespace is readable by *all* clients (including those not authenticated). This namespace is mostly reserved for cluster usage, in case that some resources should be visible and readable publicly throughout the whole cluster. The public aspect of this namespace is only a convention, not a requirement.\n\n`kube-system`\n: The namespace for objects created by the Kubernetes system.\n\n## Working with Namespaces"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::1",
+      "score": 0.76396,
+      "text": "few to tens of users, you should not\nneed to create or think about namespaces at all.  Start using namespaces when you\nneed the features they provide.\n\nNamespaces provide a scope for names.  Names of resources need to be unique within a namespace,\nbut not across namespaces. Namespaces cannot be nested inside one another and each Kubernetes \nresource can only be in one namespace.\n\nNamespaces are a way to divide cluster resources between multiple users (via [resource quota](/docs/concepts/policy/resource-quotas/)).\n\nIt is not necessary to use multiple namespaces to separate slightly different\nresources, such as different versions of the same software: use\n{{< glossary_tooltip text=\"labels\" term_id=\"label\" >}} to distinguish\nresources within the same namespace.\n\n{{< note >}}\nFor a production cluster, consider _not_ using the `default` namespace. Instead, make other namespaces and use those.\n{{< /note >}}\n\n## Initial namespaces\n\nKubernetes starts with four initial namespaces:"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::3",
+      "score": 0.74472,
+      "text": "pace is only a convention, not a requirement.\n\n`kube-system`\n: The namespace for objects created by the Kubernetes system.\n\n## Working with Namespaces\n\nCreation and deletion of namespaces are described in the\n[Admin Guide documentation for namespaces](/docs/tasks/administer-cluster/namespaces).\n\n{{< note >}}\nAvoid creating namespaces with the prefix `kube-`, since it is reserved for Kubernetes system namespaces.\n{{< /note >}}\n\n### Viewing namespaces\n\nYou can list the current namespaces in a cluster using:\n\n```shell\nkubectl get namespace\n```\n```\nNAME              STATUS   AGE\ndefault           Active   1d\nkube-node-lease   Active   1d\nkube-public       Active   1d\nkube-system       Active   1d\n```\n\n\n### Setting the namespace for a request\n\nTo set the namespace for a current request, use the `--namespace` flag.\n\nFor example:\n\n```shell\nkubectl run nginx --image=nginx --namespace=<insert-namespace-name-here>\nkubectl get pods --namespace=<insert-namespace-name-here>\n```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/init-containers.md::1",
+      "score": 0.0,
+      "text": "This document is about init containers:\ncontainers that run to completion during Pod initialization.\n\n<!-- body -->\n\n## Understanding init containers\n\nA {{< glossary_tooltip text=\"Pod\" term_id=\"pod\" >}} can have multiple containers\nrunning apps within it, but it can also have one or more init containers, which are run\nbefore the app containers are started.\n\nInit containers are exactly like regular containers, except:\n\n* Init containers always run to completion.\n* Each init container must complete successfully before the next one starts.\n\nIf a Pod's init container fails, the kubelet repeatedly restarts that init container until it succeeds.\nHowever, if the Pod has a `restartPolicy` of Never, and an init container fails during startup of that Pod, Kubernetes treats the overall Pod as failed."
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/system-metrics.md::6",
+      "score": 0.0,
+      "text": "eded even though a metrics can be deprecated in a\npatch release, the reason for that is the metrics deprecation policy runs against the minor release.\n\nThe flag can only take the previous minor version as its value. If you want to show all metrics hidden in the previous release, you can set the `show-hidden-metrics-for-version` flag to the previous version. Using a version that is too old is not allowed because it violates the metrics deprecation policy.\n\nFor example, let's assume metric `A` is deprecated in `1.29`. The version in which metric `A` becomes hidden depends on its stability level:\n* If metric `A` is **ALPHA**, it could be hidden in `1.29`.\n* If metric `A` is **BETA**, it will be hidden in `1.30` at the earliest. If you are upgrading to `1.30` and still need `A`, you must use the command-line flag `--show-hidden-metrics-for-version=1.29`."
+    }
+  ],
+  "answer": "Kubernetes starts with four initial namespaces:\n\n- `default`: Kubernetes includes this namespace so that you can start using your new cluster without first creating a namespace.\n- `kube-node-lease`: This namespace holds Lease objects associated with each node. Node leases allow the kubelet to send heartbeats so that the control plane can detect node failure.\n- `kube-public`: This namespace is readable by all clients (including those not authenticated). This namespace is mostly reserved for cluster usage, in case that some resources should be visible and readable publicly throughout the whole cluster. The public aspect of this namespace is only a convention, not a requirement.\n- `kube-system`: The namespace for objects created by the Kubernetes system.",
+  "prompt_sha256": "ea864e5d92fef4f6973e130323a472505b9f690dbc7a1cb6581000e85a084a2b",
+  "timings_s": {
+    "retrieve": 0.67,
+    "generate": 50.95
+  }
+}

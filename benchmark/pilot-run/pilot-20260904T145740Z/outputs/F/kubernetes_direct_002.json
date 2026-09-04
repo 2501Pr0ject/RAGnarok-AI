@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_direct_002",
+  "question": "What is the maximum amount of data a Kubernetes ConfigMap can hold?",
+  "retrieved": [
+    {
+      "id": "fastapi/advanced/settings@0.100.0.md::16",
+      "score": 0.0,
+      "text": "uest.\n\nBut every time we do:\n\n```Python\nSettings()\n```\n\na new `Settings` object would be created, and at creation it would read the `.env` file again.\n\nIf the dependency function was just like:\n\n```Python\ndef get_settings():\n    return Settings()\n```\n\nwe would create that object for each request, and we would be reading the `.env` file for each request. \u26a0\ufe0f\n\nBut as we are using the `@lru_cache()` decorator on top, the `Settings` object will be created only once, the first time it's called. \u2714\ufe0f\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"1  11\"\n    {!> ../../../docs_src/settings/app03_an_py39/main.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"1  11\"\n    {!> ../../../docs_src/settings/app03_an/main.py!}\n    ```\n\n=== \"Python 3.6+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"1  10\"\n    {!> ../../../docs_src/settings/app03/main.py!}\n    ```"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/network-policies.md::9",
+      "score": 0.0,
+      "text": "pods to\nwhich the policy applies. The example policy selects pods with the label \"role=db\". An empty\n`podSelector` selects all pods in the namespace.\n\n**policyTypes**: Each NetworkPolicy includes a `policyTypes` list which may include either\n`Ingress`, `Egress`, or both. The `policyTypes` field indicates whether or not the given policy\napplies to ingress traffic to selected pod, egress traffic from selected pods, or both. If no\n`policyTypes` are specified on a NetworkPolicy then by default `Ingress` will always be set and\n`Egress` will be set if the NetworkPolicy has any egress rules.\n\n**ingress**: Each NetworkPolicy may include a list of allowed `ingress` rules. Each rule allows\ntraffic which matches both the `from` and `ports` sections. The example policy contains a single\nrule, which matches traffic on a single port, from one of three sources, the first specified via\nan `ipBlock`, the second via a `namespaceSelector` and the third via a `podSelector`."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::47",
+      "score": 0.0,
+      "text": "u to\napply multiple fixes in between pausing and resuming without triggering unnecessary rollouts.\n\n* For example, with a Deployment that was created:\n\n  Get the Deployment details:\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n  ```\n  NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx     3         3         3            3           1m\n  ```\n  Get the rollout status:\n  ```shell\n  kubectl get rs\n  ```\n  The output is similar to this:\n  ```\n  NAME               DESIRED   CURRENT   READY     AGE\n  nginx-2142116321   3         3         3         1m\n  ```\n\n* Pause by running the following command:\n  ```shell\n  kubectl rollout pause deployment/nginx-deployment\n  ```\n\n  The output is similar to this:\n  ```\n  deployment.apps/nginx-deployment paused\n  ```\n\n* Then update the image of the Deployment:\n  ```shell\n  kubectl set image deployment/nginx-deployment nginx=nginx:1.16.1\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::61",
+      "score": 0.0,
+      "text": "counts, requested: pods=1, used: pods=3, limited: pods=2'\n    reason: FailedCreate\n    status: \"True\"\n    type: ReplicaFailure\n  observedGeneration: 3\n  replicas: 2\n  unavailableReplicas: 2\n```\n\nEventually, once the Deployment progress deadline is exceeded, Kubernetes updates the status and the\nreason for the Progressing condition:\n\n```\nConditions:\n  Type            Status  Reason\n  ----            ------  ------\n  Available       True    MinimumReplicasAvailable\n  Progressing     False   ProgressDeadlineExceeded\n  ReplicaFailure  True    FailedCreate\n```\n\nYou can address an issue of insufficient quota by scaling down your Deployment, by scaling down other\ncontrollers you may be running, or by increasing quota in your namespace. If you satisfy the quota\nconditions and the Deployment controller then completes the Deployment rollout, you'll see the\nDeployment's status update with a successful condition (`status: \"True\"` and `reason: NewReplicaSetAvailable`)."
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/_index.md::11",
+      "score": 0.0,
+      "text": "itecture/controller/) in Kubernetes.\n* [kubectl](/docs/reference/kubectl/) and [kubectl commands](/docs/reference/generated/kubectl/kubectl-commands).\n\n[Kubernetes Object Management](/docs/concepts/overview/working-with-objects/object-management/)\nexplains how to use `kubectl` to manage objects.\nYou might need to [install kubectl](/docs/tasks/tools/#kubectl) if you don't already have it available.\n\nTo learn about the Kubernetes API in general, visit:\n\n* [Kubernetes API overview](/docs/reference/using-api/)\n\nTo learn about objects in Kubernetes in more depth, read other pages in this section:\n<!-- Docsy automatically includes a list of pages in the section -->"
+    }
+  ],
+  "answer": "The information provided in the context does not contain details about the maximum amount of data a Kubernetes ConfigMap can hold. Therefore, I cannot answer this question based on the given documentation.",
+  "prompt_sha256": "b6c1f0382d955e1c9a9a3acd27bf83836b0c8c21b3ebfce4a0f5faf55c35ff6d",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 25.2
+  }
+}

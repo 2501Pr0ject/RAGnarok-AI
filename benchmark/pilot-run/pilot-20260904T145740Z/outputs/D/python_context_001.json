@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "python_context_001",
+  "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+  "retrieved": [
+    {
+      "id": "python/howto/sorting.rst::7",
+      "score": 0.75232,
+      "text": "'age'), reverse=True)\n    [('john', 'A', 15), ('jane', 'B', 12), ('dave', 'B', 10)]\n\nSort Stability and Complex Sorts\n================================\n\nSorts are guaranteed to be `stable\n<https://en.wikipedia.org/wiki/Sorting_algorithm#Stability>`_\\. That means that\nwhen multiple records have the same key, their original order is preserved.\n\n.. doctest::\n\n    >>> data = [('red', 1), ('blue', 1), ('red', 2), ('blue', 2)]\n    >>> sorted(data, key=itemgetter(0))\n    [('blue', 1), ('blue', 2), ('red', 1), ('red', 2)]\n\nNotice how the two records for *blue* retain their original order so that\n``('blue', 1)`` is guaranteed to precede ``('blue', 2)``.\n\nThis wonderful property lets you build complex sorts in a series of sorting\nsteps. For example, to sort the student data by descending *grade* and then\nascending *age*, do the *age* sort first and then sort again using *grade*:\n\n.. doctest::"
+    }
+  ],
+  "answer": "Python's sorts are documented as stable. This means that when multiple records have the same key, their original order is preserved.\n\nThis property guarantees that the relative order of records with equal keys is the same in the sorted output as it was in the input.\n\nIt is particularly useful for building complex sorting criteria where you need to sort by multiple keys while preserving the order of items that share the same value on those keys. For example, sorting students first by descending grade and then by ascending age would maintain the original order among students with the same grade.",
+  "prompt_sha256": "b1f00270c4ce0ae227761ef244ec6e3778334c0dbbd130015a0f9d4347bd3217",
+  "timings_s": {
+    "retrieve": 0.56,
+    "generate": 26.16
+  }
+}

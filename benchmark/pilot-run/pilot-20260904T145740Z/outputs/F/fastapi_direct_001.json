@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "fastapi_direct_001",
+  "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+  "retrieved": [
+    {
+      "id": "python/howto/unicode.rst::18",
+      "score": 0.0,
+      "text": "nserts a ``\\uNNNN`` escape sequence) and\n``namereplace`` (inserts a ``\\N{...}`` escape sequence).\n\nThe following example shows the different results::\n\n    >>> u = chr(40960) + 'abcd' + chr(1972)\n    >>> u.encode('utf-8')\n    b'\\xea\\x80\\x80abcd\\xde\\xb4'\n    >>> u.encode('ascii')  #doctest: +NORMALIZE_WHITESPACE\n    Traceback (most recent call last):\n        ...\n    UnicodeEncodeError: 'ascii' codec can't encode character '\\ua000' in\n      position 0: ordinal not in range(128)\n    >>> u.encode('ascii', 'ignore')\n    b'abcd'\n    >>> u.encode('ascii', 'replace')\n    b'?abcd?'\n    >>> u.encode('ascii', 'xmlcharrefreplace')\n    b'&#40960;abcd&#1972;'\n    >>> u.encode('ascii', 'backslashreplace')\n    b'\\\\ua000abcd\\\\u07b4'\n    >>> u.encode('ascii', 'namereplace')\n    b'\\\\N{YI SYLLABLE IT}abcd\\\\u07b4'"
+    },
+    {
+      "id": "fastapi/tutorial/body-fields.md::0",
+      "score": 0.0,
+      "text": "# Body - Fields { #body-fields }\n\nThe same way you can declare additional validation and metadata in *path operation function* parameters with `Query`, `Path` and `Body`, you can declare validation and metadata inside of Pydantic models using Pydantic's `Field`.\n\n## Import `Field` { #import-field }\n\nFirst, you have to import it:\n\n{* ../../docs_src/body_fields/tutorial001_an_py310.py hl[4] *}\n\n\n/// warning\n\nNotice that `Field` is imported directly from `pydantic`, not from `fastapi` as are all the rest (`Query`, `Path`, `Body`, etc).\n\n///\n\n## Declare model attributes { #declare-model-attributes }\n\nYou can then use `Field` with model attributes:\n\n{* ../../docs_src/body_fields/tutorial001_an_py310.py hl[11:14] *}\n\n`Field` works the same way as `Query`, `Path` and `Body`, it has all the same parameters, etc.\n\n/// note | Technical Details"
+    },
+    {
+      "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::41",
+      "score": 0.0,
+      "text": "orms below are equivalent:\n\n```yml\ntest: [\"CMD-SHELL\", \"curl -f http://localhost || exit 1\"]\n```\n\n```yml\ntest: curl -f https://localhost || exit 1\n```\n\n`NONE` disables the healthcheck, and is mostly useful to disable the Healthcheck Dockerfile instruction set by the service's Docker image. Alternatively,\nthe healthcheck set by the image can be disabled by setting `disable: true`:\n\n```yml\nhealthcheck:\n  disable: true\n```\n\n### hostname\n\n`hostname` declares a custom host name to use for the service container. It must be a valid RFC 1123 hostname.\n\n### image\n\n`image` specifies the image to start the container from. `image` must follow the Open Container Specification\n[addressable image format](https://github.com/opencontainers/org/blob/master/docs/docs/introduction/digests.md),\nas `[<registry>/][<project>/]<image>[:<tag>|@<digest>]`."
+    },
+    {
+      "id": "python/howto/logging@v3.10.14.rst::50",
+      "score": 0.0,
+      "text": ".2 behaviour, ``logging.lastResort`` can be set to ``None``.\n\n.. _library-config:\n\nConfiguring Logging for a Library\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nWhen developing a library which uses logging, you should take care to\ndocument how the library uses logging - for example, the names of loggers\nused. Some consideration also needs to be given to its logging configuration.\nIf the using application does not use logging, and library code makes logging\ncalls, then (as described in the previous section) events of severity\n``WARNING`` and greater will be printed to ``sys.stderr``. This is regarded as\nthe best default behaviour."
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::193",
+      "score": 0.0,
+      "text": "* Dispatch to multiple subcommands in separate files, all logging at the same\n  level in a consistent way\n* Make use of simple, minimal configuration\n\nSuppose we have a command-line application whose job is to stop, start or\nrestart some services. This could be organised for the purposes of illustration\nas a file ``app.py`` that is the main script for the application, with individual\ncommands implemented in ``start.py``, ``stop.py`` and ``restart.py``. Suppose\nfurther that we want to control the verbosity of the application via a\ncommand-line argument, defaulting to ``logging.INFO``. Here's one way that\n``app.py`` could be written::\n\n    import argparse\n    import importlib\n    import logging\n    import os\n    import sys"
+    }
+  ],
+  "answer": "The information provided in the context does not contain an answer to the question about the alternative documentation UI for FastAPI when running locally. Therefore, I cannot provide an answer based on the given context alone.",
+  "prompt_sha256": "0f85799e8f51b4b8d30dd9c6851ee42b74a94f73e9d8b1bbdeab8fe6fabb52a6",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 25.61
+  }
+}

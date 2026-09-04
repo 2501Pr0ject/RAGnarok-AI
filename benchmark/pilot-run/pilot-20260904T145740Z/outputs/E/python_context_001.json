@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "python_context_001",
+  "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+  "retrieved": [
+    {
+      "id": "python/howto/sorting.rst::7",
+      "score": 0.75232,
+      "text": "'age'), reverse=True)\n    [('john', 'A', 15), ('jane', 'B', 12), ('dave', 'B', 10)]\n\nSort Stability and Complex Sorts\n================================\n\nSorts are guaranteed to be `stable\n<https://en.wikipedia.org/wiki/Sorting_algorithm#Stability>`_\\. That means that\nwhen multiple records have the same key, their original order is preserved.\n\n.. doctest::\n\n    >>> data = [('red', 1), ('blue', 1), ('red', 2), ('blue', 2)]\n    >>> sorted(data, key=itemgetter(0))\n    [('blue', 1), ('blue', 2), ('red', 1), ('red', 2)]\n\nNotice how the two records for *blue* retain their original order so that\n``('blue', 1)`` is guaranteed to precede ``('blue', 2)``.\n\nThis wonderful property lets you build complex sorts in a series of sorting\nsteps. For example, to sort the student data by descending *grade* and then\nascending *age*, do the *age* sort first and then sort again using *grade*:\n\n.. doctest::"
+    },
+    {
+      "id": "python/howto/sorting.rst::0",
+      "score": 0.74771,
+      "text": ".. _sortinghowto:\n\nSorting Techniques\n******************\n\n:Author: Andrew Dalke and Raymond Hettinger\n\n\nPython lists have a built-in :meth:`list.sort` method that modifies the list\nin-place.  There is also a :func:`sorted` built-in function that builds a new\nsorted list from an iterable.\n\nIn this document, we explore the various techniques for sorting data using Python.\n\n\nSorting Basics\n==============\n\nA simple ascending sort is very easy: just call the :func:`sorted` function. It\nreturns a new sorted list:\n\n.. doctest::\n\n    >>> sorted([5, 2, 3, 1, 4])\n    [1, 2, 3, 4, 5]\n\nYou can also use the :meth:`list.sort` method. It modifies the list\nin-place (and returns ``None`` to avoid confusion). Usually it's less convenient\nthan :func:`sorted` - but if you don't need the original list, it's slightly\nmore efficient.\n\n.. doctest::\n\n    >>> a = [5, 2, 3, 1, 4]\n    >>> a.sort()\n    >>> a\n    [1, 2, 3, 4, 5]"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::4",
+      "score": 0.735,
+      "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "fastapi/tutorial/dependencies/dependencies-with-yield.md::6",
+      "score": 0.0,
+      "text": "Handler](../handling-errors.md#install-custom-exception-handlers).\n\n## Dependencies with `yield` and `except` { #dependencies-with-yield-and-except }\n\nIf you catch an exception using `except` in a dependency with `yield` and you don't raise it again (or raise a new exception), FastAPI won't be able to notice there was an exception, the same way that would happen with regular Python:\n\n{* ../../docs_src/dependencies/tutorial008c_an_py310.py hl[15:16] *}\n\nIn this case, the client will see an *HTTP 500 Internal Server Error* response as it should, given that we are not raising an `HTTPException` or similar, but the server will **not have any logs** or any other indication of what was the error. \ud83d\ude31\n\n### Always `raise` in Dependencies with `yield` and `except` { #always-raise-in-dependencies-with-yield-and-except }\n\nIf you catch an exception in a dependency with `yield`, unless you are raising another `HTTPException` or similar, **you should re-raise the original exception**."
+    },
+    {
+      "id": "kubernetes/concepts/resource-management/resource-managers.md::11",
+      "score": 0.0,
+      "text": "e to show alpha-level options.\n\nYou will still have to enable each option using the `cpuManagerPolicyOptions` field in the\nkubelet configuration file.\n\nFor more detail about the individual options you can configure, read on.\n\n###### `full-pcpus-only`\n\nIf the `full-pcpus-only` policy option is specified, the static policy will always allocate full physical cores.\nBy default, without this option, the static policy allocates CPUs using a topology-aware best-fit allocation.\nOn SMT enabled systems, the policy can allocate individual virtual cores, which correspond to hardware threads.\nThis can lead to different containers sharing the same physical cores; this behaviour in turn contributes\nto the [noisy neighbours problem](https://en.wikipedia.org/wiki/Cloud_computing_issues#Performance_interference_and_noisy_neighbors).\nWith the option enabled, the pod will be admitted by the kubelet only if the CPU request of all its containers\ncan be fulfilled by allocating full physical cores."
+    }
+  ],
+  "answer": "Python's sorts are guaranteed to be stable. This means that when multiple records have the same key, their original order is preserved. This property is useful when you need to perform complex sorts in a series of steps. For example, sorting by one key and then another without disrupting the order of items that have the same value for the first key.",
+  "prompt_sha256": "fcf9696cf067a56aaa1301ac12e609abbf66ebc4b6bdb471079e8cffe8ec5be3",
+  "timings_s": {
+    "retrieve": 0.72,
+    "generate": 33.43
+  }
+}

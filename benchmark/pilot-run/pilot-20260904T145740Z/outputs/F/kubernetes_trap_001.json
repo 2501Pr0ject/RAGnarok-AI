@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_trap_001",
+  "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/extend-kubernetes/_index.md::24",
+      "score": 0.0,
+      "text": "edulers/)\ncan run at the same time.\n\nThis is a significant undertaking, and almost all Kubernetes users find they\ndo not need to modify the scheduler.\n\nYou can control which [scheduling plugins](/docs/reference/scheduling/config/#scheduling-plugins)\nare active, or associate sets of plugins with different named [scheduler profiles](/docs/reference/scheduling/config/#multiple-profiles).\nYou can also write your own plugin that integrates with one or more of the kube-scheduler's\n[extension points](/docs/concepts/scheduling-eviction/scheduling-framework/#extension-points).\n\nFinally, the built in `kube-scheduler` component supports a\n[webhook](https://git.k8s.io/design-proposals-archive/scheduling/scheduler_extender.md)\nthat permits a remote HTTP backend (scheduler extension) to filter and / or prioritize\nthe nodes that the kube-scheduler chooses for a pod."
+    },
+    {
+      "id": "docker/manuals/engine/install/_index.md::1",
+      "score": 0.0,
+      "text": "lation/linux/cruxlinux/\n- /engine/installation/linux/docker-ce/\n- /engine/installation/linux/docker-ee/\n- /engine/installation/linux/docker-ee/oracle/\n- /engine/installation/linux/frugalware/\n- /engine/installation/linux/gentoolinux/\n- /engine/installation/linux/oracle/\n- /engine/installation/linux/other/\n- /engine/installation/oracle/\n- /enterprise/supported-platforms/\n- /install/linux/docker-ee/oracle/\n- /ee/docker-ee/sles/\n- /ee/docker-ee/suse/\n- /engine/installation/linux/docker-ce/sles/\n- /engine/installation/linux/docker-ee/sles/\n- /engine/installation/linux/docker-ee/suse/\n- /engine/installation/linux/sles/\n- /engine/installation/linux/SUSE/\n- /engine/installation/linux/suse/\n- /engine/installation/sles/\n- /engine/installation/SUSE/\n- /install/linux/docker-ce/sles/\n- /install/linux/docker-ee/sles/\n- /install/linux/docker-ee/suse/\n- /install/linux/sles/\n- /installation/sles/\n---"
+    },
+    {
+      "id": "python/howto/logging@v3.10.14.rst::70",
+      "score": 0.0,
+      "text": "ging._srcfile`` to ``None``.             |\n|                                                     | This avoids calling :func:`sys._getframe`, which  |\n|                                                     | may help to speed up your code in environments    |\n|                                                     | like PyPy (which can't speed up code that uses    |\n|                                                     | :func:`sys._getframe`).                           |\n+-----------------------------------------------------+---------------------------------------------------+\n| Threading information.                              | Set ``logging.logThreads`` to ``False``.          |\n+-----------------------------------------------------+---------------------------------------------------+\n| Current process ID (:func:`os.getpid`)              | Set ``logging.logProcesses`` to ``False``.        |"
+    },
+    {
+      "id": "kubernetes/concepts/resource-management/dynamic-resource-allocation/dra-api.md::6",
+      "score": 0.0,
+      "text": "red by their Pods. Kubernetes generates one ResourceClaim for the PodGroup\n  from the specification in the ResourceClaimTemplate. The lifetime of each\n  generated ResourceClaim is bound to the lifetime of the corresponding\n  PodGroup. This requires the\n  [`DRAWorkloadResourceClaims`](/docs/reference/command-line-tools-reference/feature-gates/#DRAWorkloadResourceClaims)\n  feature to be enabled.\n\nWhen you define a workload, you can use\n{{< glossary_tooltip term_id=\"cel\" text=\"Common Expression Language (CEL)\" >}}\nto filter for specific device attributes or capacity. The available parameters\nfor filtering depend on the device and the drivers.\n\nIf you directly reference a specific ResourceClaim in a Pod, that ResourceClaim\nmust already exist in the same namespace as the Pod. If the ResourceClaim\ndoesn't exist in the namespace, the Pod won't schedule. This behavior is similar\nto how a PersistentVolumeClaim must exist in the same namespace as a Pod that\nreferences it."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/replicationcontroller.md::17",
+      "score": 0.0,
+      "text": "you can mess with the ReplicationControllers separately to test things out, monitor the results, etc.\n\n### Using ReplicationControllers with Services\n\nMultiple ReplicationControllers can sit behind a single service, so that, for example, some traffic\ngoes to the old version, and some goes to the new version.\n\nA ReplicationController will never terminate on its own, but it isn't expected to be as long-lived as services. Services may be composed of pods controlled by multiple ReplicationControllers, and it is expected that many ReplicationControllers may be created and destroyed over the lifetime of a service (for instance, to perform an update of pods that run the service). Both services themselves and their clients should remain oblivious to the ReplicationControllers that maintain the pods of the services.\n\n## Writing programs for Replication"
+    }
+  ],
+  "answer": "The provided context does not contain information about updating the label selector of an existing Kubernetes Deployment using a `kubectl` command. Therefore, I cannot answer this question based on the given documentation.",
+  "prompt_sha256": "e8fb1d8b2f8a1c7551cc23492ef652db8881d0320f65c96abeeabe421e1c34d0",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 22.26
+  }
+}

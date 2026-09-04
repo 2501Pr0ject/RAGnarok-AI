@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_context_002",
+  "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/resource-management/pod-level-resource-managers.md::1",
+      "score": 0.0,
+      "text": "els where some containers in a Pod receive exclusive, NUMA-aligned resources,\nwhile others share the remaining resources from a pod-level shared pool.\n\nTo practice setting up `kubelet` resource managers with pod-level resources and\nobserve allocation behaviors hands-on, follow the\n[Use pod-level resources with `kubelet` resource managers](/docs/tutorials/cluster-management/use-pod-level-resource-managers/)\ntutorial.\n\n<!-- body -->\n\nTo understand pod-level resource managers, it is helpful to contrast them with\nthe traditional container-focused model. Previously, `kubelet` resource\nallocations were strictly all or nothing: to receive exclusive NUMA-aligned\nresources for your workload, every container in the Pod had to be Guaranteed\n(specifying requests equal to limits for both CPU and memory).\n\nPod-level resource managers use `.spec.resources` to enable flexible\npartitioning based on the configured Topology Manager scope:"
+    },
+    {
+      "id": "docker/manuals/engine/network/drivers/ipvlan.md::22",
+      "score": 0.0,
+      "text": "ing them isolated to a pair of ToRs (top of rack switches) will reduce hard\nto troubleshoot bridging instabilities. IPvlan L2 modes is well suited for\nisolated VLANs only trunked into a pair of ToRs that can provide a loop-free\nnon-blocking fabric. The next step further is to route at the edge via IPvlan L3\nmode that reduces a failure domain to a local host only.\n\n- L3 mode needs to be on a separate subnet as the default namespace since it\n  requires a netlink route in the default namespace pointing to the IPvlan parent\n  interface.\n- The parent interface used in this example is `eth0` and it is on the subnet\n  `192.168.1.0/24`. Notice the `docker network` is not on the same subnet\n  as `eth0`.\n- Unlike IPvlan l2 modes, different subnets/networks can ping one another as\n  long as they share the same parent interface `-o parent=`."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/windows-networking.md::14",
+      "score": 0.0,
+      "text": "r) notes above. | Windows Server 2019 | Set the following command line argument (assuming version {{< skew currentVersion >}}): ` --enable-dsr=true` |\n| Preserve-Destination | Skips DNAT of service traffic, thereby preserving the virtual IP of the target service in packets reaching the backend Pod. Also disables node-node forwarding. | Windows Server, version 1903 | Set `\"preserve-destination\": \"true\"` in service annotations and enable DSR in kube-proxy. |\n| IPv4/IPv6 dual-stack networking | Native IPv4-to-IPv4 in parallel with IPv6-to-IPv6 communications to, from, and within a cluster | Windows Server 2019 | See [IPv4/IPv6 dual-stack](/docs/concepts/services-networking/dual-stack/#windows-support) |\n| Client IP preservation | Ensures that source IP of incoming ingress traffic gets preserved. Also disables node-node forwarding. |  Windows Server 2019  | Set `service.spec.externalTrafficPolicy` to \"Local\" and enable DSR in kube-proxy |\n{{< /table >}}\n\n## Limitations"
+    },
+    {
+      "id": "docker/get-started/introduction/build-and-push-first-image.md::6",
+      "score": 0.0,
+      "text": "you'd like\n    - **Visibility** - select **Public** to allow others to pull your customized to-do app\n\n4. Select **Create** to create the repository.\n\n\n## Build and push the image\n\nNow that you have a repository, you are ready to build and push your image. An important note is that the image you are building extends the Node image, meaning you don't need to install or configure Node, yarn, etc. You can simply focus on what makes your application unique.\n\n> **What is an image/Dockerfile?**\n>\n> Without going too deep yet, think of a container image as a single package that contains\n> everything needed to run a process. In this case, it will contain a Node environment,\n> the backend code, and the compiled React code. \n>\n> Any machine that runs a container using the image, will then be able to run the application as \n> it was built without needing anything else pre-installed on the machine. \n>\n> A `Dockerfile` is a text-based script that provides the instruction set on how to build"
+    },
+    {
+      "id": "docker/manuals/engine/storage/bind-mounts.md::13",
+      "score": 0.0,
+      "text": "\"Source\": \"/tmp/source/target\",\n        \"Destination\": \"/app\",\n        \"Mode\": \"\",\n        \"RW\": true,\n        \"Propagation\": \"rprivate\"\n    }\n],\n```\n\nThis shows that the mount is a `bind` mount, it shows the correct source and\ndestination, it shows that the mount is read-write, and that the propagation is\nset to `rprivate`.\n\nStop and remove the container:\n\n```console\n$ docker container rm -fv devtest\n```\n\n### Mount into a non-empty directory on the container\n\nIf you bind-mount a directory into a non-empty directory on the container, the\ndirectory's existing contents are obscured by the bind mount. This can be\nbeneficial, such as when you want to test a new version of your application\nwithout building a new image. However, it can also be surprising and this\nbehavior differs from that of [volumes](volumes.md)."
+    }
+  ],
+  "answer": "The information provided in the context does not contain an answer to the question \"What do you gain by marking a Kubernetes ConfigMap as immutable?\" Therefore, the information is not present in the provided documentation.",
+  "prompt_sha256": "a0e4f795cdb4a18344dc727dec1fb0e95ced60dcb81f1f344f8096afb3fd5836",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 29.26
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "fastapi_multi_001",
+  "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::3",
+      "score": 0.65415,
+      "text": "//127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```\n\nor any other case variation (uppercase, first letter in uppercase, etc), your function will see the parameter `short` with a `bool` value of `True`. Otherwise as `False`.\n\n\n## Multiple path and query parameters { #multiple-path-and-query-parameters }\n\nYou can declare multiple path parameters and query parameters at the same time, **FastAPI** knows which is which.\n\nAnd you don't have to declare them in any specific order.\n\nThey will be detected by name:\n\n{* ../../docs_src/query_params/tutorial004_py310.py hl[6,8] *}\n\n## Required query parameters { #required-query-parameters }\n\nWhen you declare a default value for non-path parameters (for now, we have only seen query parameters), then it is not required.\n\nIf you don't want to add a specific value but just make it optional, set the default as `None`."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::3",
+      "score": 0.62305,
+      "text": "_src/query_params_str_validations/tutorial002_an_py310.py hl[9] *}\n\nNotice that the default value is still `None`, so the parameter is still optional.\n\nBut now, having `Query(max_length=50)` inside of `Annotated`, we are telling FastAPI that we want it to have **additional validation** for this value, we want it to have maximum 50 characters. \ud83d\ude0e\n\n/// tip\n\nHere we are using `Query()` because this is a **query parameter**. Later we will see others like `Path()`, `Body()`, `Header()`, and `Cookie()`, that also accept the same arguments as `Query()`.\n\n///\n\nFastAPI will now:\n\n* **Validate** the data making sure that the max length is 50 characters\n* Show a **clear error** for the client when the data is not valid\n* **Document** the parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }"
+    },
+    {
+      "id": "fastapi/tutorial/query-params.md::0",
+      "score": 0.62233,
+      "text": "# Query Parameters { #query-parameters }\n\nWhen you declare other function parameters that are not part of the path parameters, they are automatically interpreted as \"query\" parameters.\n\n{* ../../docs_src/query_params/tutorial001_py310.py hl[9] *}\n\nThe query is the set of key-value pairs that go after the `?` in a URL, separated by `&` characters.\n\nFor example, in the URL:\n\n```\nhttp://127.0.0.1:8000/items/?skip=0&limit=10\n```\n\n...the query parameters are:\n\n* `skip`: with a value of `0`\n* `limit`: with a value of `10`\n\nAs they are part of the URL, they are \"naturally\" strings.\n\nBut when you declare them with Python types (in the example above, as `int`), they are converted to that type and validated against it.\n\nAll the same processes that apply to path parameters also apply to query parameters:\n\n* Editor support (obviously)\n* Data <dfn title=\"converting the string that comes from an HTTP request into Python data\">\"parsing\"</dfn>\n* Data validation\n* Automatic documentation"
+    },
+    {
+      "id": "fastapi/tutorial/body.md::7",
+      "score": 0.62204,
+      "text": "d take the data from the correct place.\n\n{* ../../docs_src/body/tutorial004_py310.py hl[16] *}\n\nThe function parameters will be recognized as follows:\n\n* If the parameter is also declared in the **path**, it will be used as a path parameter.\n* If the parameter is of a **singular type** (like `int`, `float`, `str`, `bool`, etc) it will be interpreted as a **query** parameter.\n* If the parameter is declared to be of the type of a **Pydantic model**, it will be interpreted as a request **body**.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nThe `str | None` is not used by FastAPI to determine that the value is not required, it will know it's not required because it has a default value of `= None`.\n\nBut adding the type annotations will allow your editor to give you better support and detect errors.\n\n///\n\n## Without Pydantic { #without-pydantic }"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.61384,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    }
+  ],
+  "answer": "Path parameters and query parameters differ in declaration and requirement as follows:\n\n- **Path Parameters**: Declared within the route definition's path template. They must be provided when making a request to that endpoint, otherwise, it will result in a 404 Not Found error or similar depending on how the application is structured.\n\n- **Query Parameters**: Declared as function parameters outside of the path template. They are optional and do not need to be included in every request. If they are not provided, FastAPI will use their default values (if specified) or treat them as `None` if no default value is set.",
+  "prompt_sha256": "b20ab922091898b40ba4e04e2732866ca2b3353197bd7d2d73e80275eb7185c8",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 47.64
+  }
+}

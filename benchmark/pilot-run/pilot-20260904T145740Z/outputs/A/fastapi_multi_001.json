@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "fastapi_multi_001",
+  "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::3",
+      "score": 0.79445,
+      "text": "//127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```\n\nor any other case variation (uppercase, first letter in uppercase, etc), your function will see the parameter `short` with a `bool` value of `True`. Otherwise as `False`.\n\n\n## Multiple path and query parameters { #multiple-path-and-query-parameters }\n\nYou can declare multiple path parameters and query parameters at the same time, **FastAPI** knows which is which.\n\nAnd you don't have to declare them in any specific order.\n\nThey will be detected by name:\n\n{* ../../docs_src/query_params/tutorial004_py310.py hl[6,8] *}\n\n## Required query parameters { #required-query-parameters }\n\nWhen you declare a default value for non-path parameters (for now, we have only seen query parameters), then it is not required.\n\nIf you don't want to add a specific value but just make it optional, set the default as `None`."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::5",
+      "score": 0.77999,
+      "text": "parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</abbr>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n!!! tip\n    For new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002.py!}\n    ```"
+    },
+    {
+      "id": "fastapi/tutorial/path-params-numeric-validations.md::0",
+      "score": 0.77734,
+      "text": "# Path Parameters and Numeric Validations { #path-parameters-and-numeric-validations }\n\nIn the same way that you can declare more validations and metadata for query parameters with `Query`, you can declare the same type of validations and metadata for path parameters with `Path`.\n\n## Import `Path` { #import-path }\n\nFirst, import `Path` from `fastapi`, and import `Annotated`:\n\n{* ../../docs_src/path_params_numeric_validations/tutorial001_an_py310.py hl[1,3] *}\n\n/// note\n\nFastAPI added support for `Annotated` (and started recommending it) in version 0.95.0.\n\nIf you have an older version, you would get errors when trying to use `Annotated`.\n\nMake sure you [Upgrade the FastAPI version](../deployment/versions.md#upgrading-the-fastapi-versions) to at least 0.95.1 before using `Annotated`.\n\n///\n\n## Declare metadata { #declare-metadata }\n\nYou can declare all the same parameters as for `Query`.\n\nFor example, to declare a `title` metadata value for the path parameter `item_id` you can type:"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.77222,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    },
+    {
+      "id": "fastapi/tutorial/query-params.md::2",
+      "score": 0.76821,
+      "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+    }
+  ],
+  "answer": "Path parameters and query parameters are declared differently in FastAPI:\n\n- Path parameters are part of the URL path itself. They must be specified when defining the endpoint's path.\n- Query parameters are appended to the URL after a `?` and can include multiple key-value pairs.\n\nRegarding requirements, both can be required or optional:\n\n- To make them optional, set their default value to `None`.\n- If no default is provided, they are considered optional by FastAPI. \n\nFastAPI automatically detects which is which based on name, not position or type annotation. Path parameters are part of the path definition, while query parameters are specified in the function signature as extra arguments.",
+  "prompt_sha256": "9913caa22380c8bfa4bed2b15967f4be34073ef6fc5d65242583472032ee01db",
+  "timings_s": {
+    "retrieve": 0.76,
+    "generate": 50.49
+  }
+}

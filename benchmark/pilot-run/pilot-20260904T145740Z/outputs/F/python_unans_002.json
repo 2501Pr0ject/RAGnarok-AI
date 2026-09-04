@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_unans_002",
+  "question": "How do I install Python on Windows?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-condition.md::10",
+      "score": 0.0,
+      "text": "sets the `Initialized` condition to `True` before sandbox creation and network configuration starts.\n\n## Other Pod conditions {#other-pod-conditions}\n\nThe following conditions are not part of the normal Pod lifecycle progression.\nThey are set in response to specific operations or events.\n\n### DisruptionTarget {#disruption-target}\n\nA dedicated Pod `DisruptionTarget` condition is added to indicate that\nthe Pod is about to be deleted due to a {{<glossary_tooltip term_id=\"disruption\" text=\"disruption\">}}.\nThe `reason` field of the condition additionally\nindicates one of the following reasons for the Pod termination:\n\n`PreemptionByScheduler`\n: Pod is due to be {{<glossary_tooltip term_id=\"preemption\" text=\"preempted\">}} by a scheduler in order to accommodate a new Pod with a higher priority. For more information, see [Pod priority preemption](/docs/concepts/scheduling-eviction/pod-priority-preemption/)."
+    },
+    {
+      "id": "kubernetes/concepts/security/secrets-good-practices.md::1",
+      "score": 0.0,
+      "text": "od practices that cluster administrators can use to\nimprove the security of confidential information in the cluster.\n\n### Configure encryption at rest\n\nBy default, Secret objects are stored unencrypted in {{<glossary_tooltip\nterm_id=\"etcd\" text=\"etcd\">}}. You should configure encryption of your Secret\ndata in `etcd`. For instructions, refer to\n[Encrypt Secret Data at Rest](/docs/tasks/administer-cluster/encrypt-data/).\n\n### Configure least-privilege access to Secrets {#least-privilege-secrets}\n\nWhen planning your access control mechanism, such as Kubernetes\n{{<glossary_tooltip term_id=\"rbac\" text=\"Role-based Access Control\">}} [(RBAC)](/docs/reference/access-authn-authz/rbac/),\nconsider the following guidelines for access to `Secret` objects. You should\nalso follow the other guidelines in\n[RBAC good practices](/docs/concepts/security/rbac-good-practices)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/probes.md::30",
+      "score": 0.0,
+      "text": "obe type, the Kubernetes project recommends that you use a name that\nconcatenates those. For example: `myservice-liveness` (using `-` as a separator).\n\n{{< note >}}\nUnlike HTTP or TCP probes, you cannot specify the health check port by name,\nand you cannot configure a custom hostname.\n{{< /note >}}\n\nConfiguration problems (for example: incorrect port or service, unimplemented\nhealth checking protocol) are considered a probe failure, similar to HTTP and\nTCP probes.\n\n{{< feature-state feature_gate_name=\"GRPCContainerProbeTLS\" >}}\n\nYou can configure a gRPC probe to connect over TLS by setting the `mode` field\nto `TLS`. When `mode` is set to `TLS`, the kubelet uses TLS with\n`InsecureSkipVerify` (it does not verify the server certificate). The default\n`mode` is `Plaintext`. For more details, see\n[Use TLS with gRPC probes](/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#grpc-probe-tls).\n\n## {{% heading \"whatsnext\" %}}"
+    },
+    {
+      "id": "docker/manuals/engine/network/drivers/bridge.md::30",
+      "score": 0.0,
+      "text": "network:\n\n   ```console\n   $ docker network create --driver bridge alpine-net\n   ```\n\n2. List Docker's networks:\n\n   ```console\n   $ docker network ls\n\n   NETWORK ID          NAME                DRIVER              SCOPE\n   e9261a8c9a19        alpine-net          bridge              local\n   17e324f45964        bridge              bridge              local\n   6ed54d316334        host                host                local\n   7092879f2cc8        none                null                local\n   ```\n\n   Inspect the `alpine-net` network:\n\n   ```console\n   $ docker network inspect alpine-net\n   ```\n\n   This shows the network's gateway (for example, `172.18.0.1`) and that no\n   containers are connected yet.\n\n3. Create four containers. Three connect to `alpine-net`, and one connects to\n   the default `bridge`. Then connect one container to both networks:"
+    },
+    {
+      "id": "docker/manuals/engine/storage/bind-mounts.md::13",
+      "score": 0.0,
+      "text": "\"Source\": \"/tmp/source/target\",\n        \"Destination\": \"/app\",\n        \"Mode\": \"\",\n        \"RW\": true,\n        \"Propagation\": \"rprivate\"\n    }\n],\n```\n\nThis shows that the mount is a `bind` mount, it shows the correct source and\ndestination, it shows that the mount is read-write, and that the propagation is\nset to `rprivate`.\n\nStop and remove the container:\n\n```console\n$ docker container rm -fv devtest\n```\n\n### Mount into a non-empty directory on the container\n\nIf you bind-mount a directory into a non-empty directory on the container, the\ndirectory's existing contents are obscured by the bind mount. This can be\nbeneficial, such as when you want to test a new version of your application\nwithout building a new image. However, it can also be surprising and this\nbehavior differs from that of [volumes](volumes.md)."
+    }
+  ],
+  "answer": "The information provided in the context does not contain any details about installing Python on Windows. Therefore, I cannot answer the question using only the given context.",
+  "prompt_sha256": "9ec84b3953cfd064557fe876fcc23932f589b21b4cc6abb7a4e6d461fb50d6aa",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 23.79
+  }
+}

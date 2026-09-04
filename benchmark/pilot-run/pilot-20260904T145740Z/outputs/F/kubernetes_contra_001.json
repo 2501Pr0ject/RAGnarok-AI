@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_contra_001",
+  "question": "Is the Kubernetes Endpoints API deprecated?",
+  "retrieved": [
+    {
+      "id": "python/howto/logging.rst::2",
+      "score": 0.0,
+      "text": "g, and to see\nwhich logger methods to use when, see the table below. It states, for each of a\nset of common tasks, the best tool to use for that task.\n\n+-------------------------------------+--------------------------------------+\n| Task you want to perform            | The best tool for the task           |\n+=====================================+======================================+\n| Display console output for ordinary | :func:`print`                        |\n| usage of a command line script or   |                                      |\n| program                             |                                      |\n+-------------------------------------+--------------------------------------+\n| Report events that occur during     | A logger's :meth:`~Logger.info` (or  |\n| normal operation of a program (e.g. | :meth:`~Logger.debug` method for very|\n| for status monitoring or fault      | detailed output for diagnostic       |"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/ingress-controllers.md::0",
+      "score": 0.0,
+      "text": "---\ntitle: Ingress Controllers\ndescription: >-\n  In order for an [Ingress](/docs/concepts/services-networking/ingress/) to work in your cluster,\n  there must be an _ingress controller_ running.\n  You need to select at least one ingress controller and make sure it is set up in your cluster.  \n  This page lists common ingress controllers that you can deploy.\ncontent_type: concept\nweight: 50\n---\n\n{{< note >}}\nThe Kubernetes project recommends using [Gateway](https://gateway-api.sigs.k8s.io/) instead of\n[Ingress](/docs/concepts/services-networking/ingress/).\nThe Ingress API has been frozen.\n\nThis means that:\n* The Ingress API is generally available, and is subject to the [stability guarantees](/docs/reference/using-api/deprecation-policy/#deprecating-parts-of-the-api) for generally available APIs.\n  The Kubernetes project has no plans to remove Ingress from Kubernetes.\n* The Ingress API is no longer being developed, and will have no further changes\n  or updates made to it.\n{{< /note >}}"
+    },
+    {
+      "id": "docker/manuals/engine/storage/drivers/zfs-driver.md::10",
+      "score": 0.0,
+      "text": "nly layers.\n  - If you create and then delete a file or directory within the container's\n    writable layer, the blocks are reclaimed by the `zpool`.\n\n\n## ZFS and Docker performance\n\nThere are several factors that influence the performance of Docker using the\n`zfs` storage driver.\n\n- **Memory**: Memory has a major impact on ZFS performance. ZFS was originally\n  designed for large enterprise-grade servers with a large amount of memory.\n\n- **ZFS Features**: ZFS includes a de-duplication feature. Using this feature\n  may save disk space, but uses a large amount of memory. It is recommended that\n  you disable this feature for the `zpool` you are using with Docker, unless you\n  are using SAN, NAS, or other hardware RAID technologies."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/ingress.md::12",
+      "score": 0.0,
+      "text": "aml\" %}}\n\nAfter creating the Ingress above, you can view it with the following command:\n\n```bash\nkubectl describe ingress ingress-resource-backend\n```\n\n```\nName:             ingress-resource-backend\nNamespace:        default\nAddress:\nDefault backend:  APIGroup: k8s.example.com, Kind: StorageBucket, Name: static-assets\nRules:\n  Host        Path  Backends\n  ----        ----  --------\n  *\n              /icons   APIGroup: k8s.example.com, Kind: StorageBucket, Name: icon-assets\nAnnotations:  <none>\nEvents:       <none>\n```\n\n### Path types\n\nEach path in an Ingress is required to have a corresponding path type. Paths\nthat do not include an explicit `pathType` will fail validation. There are three\nsupported path types:\n\n* `ImplementationSpecific`: With this path type, matching is up to the\n  IngressClass. Implementations can treat this as a separate `pathType` or treat\n  it identically to `Prefix` or `Exact` path types.\n\n* `Exact`: Matches the URL path exactly and with case sensitivity."
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::60",
+      "score": 0.0,
+      "text": "for the service to be\nconnected to the `default` network:\n\n```yml\nservices:\n  some-service:\n    image: foo\n```\nThis example is actually equivalent to:\n\n```yml\nservices:\n  some-service:\n    image: foo\n    networks:\n      default: {}\n```\n\nIf you want the service to not be connected a network, you must set [`network_mode: none`](#network_mode).\n\n#### `aliases`\n\n`aliases` declares alternative hostnames for the service on the network. Other containers on the same\nnetwork can use either the service name or an alias to connect to one of the service's containers.\n\nSince `aliases` are network-scoped, the same service can have different aliases on different networks.\n\n> [!NOTE]\n> A network-wide alias can be shared by multiple containers, and even by multiple services.\n> If it is, then exactly which container the name resolves to is not guaranteed."
+    }
+  ],
+  "answer": "The information provided in the given context does not mention whether the Kubernetes Endpoints API is deprecated or not. Therefore, based on the provided documentation, I cannot answer this question.",
+  "prompt_sha256": "5f8a394135da7e2d16044d930b416b85e381c176d9c3fbe2497e1fa4b2432ce3",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 26.55
+  }
+}

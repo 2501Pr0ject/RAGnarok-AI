@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_context_001",
+  "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::477",
+      "score": 0.81424,
+      "text": "Should you manually scale a Deployment, example via `kubectl scale deployment"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::462",
+      "score": 0.81424,
+      "text": "Should you manually scale a Deployment, example via `kubectl scale deployment"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::19",
+      "score": 0.79334,
+      "text": ". Each rollback updates the revision of the Deployment.\n* [Scale up the Deployment to facilitate more load](#scaling-a-deploymen"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::19",
+      "score": 0.77252,
+      "text": "* [Scale up the Deployment to facilitate more load](#scaling-a-deployment)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::101",
+      "score": 0.77047,
+      "text": "* After the rollout succeeds, you can view the Deployment by running `kubectl get deployments`."
+    }
+  ],
+  "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. Therefore, based on the given information, I cannot provide an answer to this question.",
+  "prompt_sha256": "8832d66f26006dcf9de2d90bc3347d19fdc7502ad0756b4ca45ce97f0a6c7885",
+  "timings_s": {
+    "retrieve": 7.5,
+    "generate": 8.31
+  }
+}

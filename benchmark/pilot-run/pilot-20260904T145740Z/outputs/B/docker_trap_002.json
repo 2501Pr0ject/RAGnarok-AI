@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_trap_002",
+  "question": "Why does a container with the `unless-stopped` restart policy start again after a daemon restart even when I had manually stopped it?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::589",
+      "score": 0.86246,
+      "text": "- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops"
+    },
+    {
+      "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::466",
+      "score": 0.86246,
+      "text": "- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::25",
+      "score": 0.86161,
+      "text": "restart policy. Docker restarts the container if it exits or if the daemon"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::20",
+      "score": 0.85211,
+      "text": "it's restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::34",
+      "score": 0.84985,
+      "text": "which doesn't start at all from going into a restart loop.\n\n- If you manually stop a container, the restart policy is ignored"
+    }
+  ],
+  "answer": "A container with the `unless-stopped` restart policy starts again after a daemon restart because this policy tells Docker to restart the container irrespective of its exit code, but it stops if the container is manually stopped. Since you only manually stopped the container without stopping the Docker daemon, when the daemon restarts, the container will start again according to the `unless-stopped` policy.",
+  "prompt_sha256": "188a7cca2b3b504be3c78db9129a7a1ce160d0fd3ad634ffc6093b5fc2895401",
+  "timings_s": {
+    "retrieve": 8.47,
+    "generate": 23.94
+  }
+}

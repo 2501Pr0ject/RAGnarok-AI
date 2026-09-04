@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_multi_001",
+  "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/statefulset.md::1",
+      "score": 0.6682,
+      "text": "* Stable, unique network identifiers.\n* Stable, persistent storage.\n* Ordered, graceful deployment and scaling.\n* Ordered, automated rolling updates.\n\nIn the above, stable is synonymous with persistence across Pod (re)scheduling.\nIf an application doesn't require any stable identifiers or ordered deployment,\ndeletion, or scaling, you should deploy your application using a workload object\nthat provides a set of stateless replicas.\n[Deployment](/docs/concepts/workloads/controllers/deployment/) or\n[ReplicaSet](/docs/concepts/workloads/controllers/replicaset/) may be better suited to your stateless needs.\n\n## Limitations"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/_index.md::3",
+      "score": 0.65803,
+      "text": "/persistent-volumes/). If one of the Pods\nin the StatefulSet fails, Kubernetes makes a replacement Pod that is connected to the\nsame PersistentVolume.\n\nA [DaemonSet](/docs/concepts/workloads/controllers/daemonset/) defines Pods that provide\nfacilities that are local to a specific {{< glossary_tooltip text=\"node\" term_id=\"node\" >}};\nfor example, a driver that lets containers on that node access a storage system. You use a DaemonSet\nwhen the driver, or other node-level service, has to run on the node where it's useful.\nEach Pod in a DaemonSet performs a role similar to a system daemon on a classic Unix / POSIX\nserver.\nA DaemonSet might be fundamental to the operation of your cluster,\nsuch as a plugin to let that node access\n[cluster networking](/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-network-model),\nit might help you to manage the node,\nor it could provide less essential facilities that enhance the container platform you are running."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/_index.md::2",
+      "score": 0.65638,
+      "text": "if needed.\n(Deployments are a replacement for the legacy\n{{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}} API).\n\nA [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\nmanage one or more Pods \u2013 all running the same application code \u2013 where the Pods rely\non having a distinct identity. This is different from a Deployment where the Pods are\nexpected to be interchangeable.\nThe most common use for a StatefulSet is to be able to make a link between its Pods and\ntheir persistent storage. For example, you can run a StatefulSet that associates each Pod\nwith a [PersistentVolume](/docs/concepts/storage/persistent-volumes/). If one of the Pods\nin the StatefulSet fails, Kubernetes makes a replacement Pod that is connected to the\nsame PersistentVolume."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/_index.md::7",
+      "score": 0.65307,
+      "text": "particularly useful for batch processing and machine\nlearning workloads where \"all-or-nothing\" placement is required.\n\n## {{% heading \"whatsnext\" %}}\n\nAs well as reading about each API kind for workload management, you can read how to\ndo specific tasks:\n\n* [Run a stateless application using a Deployment](/docs/tasks/run-application/run-stateless-application-deployment/)\n* Run a stateful application either as a [single instance](/docs/tasks/run-application/run-single-instance-stateful-application/)\n  or as a [replicated set](/docs/tasks/run-application/run-replicated-stateful-application/)\n* [Run automated tasks with a CronJob](/docs/tasks/job/automated-tasks-with-cron-jobs/)\n\nTo learn about Kubernetes' mechanisms for separating code from configuration,\nvisit [Configuration](/docs/concepts/configuration/)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/statefulset.md::39",
+      "score": 0.65288,
+      "text": "/delete-stateful-set/).\n  * Learn how to [configure a Pod to use a volume for storage](/docs/tasks/configure-pod-container/configure-volume-storage/).\n  * Learn how to [configure a Pod to use a PersistentVolume for storage](/docs/tutorials/configuration/configure-persistent-volume-storage/).\n* `StatefulSet` is a top-level resource in the Kubernetes REST API.\n  Read the {{< api-reference page=\"apps/stateful-set-v1\" >}}\n  object definition to understand the API for stateful sets.\n* Read about [PodDisruptionBudget](/docs/concepts/workloads/pods/disruptions/) and how\n  you can use it to manage application availability during disruptions."
+    }
+  ],
+  "answer": "You should use a StatefulSet instead of a Deployment in Kubernetes when your application requires each Pod to have a distinct identity, such as stable, unique network identifiers and persistent storage. This is because StatefulSets are designed to manage Pods that rely on having a distinct identity, which is different from Deployments where the Pods are expected to be interchangeable.",
+  "prompt_sha256": "739143edee4c8b09b42e279d1cbe557ecd7932bc3affd77d8d5e4638c4ebe7a7",
+  "timings_s": {
+    "retrieve": 0.38,
+    "generate": 29.32
+  }
+}

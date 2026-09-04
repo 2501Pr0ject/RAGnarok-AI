@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_direct_001",
+  "question": "What command do I run to create a virtual environment called tutorial-env?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::28",
+      "score": 0.85964,
+      "text": "Once you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate"
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::28",
+      "score": 0.8321,
+      "text": "Once you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat"
+    },
+    {
+      "id": "python/tutorial/venv.rst::22",
+      "score": 0.81348,
+      "text": "This will create the ``tutorial-env`` directory if it doesn't exist,"
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::22",
+      "score": 0.81348,
+      "text": "This will create the ``tutorial-env`` directory if it doesn't exist,"
+    },
+    {
+      "id": "python/tutorial/venv.rst::20",
+      "score": 0.76062,
+      "text": "To create a virtual environment, decide upon a directory where you want to"
+    }
+  ],
+  "answer": "The provided context does not contain information on how to create a virtual environment. It only describes how to activate an already created virtual environment.",
+  "prompt_sha256": "d64c15c5b3d263dd22ba54ed18685f6ba104ba5243789c7f4e8f092160d91f80",
+  "timings_s": {
+    "retrieve": 7.11,
+    "generate": 6.16
+  }
+}

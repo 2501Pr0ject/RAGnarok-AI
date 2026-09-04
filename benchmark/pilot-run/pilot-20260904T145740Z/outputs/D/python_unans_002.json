@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "python_unans_002",
+  "question": "How do I install Python on Windows?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/interpreter.rst::1",
+      "score": 0.71733,
+      "text": "places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)\n\nOn Windows machines where you have installed Python from the :ref:`Microsoft Store\n<windows-store>`, the :file:`python3.12` command will be available. If you have\nthe :ref:`py.exe launcher <launcher>` installed, you can use the :file:`py`\ncommand. See :ref:`setting-envvars` for other ways to launch Python.\n\nTyping an end-of-file character (:kbd:`Control-D` on Unix, :kbd:`Control-Z` on\nWindows) at the primary prompt causes the interpreter to exit with a zero exit\nstatus.  If that doesn't work, you can exit the interpreter by typing the\nfollowing command: ``quit()``."
+    }
+  ],
+  "answer": "The provided context does not contain specific steps for installing Python on Windows. It mentions using the Microsoft Store to install Python and using the `py.exe` launcher if installed, but it does not provide detailed installation instructions.",
+  "prompt_sha256": "fef1765c7e33b5b87d5bdb210ceae0ed6d53cfc360d38b37223ebf8992c0c36d",
+  "timings_s": {
+    "retrieve": 0.6,
+    "generate": 3.79
+  }
+}

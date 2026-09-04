@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_multi_001",
+  "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/architecture/_index.md::77",
+      "score": 0.81018,
+      "text": "and StatefulSets or other Kubernetes primitives.\n\nManaged Kubernetes services"
+    },
+    {
+      "id": "kubernetes/concepts/architecture/self-healing.md::9",
+      "score": 0.78659,
+      "text": "orkloads/controllers/deployment/) or [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) fails, Kubernetes creates"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/disruptions.md::62",
+      "score": 0.77709,
+      "text": "as the one used by the application's controller (deployment, stateful-set, etc)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/statefulset.md::284",
+      "score": 0.77017,
+      "text": "* Follow an example of [deploying a stateful application](/docs/tutorials/stateful-application/basic-stateful-set/)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-lifecycle.md::391",
+      "score": 0.76667,
+      "text": "workload resource that manages it (such as a Deployment or StatefulSet)."
+    }
+  ],
+  "answer": "You should use a StatefulSet instead of a Deployment in Kubernetes when you need to manage stateful workloads. This includes scenarios where maintaining the order of pod creation and deletion is important, ensuring unique storage for each instance, or preserving stable network identifiers (like a hostname) for applications that require persistent identities.",
+  "prompt_sha256": "136e59c96aa109d518d5c37610547701c87ab5d472a27ec40ef5c7ebd61a4fb1",
+  "timings_s": {
+    "retrieve": 8.13,
+    "generate": 13.71
+  }
+}

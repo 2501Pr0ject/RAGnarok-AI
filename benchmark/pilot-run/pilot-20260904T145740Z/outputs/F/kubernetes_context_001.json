@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_context_001",
+  "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+  "retrieved": [
+    {
+      "id": "python/howto/functional.rst::31",
+      "score": 0.0,
+      "text": "generator.\n:keyword:`yield` became an expression, returning a value that can be assigned to\na variable or otherwise operated on::\n\n    val = (yield i)\n\nI recommend that you **always** put parentheses around a ``yield`` expression\nwhen you're doing something with the returned value, as in the above example.\nThe parentheses aren't always necessary, but it's easier to always add them\ninstead of having to remember when they're needed.\n\n(:pep:`342` explains the exact rules, which are that a ``yield``-expression must\nalways be parenthesized except when it occurs at the top-level expression on the\nright-hand side of an assignment.  This means you can write ``val = yield i``\nbut have to use parentheses when there's an operation, as in ``val = (yield i)\n+ 12``.)"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::11",
+      "score": 0.0,
+      "text": "_str_validations/tutorial003_an.py!}\n    ```\n\n=== \"Python 3.10+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003_py310.py!}\n    ```\n\n=== \"Python 3.6+ non-Annotated\"\n\n    !!! tip\n        Prefer to use the `Annotated` version if possible.\n\n    ```Python hl_lines=\"10\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial003.py!}\n    ```\n\n## Add regular expressions\n\nYou can define a <abbr title=\"A regular expression, regex or regexp is a sequence of characters that define a search pattern for strings.\">regular expression</abbr> `pattern` that the parameter should match:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_an_py310.py!}\n    ```\n\n=== \"Python 3.9+\"\n\n    ```Python hl_lines=\"11\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial004_an_py39.py!}\n    ```"
+    },
+    {
+      "id": "kubernetes/concepts/architecture/leases.md::1",
+      "score": 0.0,
+      "text": "d for system-critical capabilities such as node heartbeats and component-level leader election.\n\n<!-- body -->\n\n## Node heartbeats {#node-heart-beats}\n\nKubernetes uses the Lease API to communicate kubelet node heartbeats to the Kubernetes API server.\nFor every `Node` , there is a `Lease` object with a matching name in the `kube-node-lease`\nnamespace. Under the hood, every kubelet heartbeat is an **update** request to this `Lease` object, updating\nthe `spec.renewTime` field for the Lease. The Kubernetes control plane uses the time stamp of this field\nto determine the availability of this `Node`.\n\nSee [Node Lease objects](/docs/concepts/architecture/nodes/#node-heartbeats) for more details.\n\n## Leader election"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/job.md::67",
+      "score": 0.0,
+      "text": "his table shows the required settings for `.spec.parallelism` and `.spec.completions` for each of the patterns.\nHere, `W` is the number of work items.\n\n|             Pattern                             | `.spec.completions` |  `.spec.parallelism` |\n| ----------------------------------------------- |:-------------------:|:--------------------:|\n| [Queue with Pod Per Work Item]                  |          W          |        any           |\n| [Queue with Variable Pod Count]                 |         null        |        any           |\n| [Indexed Job with Static Work Assignment]       |          W          |        any           |\n| [Job with Pod-to-Pod Communication]             |          W          |         W            |\n| [Job Template Expansion]                        |          1          |     should be 1      |\n\n\n\n## Advanced usage\n\n### Suspending a Job\n\n{{< feature-state for_k8s_version=\"v1.24\" state=\"stable\" >}}"
+    },
+    {
+      "id": "python/howto/annotations.rst::3",
+      "score": 0.0,
+      "text": "he object you're examining is one of these three\n*specific* objects, you may simply use ``o.__annotations__``\nto get at the object's annotations dict.\n\nHowever, other types of callables--for example,\ncallables created by :func:`functools.partial`--may\nnot have an ``__annotations__`` attribute defined.  When\naccessing the ``__annotations__`` of a possibly unknown\nobject,  best practice in Python versions 3.10 and\nnewer is to call :func:`getattr` with three arguments,\nfor example ``getattr(o, '__annotations__', None)``.\n\nBefore Python 3.10, accessing ``__annotations__`` on a class that\ndefines no annotations but that has a parent class with\nannotations would return the parent's ``__annotations__``.\nIn Python 3.10 and newer, the child class's annotations\nwill be an empty dict instead.\n\n\nAccessing The Annotations Dict Of An Object In Python 3.9 And Older\n==================================================================="
+    }
+  ],
+  "answer": "The provided context does not contain information about whether scaling a Kubernetes Deployment triggers a rollout. Therefore, the information is not present in the given documentation.",
+  "prompt_sha256": "2ef18e90debd9ccee2e76891d51b35fdcfd615c6d2205ac0f84f1332fee67d92",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 22.25
+  }
+}

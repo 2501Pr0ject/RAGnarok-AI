@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "kubernetes_contra_001",
+  "question": "Is the Kubernetes Endpoints API deprecated?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::19",
+      "score": 0.81128,
+      "text": "ices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}\n\nThe EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:\n\n  - It does not support dual-stack clusters.\n  - It does not contain information needed to support newer features, such as\n    [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution).\n  - It will truncate the list of endpoints if it is too long to fit in a single object.\n\nBecause of this, it is recommended that all clients use the\nEndpointSlice API rather than Endpoints.\n\n#### Over-capacity endpoints"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::19",
+      "score": 0.79756,
+      "text": "(the resource kind is plural) defines a list of network endpoints, typically\nreferenced by a Service to define which Pods the traffic can be sent to.\n\nThe EndpointSlice API is the recommended replacement for Endpoints.\n\n#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints\nobject. When there are over 1000 backing endpoints for a Service, Kubernetes\ntruncates the data in the Endpoints object. Because a Service can be linked\nwith more than one EndpointSlice, the 1000 backing endpoint limit only\naffects the legacy Endpoints API."
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubernetes-api.md::18",
+      "score": 0.78382,
+      "text": "he `v1beta1` version is deprecated and removed.\nAt that point you can continue accessing and modifying the object using the `v1` API.\n\n### API changes\n\nAny system that is successful needs to grow and change as new use cases emerge or existing ones change.\nTherefore, Kubernetes has designed the Kubernetes API to continuously change and grow.\nThe Kubernetes project aims to _not_ break compatibility with existing clients, and to maintain that\ncompatibility for a length of time so that other projects have an opportunity to adapt.\n\nIn general, new API resources and new resource fields can be added often and frequently.\nElimination of resources or fields requires following the\n[API deprecation policy](/docs/reference/using-api/deprecation-policy/)."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::18",
+      "score": 0.7806,
+      "text": "](/docs/concepts/services-networking/endpoint-slices/) are objects that\nrepresent a subset (a _slice_) of the backing network endpoints for a Service.\n\nYour Kubernetes cluster tracks how many endpoints each EndpointSlice represents.\nIf there are so many endpoints for a Service that a threshold is reached, then\nKubernetes adds another empty EndpointSlice and stores new endpoint information\nthere.\nBy default, Kubernetes makes a new EndpointSlice once the existing EndpointSlices\nall contain at least 100 endpoints. Kubernetes does not make the new EndpointSlice\nuntil an extra endpoint needs to be added.\n\nSee [EndpointSlices](/docs/concepts/services-networking/endpoint-slices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}"
+    },
+    {
+      "id": "kubernetes/concepts/security/pod-security-policy.md::1",
+      "score": 0.77244,
+      "text": "of this API,\nsee [PodSecurityPolicy Deprecation: Past, Present, and Future](/blog/2021/04/06/podsecuritypolicy-deprecation-past-present-and-future/).\n\nIf you are not running Kubernetes v{{< skew currentVersion >}}, check the documentation for\nyour version of Kubernetes."
+    }
+  ],
+  "answer": "Yes, the Kubernetes Endpoints API is deprecated. The document clearly states that the `Endpoints` API has several limitations and problems compared to the `EndpointSlice` API. It also mentions that because of these issues, it is recommended to use the `EndpointSlice` API instead. Additionally, specific versions of the `v1beta1` API are noted as deprecated and eventually removed. Therefore, clients are advised to transition away from using the deprecated Endpoints API in favor of the newer EndpointSlice API.",
+  "prompt_sha256": "ee0ecc68c49947fd43685048a8d284ff0950ab21b02fbd6edbaace7ed186361f",
+  "timings_s": {
+    "retrieve": 0.7,
+    "generate": 33.11
+  }
+}

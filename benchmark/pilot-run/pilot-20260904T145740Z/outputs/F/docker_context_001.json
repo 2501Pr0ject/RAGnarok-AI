@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "docker_context_001",
+  "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/assign-pod-node.md::2",
+      "score": 0.0,
+      "text": "-affinity)\n- [nodeName](#nodename) field\n- [Pod topology spread constraints](#pod-topology-spread-constraints)\n\n## Node labels {#built-in-node-labels}\n\nLike many other Kubernetes objects, nodes have\n[labels](/docs/concepts/overview/working-with-objects/labels/). You can\n[attach labels manually](/docs/tasks/configure-pod-container/assign-pods-nodes/#add-a-label-to-a-node).\nKubernetes also populates a [standard set of labels](/docs/reference/node/node-labels/)\non all nodes in a cluster.\n\n{{<note>}}\nThe value of these labels is cloud provider specific and is not guaranteed to be reliable.\nFor example, the value of `kubernetes.io/hostname` may be the same as the node name in some environments\nand a different value in other environments.\n{{</note>}}\n\n### Node isolation/restriction"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/logging.md::2",
+      "score": 0.0,
+      "text": "e following command:\n\n```shell\nkubectl apply -f https://k8s.io/examples/debug/counter-pod.yaml\n```\n\nThe output is:\n\n```console\npod/counter created\n```\n\nTo fetch the logs, use the `kubectl logs` command, as follows:\n\n```shell\nkubectl logs counter\n```\n\nThe output is similar to:\n\n```console\n0: Fri Apr  1 11:42:23 UTC 2022\n1: Fri Apr  1 11:42:24 UTC 2022\n2: Fri Apr  1 11:42:25 UTC 2022\n```\n\nYou can use `kubectl logs --previous` to retrieve logs from a previous instantiation of a container.\nIf your pod has multiple containers, specify which container's logs you want to access by\nappending a container name to the command, with a `-c` flag, like so:\n\n```shell\nkubectl logs counter -c count\n```\n\n\n### Container log streams\n\n{{< feature-state feature_gate_name=\"PodLogsQuerySplitStreams\" >}}"
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/scheduler-perf-tuning.md::2",
+      "score": 0.0,
+      "text": "e-scheduler\nshould use its compiled-in default.\nIf you set `percentageOfNodesToScore` above 100, kube-scheduler acts as if you\nhad set a value of 100.\n\nTo change the value, edit the\n[kube-scheduler configuration file](/docs/reference/config-api/kube-scheduler-config.v1/)\nand then restart the scheduler.\nIn many cases, the configuration file can be found at `/etc/kubernetes/config/kube-scheduler.yaml`.\n\nAfter you have made this change, you can run\n\n```bash\nkubectl get pods -n kube-system | grep kube-scheduler\n```\n\nto verify that the kube-scheduler component is healthy.\n\n## Node scoring threshold {#percentage-of-nodes-to-score}\n\nTo improve scheduling performance, the kube-scheduler can stop looking for\nfeasible nodes once it has found enough of them. In large clusters, this saves\ntime compared to a naive approach that would consider every node."
+    },
+    {
+      "id": "docker/manuals/engine/security/apparmor.md::8",
+      "score": 0.0,
+      "text": "lude <abstractions/base>\n\n  network inet tcp,\n  network inet udp,\n  network inet icmp,\n\n  deny network raw,\n\n  deny network packet,\n\n  file,\n  umount,\n\n  deny /bin/** wl,\n  deny /boot/** wl,\n  deny /dev/** wl,\n  deny /etc/** wl,\n  deny /home/** wl,\n  deny /lib/** wl,\n  deny /lib64/** wl,\n  deny /media/** wl,\n  deny /mnt/** wl,\n  deny /opt/** wl,\n  deny /proc/** wl,\n  deny /root/** wl,\n  deny /sbin/** wl,\n  deny /srv/** wl,\n  deny /tmp/** wl,\n  deny /sys/** wl,\n  deny /usr/** wl,\n\n  audit /** w,\n\n  /var/run/nginx.pid w,\n\n  /usr/sbin/nginx ix,\n\n  deny /bin/dash mrwklx,\n  deny /bin/sh mrwklx,\n  deny /usr/bin/top mrwklx,\n\n\n  capability chown,\n  capability dac_override,\n  capability setuid,\n  capability setgid,\n  capability net_bind_service,"
+    },
+    {
+      "id": "docker/manuals/engine/storage/drivers/vfs-driver.md::1",
+      "score": 0.0,
+      "text": "yet exist, create it. Assuming\n    that the file was empty, add the following contents.\n\n    ```json\n    {\n      \"storage-driver\": \"vfs\"\n    }\n    ```\n\n    If you want to set a quota to control the maximum size the VFS storage\n    driver can use, set the `size` option on the `storage-opts` key.\n\n    ```json\n    {\n      \"storage-driver\": \"vfs\",\n      \"storage-opts\": [\"size=256M\"]\n    }\n    ```\n\n    Docker doesn't start if the `daemon.json` file contains invalid JSON.\n\n3.  Start Docker.\n\n    ```console\n    $ sudo systemctl start docker\n    ```\n\n4.  Verify that the daemon is using the `vfs` storage driver.\n    Use the `docker info` command and look for `Storage Driver`.\n\n    ```console\n    $ docker info\n\n    Storage Driver: vfs\n    ...\n    ```\n\nDocker is now using the `vfs` storage driver. Docker has automatically\ncreated the `/var/lib/docker/vfs/` directory, which contains all the layers\nused by running containers.\n\n## How the `vfs` storage driver works"
+    }
+  ],
+  "answer": "The provided context does not contain information about what happens to a container with a restart policy of `always` when the Docker daemon restarts after being stopped. Therefore, the information needed to answer this specific question is not present in the given documentation.",
+  "prompt_sha256": "348461e28d0c7d511ebb244f5696ea1dc85b111f62d7dc35148af7e9e0b450eb",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 27.84
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_multi_001",
+  "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::22",
+      "score": 0.0,
+      "text": "--name=nginxtest \\\n  --mount source=nginx-vol,destination=/usr/share/nginx/html,readonly \\\n  nginx:latest\n```\n\n{{< /tab >}}\n{{< tab name=\"`-v`\" >}}\n\n```console\n$ docker run -d \\\n  --name=nginxtest \\\n  -v nginx-vol:/usr/share/nginx/html:ro \\\n  nginx:latest\n```\n\n{{< /tab >}}\n{{< /tabs >}}\n\nUse `docker inspect nginxtest` to verify that Docker created the read-only mount\ncorrectly. Look for the `Mounts` section:\n\n```json\n\"Mounts\": [\n    {\n        \"Type\": \"volume\",\n        \"Name\": \"nginx-vol\",\n        \"Source\": \"/var/lib/docker/volumes/nginx-vol/_data\",\n        \"Destination\": \"/usr/share/nginx/html\",\n        \"Driver\": \"local\",\n        \"Mode\": \"\",\n        \"RW\": false,\n        \"Propagation\": \"\"\n    }\n],\n```\n\nStop and remove the container, and remove the volume. Volume removal is a\nseparate step.\n\n```console\n$ docker container stop nginxtest\n\n$ docker container rm nginxtest\n\n$ docker volume rm nginx-vol\n```\n\n## Mount a volume subdirectory"
+    },
+    {
+      "id": "python/howto/logging@v3.10.14.rst::39",
+      "score": 0.0,
+      "text": "logger.setLevel(logging.DEBUG)\n\n    # create console handler and set level to debug\n    ch = logging.StreamHandler()\n    ch.setLevel(logging.DEBUG)\n\n    # create formatter\n    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')\n\n    # add formatter to ch\n    ch.setFormatter(formatter)\n\n    # add ch to logger\n    logger.addHandler(ch)\n\n    # 'application' code\n    logger.debug('debug message')\n    logger.info('info message')\n    logger.warning('warn message')\n    logger.error('error message')\n    logger.critical('critical message')\n\nRunning this module from the command line produces the following output:\n\n.. code-block:: shell-session"
+    },
+    {
+      "id": "kubernetes/concepts/security/pod-security-standards.md::4",
+      "score": 0.0,
+      "text": "e>spec.securityContext.windowsOptions.hostProcess</code></li>\n\t\t\t\t\t<li><code>spec.containers[*].securityContext.windowsOptions.hostProcess</code></li>\n\t\t\t\t\t<li><code>spec.initContainers[*].securityContext.windowsOptions.hostProcess</code></li>\n\t\t\t\t\t<li><code>spec.ephemeralContainers[*].securityContext.windowsOptions.hostProcess</code></li>\n\t\t\t\t</ul>\n\t\t\t\t<p><strong>Allowed Values</strong></p>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>Undefined/nil</li>\n\t\t\t\t\t<li><code>false</code></li>\n\t\t\t\t</ul>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"white-space: nowrap\">Host Namespaces</td>\n\t\t\t<td>\n\t\t\t\t<p>Sharing the host namespaces must be disallowed.</p>\n\t\t\t\t<p><strong>Restricted Fields</strong></p>\n\t\t\t\t<ul>\n\t\t\t\t\t<li><code>spec.hostNetwork</code></li>\n\t\t\t\t\t<li><code>spec.hostPID</code></li>\n\t\t\t\t\t<li><code>spec.hostIPC</code></li>\n\t\t\t\t</ul>\n\t\t\t\t<p><strong>Allowed Values</strong></p>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>Undefined/nil</li>\n\t\t\t\t\t<li><code>false</code></li>\n\t\t\t\t</ul>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/autoscaling/horizontal-pod-autoscale.md::41",
+      "score": 0.0,
+      "text": "the following policy would be used:\n\n```yaml\nbehavior:\n  scaleDown:\n    selectPolicy: Disabled\n```\n\n## Support for HorizontalPodAutoscaler in kubectl\n\nHorizontalPodAutoscaler, like every API resource, is supported in a standard way by `kubectl`.\nYou can create a new autoscaler using `kubectl create` command.\nYou can list autoscalers by `kubectl get hpa` or get detailed description by `kubectl describe hpa`.\nFinally, you can delete an autoscaler using `kubectl delete hpa`.\n\nIn addition, there is a special `kubectl autoscale` command for creating a HorizontalPodAutoscaler object.\nFor instance, executing `kubectl autoscale rs foo --min=2 --max=5 --cpu=80%`\nwill create an autoscaler for ReplicaSet _foo_, with target CPU utilization set to `80%`\nand the number of replicas between 2 and 5.\n\n## Scaling to and from zero\n\n{{< feature-state feature_gate_name=\"HPAScaleToZero\" >}}"
+    },
+    {
+      "id": "kubernetes/concepts/security/pod-security-standards.md::2",
+      "score": 0.0,
+      "text": "is able to bypass typical container isolation mechanisms.\nFor example, you can define a Pod that has access to the node's host network.\n\n### Baseline\n\n**The _Baseline_ policy is aimed at ease of adoption for common containerized workloads while\npreventing known privilege escalations.** This policy is targeted at application operators and\ndevelopers of non-critical applications. The following listed controls should be\nenforced/disallowed:\n\n{{< note >}}\nIn this table, wildcards (`*`) indicate all elements in a list. For example,\n`spec.containers[*].securityContext` refers to the Security Context object for _all defined\ncontainers_. If any of the listed containers fails to meet the requirements, the entire pod will\nfail validation.\n{{< /note >}}"
+    }
+  ],
+  "answer": "The information provided in the context does not contain details about using lists in Python for stacks or queues. Therefore, I cannot provide an answer based on the given context.\n\nHowever, in general, a plain list in Python can be used as a stack because you can append to and pop from the end of the list (using `append` and `pop` without arguments), which is LIFO (Last In, First Out). But using a list as a queue is not efficient because inserting an element at the beginning or removing an element from the middle requires shifting all elements, which has a time complexity of O(n).\n\nFor a queue, you should use collections.deque instead, which supports fast appends and pops from both ends.",
+  "prompt_sha256": "1d70a239c2d53458783eeebe78892fa9c6acef54d4f3542a2da77a18474ec72a",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 48.48
+  }
+}

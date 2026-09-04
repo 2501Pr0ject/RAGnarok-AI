@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_unans_001",
+  "question": "What are the parameters of str.split() and what are their default values?",
+  "retrieved": [
+    {
+      "id": "python/howto/regex.rst::70",
+      "score": 0.53587,
+      "text": ",  but     |\n|                  | returns the new string and the number of      |\n|                  | replacements                                  |\n+------------------+-----------------------------------------------+\n\n\nSplitting Strings\n-----------------\n\nThe :meth:`~re.Pattern.split` method of a pattern splits a string apart\nwherever the RE matches, returning a list of the pieces. It's similar to the\n:meth:`~str.split` method of strings but provides much more generality in the\ndelimiters that you can split by; string :meth:`!split` only supports splitting by\nwhitespace or by a fixed string.  As you'd expect, there's a module-level\n:func:`re.split` function, too.\n\n\n.. method:: .split(string [, maxsplit=0])\n   :noindex:\n\n   Split *string* by the matches of the regular expression.  If capturing\n   parentheses are used in the RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed."
+    },
+    {
+      "id": "python/howto/regex.rst::71",
+      "score": 0.49251,
+      "text": "RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed.\n\nYou can limit the number of splits made, by passing a value for *maxsplit*.\nWhen *maxsplit* is nonzero, at most *maxsplit* splits will be made, and the\nremainder of the string is returned as the final element of the list.  In the\nfollowing example, the delimiter is any sequence of non-alphanumeric characters.\n::\n\n   >>> p = re.compile(r'\\W+')\n   >>> p.split('This is a test, short and sweet, of split().')\n   ['This', 'is', 'a', 'test', 'short', 'and', 'sweet', 'of', 'split', '']\n   >>> p.split('This is a test, short and sweet, of split().', 3)\n   ['This', 'is', 'a', 'test, short and sweet, of split().']"
+    },
+    {
+      "id": "python/tutorial/inputoutput.rst::22",
+      "score": 0.43357,
+      "text": "binary mode) -- before writing them::\n\n   >>> value = ('the answer', 42)\n   >>> s = str(value)  # convert the tuple to string\n   >>> f.write(s)\n   18\n\n``f.tell()`` returns an integer giving the file object's current position in the file\nrepresented as number of bytes from the beginning of the file when in binary mode and\nan opaque number when in text mode.\n\nTo change the file object's position, use ``f.seek(offset, whence)``.  The position is computed\nfrom adding *offset* to a reference point; the reference point is selected by\nthe *whence* argument.  A *whence* value of 0 measures from the beginning\nof the file, 1 uses the current file position, and 2 uses the end of the file as\nthe reference point.  *whence* can be omitted and defaults to 0, using the\nbeginning of the file as the reference point. ::"
+    },
+    {
+      "id": "python/howto/regex.rst::72",
+      "score": 0.43057,
+      "text": "et', 'of', 'split', '']\n   >>> p.split('This is a test, short and sweet, of split().', 3)\n   ['This', 'is', 'a', 'test, short and sweet, of split().']\n\nSometimes you're not only interested in what the text between delimiters is, but\nalso need to know what the delimiter was.  If capturing parentheses are used in\nthe RE, then their values are also returned as part of the list.  Compare the\nfollowing calls::\n\n   >>> p = re.compile(r'\\W+')\n   >>> p2 = re.compile(r'(\\W+)')\n   >>> p.split('This... is a test.')\n   ['This', 'is', 'a', 'test', '']\n   >>> p2.split('This... is a test.')\n   ['This', '... ', 'is', ' ', 'a', ' ', 'test', '.', '']\n\nThe module-level function :func:`re.split` adds the RE to be used as the first\nargument, but is otherwise the same.   ::"
+    },
+    {
+      "id": "python/tutorial/inputoutput.rst::20",
+      "score": 0.42271,
+      "text": "s twice as large as your machine's memory. Otherwise, at most *size*\ncharacters (in text mode) or *size* bytes (in binary mode) are read and returned.\nIf the end of the file has been reached, ``f.read()`` will return an empty\nstring (``''``).  ::\n\n   >>> f.read()\n   'This is the entire file.\\n'\n   >>> f.read()\n   ''\n\n``f.readline()`` reads a single line from the file; a newline character (``\\n``)\nis left at the end of the string, and is only omitted on the last line of the\nfile if the file doesn't end in a newline.  This makes the return value\nunambiguous; if ``f.readline()`` returns an empty string, the end of the file\nhas been reached, while a blank line is represented by ``'\\n'``, a string\ncontaining only a single newline.  ::\n\n   >>> f.readline()\n   'This is the first line of the file.\\n'\n   >>> f.readline()\n   'Second line of the file\\n'\n   >>> f.readline()\n   ''"
+    }
+  ],
+  "answer": "The method `str.split()` has one parameter:\n\n- `string`: The string to be split.\n\nIt also has an optional parameter:\n\n- `maxsplit`: The maximum number of splits to perform. If not provided, it defaults to 0, meaning no limit on the number of splits.",
+  "prompt_sha256": "44d351a03d778f10217dd8b2b697e4b10792939a1c8289e2d0d70189ee71a233",
+  "timings_s": {
+    "retrieve": 0.32,
+    "generate": 35.45
+  }
+}

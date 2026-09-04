@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_context_001",
+  "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::42",
+      "score": 0.76883,
+      "text": "oyment --min=10 --max=15 --cpu-percent=80\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::43",
+      "score": 0.7681,
+      "text": "yment --min=10 --max=15 --cpu-percent=80%\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::53",
+      "score": 0.75083,
+      "text": "ogress](#failed-deployment).\n\n### Progressing Deployment\n\nKubernetes marks a Deployment as _progressing_ when one of the following tasks is performed:\n\n* The Deployment creates a new ReplicaSet.\n* The Deployment is scaling up its newest ReplicaSet.\n* The Deployment is scaling down its older ReplicaSet(s).\n* New Pods become ready or available (ready for at least [MinReadySeconds](#min-ready-seconds)).\n\nWhen the rollout becomes \u201cprogressing\u201d, the Deployment controller adds a condition with the following\nattributes to the Deployment's `.status.conditions`:\n\n* `type: Progressing`\n* `status: \"True\"`\n* `reason: NewReplicaSetCreated` | `reason: FoundNewReplicaSet` | `reason: ReplicaSetUpdated`\n\nYou can monitor the progress for a Deployment by using `kubectl rollout status`.\n\n### Complete Deployment\n\nKubernetes marks a Deployment as _complete_ when it has the following characteristics:"
+    },
+    {
+      "id": "python/howto/enum.rst::21",
+      "score": 0.0,
+      "text": "unnamed aliases will\n    not unpickle.\n\n\nFunctional API\n--------------\n\nThe :class:`Enum` class is callable, providing the following functional API::\n\n    >>> Animal = Enum('Animal', 'ANT BEE CAT DOG')\n    >>> Animal\n    <enum 'Animal'>\n    >>> Animal.ANT\n    <Animal.ANT: 1>\n    >>> list(Animal)\n    [<Animal.ANT: 1>, <Animal.BEE: 2>, <Animal.CAT: 3>, <Animal.DOG: 4>]\n\nThe semantics of this API resemble :class:`~collections.namedtuple`. The first\nargument of the call to :class:`Enum` is the name of the enumeration."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::17",
+      "score": 0.0,
+      "text": "l\" file=\"secret/serviceaccount-token-secret.yaml\" %}}\n\nAfter creating the Secret, wait for Kubernetes to populate the `token` key in the `data` field.\n\nSee the [ServiceAccount](/docs/concepts/security/service-accounts/)\ndocumentation for more information on how ServiceAccounts work.\nYou can also check the `automountServiceAccountToken` field and the\n`serviceAccountName` field of the\n[`Pod`](/docs/reference/generated/kubernetes-api/{{< param \"version\" >}}/#pod-v1-core)\nfor information on referencing ServiceAccount credentials from within Pods.\n\n### Docker config Secrets\n\nIf you are creating a Secret to store credentials for accessing a container image registry,\nyou must use one of the following `type` values for that Secret:"
+    }
+  ],
+  "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. The context discusses proportional scaling and progressing/deploying replicas but does not directly address if scaling itself initiates a rollout process. Therefore, the information needed to answer this specific question is not present in the given documentation.",
+  "prompt_sha256": "68596e759fe35d437390923bc4085ad91b70a68f2e1981ce29aba05834eb70d9",
+  "timings_s": {
+    "retrieve": 0.64,
+    "generate": 27.91
+  }
+}

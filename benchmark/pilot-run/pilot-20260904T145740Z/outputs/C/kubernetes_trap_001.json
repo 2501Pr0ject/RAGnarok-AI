@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_trap_001",
+  "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/topology-spread-constraints.md::12",
+      "score": 0.74121,
+      "text": "that is, you edit the Pod and not a Deployment),\n  kube-apiserver doesn't reflect the label update onto the merged `labelSelector`.\n  {{< /caution >}}\n\n  With `matchLabelKeys`, you don't need to update the `pod.spec` between different revisions.\n  The controller/operator just needs to set different values to the same label key for different\n  revisions. For example, if you are configuring a Deployment, you can use the label keyed with\n  [pod-template-hash](/docs/concepts/workloads/controllers/deployment/#pod-template-hash-label), which\n  is added automatically by the Deployment controller, to distinguish between different revisions\n  in a single Deployment.\n\n  ```yaml\n      topologySpreadConstraints:\n          - maxSkew: 1\n            topologyKey: kubernetes.io/hostname\n            whenUnsatisfiable: DoNotSchedule\n            labelSelector:\n              matchLabels:\n                app: foo\n            matchLabelKeys:\n              - pod-template-hash\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/assign-pod-node.md::28",
+      "score": 0.71801,
+      "text": "Keys` **directly**, (that is, not via a deployment),\nkube-apiserver doesn't reflect the label update onto the merged `labelSelector`.\n{{< /caution >}}\n\nA common use case is to use `matchLabelKeys` with `pod-template-hash` (set on Pods\nmanaged as part of a Deployment, where the value is unique for each revision).\nUsing `pod-template-hash` in `matchLabelKeys` allows you to target the Pods that belong\nto the same revision as the incoming Pod, so that a rolling upgrade won't break affinity.\n\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: application-server\n...\nspec:\n  template:\n    spec:\n      affinity:\n        podAffinity:\n          requiredDuringSchedulingIgnoredDuringExecution:\n          - labelSelector:\n              matchExpressions:\n              - key: app\n                operator: In\n                values:\n                - database\n            topologyKey: topology.kubernetes.io/zone"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::21",
+      "score": 0.71464,
+      "text": "lumns`).\n\nFor more information, please see [kubectl label](/docs/reference/generated/kubectl/kubectl-commands/#label).\n\n## {{% heading \"whatsnext\" %}}\n\n- Learn how to [add a label to a node](/docs/tasks/configure-pod-container/assign-pods-nodes/#add-a-label-to-a-node)\n- Find [Well-known labels, Annotations and Taints](/docs/reference/labels-annotations-taints/)\n- See [Recommended labels](/docs/concepts/overview/working-with-objects/common-labels/)\n- [Enforce Pod Security Standards with Namespace Labels](/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/)\n- Read a blog on [Writing a Controller for Pod Labels](/blog/2021/06/21/writing-a-controller-for-pod-labels/)"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::24",
+      "score": 0.7133,
+      "text": "up front.\nIn any case, if you need to perform a label selector update, exercise great caution and make sure you have grasped\nall of the implications.\n\n{{< note >}}\nIn API version `apps/v1`, a Deployment's label selector is immutable after it gets created.\n{{< /note >}}\n\n* Selector additions require the Pod template labels in the Deployment spec to be updated with the new label too,\notherwise a validation error is returned. This change is a non-overlapping one, meaning that the new selector does\nnot select ReplicaSets and Pods created with the old selector, resulting in orphaning all old ReplicaSets and\ncreating a new ReplicaSet.\n* Selector updates changes the existing value in a selector key -- result in the same behavior as additions.\n* Selector removals removes an existing key from the Deployment selector -- do not require any changes in the\nPod template labels. Existing ReplicaSets are not orphaned, and a new ReplicaSet is not created, but note that the"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::4",
+      "score": 0.69006,
+      "text": ", `kube-controller-manager`,\n`kube-apiserver`, `kubectl`, or other third-party automation) which add labels\nto end-user objects must specify a prefix.\n\nThe `kubernetes.io/` and `k8s.io/` prefixes are\n[reserved](/docs/reference/labels-annotations-taints/) for Kubernetes core components.\n\nValid label value:\n\n* must be 63 characters or less (can be empty),\n* unless empty, must begin and end with an alphanumeric character (`[a-z0-9A-Z]`),\n* could contain dashes (`-`), underscores (`_`), dots (`.`), and alphanumerics between.\n\nFor example, here's a manifest for a Pod that has two labels\n`environment: production` and `app: nginx`:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: label-demo\n  labels:\n    environment: production\n    app: nginx\nspec:\n  containers:\n  - name: nginx\n    image: nginx:1.14.2\n    ports:\n    - containerPort: 80\n```\n\n## Label selectors"
+    }
+  ],
+  "answer": "The provided context does not contain information about a specific `kubectl` command to update the label selector of an existing Kubernetes Deployment. Therefore, based on the given documentation, I cannot provide a specific `kubectl` command for this action.",
+  "prompt_sha256": "322cab47d89d48e6c1ac46a364f3259cc255e927c9fa07a3324358bc2a8a3c9a",
+  "timings_s": {
+    "retrieve": 0.38,
+    "generate": 26.46
+  }
+}

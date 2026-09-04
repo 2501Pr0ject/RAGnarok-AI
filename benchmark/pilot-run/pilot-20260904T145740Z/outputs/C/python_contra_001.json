@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_contra_001",
+  "question": "On Windows, what command activates a virtual environment created with venv?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::2",
+      "score": 0.61611,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will install the Python version from which\nthe command was run (as reported by the :option:`--version` option).\nFor instance, executing the command with ``python3.12`` will install\nversion 3.12.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::2",
+      "score": 0.58595,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::3",
+      "score": 0.58421,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::3",
+      "score": 0.5826,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/windows-networking.md::1",
+      "score": 0.44976,
+      "text": "rvice (HCS) work together to create containers and attach container\nvNICs to networks. HCS is responsible for the management of containers whereas HNS\nis responsible for the management of networking resources such as:\n\n* Virtual networks (including creation of vSwitches)\n* Endpoints / vNICs\n* Namespaces\n* Policies including packet encapsulations, load-balancing rules, ACLs, and NAT rules.\n\nThe Windows HNS and vSwitch implement namespacing and can\ncreate virtual NICs as needed for a pod or container. However, many configurations such\nas DNS, routes, and metrics are stored in the Windows registry database rather than as\nfiles inside `/etc`, which is how Linux stores those configurations. The Windows registry for the container\nis separate from that of the host, so concepts like mapping `/etc/resolv.conf` from\nthe host into a container don't have the same effect they would on Linux. These must\nbe configured using Windows APIs run in the context of that container. Therefore"
+    }
+  ],
+  "answer": "On Windows, to activate a virtual environment created with venv, you should run:\n\n```\ntutorial-env\\Scripts\\activate\n```",
+  "prompt_sha256": "48d1f7b0a59a669984676a260d902da835d3985cf62fbb9d1edb628c372cf103",
+  "timings_s": {
+    "retrieve": 0.31,
+    "generate": 21.82
+  }
+}

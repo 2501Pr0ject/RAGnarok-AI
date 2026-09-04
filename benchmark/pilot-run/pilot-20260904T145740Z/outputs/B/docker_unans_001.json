@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_unans_001",
+  "question": "What are the main changes introduced in Docker Engine version 28?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/daemon/_index.md::45",
+      "score": 0.77427,
+      "text": "(the default for Docker Engine 29.0 and later on fresh installations), image"
+    },
+    {
+      "id": "docker/manuals/engine/install/raspberry-pi-os.md::27",
+      "score": 0.76495,
+      "text": "> [!WARNING]\n>\n> Docker Engine v28 is the last major version to support Raspberry Pi OS 32-bit (armhf). Starting with v29,"
+    },
+    {
+      "id": "docker/get-started/introduction/develop-with-containers.md::3",
+      "score": 0.76152,
+      "text": "Docker's powerful features. We'll cover making real-time changes to both"
+    },
+    {
+      "id": "docker/manuals/engine/install/raspberry-pi-os.md::7",
+      "score": 0.74404,
+      "text": "> Docker Engine v28 will be the last major version to support Raspberry Pi OS 32-bit (armhf)."
+    },
+    {
+      "id": "docker/manuals/engine/network/firewall-nftables.md::20",
+      "score": 0.7384,
+      "text": "configuration. However, the tables and their rules are likely to change\nbetween Docker Engine releases."
+    }
+  ],
+  "answer": "The provided context does not specify any main changes introduced in Docker Engine version 28. It only mentions that Docker Engine v28 is the last major version to support Raspberry Pi OS 32-bit (armhf). Therefore, based on the given information, I cannot provide details about the main changes introduced in Docker Engine version 28.",
+  "prompt_sha256": "d6c3eb098d2569d15c439c934480c3169eaf83af05350bd9caee6f7039448e21",
+  "timings_s": {
+    "retrieve": 7.21,
+    "generate": 15.45
+  }
+}

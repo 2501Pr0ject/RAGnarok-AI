@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "docker_contra_001",
+  "question": "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::11",
+      "score": 0.76865,
+      "text": "the value is `[]` (empty list) or `''` (empty string), the default command declared by the image is ignored, or in other words overridden to be empty.\n\n> [!NOTE]\n>\n> Unlike the `CMD` instruction in a Dockerfile, the `command` field doesn't automatically run within the context of the [`SHELL`](/reference/dockerfile.md#shell-form) instruction defined in the image. If your `command` relies on shell-specific features, such as environment variable expansion, you need to explicitly run it within a shell. For example:\n>\n> ```yaml\n> command: /bin/sh -c 'echo \"hello $$HOSTNAME\"'\n> ```\n\nThe value can also be a list, similar to the [exec-form syntax](/reference/dockerfile.md#exec-form)\nused by the [Dockerfile](/reference/dockerfile.md#exec-form).\n\n### `configs`\n\n`configs` let services adapt their behaviour without the need to rebuild a Docker image.\nServices can only access configs when explicitly granted by the `configs` attribute. Two different syntax variants are supported."
+    },
+    {
+      "id": "docker/manuals/engine/swarm/configs.md::9",
+      "score": 0.75981,
+      "text": "s for\n> simplicity. The examples use Linux containers, but Windows containers also\n> support configs.\n\n### Defining and using configs in compose files\n\nThe `docker stack` command supports defining configs in a Compose file.\nHowever, the `configs` key is not supported for `docker compose`. See\n[the Compose file reference](/reference/compose-file/configs.md) for details.\n\n### Simple example: Get started with configs\n\nThis simple example shows how configs work in just a few commands. For a\nreal-world example, continue to\n[Advanced example: Use configs with a Nginx service](#advanced-example-use-configs-with-a-nginx-service).\n\n1.  Add a config to Docker. The `docker config create` command reads standard\n    input because the last argument, which represents the file to read the\n    config from, is set to `-`.\n\n    ```console\n    $ echo \"This is a config\" | docker config create my-config -\n    ```"
+    },
+    {
+      "id": "docker/reference/compose-file/_index.md::2",
+      "score": 0.73948,
+      "text": "features and use cases of Docker Compose](/manuals/compose/intro/features-uses.md) or [try the quickstart guide](/manuals/compose/gettingstarted.md).\n\nThe Compose Specification is the latest and recommended version of the Compose file format. It helps you define a [Compose file](/manuals/compose/intro/compose-application-model.md) which is used to configure your Docker application\u2019s services, networks, volumes, and more.\n\nLegacy versions 2.x and 3.x of the Compose file format were merged into the Compose Specification. It is implemented in versions 1.27.0 and above (also known as Compose v2) of the Docker Compose CLI.\n\nThe Compose Specification on Docker Docs is the Docker Compose implementation. If you wish to implement your own version of the Compose Specification, see the [Compose Specification repository](https://github.com/compose-spec/compose-spec).\n\nUse the following links to navigate key sections of the Compose Specification."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/dual-stack.md::2",
+      "score": 0.0,
+      "text": "er\n\n  For information about using dual-stack services with earlier\n  Kubernetes versions, refer to the documentation for that version\n  of Kubernetes.\n\n* Provider support for dual-stack networking (Cloud provider or otherwise must be able to provide\n  Kubernetes nodes with routable IPv4/IPv6 network interfaces)\n* A [network plugin](/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) that\n  supports dual-stack networking.\n\n## Configure IPv4/IPv6 dual-stack\n\nTo configure IPv4/IPv6 dual-stack, set dual-stack cluster network assignments:"
+    },
+    {
+      "id": "fastapi/tutorial/path-operation-configuration.md::0",
+      "score": 0.0,
+      "text": "# Path Operation Configuration { #path-operation-configuration }\n\nThere are several parameters that you can pass to your *path operation decorator* to configure it.\n\n/// warning\n\nNotice that these parameters are passed directly to the *path operation decorator*, not to your *path operation function*.\n\n///\n\n## Response Status Code { #response-status-code }\n\nYou can define the (HTTP) `status_code` to be used in the response of your *path operation*.\n\nYou can pass directly the `int` code, like `404`.\n\nBut if you don't remember what each number code is for, you can use the shortcut constants in `status`:\n\n{* ../../docs_src/path_operation_configuration/tutorial001_py310.py hl[1,15] *}\n\nThat status code will be used in the response and will be added to the OpenAPI schema.\n\n/// note | Technical Details\n\nYou could also use `from starlette import status`."
+    }
+  ],
+  "answer": "No, the `command` field in Docker Compose does not automatically run within the context of the `SHELL` instruction defined in the image. Therefore, it does not support shell features like environment variable expansion by default, unlike the `CMD` instruction in a Dockerfile when used with the shell form. To achieve similar functionality, you need to explicitly run it within a shell as shown in the example provided in the context.",
+  "prompt_sha256": "cca98980deab16602b326d4e38cc51f63605c82b7fe4c3d96f15dc08110f8131",
+  "timings_s": {
+    "retrieve": 0.7,
+    "generate": 32.45
+  }
+}

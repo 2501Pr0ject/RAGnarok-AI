@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_multi_002",
+  "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::15",
+      "score": 0.71003,
+      "text": "service account token projection](/docs/tasks/configure-pod-container/configure-service-account/#launch-a-pod-using-service-account-token-projection).\n\n{{< note >}}\nYou should only create a ServiceAccount token Secret\nif you can't use the `TokenRequest` API to obtain a token,\nand the security exposure of persisting a non-expiring token credential\nin a readable API object is acceptable to you. For instructions, see\n[Manually create a long-lived API token for a ServiceAccount](/docs/tasks/configure-pod-container/configure-service-account/#manually-create-an-api-token-for-a-serviceaccount).\n{{< /note >}}\n\nWhen using this Secret type, you need to ensure that the\n`kubernetes.io/service-account.name` annotation is set to an existing\nServiceAccount name. If you are creating both the ServiceAccount and\nthe Secret objects, you should create the ServiceAccount object first."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::43",
+      "score": 0.70692,
+      "text": "## Information security for Secrets\n\nAlthough ConfigMap and Secret work similarly, Kubernetes applies some additional\nprotection for Secret objects.\n\nSecrets often hold values that span a spectrum of importance, many of which can\ncause escalations within Kubernetes (e.g. service account tokens) and to\nexternal systems. Even if an individual app can reason about the power of the\nSecrets it expects to interact with, other apps within the same namespace can\nrender those assumptions invalid.\n\nAuthorization configuration affects how Secret data can be accessed within a namespace. \nFor example, granting **list** or **watch** permissions on Secrets allows a subject\nto read all Secret data in that namespace, not only the Secrets explicitly \nreferenced by its Pods. Restrict access to the minimum set of permissions \nrequired for a workload to function, and avoid granting broad roles such as \n`cluster-admin` unless required for administrative purposes."
+    },
+    {
+      "id": "kubernetes/concepts/security/service-accounts.md::20",
+      "score": 0.6923,
+      "text": "e and ensure that secrets are accessed only by the appropriate resources.\n\n## Authenticating service account credentials {#authenticating-credentials}\n\nServiceAccounts use signed\n{{<glossary_tooltip term_id=\"jwt\" text=\"JSON Web Tokens\">}}  (JWTs)\nto authenticate to the Kubernetes API server, and to any other system where a\ntrust relationship exists. Depending on how the token was issued\n(either time-limited using a `TokenRequest` or using a legacy mechanism with\na Secret), a ServiceAccount token might also have an expiry time, an audience,\nand a time after which the token *starts* being valid. When a client that is\nacting as a ServiceAccount tries to communicate with the Kubernetes API server,\nthe client includes an `Authorization: Bearer <token>` header with the HTTP\nrequest. The API server checks the validity of that bearer token as follows:"
+    },
+    {
+      "id": "kubernetes/concepts/security/service-accounts.md::12",
+      "score": 0.67861,
+      "text": "credentials for a ServiceAccount to mount in a non-standard\nlocation, or for an audience that isn't the API server, use one of the\nfollowing methods:\n\n* [TokenRequest API](/docs/reference/kubernetes-api/authentication-resources/token-request-v1/)\n  (recommended): Request a short-lived service account token from within\n  your own *application code*. The token expires automatically and can rotate\n  upon expiration.\n  If you have a legacy application that is not aware of Kubernetes, you\n  could use a sidecar container within the same pod to fetch these tokens\n  and make them available to the application workload.\n* [Token Volume Projection](/docs/tasks/configure-pod-container/configure-service-account/#serviceaccount-token-volume-projection)\n  (also recommended): In Kubernetes v1.20 and later, use the Pod specification to\n  tell the kubelet to add the service account token to the Pod as a\n  *projected volume*. Projected tokens expire automatically, and the kubelet"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::17",
+      "score": 0.6677,
+      "text": "l\" file=\"secret/serviceaccount-token-secret.yaml\" %}}\n\nAfter creating the Secret, wait for Kubernetes to populate the `token` key in the `data` field.\n\nSee the [ServiceAccount](/docs/concepts/security/service-accounts/)\ndocumentation for more information on how ServiceAccounts work.\nYou can also check the `automountServiceAccountToken` field and the\n`serviceAccountName` field of the\n[`Pod`](/docs/reference/generated/kubernetes-api/{{< param \"version\" >}}/#pod-v1-core)\nfor information on referencing ServiceAccount credentials from within Pods.\n\n### Docker config Secrets\n\nIf you are creating a Secret to store credentials for accessing a container image registry,\nyou must use one of the following `type` values for that Secret:"
+    }
+  ],
+  "answer": "You should put the API token in a Secret rather than a ConfigMap. The context mentions that although ConfigMap and Secret work similarly, Kubernetes applies some additional protection for Secret objects. This is particularly important for sensitive information like API tokens, as Secrets provide enhanced security measures to protect such data.",
+  "prompt_sha256": "c6ad183924bbd7133c6a034d19fc57518e36d5a45fb349033a6fda66a83f9106",
+  "timings_s": {
+    "retrieve": 1.54,
+    "generate": 26.71
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "fastapi_context_001",
+  "question": "In FastAPI, what makes a query parameter required rather than optional?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::2",
+      "score": 0.79787,
+      "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+    }
+  ],
+  "answer": "The provided context does not contain information about making a query parameter required in FastAPI. It only explains how to declare optional query parameters by setting their default value to `None` and provides examples of declaring `bool` types for query parameters which are automatically converted. Therefore, the specific details on marking a query parameter as required are not present in the given documentation.",
+  "prompt_sha256": "040bb1b8753e0ac2031439e3d6f93a4d5ed4268b085c9260c4704128f40900e6",
+  "timings_s": {
+    "retrieve": 0.6,
+    "generate": 19.62
+  }
+}

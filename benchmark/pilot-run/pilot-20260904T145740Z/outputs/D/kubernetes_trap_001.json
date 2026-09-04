@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_trap_001",
+  "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::4",
+      "score": 0.76312,
+      "text": ", `kube-controller-manager`,\n`kube-apiserver`, `kubectl`, or other third-party automation) which add labels\nto end-user objects must specify a prefix.\n\nThe `kubernetes.io/` and `k8s.io/` prefixes are\n[reserved](/docs/reference/labels-annotations-taints/) for Kubernetes core components.\n\nValid label value:\n\n* must be 63 characters or less (can be empty),\n* unless empty, must begin and end with an alphanumeric character (`[a-z0-9A-Z]`),\n* could contain dashes (`-`), underscores (`_`), dots (`.`), and alphanumerics between.\n\nFor example, here's a manifest for a Pod that has two labels\n`environment: production` and `app: nginx`:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: label-demo\n  labels:\n    environment: production\n    app: nginx\nspec:\n  containers:\n  - name: nginx\n    image: nginx:1.14.2\n    ports:\n    - containerPort: 80\n```\n\n## Label selectors"
+    }
+  ],
+  "answer": "The provided context does not contain information about updating the label selector of an existing Kubernetes Deployment using `kubectl`. Therefore, the answer cannot be derived from the given documentation.",
+  "prompt_sha256": "7d97631c38d5ed9f48faf2e5f5f56e32e0819195d797581e8e28ba69d898c4c6",
+  "timings_s": {
+    "retrieve": 0.62,
+    "generate": 11.51
+  }
+}

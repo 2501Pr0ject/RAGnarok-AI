@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "fastapi_multi_001",
+  "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::25",
+      "score": 0.89148,
+      "text": "You can declare multiple path parameters and query parameters at the same time, **FastAPI** knows which is which."
+    },
+    {
+      "id": "fastapi/tutorial/body-multiple-params.md::18",
+      "score": 0.86441,
+      "text": "The same way there is a `Query` and `Path` to define extra data for query and path parameters, **FastAPI** provides an equival"
+    },
+    {
+      "id": "fastapi/tutorial/body-multiple-params.md::2",
+      "score": 0.8506,
+      "text": "First, of course, you can mix `Path`, `Query` and request body parameter declarations freely and **FastAPI** will know what to"
+    },
+    {
+      "id": "fastapi/tutorial/body.md::46",
+      "score": 0.84823,
+      "text": "**FastAPI** will recognize that the function parameters that match path parameters should be **taken from the path**, and that"
+    },
+    {
+      "id": "fastapi/advanced/websockets.md::28",
+      "score": 0.82602,
+      "text": "* `Query`\n\nThey work the same way as for other FastAPI endpoints/*path operations*:"
+    }
+  ],
+  "answer": "The provided context does not contain specific details on how path parameters and query parameters differ in declaration or requirement status. Therefore, the information needed to answer the question is not present in the given documentation.",
+  "prompt_sha256": "4e11234bd13cc7cd3dfa6f13f6d64fb2f19f37fdaa99f1f920526510ed6d032f",
+  "timings_s": {
+    "retrieve": 7.42,
+    "generate": 8.65
+  }
+}

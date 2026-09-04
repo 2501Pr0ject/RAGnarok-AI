@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "docker_multi_001",
+  "question": "What is the difference between Docker volumes and bind mounts, and why are volumes the recommended option for persisting container data?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/workload-api/disruption-and-priority.md::7",
+      "score": 0.0,
+      "text": "name: job-1\nspec:\n  priorityClassName: high-priority\n```\n\n### CompositePodGroup priority\n\n{{< feature-state feature_gate_name=\"CompositePodGroup\" >}}\n\n`CompositePodGroup` API has `priorityClassName` and `priority` fields as well and their resolution\nis performed in the same way as for the `PodGroups`, through the priority admission controller.\n\nThe priority of a root `CompositePodGroup` acts as the authoritative priority for all child groups\nand Pods within its hierarchy during\n[workload-aware preemption](/docs/concepts/scheduling-eviction/workload-aware-preemption/) events.\nAll Pods within a single group hierarchy must share the exact same priority and must be equal to the\npriority of the root `CompositePodGroup`.\n\nThe value of priority is also used for the ordering of root `CompositePodGroups` in the scheduling\nactive queue."
+    },
+    {
+      "id": "python/tutorial/controlflow.rst::32",
+      "score": 0.0,
+      "text": "argument (``voltage``) and three optional arguments\n(``state``, ``action``, and ``type``).  This function can be called in any\nof the following ways::\n\n   parrot(1000)                                          # 1 positional argument\n   parrot(voltage=1000)                                  # 1 keyword argument\n   parrot(voltage=1000000, action='VOOOOOM')             # 2 keyword arguments\n   parrot(action='VOOOOOM', voltage=1000000)             # 2 keyword arguments\n   parrot('a million', 'bereft of life', 'jump')         # 3 positional arguments\n   parrot('a thousand', state='pushing up the daisies')  # 1 positional, 1 keyword\n\nbut all the following calls would be invalid::\n\n   parrot()                     # required argument missing\n   parrot(voltage=5.0, 'dead')  # non-keyword argument after a keyword argument\n   parrot(110, voltage=220)     # duplicate value for the same argument\n   parrot(actor='John Cleese')  # unknown keyword argument"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::60",
+      "score": 0.0,
+      "text": "es.\nYou can find more information about `ExternalName` resolution in\n[DNS for Services and Pods](/docs/concepts/services-networking/dns-pod-service/).\n\n<!-- preserve existing hyperlinks -->\n<a id=\"shortcomings\" />\n<a id=\"the-gory-details-of-virtual-ips\" />\n<a id=\"proxy-modes\" />\n<a id=\"proxy-mode-userspace\" />\n<a id=\"proxy-mode-iptables\" />\n<a id=\"proxy-mode-ipvs\" />\n<a id=\"ips-and-vips\" />\n\n## Virtual IP addressing mechanism\n\nRead [Virtual IPs and Service Proxies](/docs/reference/networking/virtual-ips/) explains the\nmechanism Kubernetes provides to expose a Service with a virtual IP address.\n\n### Traffic policies\n\nYou can set the `.spec.internalTrafficPolicy` and `.spec.externalTrafficPolicy` fields\nto control how Kubernetes routes traffic to healthy (\u201cready\u201d) backends.\n\nSee [Traffic Policies](/docs/reference/networking/virtual-ips/#traffic-policies) for more details.\n\n### Traffic distribution control {#traffic-distribution}"
+    },
+    {
+      "id": "kubernetes/concepts/containers/container-environment.md::1",
+      "score": 0.0,
+      "text": "It is available through the `hostname` command or the\n[`gethostname`](https://man7.org/linux/man-pages/man2/gethostname.2.html)\nfunction call in libc.\n\nThe Pod name and namespace are available as environment variables through the\n[downward API](/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/).\n\nUser-defined environment variables from the Pod definition are also available to the Container,\nas are any environment variables specified statically in the container image.\n\n### Cluster information\n\nA list of all services that were running when a Container was created is available to that Container as environment variables.\nThis list is limited to services within the same namespace as the new Container's Pod and Kubernetes control plane services.\n\nFor a service named *foo* that exposes a set of Pods, each running a container named *bar*,\nthe following variables are defined:"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/manage-resources-containers.md::19",
+      "score": 0.0,
+      "text": "e Pod or container can also apply to pages in memory backed\n  volumes, such as an `emptyDir`. The kubelet tracks `tmpfs` emptyDir volumes as container\n  memory use, rather than as local [ephemeral storage](/docs/concepts/storage/ephemeral-storage/).\n  When using memory backed `emptyDir`,\n  be sure to check the notes [below](#memory-backed-emptydir).\n\nIf a container exceeds its memory request and the node that it runs on becomes short of\nmemory overall, it is likely that the Pod the container belongs to will be\n{{< glossary_tooltip text=\"evicted\" term_id=\"eviction\" >}}.\n\nA container might or might not be allowed to exceed its CPU limit for extended periods of time.\nHowever, container runtimes don't terminate Pods or containers for excessive CPU usage.\n\nTo determine whether a container cannot be scheduled or is being killed due to resource limits,\nsee the [Troubleshooting](#troubleshooting) section.\n\n### Resizing container resources"
+    }
+  ],
+  "answer": "The provided context does not contain information about Docker volumes, bind mounts, or their differences. Therefore, the information needed to answer the question is not present in the given documentation.",
+  "prompt_sha256": "031810b0e410466e9147cb88dedbd5c648ed7504195fe8d7dbf4dcc163d00b20",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 23.57
+  }
+}

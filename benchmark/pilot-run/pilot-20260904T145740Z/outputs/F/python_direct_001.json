@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_direct_001",
+  "question": "What command do I run to create a virtual environment called tutorial-env?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/containers/images.md::8",
+      "score": 0.0,
+      "text": "of the image is running and more difficult to\nroll back properly.\n\nInstead, specify a meaningful tag such as `v1.42.0` and/or a digest.\n{{< /note >}}\n\nTo make sure the Pod always uses the same version of a container image, you can specify\nthe image's digest;\nreplace `<image-name>:<tag>` with `<image-name>@<digest>`\n(for example, `image@sha256:45b23dee08af5e43a7fea6c4cf9c25ccf269ee113168c19722f87876677c5cb2`).\n\nWhen using image tags, if the image registry were to change the code that the tag on that image\nrepresents, you might end up with a mix of Pods running the old and new code. An image digest\nuniquely identifies a specific version of the image, so Kubernetes runs the same code every time\nit starts a container with that image name and digest specified. Specifying an image by digest\npins the code that you run so that a change at the registry cannot lead to that mix of versions."
+    },
+    {
+      "id": "python/howto/argparse.rst::35",
+      "score": 0.0,
+      "text": "m the :mod:`argparse`\nmodule and output them into a file named ``messages.po``. This command assumes\nthat your Python installation is in ``/usr/lib``.\n\nYou can find out the location of the :mod:`argparse` module on your system\nusing this script::\n\n   import argparse\n   print(argparse.__file__)\n\nOnce the messages in the ``.po`` file are translated and the translations are\ninstalled using :mod:`gettext`, :mod:`argparse` will be able to display the\ntranslated messages.\n\nTo translate your own strings in the :mod:`argparse` output, use :mod:`gettext`.\n\nConclusion\n==========\n\nThe :mod:`argparse` module offers a lot more than shown here.\nIts docs are quite detailed and thorough, and full of examples.\nHaving gone through this tutorial, you should easily digest them\nwithout feeling overwhelmed."
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::25",
+      "score": 0.0,
+      "text": "h this setup, the containers write their logs to separate subdirectories of\nthe `logs` volume. The containers can't access the other container's logs.\n\n## Share data between machines\n\nWhen building fault-tolerant applications, you may need to configure multiple\nreplicas of the same service to have access to the same files.\n\n![shared storage](images/volumes-shared-storage.webp)\n\nThere are several ways to achieve this when developing your applications.\nOne is to add logic to your application to store files on a cloud object\nstorage system like Amazon S3. Another is to create volumes with a driver that\nsupports writing files to an external storage system like NFS or Amazon S3.\n\nVolume drivers let you abstract the underlying storage system from the\napplication logic. For example, if your services use a volume with an NFS\ndriver, you can update the services to use a different driver. For example, to\nstore data in the cloud, without changing the application logic.\n\n## Use a volume driver"
+    },
+    {
+      "id": "docker/manuals/engine/swarm/secrets.md::49",
+      "score": 0.0,
+      "text": "nect to MySQL.\n\n    First, find the ID of the `mysql` container task.\n\n    ```console\n    $ docker ps --filter name=mysql -q\n\n    c7705cf6176f\n    ```\n\n    Substitute the ID in the command below, or use the second variant which\n    uses shell expansion to do it all in a single step.\n\n    ```console\n    $ docker container exec <CONTAINER_ID> \\\n        bash -c 'mysqladmin --user=wordpress --password=\"$(< /run/secrets/old_mysql_password)\" password \"$(< /run/secrets/mysql_password)\"'\n    ```\n\n    Or:\n\n    ```console\n    $ docker container exec $(docker ps --filter name=mysql -q) \\\n        bash -c 'mysqladmin --user=wordpress --password=\"$(< /run/secrets/old_mysql_password)\" password \"$(< /run/secrets/mysql_password)\"'\n    ```\n\n4.  Update the `wordpress` service to use the new password, keeping the target\n    path at `/run/secrets/wp_db_password`. This triggers a rolling restart of\n    the WordPress service and the new secret is used."
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/ingress.md::3",
+      "score": 0.0,
+      "text": "etes {{< glossary_tooltip term_id=\"service\" >}} that identifies\n  a set of Pods using {{< glossary_tooltip text=\"label\" term_id=\"label\" >}} selectors.\n  Unless mentioned otherwise, Services are assumed to have virtual IPs only routable within the cluster network.\n\n## What is Ingress?\n\n[Ingress](/docs/reference/generated/kubernetes-api/{{< param \"version\" >}}/#ingress-v1-networking-k8s-io)\nexposes HTTP and HTTPS routes from outside the cluster to\n{{< link text=\"services\" url=\"/docs/concepts/services-networking/service/\" >}} within the cluster.\nTraffic routing is controlled by rules defined on the Ingress resource.\n\nHere is a simple example where an Ingress sends all its traffic to one Service:"
+    }
+  ],
+  "answer": "The provided context does not contain information about creating a virtual environment called tutorial-env. Therefore, the answer cannot be derived from the given documentation.",
+  "prompt_sha256": "76571cc261b2350b115bfddfc4967d6fdf2cd039a973bd05bc88824c3f03decb",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 22.46
+  }
+}

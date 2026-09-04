@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_unans_001",
+  "question": "What are the steps to install kubectl on my machine?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/management.md::9",
+      "score": 0.71466,
+      "text": "rning more about `kubectl`, go ahead and read\n[Command line tool (kubectl)](/docs/reference/kubectl/).\n\n## Updating your application without an outage\n\nAt some point, you'll eventually need to update your deployed application, typically by specifying\na new image or image tag. `kubectl` supports several update operations, each of which is applicable\nto different scenarios.\n\nYou can run multiple copies of your app, and use a _rollout_ to gradually shift the traffic to\nnew healthy Pods. Eventually, all the running Pods would have the new software.\n\nThis section of the page guides you through how to create and update applications with Deployments.\n\nLet's say you were running version 1.14.2 of nginx:\n\n```shell\nkubectl create deployment my-nginx --image=nginx:1.14.2\n```\n\n```none\ndeployment.apps/my-nginx created\n```\n\nEnsure that there is 1 replica:\n\n```shell\nkubectl scale --replicas 1 deployments/my-nginx --subresource='scale' --type='merge' -p '{\"spec\":{\"replicas\": 1}}'\n```"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::1",
+      "score": 0.70842,
+      "text": "variable or by setting the\n[`--kubeconfig`](/docs/concepts/configuration/organize-cluster-access-kubeconfig/) flag.\n\n<!-- body -->\n\n## Role of kubectl\n\nThe `kubectl` tool is the primary interface for creating, inspecting, updating, and deleting Kubernetes objects.\nIt complements the [Kubernetes Components](/docs/concepts/overview/components/) that run inside your cluster\nand the [Kubernetes API](/docs/concepts/overview/kubernetes-api/) that those components implement.\nWhether you run `kubectl` from your laptop or from a Pod inside the cluster, it sends requests to the API server.\nOther clients, such as [client libraries](/docs/reference/using-api/client-libraries/) and web dashboards\nlike [Headlamp](https://headlamp.dev/), also communicate through the same API.\n\n## How kubectl works"
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::5",
+      "score": 0.70739,
+      "text": "ines.\n\nFor syntax, command reference, and examples, see the [kubectl reference documentation](/docs/reference/kubectl/).\n\n## Declarative vs imperative\n\nFor production workloads, prefer [declarative object management](/docs/concepts/overview/working-with-objects/object-management/)\nusing `kubectl apply` with version-controlled configuration files.\nDeclarative management helps you track changes, collaborate, and integrate with GitOps workflows.\nImperative commands (such as `kubectl create` or `kubectl run`) are useful for development and experimentation,\nbut are harder to reproduce and audit.\n\n## Extending kubectl with plugins\n\nYou can extend `kubectl` with [plugins](/docs/tasks/extend-kubectl/kubectl-plugins/) that add new\nsub-commands. Plugins are standalone binaries that follow the `kubectl-<plugin-name>` naming convention.\nThe Kubernetes community maintains many plugins, and you can manage them with the\n[Krew](https://krew.sigs.k8s.io/) plugin manager.\n\n## Version compatibility"
+    },
+    {
+      "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::50",
+      "score": 0.0,
+      "text": "en the container has exhausted all the memory that is available to it.\nThere is a performance penalty for applications that swap memory to disk often.\n\n- If `memswap_limit` is set to a positive integer, then both `memory` and `memswap_limit` must be set. `memswap_limit` represents the total amount of memory and swap that can be used, and `memory` controls the amount used by non-swap memory. So if `memory`=\"300m\" and `memswap_limit`=\"1g\", the container can use 300m of memory and 700m (1g - 300m) swap.\n- If `memswap_limit` is set to 0, the setting is ignored, and the value is treated as unset.\n- If `memswap_limit` is set to the same value as `memory`, and `memory` is set to a positive integer, the container does not have access to swap."
+    },
+    {
+      "id": "kubernetes/concepts/containers/images.md::7",
+      "score": 0.0,
+      "text": "ed\n  image without downloading it again. The kubelet itself does not check\n  whether the image is cached locally; it always delegates to the container\n  runtime.\n\n`Never`\n: the kubelet does not try fetching the image. If the image is somehow already present\n  locally, the kubelet attempts to start the container; otherwise, startup fails.\n  See [pre-pulled images](#pre-pulled-images) for more details.\n\nThe caching semantics of the container runtime make even\n`imagePullPolicy: Always` efficient, as long as the registry is reliably accessible.\nThe container runtime can notice that the image layers already exist on the node\nso that they don't need to be downloaded again.\n\n{{< note >}}\nYou should avoid using the `:latest` tag when deploying containers in production as\nit is harder to track which version of the image is running and more difficult to\nroll back properly.\n\nInstead, specify a meaningful tag such as `v1.42.0` and/or a digest.\n{{< /note >}}"
+    }
+  ],
+  "answer": "The provided context does not contain any information about how to install `kubectl` on your machine. Therefore, I cannot answer this question based on the given documentation.",
+  "prompt_sha256": "ceb332632f16361ec20aef82563f04d0efe4bb599264b191a265ab6079742b57",
+  "timings_s": {
+    "retrieve": 0.57,
+    "generate": 24.24
+  }
+}

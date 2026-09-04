@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "python_unans_001",
+  "question": "What are the parameters of str.split() and what are their default values?",
+  "retrieved": [
+    {
+      "id": "python/howto/regex.rst::70",
+      "score": 0.66014,
+      "text": ",  but     |\n|                  | returns the new string and the number of      |\n|                  | replacements                                  |\n+------------------+-----------------------------------------------+\n\n\nSplitting Strings\n-----------------\n\nThe :meth:`~re.Pattern.split` method of a pattern splits a string apart\nwherever the RE matches, returning a list of the pieces. It's similar to the\n:meth:`~str.split` method of strings but provides much more generality in the\ndelimiters that you can split by; string :meth:`!split` only supports splitting by\nwhitespace or by a fixed string.  As you'd expect, there's a module-level\n:func:`re.split` function, too.\n\n\n.. method:: .split(string [, maxsplit=0])\n   :noindex:\n\n   Split *string* by the matches of the regular expression.  If capturing\n   parentheses are used in the RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed."
+    }
+  ],
+  "answer": "The provided context does not contain information about the parameters of `str.split()` or their default values. The context only discusses the `re.Pattern.split` method, not the built-in `str.split` method. Therefore, the information is not present in the provided documentation.",
+  "prompt_sha256": "c610b475b61a94c96c99e4f2aaaf9fdcc93a01e6ad6c6aec67c258ceb5e85de4",
+  "timings_s": {
+    "retrieve": 0.66,
+    "generate": 4.64
+  }
+}

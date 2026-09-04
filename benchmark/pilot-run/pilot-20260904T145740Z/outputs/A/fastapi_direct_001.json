@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "fastapi_direct_001",
+  "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/security/index.md::3",
+      "score": 0.72669,
+      "text": "PI (previously known as Swagger) is the open specification for building APIs (now part of the Linux Foundation).\n\n**FastAPI** is based on **OpenAPI**.\n\nThat's what makes it possible to have multiple automatic interactive documentation interfaces, code generation, etc.\n\nOpenAPI has a way to define multiple security \"schemes\".\n\nBy using them, you can take advantage of all these standard-based tools, including these interactive documentation systems.\n\nOpenAPI defines the following security schemes:"
+    },
+    {
+      "id": "fastapi/tutorial/schema-extra-example.md::9",
+      "score": 0.7251,
+      "text": "on with JSON Schema, for a while, Swagger UI, the tool that provides the automatic docs, didn't support OpenAPI 3.1.0 (it does since version 5.0.0 \ud83c\udf89).\n\nBecause of that, versions of FastAPI previous to 0.99.0 still used versions of OpenAPI lower than 3.1.0.\n\n///\n\n### Pydantic and FastAPI `examples` { #pydantic-and-fastapi-examples }\n\nWhen you add `examples` inside a Pydantic model, using `schema_extra` or `Field(examples=[\"something\"])` that example is added to the **JSON Schema** for that Pydantic model.\n\nAnd that **JSON Schema** of the Pydantic model is included in the **OpenAPI** of your API, and then it's used in the docs UI."
+    },
+    {
+      "id": "fastapi/advanced/behind-a-proxy.md::17",
+      "score": 0.724,
+      "text": "ght as we wanted it. \u2714\ufe0f\n\nThis is because FastAPI uses this `root_path` to create the default `server` in OpenAPI with the URL provided by `root_path`.\n\n## Additional servers { #additional-servers }\n\n/// warning\n\nThis is a more advanced use case. Feel free to skip it.\n\n///\n\nBy default, **FastAPI** will create a `server` in the OpenAPI schema with the URL for the `root_path`.\n\nBut you can also provide other alternative `servers`, for example if you want *the same* docs UI to interact with both a staging and a production environment.\n\nIf you pass a custom list of `servers` and there's a `root_path` (because your API lives behind a proxy), **FastAPI** will insert a \"server\" with this `root_path` at the beginning of the list.\n\nFor example:\n\n{* ../../docs_src/behind_a_proxy/tutorial003_py310.py hl[4:7] *}\n\nWill generate an OpenAPI schema like:"
+    },
+    {
+      "id": "fastapi/advanced/sub-applications.md::3",
+      "score": 0.70391,
+      "text": "ve, FastAPI will take care of communicating the mount path for the sub-application using a mechanism from the ASGI specification called a `root_path`.\n\nThat way, the sub-application will know to use that path prefix for the docs UI.\n\nAnd the sub-application could also have its own mounted sub-applications and everything would work correctly, because FastAPI handles all these `root_path`s automatically.\n\nYou will learn more about the `root_path` and how to use it explicitly in the section about [Behind a Proxy](behind-a-proxy.md)."
+    },
+    {
+      "id": "fastapi/tutorial/first-steps.md::10",
+      "score": 0.70238,
+      "text": "n fastapi dev --entrypoint main:app\n```\n\nBut you would have to remember to pass the correct path\\entrypoint every time you call the `fastapi` command.\n\nAdditionally, other tools might not be able to find it, for example the [VS Code Extension](../editor-support.md) or [FastAPI Cloud](https://fastapicloud.com), so it is recommended to use the `entrypoint` in `pyproject.toml`.\n\n### Deploy your app (optional) { #deploy-your-app-optional }\n\nYou can optionally deploy your FastAPI app to [FastAPI Cloud](https://fastapicloud.com) with a single command. \ud83d\ude80\n\n<div class=\"termy\">\n\n```console\n$ uv run fastapi deploy\n\nDeploying to FastAPI Cloud...\n\n\u2705 Deployment successful!\n\n\ud83d\udc14 Ready the chicken! Your app is ready at https://myapp.fastapicloud.dev\n```\n\n</div>\n\nThe CLI will automatically detect your FastAPI application and deploy it to the cloud. If you are not logged in, your browser will open to complete the authentication process.\n\nThat's it! Now you can access your app at that URL. \u2728"
+    }
+  ],
+  "answer": "The provided context does not contain specific information about the URL where the alternative documentation UI is available when running FastAPI locally. Therefore, based on the given documentation, I cannot provide a specific URL for the alternative documentation UI.",
+  "prompt_sha256": "267d05b9c84af56ec96e46e11f719f5541264742a2254396ea2be3575a46f5d5",
+  "timings_s": {
+    "retrieve": 0.6,
+    "generate": 9.3
+  }
+}

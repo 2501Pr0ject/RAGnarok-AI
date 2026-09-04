@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_unans_002",
+  "question": "How do I install Python on Windows?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/interpreter.rst::1",
+      "score": 0.54955,
+      "text": "places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)\n\nOn Windows machines where you have installed Python from the :ref:`Microsoft Store\n<windows-store>`, the :file:`python3.12` command will be available. If you have\nthe :ref:`py.exe launcher <launcher>` installed, you can use the :file:`py`\ncommand. See :ref:`setting-envvars` for other ways to launch Python.\n\nTyping an end-of-file character (:kbd:`Control-D` on Unix, :kbd:`Control-Z` on\nWindows) at the primary prompt causes the interpreter to exit with a zero exit\nstatus.  If that doesn't work, you can exit the interpreter by typing the\nfollowing command: ``quit()``."
+    },
+    {
+      "id": "python/tutorial/whatnow.rst::1",
+      "score": 0.48408,
+      "text": "ce will give you an\n  idea of what's available.\n\n* :ref:`installing-index` explains how to install additional modules written\n  by other Python users.\n\n* :ref:`reference-index`: A detailed explanation of Python's syntax and\n  semantics.  It's heavy reading, but is useful as a complete guide to the\n  language itself.\n\nMore Python resources:\n\n* https://www.python.org:  The major Python web site.  It contains code,\n  documentation, and pointers to Python-related pages around the web.\n\n* https://docs.python.org:  Fast access to Python's  documentation.\n\n* https://pypi.org: The Python Package Index, previously also nicknamed\n  the Cheese Shop [#]_, is an index of user-created Python modules that are available\n  for download.  Once you begin releasing code, you can register it here so that\n  others can find it."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::4",
+      "score": 0.48364,
+      "text": "If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)\n\nActivating the virtual environment will change your shell's prompt to show what\nvirtual environment you're using, and modify the environment so that running\n``python`` will get you that particular version and installation of Python.\nFor example:\n\n.. code-block:: bash\n\n  $ source ~/envs/tutorial-env/bin/activate\n  (tutorial-env) $ python\n  Python 3.5.1 (default, May  6 2016, 10:59:36)\n    ...\n  >>> import sys\n  >>> sys.path\n  ['', '/usr/local/lib/python35.zip', ...,\n  '~/envs/tutorial-env/lib/python3.5/site-packages']\n  >>>\n\n\nManaging Packages with pip\n==========================\n\nYou can install, upgrade, and remove packages using a program called\n:program:`pip`.  By default ``pip`` will install packages from the `Python\nPackage Index <https://pypi.org>`_.  You can browse the Python\nPackage Index by going to it in your web browser."
+    },
+    {
+      "id": "python/tutorial/interpreter.rst::0",
+      "score": 0.47765,
+      "text": ".. _tut-using:\n\n****************************\nUsing the Python Interpreter\n****************************\n\n\n.. _tut-invoking:\n\nInvoking the Interpreter\n========================\n\nThe Python interpreter is usually installed as :file:`/usr/local/bin/python3.12`\non those machines where it is available; putting :file:`/usr/local/bin` in your\nUnix shell's search path makes it possible to start it by typing the command:\n\n.. code-block:: text\n\n   python3.12\n\nto the shell. [#]_ Since the choice of the directory where the interpreter lives\nis an installation option, other places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)"
+    },
+    {
+      "id": "python/howto/pyporting.rst::1",
+      "score": 0.46105,
+      "text": "ocs.python.org/3.10/howto/pyporting.html>`_.\n\n\nThird-party guides\n==================\n\nThere are also multiple third-party guides that might be useful:\n\n- `Guide by Fedora <https://portingguide.readthedocs.io>`_\n- `PyCon 2020 tutorial <https://www.youtube.com/watch?v=JgIgEjASOlk>`_\n- `Guide by DigitalOcean <https://www.digitalocean.com/community/tutorials/how-to-port-python-2-code-to-python-3>`_\n- `Guide by ActiveState <https://www.activestate.com/blog/how-to-migrate-python-2-applications-to-python-3>`_\n\n\n.. _python-porting: https://mail.python.org/pipermail/python-porting/"
+    }
+  ],
+  "answer": "The provided context does not contain specific steps for installing Python on Windows. It mentions that if you have installed Python from the Microsoft Store on a Windows machine, the `python3.12` command will be available. Additionally, it suggests using the `py.exe launcher` if installed. For detailed installation instructions, you should refer to the official Python documentation or third-party guides mentioned in the context.",
+  "prompt_sha256": "4652c46069b2bb0d9a1731906b8df88c24e9e6f24e1564eaa576514a8910bfe4",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 31.37
+  }
+}

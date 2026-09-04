@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_trap_001",
+  "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::4",
+      "score": 0.76312,
+      "text": ", `kube-controller-manager`,\n`kube-apiserver`, `kubectl`, or other third-party automation) which add labels\nto end-user objects must specify a prefix.\n\nThe `kubernetes.io/` and `k8s.io/` prefixes are\n[reserved](/docs/reference/labels-annotations-taints/) for Kubernetes core components.\n\nValid label value:\n\n* must be 63 characters or less (can be empty),\n* unless empty, must begin and end with an alphanumeric character (`[a-z0-9A-Z]`),\n* could contain dashes (`-`), underscores (`_`), dots (`.`), and alphanumerics between.\n\nFor example, here's a manifest for a Pod that has two labels\n`environment: production` and `app: nginx`:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: label-demo\n  labels:\n    environment: production\n    app: nginx\nspec:\n  containers:\n  - name: nginx\n    image: nginx:1.14.2\n    ports:\n    - containerPort: 80\n```\n\n## Label selectors"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::17",
+      "score": 0.76127,
+      "text": "nt.\n\n## In-place updates of resources\n\nSometimes it's necessary to make narrow, non-disruptive updates to resources you've created.\n\n### kubectl apply\n\nIt is suggested to maintain a set of configuration files in source control\n(see [configuration as code](https://martinfowler.com/bliki/InfrastructureAsCode.html)),\nso that they can be maintained and versioned along with the code for the resources they configure.\nThen, you can use [`kubectl apply`](/docs/reference/kubectl/generated/kubectl_apply/)\nto push your configuration changes to the cluster.\n\nThis command will compare the version of the configuration that you're pushing with the previous\nversion and apply the changes you've made, without overwriting any automated changes to properties\nyou haven't specified.\n\n```shell\nkubectl apply -f https://k8s.io/examples/application/nginx/nginx-deployment.yaml\n```\n\n```none\ndeployment.apps/my-nginx configured\n```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::9",
+      "score": 0.76093,
+      "text": "rning more about `kubectl`, go ahead and read\n[Command line tool (kubectl)](/docs/reference/kubectl/).\n\n## Updating your application without an outage\n\nAt some point, you'll eventually need to update your deployed application, typically by specifying\na new image or image tag. `kubectl` supports several update operations, each of which is applicable\nto different scenarios.\n\nYou can run multiple copies of your app, and use a _rollout_ to gradually shift the traffic to\nnew healthy Pods. Eventually, all the running Pods would have the new software.\n\nThis section of the page guides you through how to create and update applications with Deployments.\n\nLet's say you were running version 1.14.2 of nginx:\n\n```shell\nkubectl create deployment my-nginx --image=nginx:1.14.2\n```\n\n```none\ndeployment.apps/my-nginx created\n```\n\nEnsure that there is 1 replica:\n\n```shell\nkubectl scale --replicas 1 deployments/my-nginx --subresource='scale' --type='merge' -p '{\"spec\":{\"replicas\": 1}}'\n```"
+    },
+    {
+      "id": "docker/reference/compose-file/build.md::24",
+      "score": 0.0,
+      "text": "`ulimits` overrides the default `ulimits` for a container. It's specified either as an integer for a single limit\nor as mapping for soft/hard limits.\n\n```yml\nservices:\n  frontend:\n    build:\n      context: .\n      ulimits:\n        nproc: 65535\n        nofile:\n          soft: 20000\n          hard: 40000\n```"
+    },
+    {
+      "id": "fastapi/tutorial/security/index.md::5",
+      "score": 0.0,
+      "text": "be perfectly used for handling authentication in the same application directly:\n        * `password`: some next chapters will cover examples of this.\n* `openIdConnect`: has a way to define how to discover OAuth2 authentication data automatically.\n    * This automatic discovery is what is defined in the OpenID Connect specification.\n\n\n/// tip\n\nIntegrating other authentication/authorization providers like Google, Facebook, X (Twitter), GitHub, etc. is also possible and relatively easy.\n\nThe most complex problem is building an authentication/authorization provider like those, but **FastAPI** gives you the tools to do it easily, while doing the heavy lifting for you.\n\n///\n\n## **FastAPI** utilities { #fastapi-utilities }\n\nFastAPI provides several tools for each of these security schemes in the `fastapi.security` module that simplify using these security mechanisms.\n\nIn the next chapters you will see how to add security to your API using those tools provided by **FastAPI**."
+    }
+  ],
+  "answer": "The information provided does not contain a specific `kubectl` command for updating the label selector of an existing Kubernetes Deployment. The context focuses on using `kubectl apply` to push configuration changes and mentions rolling out updates with Deployments but does not detail how to directly update label selectors.",
+  "prompt_sha256": "41d647ebbf31f412076e361237ccfba0337fc8e3492fe2508ee2238fd817e756",
+  "timings_s": {
+    "retrieve": 0.59,
+    "generate": 25.5
+  }
+}

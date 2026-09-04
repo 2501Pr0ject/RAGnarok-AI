@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "python_context_001",
+  "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+  "retrieved": [
+    {
+      "id": "python/howto/sorting.rst::7",
+      "score": 0.75232,
+      "text": "'age'), reverse=True)\n    [('john', 'A', 15), ('jane', 'B', 12), ('dave', 'B', 10)]\n\nSort Stability and Complex Sorts\n================================\n\nSorts are guaranteed to be `stable\n<https://en.wikipedia.org/wiki/Sorting_algorithm#Stability>`_\\. That means that\nwhen multiple records have the same key, their original order is preserved.\n\n.. doctest::\n\n    >>> data = [('red', 1), ('blue', 1), ('red', 2), ('blue', 2)]\n    >>> sorted(data, key=itemgetter(0))\n    [('blue', 1), ('blue', 2), ('red', 1), ('red', 2)]\n\nNotice how the two records for *blue* retain their original order so that\n``('blue', 1)`` is guaranteed to precede ``('blue', 2)``.\n\nThis wonderful property lets you build complex sorts in a series of sorting\nsteps. For example, to sort the student data by descending *grade* and then\nascending *age*, do the *age* sort first and then sort again using *grade*:\n\n.. doctest::"
+    },
+    {
+      "id": "python/howto/sorting.rst::0",
+      "score": 0.74771,
+      "text": ".. _sortinghowto:\n\nSorting Techniques\n******************\n\n:Author: Andrew Dalke and Raymond Hettinger\n\n\nPython lists have a built-in :meth:`list.sort` method that modifies the list\nin-place.  There is also a :func:`sorted` built-in function that builds a new\nsorted list from an iterable.\n\nIn this document, we explore the various techniques for sorting data using Python.\n\n\nSorting Basics\n==============\n\nA simple ascending sort is very easy: just call the :func:`sorted` function. It\nreturns a new sorted list:\n\n.. doctest::\n\n    >>> sorted([5, 2, 3, 1, 4])\n    [1, 2, 3, 4, 5]\n\nYou can also use the :meth:`list.sort` method. It modifies the list\nin-place (and returns ``None`` to avoid confusion). Usually it's less convenient\nthan :func:`sorted` - but if you don't need the original list, it's slightly\nmore efficient.\n\n.. doctest::\n\n    >>> a = [5, 2, 3, 1, 4]\n    >>> a.sort()\n    >>> a\n    [1, 2, 3, 4, 5]"
+    },
+    {
+      "id": "python/tutorial/datastructures.rst::4",
+      "score": 0.735,
+      "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+    },
+    {
+      "id": "python/howto/sorting.rst::11",
+      "score": 0.72429,
+      "text": "ist, but including it gives two benefits:\n\n* The sort is stable -- if two items have the same key, their order will be\n  preserved in the sorted list.\n\n* The original items do not have to be comparable because the ordering of the\n  decorated tuples will be determined by at most the first two items. So for\n  example the original list could contain complex numbers which cannot be sorted\n  directly.\n\nAnother name for this idiom is\n`Schwartzian transform <https://en.wikipedia.org/wiki/Schwartzian_transform>`_\\,\nafter Randal L. Schwartz, who popularized it among Perl programmers.\n\nNow that Python sorting provides key-functions, this technique is not often needed.\n\nComparison Functions\n====================\n\nUnlike key functions that return an absolute value for sorting, a comparison\nfunction computes the relative ordering for two inputs."
+    },
+    {
+      "id": "python/tutorial/appetite.rst::2",
+      "score": 0.692,
+      "text": "st-draft\nprogram.  Python is simpler to use, available on Windows, macOS, and Unix\noperating systems, and will help you get the job done more quickly.\n\nPython is simple to use, but it is a real programming language, offering much\nmore structure and support for large programs than shell scripts or batch files\ncan offer.  On the other hand, Python also offers much more error checking than\nC, and, being a *very-high-level language*, it has high-level data types built\nin, such as flexible arrays and dictionaries.  Because of its more general data\ntypes Python is applicable to a much larger problem domain than Awk or even\nPerl, yet many things are at least as easy in Python as in those languages."
+    }
+  ],
+  "answer": "Python's sorting algorithms are guaranteed to be stable, which means that the relative order of records with equal keys (values used for comparison) is preserved from the input sequence in the sorted output.\n\nThis stability is particularly useful in scenarios where you need to perform multiple sorts on the same data. For instance, consider a situation where you want to sort students first by their grade level (descending), and then alphabetically by their names if they are at the same grade level. You can achieve this by performing two separate sorts:\n\n1. First, sort by `grade` in descending order.\n2. Then, sort by `name` in ascending order.\n\nBecause the sorting algorithm is stable, students with the same grade will maintain their relative order after the second pass of sorting based on names. Here\u2019s how you can implement this:\n\n```python\ndata = [\n    ('john', 'A', 15),\n    ('jane', 'B', 12),\n    ('dave', 'B', 10)\n]\n\n# Step 1: Sort by grade in descending order (stability ensures names remain in original order within the same grade)\ndata.sort(key=lambda student: (-student[2], student[0]))\n\nprint(data)\n```\n\nIn this example, after sorting:\n\n- `('john', 'A', 15)` will come first because of its higher grade.\n- For students with the same grade (both `B`), their original order (`'jane', 'dave'`) is preserved.\n\nThis stability allows you to build complex sort criteria incrementally, ensuring that each sorting step respects the ordering from previous steps.",
+  "prompt_sha256": "7c18a3e5b9228a684884cae6f0cd3585c615fc1d391323638e5bf1f64be6184d",
+  "timings_s": {
+    "retrieve": 0.68,
+    "generate": 89.56
+  }
+}

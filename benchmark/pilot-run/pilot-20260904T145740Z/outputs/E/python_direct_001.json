@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "python_direct_001",
+  "question": "What command do I run to create a virtual environment called tutorial-env?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::3",
+      "score": 0.7738,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::3",
+      "score": 0.77358,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::2",
+      "score": 0.76508,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::12",
+      "score": 0.0,
+      "text": "uild a Docker image.\nServices can only access configs when explicitly granted by the `configs` attribute. Two different syntax variants are supported.\n\nCompose reports an error if `config` doesn't exist on the platform or isn't defined in the\n[`configs` top-level element](configs.md) in the Compose file.\n\nThere are two syntaxes defined for configs: a short syntax and a long syntax.\n\nYou can grant a service access to multiple configs, and you can mix long and short syntax.\n\n#### Short syntax\n\nThe short syntax variant only specifies the config name. This grants the\ncontainer access to the config and mounts it as files into a service\u2019s container\u2019s filesystem. The location of the mount point within the container defaults to `/<config_name>` in Linux containers, and `C:\\<config-name>` in Windows containers."
+    },
+    {
+      "id": "docker/manuals/engine/security/trust/trust_sandbox.md::9",
+      "score": 0.0,
+      "text": "e trust data for      sandboxregistry:5000/test/trusttest\n   ```\n      You see an error, because this content doesn't exist on the `notaryserver` yet.\n\n6. Push and sign the trusted image.\n   ```console\n   / # docker push sandboxregistry:5000/test/trusttest:latest\n   The push refers to a repository [sandboxregistry:5000/test/trusttest]\n   5f70bf18a086: Pushed\n   c22f7bc058a9: Pushed\n   latest: digest: sha256:ebf59c538accdf160ef435f1a19938ab8c0d6bd96aef8d4ddd1b379edf15a926 size: 734\n   Signing and pushing trust metadata\n   You are about to create a new root signing key passphrase. This passphrase\n   will be used to protect the most sensitive key in your signing system. Please\n   choose a long, complex passphrase and be careful to keep the password and the\n   key file itself secure and backed up. It is highly recommended that you use a\n   password manager to generate the passphrase and keep it safe. There will be no"
+    }
+  ],
+  "answer": "To create a virtual environment called `tutorial-env`, you would run:\n\n```bash\npython -m venv tutorial-env\n```",
+  "prompt_sha256": "f64391d70c129597d6a4a8613819fac1d7af6581ddc949ba907fadb762c07d65",
+  "timings_s": {
+    "retrieve": 1.9,
+    "generate": 42.49
+  }
+}
