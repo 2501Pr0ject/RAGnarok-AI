@@ -1,0 +1,842 @@
+{
+  "1": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "bad_chunking"
+  },
+  "2": {
+    "case_id": "python_direct_001",
+    "rag_config": "hallucination_prone"
+  },
+  "3": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "low_k"
+  },
+  "4": {
+    "case_id": "python_direct_001",
+    "rag_config": "weak_embedding"
+  },
+  "5": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "hallucination_prone"
+  },
+  "6": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "broken_retrieval"
+  },
+  "7": {
+    "case_id": "docker_trap_001",
+    "rag_config": "weak_embedding"
+  },
+  "8": {
+    "case_id": "python_context_001",
+    "rag_config": "hallucination_prone"
+  },
+  "9": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "broken_retrieval"
+  },
+  "10": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "weak_embedding"
+  },
+  "11": {
+    "case_id": "docker_multi_001",
+    "rag_config": "baseline"
+  },
+  "12": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "low_k"
+  },
+  "13": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "bad_chunking"
+  },
+  "14": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "baseline"
+  },
+  "15": {
+    "case_id": "docker_contra_001",
+    "rag_config": "weak_embedding"
+  },
+  "16": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "weak_embedding"
+  },
+  "17": {
+    "case_id": "docker_trap_002",
+    "rag_config": "baseline"
+  },
+  "18": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "baseline"
+  },
+  "19": {
+    "case_id": "python_unans_002",
+    "rag_config": "hallucination_prone"
+  },
+  "20": {
+    "case_id": "docker_unans_001",
+    "rag_config": "bad_chunking"
+  },
+  "21": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "low_k"
+  },
+  "22": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "noisy_context"
+  },
+  "23": {
+    "case_id": "docker_direct_001",
+    "rag_config": "broken_retrieval"
+  },
+  "24": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "baseline"
+  },
+  "25": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "bad_chunking"
+  },
+  "26": {
+    "case_id": "docker_direct_001",
+    "rag_config": "hallucination_prone"
+  },
+  "27": {
+    "case_id": "docker_direct_001",
+    "rag_config": "baseline"
+  },
+  "28": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "hallucination_prone"
+  },
+  "29": {
+    "case_id": "docker_context_001",
+    "rag_config": "bad_chunking"
+  },
+  "30": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "broken_retrieval"
+  },
+  "31": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "bad_chunking"
+  },
+  "32": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "bad_chunking"
+  },
+  "33": {
+    "case_id": "docker_trap_001",
+    "rag_config": "noisy_context"
+  },
+  "34": {
+    "case_id": "python_trap_001",
+    "rag_config": "broken_retrieval"
+  },
+  "35": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "weak_embedding"
+  },
+  "36": {
+    "case_id": "python_multi_001",
+    "rag_config": "broken_retrieval"
+  },
+  "37": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "hallucination_prone"
+  },
+  "38": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "broken_retrieval"
+  },
+  "39": {
+    "case_id": "python_unans_002",
+    "rag_config": "weak_embedding"
+  },
+  "40": {
+    "case_id": "docker_multi_001",
+    "rag_config": "noisy_context"
+  },
+  "41": {
+    "case_id": "docker_context_001",
+    "rag_config": "weak_embedding"
+  },
+  "42": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "broken_retrieval"
+  },
+  "43": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "baseline"
+  },
+  "44": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "baseline"
+  },
+  "45": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "bad_chunking"
+  },
+  "46": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "noisy_context"
+  },
+  "47": {
+    "case_id": "python_context_001",
+    "rag_config": "bad_chunking"
+  },
+  "48": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "weak_embedding"
+  },
+  "49": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "low_k"
+  },
+  "50": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "weak_embedding"
+  },
+  "51": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "noisy_context"
+  },
+  "52": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "weak_embedding"
+  },
+  "53": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "low_k"
+  },
+  "54": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "noisy_context"
+  },
+  "55": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "baseline"
+  },
+  "56": {
+    "case_id": "python_contra_001",
+    "rag_config": "hallucination_prone"
+  },
+  "57": {
+    "case_id": "python_unans_001",
+    "rag_config": "broken_retrieval"
+  },
+  "58": {
+    "case_id": "python_contra_002",
+    "rag_config": "weak_embedding"
+  },
+  "59": {
+    "case_id": "docker_context_001",
+    "rag_config": "baseline"
+  },
+  "60": {
+    "case_id": "python_contra_001",
+    "rag_config": "low_k"
+  },
+  "61": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "baseline"
+  },
+  "62": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "low_k"
+  },
+  "63": {
+    "case_id": "docker_trap_002",
+    "rag_config": "low_k"
+  },
+  "64": {
+    "case_id": "docker_unans_001",
+    "rag_config": "weak_embedding"
+  },
+  "65": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "noisy_context"
+  },
+  "66": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "broken_retrieval"
+  },
+  "67": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "weak_embedding"
+  },
+  "68": {
+    "case_id": "python_contra_002",
+    "rag_config": "broken_retrieval"
+  },
+  "69": {
+    "case_id": "docker_direct_001",
+    "rag_config": "bad_chunking"
+  },
+  "70": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "broken_retrieval"
+  },
+  "71": {
+    "case_id": "python_context_001",
+    "rag_config": "noisy_context"
+  },
+  "72": {
+    "case_id": "docker_unans_001",
+    "rag_config": "noisy_context"
+  },
+  "73": {
+    "case_id": "python_unans_001",
+    "rag_config": "noisy_context"
+  },
+  "74": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "low_k"
+  },
+  "75": {
+    "case_id": "python_unans_002",
+    "rag_config": "low_k"
+  },
+  "76": {
+    "case_id": "docker_trap_002",
+    "rag_config": "hallucination_prone"
+  },
+  "77": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "baseline"
+  },
+  "78": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "baseline"
+  },
+  "79": {
+    "case_id": "docker_unans_001",
+    "rag_config": "hallucination_prone"
+  },
+  "80": {
+    "case_id": "python_multi_001",
+    "rag_config": "noisy_context"
+  },
+  "81": {
+    "case_id": "python_direct_001",
+    "rag_config": "low_k"
+  },
+  "82": {
+    "case_id": "docker_trap_002",
+    "rag_config": "weak_embedding"
+  },
+  "83": {
+    "case_id": "docker_unans_001",
+    "rag_config": "broken_retrieval"
+  },
+  "84": {
+    "case_id": "docker_context_001",
+    "rag_config": "noisy_context"
+  },
+  "85": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "bad_chunking"
+  },
+  "86": {
+    "case_id": "python_context_001",
+    "rag_config": "broken_retrieval"
+  },
+  "87": {
+    "case_id": "docker_direct_001",
+    "rag_config": "noisy_context"
+  },
+  "88": {
+    "case_id": "python_contra_002",
+    "rag_config": "bad_chunking"
+  },
+  "89": {
+    "case_id": "python_contra_002",
+    "rag_config": "noisy_context"
+  },
+  "90": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "noisy_context"
+  },
+  "91": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "noisy_context"
+  },
+  "92": {
+    "case_id": "docker_contra_001",
+    "rag_config": "noisy_context"
+  },
+  "93": {
+    "case_id": "docker_trap_002",
+    "rag_config": "broken_retrieval"
+  },
+  "94": {
+    "case_id": "python_unans_002",
+    "rag_config": "noisy_context"
+  },
+  "95": {
+    "case_id": "docker_multi_001",
+    "rag_config": "bad_chunking"
+  },
+  "96": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "noisy_context"
+  },
+  "97": {
+    "case_id": "python_direct_001",
+    "rag_config": "noisy_context"
+  },
+  "98": {
+    "case_id": "python_context_001",
+    "rag_config": "weak_embedding"
+  },
+  "99": {
+    "case_id": "docker_trap_001",
+    "rag_config": "hallucination_prone"
+  },
+  "100": {
+    "case_id": "docker_multi_001",
+    "rag_config": "weak_embedding"
+  },
+  "101": {
+    "case_id": "python_contra_001",
+    "rag_config": "weak_embedding"
+  },
+  "102": {
+    "case_id": "python_context_001",
+    "rag_config": "low_k"
+  },
+  "103": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "low_k"
+  },
+  "104": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "broken_retrieval"
+  },
+  "105": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "weak_embedding"
+  },
+  "106": {
+    "case_id": "python_trap_001",
+    "rag_config": "baseline"
+  },
+  "107": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "hallucination_prone"
+  },
+  "108": {
+    "case_id": "docker_trap_002",
+    "rag_config": "noisy_context"
+  },
+  "109": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "bad_chunking"
+  },
+  "110": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "hallucination_prone"
+  },
+  "111": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "low_k"
+  },
+  "112": {
+    "case_id": "docker_trap_001",
+    "rag_config": "baseline"
+  },
+  "113": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "low_k"
+  },
+  "114": {
+    "case_id": "python_unans_002",
+    "rag_config": "baseline"
+  },
+  "115": {
+    "case_id": "fastapi_unans_001",
+    "rag_config": "hallucination_prone"
+  },
+  "116": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "low_k"
+  },
+  "117": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "low_k"
+  },
+  "118": {
+    "case_id": "docker_contra_001",
+    "rag_config": "hallucination_prone"
+  },
+  "119": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "noisy_context"
+  },
+  "120": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "broken_retrieval"
+  },
+  "121": {
+    "case_id": "python_unans_001",
+    "rag_config": "hallucination_prone"
+  },
+  "122": {
+    "case_id": "docker_context_001",
+    "rag_config": "hallucination_prone"
+  },
+  "123": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "broken_retrieval"
+  },
+  "124": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "weak_embedding"
+  },
+  "125": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "noisy_context"
+  },
+  "126": {
+    "case_id": "docker_trap_001",
+    "rag_config": "bad_chunking"
+  },
+  "127": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "bad_chunking"
+  },
+  "128": {
+    "case_id": "python_unans_001",
+    "rag_config": "low_k"
+  },
+  "129": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "noisy_context"
+  },
+  "130": {
+    "case_id": "python_contra_002",
+    "rag_config": "hallucination_prone"
+  },
+  "131": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "bad_chunking"
+  },
+  "132": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "baseline"
+  },
+  "133": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "weak_embedding"
+  },
+  "134": {
+    "case_id": "python_contra_001",
+    "rag_config": "bad_chunking"
+  },
+  "135": {
+    "case_id": "docker_context_001",
+    "rag_config": "low_k"
+  },
+  "136": {
+    "case_id": "docker_trap_001",
+    "rag_config": "low_k"
+  },
+  "137": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "bad_chunking"
+  },
+  "138": {
+    "case_id": "docker_multi_001",
+    "rag_config": "low_k"
+  },
+  "139": {
+    "case_id": "python_multi_001",
+    "rag_config": "low_k"
+  },
+  "140": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "broken_retrieval"
+  },
+  "141": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "broken_retrieval"
+  },
+  "142": {
+    "case_id": "python_direct_001",
+    "rag_config": "baseline"
+  },
+  "143": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "hallucination_prone"
+  },
+  "144": {
+    "case_id": "docker_multi_001",
+    "rag_config": "broken_retrieval"
+  },
+  "145": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "weak_embedding"
+  },
+  "146": {
+    "case_id": "python_unans_001",
+    "rag_config": "bad_chunking"
+  },
+  "147": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "broken_retrieval"
+  },
+  "148": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "baseline"
+  },
+  "149": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "bad_chunking"
+  },
+  "150": {
+    "case_id": "python_trap_001",
+    "rag_config": "noisy_context"
+  },
+  "151": {
+    "case_id": "docker_direct_001",
+    "rag_config": "low_k"
+  },
+  "152": {
+    "case_id": "kubernetes_contra_001",
+    "rag_config": "weak_embedding"
+  },
+  "153": {
+    "case_id": "kubernetes_unans_001",
+    "rag_config": "noisy_context"
+  },
+  "154": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "baseline"
+  },
+  "155": {
+    "case_id": "docker_unans_001",
+    "rag_config": "low_k"
+  },
+  "156": {
+    "case_id": "docker_contra_001",
+    "rag_config": "bad_chunking"
+  },
+  "157": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "noisy_context"
+  },
+  "158": {
+    "case_id": "python_trap_001",
+    "rag_config": "low_k"
+  },
+  "159": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "baseline"
+  },
+  "160": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "weak_embedding"
+  },
+  "161": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "hallucination_prone"
+  },
+  "162": {
+    "case_id": "python_unans_001",
+    "rag_config": "weak_embedding"
+  },
+  "163": {
+    "case_id": "docker_contra_001",
+    "rag_config": "low_k"
+  },
+  "164": {
+    "case_id": "python_contra_002",
+    "rag_config": "baseline"
+  },
+  "165": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "low_k"
+  },
+  "166": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "hallucination_prone"
+  },
+  "167": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "hallucination_prone"
+  },
+  "168": {
+    "case_id": "python_multi_001",
+    "rag_config": "weak_embedding"
+  },
+  "169": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "hallucination_prone"
+  },
+  "170": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "bad_chunking"
+  },
+  "171": {
+    "case_id": "python_direct_001",
+    "rag_config": "broken_retrieval"
+  },
+  "172": {
+    "case_id": "python_trap_001",
+    "rag_config": "weak_embedding"
+  },
+  "173": {
+    "case_id": "kubernetes_context_002",
+    "rag_config": "hallucination_prone"
+  },
+  "174": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "bad_chunking"
+  },
+  "175": {
+    "case_id": "docker_contra_001",
+    "rag_config": "baseline"
+  },
+  "176": {
+    "case_id": "fastapi_trap_001",
+    "rag_config": "weak_embedding"
+  },
+  "177": {
+    "case_id": "docker_context_001",
+    "rag_config": "broken_retrieval"
+  },
+  "178": {
+    "case_id": "python_contra_002",
+    "rag_config": "low_k"
+  },
+  "179": {
+    "case_id": "python_multi_001",
+    "rag_config": "bad_chunking"
+  },
+  "180": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "low_k"
+  },
+  "181": {
+    "case_id": "kubernetes_direct_002",
+    "rag_config": "hallucination_prone"
+  },
+  "182": {
+    "case_id": "python_unans_002",
+    "rag_config": "broken_retrieval"
+  },
+  "183": {
+    "case_id": "kubernetes_direct_001",
+    "rag_config": "broken_retrieval"
+  },
+  "184": {
+    "case_id": "docker_multi_001",
+    "rag_config": "hallucination_prone"
+  },
+  "185": {
+    "case_id": "kubernetes_trap_001",
+    "rag_config": "bad_chunking"
+  },
+  "186": {
+    "case_id": "python_contra_001",
+    "rag_config": "noisy_context"
+  },
+  "187": {
+    "case_id": "python_trap_001",
+    "rag_config": "hallucination_prone"
+  },
+  "188": {
+    "case_id": "docker_trap_001",
+    "rag_config": "broken_retrieval"
+  },
+  "189": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "noisy_context"
+  },
+  "190": {
+    "case_id": "python_unans_002",
+    "rag_config": "bad_chunking"
+  },
+  "191": {
+    "case_id": "python_direct_001",
+    "rag_config": "bad_chunking"
+  },
+  "192": {
+    "case_id": "python_contra_001",
+    "rag_config": "baseline"
+  },
+  "193": {
+    "case_id": "fastapi_context_001",
+    "rag_config": "baseline"
+  },
+  "194": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "baseline"
+  },
+  "195": {
+    "case_id": "kubernetes_multi_001",
+    "rag_config": "low_k"
+  },
+  "196": {
+    "case_id": "docker_contra_001",
+    "rag_config": "broken_retrieval"
+  },
+  "197": {
+    "case_id": "python_context_001",
+    "rag_config": "baseline"
+  },
+  "198": {
+    "case_id": "kubernetes_multi_002",
+    "rag_config": "noisy_context"
+  },
+  "199": {
+    "case_id": "python_multi_001",
+    "rag_config": "hallucination_prone"
+  },
+  "200": {
+    "case_id": "python_contra_001",
+    "rag_config": "broken_retrieval"
+  },
+  "201": {
+    "case_id": "python_multi_001",
+    "rag_config": "baseline"
+  },
+  "202": {
+    "case_id": "fastapi_contra_001",
+    "rag_config": "hallucination_prone"
+  },
+  "203": {
+    "case_id": "docker_trap_002",
+    "rag_config": "bad_chunking"
+  },
+  "204": {
+    "case_id": "python_trap_001",
+    "rag_config": "bad_chunking"
+  },
+  "205": {
+    "case_id": "docker_direct_001",
+    "rag_config": "weak_embedding"
+  },
+  "206": {
+    "case_id": "fastapi_multi_001",
+    "rag_config": "weak_embedding"
+  },
+  "207": {
+    "case_id": "fastapi_direct_001",
+    "rag_config": "hallucination_prone"
+  },
+  "208": {
+    "case_id": "docker_unans_001",
+    "rag_config": "baseline"
+  },
+  "209": {
+    "case_id": "python_unans_001",
+    "rag_config": "baseline"
+  },
+  "210": {
+    "case_id": "kubernetes_context_001",
+    "rag_config": "broken_retrieval"
+  }
+}
