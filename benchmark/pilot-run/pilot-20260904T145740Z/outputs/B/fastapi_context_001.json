@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "fastapi_context_001",
+  "question": "In FastAPI, what makes a query parameter required rather than optional?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::56",
+      "score": 0.8613,
+      "text": "not what tells FastAPI that this parameter is not required.\n\nThen, we can pass more parameters to `Query`. In this case, the `ma"
+    },
+    {
+      "id": "fastapi/tutorial/path-params-numeric-validations.md::19",
+      "score": 0.81128,
+      "text": "It doesn't matter for **FastAPI**. It will detect the parameters by their names, types and default declarations (`Query`, `Pat"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::132",
+      "score": 0.8011,
+      "text": "This will let **FastAPI** know that this parameter is required.\n\n### Required with `None`"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.79817,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your para"
+    },
+    {
+      "id": "fastapi/tutorial/query-params.md::14",
+      "score": 0.78517,
+      "text": "## Optional parameters { #optional-parameters }\n\nThe same way, you can declare optional query parameters, by setting their def"
+    }
+  ],
+  "answer": "In FastAPI, a query parameter is considered required if it does not have a default value declared. If a default value is provided for the parameter using `Query`, then the parameter is considered optional.",
+  "prompt_sha256": "18504614710bb6103d4adea739be0ee892ad28feb02b7a76ca5104ea7d1aa315",
+  "timings_s": {
+    "retrieve": 7.24,
+    "generate": 10.95
+  }
+}

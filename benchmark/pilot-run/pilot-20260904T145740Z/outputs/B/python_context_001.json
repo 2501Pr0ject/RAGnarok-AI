@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_context_001",
+  "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+  "retrieved": [
+    {
+      "id": "python/howto/sorting.rst::54",
+      "score": 0.85179,
+      "text": "Sorts are guaranteed to be `stable\n<https://en.wikipedia.org/wiki/Sorting_algorithm#Stability>`_\\. That means that"
+    },
+    {
+      "id": "python/howto/sorting.rst::69",
+      "score": 0.79117,
+      "text": "used in Python\ndoes multiple sorts efficiently because it can take advantage of any ordering\nalready present in a dataset."
+    },
+    {
+      "id": "python/howto/sorting.rst::85",
+      "score": 0.75761,
+      "text": "Now that Python sorting provides key-functions, this technique is not often needed."
+    },
+    {
+      "id": "python/howto/sorting.rst::53",
+      "score": 0.75644,
+      "text": "Sort Stability and Complex Sorts\n================================"
+    },
+    {
+      "id": "python/howto/enum.rst::301",
+      "score": 0.73528,
+      "text": "- ``_order_`` -- used in Python 2/3 code to ensure member order is consistent"
+    }
+  ],
+  "answer": "Python's sorts being documented as stable guarantees that equal elements will retain their relative order after sorting. This means if you have two elements that are considered equal based on the key function (if provided), their original order in the list will be preserved.\n\nThis guarantee is particularly useful when you need to maintain the relative order of certain items in your dataset, even as other parts of the data are reordered. For example, if you sort a list primarily by one criterion but want to ensure that items which are equal according to this primary criterion remain in their original order, stability ensures this behavior without needing additional complex sorting techniques.",
+  "prompt_sha256": "21764e8bb0bdec0b83ca18231faca167b410e0eb4bc1494a1e6640c25ab30e17",
+  "timings_s": {
+    "retrieve": 9.84,
+    "generate": 39.08
+  }
+}

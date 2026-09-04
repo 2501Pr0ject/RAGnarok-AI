@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "kubernetes_multi_001",
+  "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/_index.md::2",
+      "score": 0.75971,
+      "text": "if needed.\n(Deployments are a replacement for the legacy\n{{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}} API).\n\nA [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\nmanage one or more Pods \u2013 all running the same application code \u2013 where the Pods rely\non having a distinct identity. This is different from a Deployment where the Pods are\nexpected to be interchangeable.\nThe most common use for a StatefulSet is to be able to make a link between its Pods and\ntheir persistent storage. For example, you can run a StatefulSet that associates each Pod\nwith a [PersistentVolume](/docs/concepts/storage/persistent-volumes/). If one of the Pods\nin the StatefulSet fails, Kubernetes makes a replacement Pod that is connected to the\nsame PersistentVolume."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/_index.md::2",
+      "score": 0.74235,
+      "text": "ip term_id=\"controller\" text=\"controllers\" >}}\nthat make sure the right number of the right kind of pod are running, to match the state\nyou specified.\n\nKubernetes provides several built-in workload resources:\n\n* [Deployment](/docs/concepts/workloads/controllers/deployment/) and [ReplicaSet](/docs/concepts/workloads/controllers/replicaset/)\n  (replacing the legacy resource\n  {{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}}).\n  Deployment is a good fit for managing a stateless application workload on your cluster,\n  where any Pod in the Deployment is interchangeable and can be replaced if needed.\n* [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\n  run one or more related Pods that do track state somehow. For example, if your workload\n  records data persistently, you can run a StatefulSet that matches each Pod with a\n  [PersistentVolume](/docs/concepts/storage/persistent-volumes/). Your code, running in the"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::1",
+      "score": 0.73862,
+      "text": "ides declarative updates for {{< glossary_tooltip text=\"Pods\" term_id=\"pod\" >}} and\n{{< glossary_tooltip term_id=\"replica-set\" text=\"ReplicaSets\" >}}.\n\nYou describe a _desired state_ in a Deployment, and the Deployment {{< glossary_tooltip term_id=\"controller\" >}} changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.\n\n{{< note >}}\nDo not manage ReplicaSets owned by a Deployment. Consider opening an issue in the main Kubernetes repository if your use case is not covered below.\n{{< /note >}}\n\n<!-- body -->\n\n## Use Case\n\nThe following are typical use cases for Deployments:"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::1",
+      "score": 0.73862,
+      "text": "ides declarative updates for {{< glossary_tooltip text=\"Pods\" term_id=\"pod\" >}} and\n{{< glossary_tooltip term_id=\"replica-set\" text=\"ReplicaSets\" >}}.\n\nYou describe a _desired state_ in a Deployment, and the Deployment {{< glossary_tooltip term_id=\"controller\" >}} changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.\n\n{{< note >}}\nDo not manage ReplicaSets owned by a Deployment. Consider opening an issue in the main Kubernetes repository if your use case is not covered below.\n{{< /note >}}\n\n<!-- body -->\n\n## Use Case\n\nThe following are typical use cases for Deployments:"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/statefulset.md::39",
+      "score": 0.71523,
+      "text": "/delete-stateful-set/).\n  * Learn how to [configure a Pod to use a volume for storage](/docs/tasks/configure-pod-container/configure-volume-storage/).\n  * Learn how to [configure a Pod to use a PersistentVolume for storage](/docs/tutorials/configuration/configure-persistent-volume-storage/).\n* `StatefulSet` is a top-level resource in the Kubernetes REST API.\n  Read the {{< api-reference page=\"apps/stateful-set-v1\" >}}\n  object definition to understand the API for stateful sets.\n* Read about [PodDisruptionBudget](/docs/concepts/workloads/pods/disruptions/) and how\n  you can use it to manage application availability during disruptions."
+    }
+  ],
+  "answer": "You should use a StatefulSet instead of a Deployment in Kubernetes when your workload requires each Pod to have a distinct identity, such as persistent storage that is tied to the lifecycle of the Pod. This is because StatefulSets are designed to manage Pods where the Pods are not interchangeable and rely on having a stable, unique identifier. Examples include databases or any application where data persistence per Pod is necessary. Deployments, on the other hand, are better suited for stateless applications where any Pod can be replaced without issue.",
+  "prompt_sha256": "3eeaf5043ee648cfcf96999d7c99d1ae9025c0eb5d833acc762b2ce961d73ba8",
+  "timings_s": {
+    "retrieve": 1.08,
+    "generate": 41.03
+  }
+}

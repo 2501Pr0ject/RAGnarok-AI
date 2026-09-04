@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "fastapi_trap_001",
+  "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::9",
+      "score": 0.7729,
+      "text": "tiple reasons. \ud83e\udd13\n\nThe **default** value of the **function parameter** is the **actual default** value, that's more intuitive with Python in general. \ud83d\ude0c\n\nYou could **call** that same function in **other places** without FastAPI, and it would **work as expected**. If there's a **required** parameter (without a default value), your **editor** will let you know with an error, **Python** will also complain if you run it without passing the required parameter.\n\nWhen you don't use `Annotated` and instead use the **(old) default value style**, if you call that function without FastAPI in **other place**, you have to **remember** to pass the arguments to the function for it to work correctly, otherwise the values will be different from what you expect (e.g. `QueryInfo` or something similar instead of `str`). And your editor won't complain, and Python won't complain running that function, only when the operations inside error out."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::4",
+      "score": 0.76753,
+      "text": "(so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }\n\nPrevious versions of FastAPI (before <dfn title=\"before 2023-03\">0.95.0</dfn>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n/// tip\n\nFor new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\n///\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n{* ../../docs_src/query_params_str_validations/tutorial002_py310.py hl[7] *}"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.75917,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    },
+    {
+      "id": "python/tutorial/controlflow.rst::7",
+      "score": 0.0,
+      "text": "ntinue` Statements, and :keyword:`!else` Clauses on Loops\n============================================================================================\n\nThe :keyword:`break` statement breaks out of the innermost enclosing\n:keyword:`for` or :keyword:`while` loop.\n\nA :keyword:`!for` or :keyword:`!while` loop can include an :keyword:`!else` clause.\n\nIn a :keyword:`for` loop, the :keyword:`!else` clause is executed\nafter the loop reaches its final iteration.\n\nIn a :keyword:`while` loop, it's executed after the loop's condition becomes false.\n\nIn either kind of loop, the :keyword:`!else` clause is **not** executed\nif the loop was terminated by a :keyword:`break`.\n\nThis is exemplified in the following :keyword:`!for` loop,\nwhich searches for prime numbers::"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/swap-memory-management.md::4",
+      "score": 0.0,
+      "text": "es nodes](/docs/tutorials/cluster-management/provision-swap-memory/) to learn about enabling swap for your cluster.\n\n### Container runtime integration\n\nThe kubelet uses the container runtime API, and directs the container runtime to\napply specific configuration (for example, in the cgroup v2 case, `memory.swap.max`) in a manner that will\nenable the desired swap configuration for a container. For runtimes that use control groups, or cgroups,\nthe container runtime is then responsible for writing these settings to the container-level cgroup.\n\n## Observability for swap use\n\n### Node and container level metric statistics"
+    }
+  ],
+  "answer": "In FastAPI, a query parameter stays required even after you give it a default value because if the default value is `None`, FastAPI will recognize that the parameter is not required. However, if your editor or development environment does not catch this, and you call the function without passing the parameter, the behavior can differ from what you expect. Specifically, the parameter might use the default value provided by `Annotated` instead of `None`. This can lead to unexpected results if you rely on `None` to indicate an optional parameter.\n\nTo ensure clarity and avoid such issues, it is recommended to use `Annotated` with a default value that clearly indicates whether the parameter is required or optional. For example:\n\n```python\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n@app.get(\"/\")\nasync def read_items(q: str = Query(None)):\n    return {\"q\": q}\n```\n\nIn this case, `Query(None)` helps in making it clear that `q` is an optional parameter. If you want to make it required, you can do so by removing the default value or setting it to a non-nullable type:\n\n```python\n@app.get(\"/\")\nasync def read_items(q: str = Query(...)):\n    return {\"q\": q}\n```\n\nHere, `Query(...)` indicates that `q` is a required parameter.",
+  "prompt_sha256": "9c20de0534853627aa195bcd569d705fea78876a2acd45e731f5447efed208f8",
+  "timings_s": {
+    "retrieve": 0.69,
+    "generate": 72.93
+  }
+}

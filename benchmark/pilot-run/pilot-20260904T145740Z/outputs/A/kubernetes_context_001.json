@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "kubernetes_context_001",
+  "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::42",
+      "score": 0.76883,
+      "text": "oyment --min=10 --max=15 --cpu-percent=80\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::43",
+      "score": 0.7681,
+      "text": "yment --min=10 --max=15 --cpu-percent=80%\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::53",
+      "score": 0.75083,
+      "text": "ogress](#failed-deployment).\n\n### Progressing Deployment\n\nKubernetes marks a Deployment as _progressing_ when one of the following tasks is performed:\n\n* The Deployment creates a new ReplicaSet.\n* The Deployment is scaling up its newest ReplicaSet.\n* The Deployment is scaling down its older ReplicaSet(s).\n* New Pods become ready or available (ready for at least [MinReadySeconds](#min-ready-seconds)).\n\nWhen the rollout becomes \u201cprogressing\u201d, the Deployment controller adds a condition with the following\nattributes to the Deployment's `.status.conditions`:\n\n* `type: Progressing`\n* `status: \"True\"`\n* `reason: NewReplicaSetCreated` | `reason: FoundNewReplicaSet` | `reason: ReplicaSetUpdated`\n\nYou can monitor the progress for a Deployment by using `kubectl rollout status`.\n\n### Complete Deployment\n\nKubernetes marks a Deployment as _complete_ when it has the following characteristics:"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::52",
+      "score": 0.75083,
+      "text": "ogress](#failed-deployment).\n\n### Progressing Deployment\n\nKubernetes marks a Deployment as _progressing_ when one of the following tasks is performed:\n\n* The Deployment creates a new ReplicaSet.\n* The Deployment is scaling up its newest ReplicaSet.\n* The Deployment is scaling down its older ReplicaSet(s).\n* New Pods become ready or available (ready for at least [MinReadySeconds](#min-ready-seconds)).\n\nWhen the rollout becomes \u201cprogressing\u201d, the Deployment controller adds a condition with the following\nattributes to the Deployment's `.status.conditions`:\n\n* `type: Progressing`\n* `status: \"True\"`\n* `reason: NewReplicaSetCreated` | `reason: FoundNewReplicaSet` | `reason: ReplicaSetUpdated`\n\nYou can monitor the progress for a Deployment by using `kubectl rollout status`.\n\n### Complete Deployment\n\nKubernetes marks a Deployment as _complete_ when it has the following characteristics:"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::58",
+      "score": 0.74379,
+      "text": "ps://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties) for more information on status conditions.\n\n{{< note >}}\nKubernetes takes no action on a stalled Deployment other than to report a status condition with\n`reason: ProgressDeadlineExceeded`. Higher level orchestrators can take advantage of it and act accordingly, for\nexample, rollback the Deployment to its previous version.\n{{< /note >}}\n\n{{< note >}}\nIf you pause a Deployment rollout, Kubernetes does not check progress against your specified deadline.\nYou can safely pause a Deployment rollout in the middle of a rollout and resume without triggering\nthe condition for exceeding the deadline.\n{{< /note >}}"
+    }
+  ],
+  "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. The context discusses proportional scaling and progressing/deploying replicas but does not directly address if scaling alone initiates a rollout. Therefore, the information needed to answer the question is not present in the given documentation.",
+  "prompt_sha256": "b1fb744732dcad24d15ce432bd21295f88f891e422f011716610130565200fe2",
+  "timings_s": {
+    "retrieve": 0.84,
+    "generate": 40.02
+  }
+}

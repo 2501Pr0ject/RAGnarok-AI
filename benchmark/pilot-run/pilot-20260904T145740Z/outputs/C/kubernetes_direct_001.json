@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_direct_001",
+  "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/architecture/_index.md::7",
+      "score": 0.67948,
+      "text": "ement cluster features.\nBecause these are providing cluster-level features, namespaced resources for\naddons belong within the `kube-system` namespace.\n\nSelected addons are described below; for an extended list of available addons,\nplease see [Addons](/docs/concepts/cluster-administration/addons/).\n\n### DNS\n\nWhile the other addons are not strictly required, all Kubernetes clusters should have\n[cluster DNS](/docs/concepts/services-networking/dns-pod-service/), as many examples rely on it.\n\nCluster DNS is a DNS server, in addition to the other DNS server(s) in your environment,\nwhich serves DNS records for Kubernetes services.\n\nContainers started by Kubernetes automatically include this DNS server in their DNS searches.\n\n### Web UI (Dashboard)\n\n[Dashboard](/docs/tasks/access-application-cluster/web-ui-dashboard/) is a general purpose,\nweb-based UI for Kubernetes clusters. It allows users to manage and troubleshoot applications\nrunning in the cluster, as well as the cluster itself."
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::3",
+      "score": 0.67873,
+      "text": "pace is only a convention, not a requirement.\n\n`kube-system`\n: The namespace for objects created by the Kubernetes system.\n\n## Working with Namespaces\n\nCreation and deletion of namespaces are described in the\n[Admin Guide documentation for namespaces](/docs/tasks/administer-cluster/namespaces).\n\n{{< note >}}\nAvoid creating namespaces with the prefix `kube-`, since it is reserved for Kubernetes system namespaces.\n{{< /note >}}\n\n### Viewing namespaces\n\nYou can list the current namespaces in a cluster using:\n\n```shell\nkubectl get namespace\n```\n```\nNAME              STATUS   AGE\ndefault           Active   1d\nkube-node-lease   Active   1d\nkube-public       Active   1d\nkube-system       Active   1d\n```\n\n\n### Setting the namespace for a request\n\nTo set the namespace for a current request, use the `--namespace` flag.\n\nFor example:\n\n```shell\nkubectl run nginx --image=nginx --namespace=<insert-namespace-name-here>\nkubectl get pods --namespace=<insert-namespace-name-here>\n```"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::0",
+      "score": 0.67206,
+      "text": "---\nreviewers:\n- derekwaynecarr\n- mikedanese\n- thockin\ntitle: Namespaces\napi_metadata:\n- apiVersion: \"v1\"\n  kind: \"Namespace\"\ncontent_type: concept\nweight: 45\n---\n\n<!-- overview -->\n\nIn Kubernetes, _namespaces_ provide a mechanism for isolating groups of resources within a single cluster. Names of resources need to be unique within a namespace, but not across namespaces. Namespace-based scoping is applicable only for namespaced {{< glossary_tooltip text=\"objects\" term_id=\"object\" >}} _(e.g. Deployments, Services, etc.)_ and not for cluster-wide objects _(e.g. StorageClass, Nodes, PersistentVolumes, etc.)_.\n\n<!-- body -->\n\n## When to Use Multiple Namespaces\n\nNamespaces are intended for use in environments with many users spread across multiple\nteams, or projects.  For clusters with a few to tens of users, you should not\nneed to create or think about namespaces at all.  Start using namespaces when you\nneed the features they provide."
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::2",
+      "score": 0.66037,
+      "text": "efault` namespace. Instead, make other namespaces and use those.\n{{< /note >}}\n\n## Initial namespaces\n\nKubernetes starts with four initial namespaces:\n\n`default`\n: Kubernetes includes this namespace so that you can start using your new cluster without first creating a namespace.\n\n`kube-node-lease`\n: This namespace holds [Lease](/docs/concepts/architecture/leases/) objects associated with each node. Node leases allow the kubelet to send [heartbeats](/docs/concepts/architecture/nodes/#node-heartbeats) so that the control plane can detect node failure.\n\n`kube-public`\n: This namespace is readable by *all* clients (including those not authenticated). This namespace is mostly reserved for cluster usage, in case that some resources should be visible and readable publicly throughout the whole cluster. The public aspect of this namespace is only a convention, not a requirement.\n\n`kube-system`\n: The namespace for objects created by the Kubernetes system.\n\n## Working with Namespaces"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/network-policies.md::23",
+      "score": 0.63788,
+      "text": "e\n\nThe Kubernetes control plane sets an immutable label `kubernetes.io/metadata.name` on all\nnamespaces, the value of the label is the namespace name.\n\nWhile NetworkPolicy cannot target a namespace by its name with some object field, you can use the\nstandardized label to target a specific namespace.\n\n## Pod lifecycle\n\n{{< note >}}\nThe following applies to clusters with a conformant networking plugin and a conformant implementation of\nNetworkPolicy.\n{{< /note >}}\n\nWhen a new NetworkPolicy object is created, it may take some time for a network plugin\nto handle the new object. If a pod that is affected by a NetworkPolicy\nis created before the network plugin has completed NetworkPolicy handling,\nthat pod may be started unprotected, and isolation rules will be applied when\nthe NetworkPolicy handling is completed.\n\nOnce the NetworkPolicy is handled by a network plugin,"
+    }
+  ],
+  "answer": "A fresh Kubernetes cluster starts with four initial namespaces:\n\n- `default`\n- `kube-node-lease`\n- `kube-public`\n- `kube-system`",
+  "prompt_sha256": "b8377ae6b250166419874fdf87b2c760e8f48e5d174e0ff352d6b35d5f5c39ce",
+  "timings_s": {
+    "retrieve": 0.38,
+    "generate": 24.73
+  }
+}

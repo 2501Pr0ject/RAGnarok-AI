@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_context_001",
+  "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/podgroup-scheduling.md::12",
+      "score": 0.0,
+      "text": "ejected if the constraint is not met.\n\n## Hierarchical scheduling with CompositePodGroups\n\n{{< feature-state feature_gate_name=\"CompositePodGroup\" >}}\n\nWhen the [`CompositePodGroup`](/docs/reference/command-line-tools-reference/feature-gates/#CompositePodGroup)\nfeature gate and the `scheduling.k8s.io/v1alpha3` {{< glossary_tooltip text=\"API group\" term_id=\"api-group\" >}}\nare enabled, the scheduler extends the PodGroup scheduling cycle to support multi-level group\nhierarchies.\n\nIn a hierarchical workload, Pods belong to leaf `PodGroup` objects, which in turn specify parent\n`CompositePodGroup` resources up to the root `CompositePodGroup`. The scheduler evaluates the entire\nhierarchy of groups as a single, unified scheduling unit.\n\n### Hierarchical scheduling cycle execution\n\nAfter observing a root `CompositePodGroup`, the scheduler places it in the scheduling queue as long\nas there is at least one pending Pod that belongs to that root's group hierarchy."
+    },
+    {
+      "id": "fastapi/advanced/additional-responses.md::11",
+      "score": 0.0,
+      "text": "nformation-about-openapi-responses }\n\nTo see what exactly you can include in the responses, you can check these sections in the OpenAPI specification:\n\n* [OpenAPI Responses Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#responses-object), it includes the `Response Object`.\n* [OpenAPI Response Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#response-object), you can include anything from this directly in each response inside your `responses` parameter. Including `description`, `headers`, `content` (inside of this is that you declare different media types and JSON Schemas), and `links`."
+    },
+    {
+      "id": "docker/manuals/engine/swarm/swarm-tutorial/_index.md::3",
+      "score": 0.0,
+      "text": "st be assigned to a network interface available to the host\noperating system. All nodes in the swarm need to connect to the manager at\nthe IP address.\n\nBecause other nodes contact the manager node on its IP address, you should use a\nfixed IP address.\n\nYou can run `ip addr` on Linux, or `ifconfig` on macOS, to see a list of the\navailable network interfaces.\n\nThe tutorial uses `manager1` : `192.168.99.100`.\n\n### Open protocols and ports between the hosts\n\nThe following ports must be available. On some systems, these ports are open by default.\n\n* Port `2377` TCP for communication with and between manager nodes\n* Port `7946` TCP/UDP for overlay network node discovery\n* Port `4789` UDP (configurable) for overlay network traffic\n\nIf you plan on creating an overlay network with encryption (`--opt encrypted`),\nyou also need to ensure IP protocol 50 (IPSec ESP) traffic is allowed."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::5",
+      "score": 0.0,
+      "text": "ill install packages from the `Python\nPackage Index <https://pypi.org>`_.  You can browse the Python\nPackage Index by going to it in your web browser.\n\n``pip`` has a number of subcommands: \"install\", \"uninstall\",\n\"freeze\", etc.  (Consult the :ref:`installing-index` guide for\ncomplete documentation for ``pip``.)\n\nYou can install the latest version of a package by specifying a package's name:\n\n.. code-block:: bash\n\n  (tutorial-env) $ python -m pip install novas\n  Collecting novas\n    Downloading novas-3.1.1.3.tar.gz (136kB)\n  Installing collected packages: novas\n    Running setup.py install for novas\n  Successfully installed novas-3.1.1.3\n\nYou can also install a specific version of a package by giving the\npackage name  followed by ``==`` and the version number:\n\n.. code-block:: bash"
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::18",
+      "score": 0.0,
+      "text": "before `web`.\n\n- Compose removes services in dependency order. In the following\n  example, `web` is removed before `db` and `redis`.\n\nSimple example:\n\n```yml\nservices:\n  web:\n    build: .\n    depends_on:\n      - db\n      - redis\n  redis:\n    image: redis\n  db:\n    image: postgres:18\n```\n\nCompose guarantees dependency services have been started before\nstarting a dependent service.\nWith short syntax, Compose does not wait for dependency services to be \"healthy\" before\nstarting a dependent service.\n\n#### Long syntax\n\nThe long form syntax enables the configuration of additional fields that can't be\nexpressed in the short form.\n\n- `restart`: When set to `true` Compose restarts this service after it updates the dependency service.\n  This applies to an explicit restart controlled by a Compose operation, and excludes automated restart by the container runtime\n  after the container dies. Introduced in Docker Compose version [2.17.0](https://github.com/docker/compose/releases/tag/v2.17.0)."
+    }
+  ],
+  "answer": "The provided context does not contain information about Python's sorting algorithms or their stability. Therefore, the requested answer cannot be derived from the given documentation.",
+  "prompt_sha256": "f813e3aa507bbc6a15cd0e0f0fa9dfb28eae66c02d5539467c43d0f32b793b51",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 22.89
+  }
+}

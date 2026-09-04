@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_multi_001",
+  "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/policy/limit-range.md::6",
+      "score": 0.0,
+      "text": "e/example-no-conflict-with-limitrange-cpu.yaml\" %}}\n\n## Example resource constraints\n\nExamples of policies that could be created using LimitRange are:\n\n- In a 2 node cluster with a capacity of 8 GiB RAM and 16 cores, constrain Pods in a\n  namespace to request 100m of CPU with a max limit of 500m for CPU and request 200Mi\n  for Memory with a max limit of 600Mi for Memory.\n- Define default CPU limit and request to 150m and memory default request to 300Mi for\n  Containers started with no cpu and memory requests in their specs.\n\nIn the case where the total limits of the namespace is less than the sum of the limits\nof the Pods/Containers, there may be contention for resources. In this case, the\nContainers or Pods will not be created.\n\nNeither contention nor changes to a LimitRange will affect already created resources.\n\n## {{% heading \"whatsnext\" %}}\n\nFor examples on using limits, see:"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-lifecycle.md::1",
+      "score": 0.0,
+      "text": "es the Pod's spec\nfor the container runtime. The kubelet also manages executing\n[probes](#container-probes) that track the health of your application.\n\nLike individual application containers, Pods are considered to be relatively\nephemeral (rather than durable) entities. Pods are created, assigned a unique\nID ([UID](/docs/concepts/overview/working-with-objects/names/#uids)), and scheduled\nto run on nodes where they remain until termination (according to restart policy) or\ndeletion.\nIf a {{< glossary_tooltip term_id=\"node\" >}} dies, the Pods running on (or scheduled\nto run on) that node are [marked for deletion](#pod-garbage-collection). The control\nplane marks the Pods for removal after a timeout period.\n\n<!-- body -->\n\n## Pod lifetime"
+    },
+    {
+      "id": "fastapi/tutorial/schema-extra-example.md::0",
+      "score": 0.0,
+      "text": "# Declare Request Example Data { #declare-request-example-data }\n\nYou can declare examples of the data your app can receive.\n\nHere are several ways to do it.\n\n## Extra JSON Schema data in Pydantic models { #extra-json-schema-data-in-pydantic-models }\n\nYou can declare `examples` for a Pydantic model that will be added to the generated JSON Schema.\n\n{* ../../docs_src/schema_extra_example/tutorial001_py310.py hl[13:24] *}\n\nThat extra info will be added as-is to the output **JSON Schema** for that model, and it will be used in the API docs.\n\nYou can use the attribute `model_config` that takes a `dict` as described in [Pydantic's docs: Configuration](https://pydantic.dev/docs/validation/latest/api/pydantic/config/).\n\nYou can set `\"json_schema_extra\"` with a `dict` containing any additional data you would like to show up in the generated JSON Schema, including `examples`.\n\n/// tip\n\nYou could use the same technique to extend the JSON Schema and add your own custom extra info."
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::87",
+      "score": 0.0,
+      "text": "unts it as read-only to `/run/secrets/<secret_name>`\nwithin the container. The source name and destination mountpoint are both set\nto the secret name.\n\nThe following example uses the short syntax to grant the `frontend` service\naccess to the `server-certificate` secret. The value of `server-certificate` is set\nto the contents of the file `./server.cert`.\n\n```yml\nservices:\n  frontend:\n    image: example/webapp\n    secrets:\n      - server-certificate\nsecrets:\n  server-certificate:\n    file: ./server.cert\n```\n\n#### Long syntax\n\nThe long syntax provides more granularity in how the secret is created within\nthe service's containers."
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/scheduling-framework.md::15",
+      "score": 0.0,
+      "text": "ether or not to handle the given\nPod. If a bind plugin chooses to handle a Pod, **the remaining bind plugins are\nskipped**.\n\n### PostBind {#post-bind}\n\nThis is an informational interface. Post-bind plugins are called after a\nPod is successfully bound. This is the end of a binding cycle, and can be used\nto clean up associated resources.\n\n## Plugin API\n\nThere are two steps to the plugin API. First, plugins must register and get\nconfigured, then they use the extension point interfaces. Extension point\ninterfaces have the following form.\n\n```go\ntype Plugin interface {\n    Name() string\n}\n\ntype QueueSortPlugin interface {\n    Plugin\n    Less(*v1.pod, *v1.pod) bool\n}\n\ntype PreFilterPlugin interface {\n    Plugin\n    PreFilter(context.Context, *framework.CycleState, *v1.pod) error\n}\n\n// ...\n```\n\n## Plugin configuration"
+    }
+  ],
+  "answer": "The information needed to answer the question \"When should I use a StatefulSet instead of a Deployment in Kubernetes?\" is not present in the provided documentation.",
+  "prompt_sha256": "bfe58f236039de9db98aaa9092e7c6d11ef60a68791f3c1b54ef158339af8d96",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 21.26
+  }
+}

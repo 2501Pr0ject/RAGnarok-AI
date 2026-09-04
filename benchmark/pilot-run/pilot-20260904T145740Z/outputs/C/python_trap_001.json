@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_trap_001",
+  "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/classes.rst::5",
+      "score": 0.63632,
+      "text": "derstand what's going on.\nIncidentally, knowledge about this subject is useful for any advanced Python\nprogrammer.\n\nLet's begin with some definitions.\n\nA *namespace* is a mapping from names to objects.  Most namespaces are currently\nimplemented as Python dictionaries, but that's normally not noticeable in any\nway (except for performance), and it may change in the future.  Examples of\nnamespaces are: the set of built-in names (containing functions such as :func:`abs`, and\nbuilt-in exception names); the global names in a module; and the local names in\na function invocation.  In a sense the set of attributes of an object also form\na namespace.  The important thing to know about namespaces is that there is\nabsolutely no relation between names in different namespaces; for instance, two\ndifferent modules may both define a function ``maximize`` without confusion ---\nusers of the modules must prefix it with the module name."
+    },
+    {
+      "id": "python/tutorial/modules.rst::29",
+      "score": 0.61634,
+      "text": "could take a\nlong time and importing sub-modules might have unwanted side-effects that should\nonly happen when the sub-module is explicitly imported.\n\nThe only solution is for the package author to provide an explicit index of the\npackage.  The :keyword:`import` statement uses the following convention: if a package's\n:file:`__init__.py` code defines a list named ``__all__``, it is taken to be the\nlist of module names that should be imported when ``from package import *`` is\nencountered.  It is up to the package author to keep this list up-to-date when a\nnew version of the package is released.  Package authors may also decide not to\nsupport it, if they don't see a use for importing \\* from their package.  For\nexample, the file :file:`sound/effects/__init__.py` could contain the following\ncode::\n\n   __all__ = [\"echo\", \"surround\", \"reverse\"]\n\nThis would mean that ``from sound.effects import *`` would import the three\nnamed submodules of the :mod:`!sound.effects` package."
+    },
+    {
+      "id": "python/tutorial/modules.rst::4",
+      "score": 0.61496,
+      "text": "re executed only\nthe *first* time the module name is encountered in an import statement. [#]_\n(They are also run if the file is executed as a script.)\n\nEach module has its own private namespace, which is used as the global namespace\nby all functions defined in the module. Thus, the author of a module can\nuse global variables in the module without worrying about accidental clashes\nwith a user's global variables. On the other hand, if you know what you are\ndoing you can touch a module's global variables with the same notation used to\nrefer to its functions, ``modname.itemname``.\n\nModules can import other modules.  It is customary but not required to place all\n:keyword:`import` statements at the beginning of a module (or script, for that\nmatter).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace."
+    },
+    {
+      "id": "python/tutorial/modules.rst::5",
+      "score": 0.60745,
+      "text": "r).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace.\n\nThere is a variant of the :keyword:`import` statement that imports names from a\nmodule directly into the importing module's namespace.  For example::\n\n   >>> from fibo import fib, fib2\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis does not introduce the module name from which the imports are taken in the\nlocal namespace (so in the example, ``fibo`` is not defined).\n\nThere is even a variant to import all names that a module defines::\n\n   >>> from fibo import *\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis imports all names except those beginning with an underscore (``_``).\nIn most cases Python programmers do not use this facility since it introduces\nan unknown set of names into the interpreter, possibly hiding some things\nyou have already defined."
+    },
+    {
+      "id": "python/tutorial/modules.rst::32",
+      "score": 0.59869,
+      "text": "ious :keyword:`import` statements.  Consider this code::\n\n   import sound.effects.echo\n   import sound.effects.surround\n   from sound.effects import *\n\nIn this example, the :mod:`!echo` and :mod:`!surround` modules are imported in the\ncurrent namespace because they are defined in the :mod:`!sound.effects` package\nwhen the ``from...import`` statement is executed.  (This also works when\n``__all__`` is defined.)\n\nAlthough certain modules are designed to export only names that follow certain\npatterns when you use ``import *``, it is still considered bad practice in\nproduction code.\n\nRemember, there is nothing wrong with using ``from package import\nspecific_submodule``!  In fact, this is the recommended notation unless the\nimporting module needs to use submodules with the same name from different\npackages.\n\n\n.. _intra-package-references:\n\nIntra-package References\n------------------------"
+    }
+  ],
+  "answer": "The information provided does not explicitly state that names starting with an underscore get imported when using `from module import *`. In fact, the context mentions that this variant imports all names except those beginning with an underscore (``_``). Therefore, the answer is:\n\nNames starting with an underscore do **not** get imported along with everything else when using `from module import *`.",
+  "prompt_sha256": "4ab919b877de3311e84ed1a8cc028c14d03bd0a30b6e4d85c43350a381192127",
+  "timings_s": {
+    "retrieve": 0.38,
+    "generate": 35.21
+  }
+}

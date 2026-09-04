@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "fastapi_direct_001",
+  "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/security/index.md::3",
+      "score": 0.72669,
+      "text": "PI (previously known as Swagger) is the open specification for building APIs (now part of the Linux Foundation).\n\n**FastAPI** is based on **OpenAPI**.\n\nThat's what makes it possible to have multiple automatic interactive documentation interfaces, code generation, etc.\n\nOpenAPI has a way to define multiple security \"schemes\".\n\nBy using them, you can take advantage of all these standard-based tools, including these interactive documentation systems.\n\nOpenAPI defines the following security schemes:"
+    }
+  ],
+  "answer": "The provided context does not contain information about an alternative documentation UI for FastAPI or its URL when running locally. Therefore, the information is not present in the provided documentation.",
+  "prompt_sha256": "ee8554fe6ed43bc8fb6c054a3967e2f5d38f449ac104490e7b8ea198a83d4c3c",
+  "timings_s": {
+    "retrieve": 0.62,
+    "generate": 9.79
+  }
+}

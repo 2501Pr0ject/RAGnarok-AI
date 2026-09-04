@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_multi_002",
+  "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::2",
+      "score": 0.79154,
+      "text": "orage.\n\nSecrets are similar to {{< glossary_tooltip text=\"ConfigMaps\" term_id=\"configmap\" >}}\nbut are specifically intended to hold confidential data.\n\n{{< caution >}}\nKubernetes Secrets are, by default, stored unencrypted in the API server's underlying data store\n(etcd). Anyone with API access can retrieve or modify a Secret, and so can anyone with access to etcd.\nAdditionally, anyone who is authorized to create a Pod in a namespace can use that access to read\nany Secret in that namespace; this includes indirect access such as the ability to create a\nDeployment.\n\nIn order to safely use Secrets, take at least the following steps:"
+    }
+  ],
+  "answer": "You should put the API token in a Secret. This is because Secrets are specifically intended to hold confidential data such as API tokens, whereas ConfigMaps are more general-purpose and not designed with confidentiality in mind. Storing sensitive information like API tokens in a Secret helps mitigate security risks associated with exposing such data.",
+  "prompt_sha256": "44bb0cdef3cac21f2fe29afdf93111de40c5bb47612deb51e35533a33df49323",
+  "timings_s": {
+    "retrieve": 0.7,
+    "generate": 16.34
+  }
+}

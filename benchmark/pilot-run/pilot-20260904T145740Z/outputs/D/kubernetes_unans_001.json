@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_unans_001",
+  "question": "What are the steps to install kubectl on my machine?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/management.md::9",
+      "score": 0.71466,
+      "text": "rning more about `kubectl`, go ahead and read\n[Command line tool (kubectl)](/docs/reference/kubectl/).\n\n## Updating your application without an outage\n\nAt some point, you'll eventually need to update your deployed application, typically by specifying\na new image or image tag. `kubectl` supports several update operations, each of which is applicable\nto different scenarios.\n\nYou can run multiple copies of your app, and use a _rollout_ to gradually shift the traffic to\nnew healthy Pods. Eventually, all the running Pods would have the new software.\n\nThis section of the page guides you through how to create and update applications with Deployments.\n\nLet's say you were running version 1.14.2 of nginx:\n\n```shell\nkubectl create deployment my-nginx --image=nginx:1.14.2\n```\n\n```none\ndeployment.apps/my-nginx created\n```\n\nEnsure that there is 1 replica:\n\n```shell\nkubectl scale --replicas 1 deployments/my-nginx --subresource='scale' --type='merge' -p '{\"spec\":{\"replicas\": 1}}'\n```"
+    }
+  ],
+  "answer": "The provided context does not contain information about installing `kubectl` on a machine. Therefore, I cannot answer the question based on the given documentation.",
+  "prompt_sha256": "2be77cf6bd0fcb10b81c3b209d45e9d1509d875b4c218b5ff971a77d9088b284",
+  "timings_s": {
+    "retrieve": 0.77,
+    "generate": 3.27
+  }
+}

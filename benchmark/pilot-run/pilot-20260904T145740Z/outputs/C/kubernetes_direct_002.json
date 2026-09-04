@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_direct_002",
+  "question": "What is the maximum amount of data a Kubernetes ConfigMap can hold?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::2",
+      "score": 0.71263,
+      "text": "o store settings that are\nlarger than this limit, you may want to consider mounting a volume or use a\nseparate database or file service.\n{{< /note >}}\n\n## ConfigMap object\n\nA ConfigMap is an {{< glossary_tooltip text=\"API object\" term_id=\"object\" >}}\nthat lets you store configuration for other objects to use. Unlike most\nKubernetes objects that have a `spec`, a ConfigMap has `data` and `binaryData`\nfields. These fields accept key-value pairs as their values.  Both the `data`\nfield and the `binaryData` are optional. The `data` field is designed to\ncontain UTF-8 strings while the `binaryData` field is designed to\ncontain binary data as base64-encoded strings.\n\nThe name of a ConfigMap must be a valid\n[DNS subdomain name](/docs/concepts/overview/working-with-objects/names#dns-subdomain-names).\n\nEach key under the `data` or the `binaryData` field must consist of\nalphanumeric characters, `-`, `_` or `.`. The keys stored in `data` must not\noverlap with the keys in the `binaryData` field."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::1",
+      "score": 0.67892,
+      "text": "eep your data private.\n{{< /caution >}}\n\n<!-- body -->\n## Motivation\n\nUse a ConfigMap for setting configuration data separately from application code.\n\nFor example, imagine that you are developing an application that you can run on your\nown computer (for development) and in the cloud (to handle real traffic).\nYou write the code to look in an environment variable named `DATABASE_HOST`.\nLocally, you set that variable to `localhost`. In the cloud, you set it to\nrefer to a Kubernetes {{< glossary_tooltip text=\"Service\" term_id=\"service\" >}}\nthat exposes the database component to your cluster.\nThis lets you fetch a container image running in the cloud and\ndebug the exact same code locally if needed.\n\n{{< note >}}\nA ConfigMap is not designed to hold large chunks of data. The data stored in a\nConfigMap cannot exceed 1 MiB. If you need to store settings that are\nlarger than this limit, you may want to consider mounting a volume or use a\nseparate database or file service.\n{{< /note >}}"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::30",
+      "score": 0.635,
+      "text": "both the `data` and the\n`stringData` field, the value specified in the `stringData` field takes\nprecedence.\n\n#### Size limit {#restriction-data-size}\n\nIndividual Secrets are limited to 1MiB in size. This is to discourage creation\nof very large Secrets that could exhaust the API server and kubelet memory.\nHowever, creation of many smaller Secrets could also exhaust memory. You can\nuse a [resource quota](/docs/concepts/policy/resource-quotas/) to limit the\nnumber of Secrets (or other resources) in a namespace.\n\n### Editing a Secret\n\nYou can edit an existing Secret unless it is [immutable](#secret-immutable). To\nedit a Secret, use one of the following methods:\n\n- [Use `kubectl`](/docs/tasks/configmap-secret/managing-secret-using-kubectl/#edit-secret)\n- [Use a configuration file](/docs/tasks/configmap-secret/managing-secret-using-config-file/#edit-secret)"
+    },
+    {
+      "id": "kubernetes/concepts/containers/cri.md::4",
+      "score": 0.63414,
+      "text": "per-message size limit. This is\nparticularly useful for:\n\n- High container churn environments (CI/CD systems)\n- Large-scale batch processing workloads\n\nIf the container runtime does not support streaming RPCs, the kubelet\nautomatically falls back to the standard unary RPCs for backward\ncompatibility.\n\n## {{% heading \"whatsnext\" %}}\n\n- Learn more about the CRI [protocol definition](https://github.com/kubernetes/cri-api/blob/v0.33.1/pkg/apis/runtime/v1/api.proto)"
+    },
+    {
+      "id": "kubernetes/concepts/policy/resource-quotas.md::43",
+      "score": 0.62524,
+      "text": "Read [Limit Storage Consumption](/docs/tasks/administer-cluster/limit-storage-consumption/) to learn more about this.\n\n\n## {{% heading \"whatsnext\" %}}\n\n- See a [detailed example for how to use resource quota](/docs/tasks/administer-cluster/quota-api-object/).\n- Read the ResourceQuota [API reference](/docs/reference/kubernetes-api/policy-resources/resource-quota-v1/)\n- Learn about [LimitRanges](/docs/concepts/policy/limit-range/)\n- You can read the historical [ResourceQuota design document](https://git.k8s.io/design-proposals-archive/resource-management/admission_control_resource_quota.md)\n  for more information.\n- You can also read the [Quota support for priority class design document](https://git.k8s.io/design-proposals-archive/scheduling/pod-priority-resourcequota.md)."
+    }
+  ],
+  "answer": "The maximum amount of data a Kubernetes ConfigMap can hold is 1 MiB.",
+  "prompt_sha256": "4494188434a6349eb0e35790521bf933f60f01576bf85ec9cd3e79ca7c060516",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 22.51
+  }
+}

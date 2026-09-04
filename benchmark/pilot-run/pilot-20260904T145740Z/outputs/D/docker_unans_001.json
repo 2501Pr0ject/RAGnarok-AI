@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_unans_001",
+  "question": "What are the main changes introduced in Docker Engine version 28?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/install/_index.md::7",
+      "score": 0.7276,
+      "text": "ons released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability.\n\nUse the test channel with caution. Pre-release versions include experimental and\nearly-access features that are subject to breaking changes.\n\n## Support\n\nDocker Engine is an open source project, supported by the Moby project maintainers\nand community members. Docker doesn't provide support for Docker Engine.\nDocker provides support for Docker products, including Docker Desktop, which uses\nDocker Engine as one of its components.\n\nFor information about the open source project, refer to the\n[Moby project website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing"
+    }
+  ],
+  "answer": "The provided context does not contain information about the main changes introduced in Docker Engine version 28. Therefore, I cannot answer this question based on the given documentation.",
+  "prompt_sha256": "1ac163ac60cd836d414722b6d4bafddfbd9a0eb99a94f5ffc3054102d3fef275",
+  "timings_s": {
+    "retrieve": 0.69,
+    "generate": 3.15
+  }
+}

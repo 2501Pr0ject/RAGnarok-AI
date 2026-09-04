@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_unans_001",
+  "question": "What are the steps to install kubectl on my machine?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::0",
+      "score": 0.64572,
+      "text": "---\ntitle: The kubectl command-line tool\ncontent_type: concept\ndescription: >\n  kubectl is the primary command-line tool for communicating with a Kubernetes cluster. This page provides an overview of kubectl and its role in the Kubernetes ecosystem.\nweight: 50\ncard:\n  name: concepts\n  title: kubectl\n  weight: 40\n---\n\n<!-- overview -->\n\n{{< glossary_definition prepend=\"Kubernetes provides a\" term_id=\"kubectl\" length=\"short\" >}}\n\nThe `kubectl` tool communicates with your cluster through the [Kubernetes API](/docs/concepts/overview/kubernetes-api/).\nFor configuration, `kubectl` looks for a file named `config` in the `$HOME/.kube` directory.\nYou can specify other [kubeconfig](/docs/concepts/configuration/organize-cluster-access-kubeconfig/)\nfiles by setting the `KUBECONFIG` environment variable or by setting the\n[`--kubeconfig`](/docs/concepts/configuration/organize-cluster-access-kubeconfig/) flag.\n\n<!-- body -->\n\n## Role of kubectl"
+    },
+    {
+      "id": "kubernetes/concepts/windows/_index.md::1",
+      "score": 0.616,
+      "text": "docs/tasks/tools/install-kubectl-windows/)\nno matter what operating system you use within your cluster.\n\nIf you are using Windows nodes, you can read:\n\n* [Networking On Windows](/docs/concepts/services-networking/windows-networking/)\n* [Windows Storage In Kubernetes](/docs/concepts/storage/windows-storage/)\n* [Resource Management for Windows Nodes](/docs/concepts/configuration/windows-resource-management/)\n* [Configure RunAsUserName for Windows Pods and Containers](/docs/tasks/configure-pod-container/configure-runasusername/)\n* [Create A Windows HostProcess Pod](/docs/tasks/configure-pod-container/create-hostprocess-pod/)\n* [Configure Group Managed Service Accounts for Windows Pods and Containers](/docs/tasks/configure-pod-container/configure-gmsa/)\n* [Security For Windows Nodes](/docs/concepts/security/windows-security/)\n* [Windows Debugging Tips](/docs/tasks/debug/debug-cluster/windows/)\n* [Guide for Scheduling Windows Containers in Kubernetes](/docs/concepts/windows/user-guide)"
+    },
+    {
+      "id": "kubernetes/concepts/overview/components.md::2",
+      "score": 0.58798,
+      "text": "ding the Kubernetes runtime environment:\n\n[kubelet](/docs/concepts/architecture/#kubelet)\n: Ensures that Pods are running, including their containers.\n\n[kube-proxy](/docs/concepts/architecture/#kube-proxy) (optional)\n: Maintains network rules on nodes to implement {{< glossary_tooltip text=\"Services\" term_id=\"service\" >}}.\n\n[Container runtime](/docs/concepts/architecture/#container-runtime)\n: Software responsible for running containers. Read\n  [Container Runtimes](/docs/setup/production-environment/container-runtimes/) to learn more.\n\n{{% thirdparty-content single=\"true\" %}}\n\nYour cluster may require additional software on each node; for example, you might also\nrun [systemd](https://systemd.io/) on a Linux node to supervise local components.\n\n## Addons\n\nAddons extend the functionality of Kubernetes. A few important examples include:\n\n[DNS](/docs/concepts/architecture/#dns)\n: For cluster-wide DNS resolution."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/organize-cluster-access-kubeconfig.md::3",
+      "score": 0.58425,
+      "text": "t context* to communicate with the cluster.\n\nTo choose the current context:\n```\nkubectl config use-context\n```\n\n## The KUBECONFIG environment variable\n\nThe `KUBECONFIG` environment variable holds a list of kubeconfig files.\nFor Linux and Mac, the list is colon-delimited. For Windows, the list\nis semicolon-delimited. The `KUBECONFIG` environment variable is not\nrequired. If the `KUBECONFIG` environment variable doesn't exist,\n`kubectl` uses the default kubeconfig file, `$HOME/.kube/config`.\n\nIf the `KUBECONFIG` environment variable does exist, `kubectl` uses\nan effective configuration that is the result of merging the files\nlisted in the `KUBECONFIG` environment variable.\n\n## Merging kubeconfig files\n\nTo see your configuration, enter this command:\n\n```shell\nkubectl config view\n```\n\nAs described previously, the output might be from a single kubeconfig file,\nor it might be the result of merging several kubeconfig files."
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubectl.md::5",
+      "score": 0.5841,
+      "text": "ines.\n\nFor syntax, command reference, and examples, see the [kubectl reference documentation](/docs/reference/kubectl/).\n\n## Declarative vs imperative\n\nFor production workloads, prefer [declarative object management](/docs/concepts/overview/working-with-objects/object-management/)\nusing `kubectl apply` with version-controlled configuration files.\nDeclarative management helps you track changes, collaborate, and integrate with GitOps workflows.\nImperative commands (such as `kubectl create` or `kubectl run`) are useful for development and experimentation,\nbut are harder to reproduce and audit.\n\n## Extending kubectl with plugins\n\nYou can extend `kubectl` with [plugins](/docs/tasks/extend-kubectl/kubectl-plugins/) that add new\nsub-commands. Plugins are standalone binaries that follow the `kubectl-<plugin-name>` naming convention.\nThe Kubernetes community maintains many plugins, and you can manage them with the\n[Krew](https://krew.sigs.k8s.io/) plugin manager.\n\n## Version compatibility"
+    }
+  ],
+  "answer": "The provided context does not contain specific steps to install `kubectl` on your machine. It only mentions that you can read instructions for installing `kubectl` on Windows nodes, but it does not provide explicit installation steps for any operating system.",
+  "prompt_sha256": "8164b7f36a13268910e03e7a95c4f0b05236211fb98cd5e6c36b653f6724fec9",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 27.36
+  }
+}

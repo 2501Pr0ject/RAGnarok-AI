@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "docker_trap_001",
+  "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::7",
+      "score": 0.80179,
+      "text": "-existing files into an empty\nvolume, use the `volume-nocopy` option, see [Options for --mount](#options-for---mount).\n\n## Named and anonymous volumes\n\nA volume may be named or anonymous. Anonymous volumes are given a random name\nthat's guaranteed to be unique within a given Docker host. Just like named\nvolumes, anonymous volumes persist even if you remove the container that uses\nthem, except if you use the `--rm` flag when creating the container, in which\ncase the anonymous volume associated with the container is destroyed. See\n[Remove anonymous volumes](volumes.md#remove-anonymous-volumes).\n\nIf you create multiple containers consecutively that each use anonymous\nvolumes, each container creates its own volume. Anonymous volumes aren't reused\nor shared between containers automatically. To share an anonymous volume\nbetween two or more containers, you must mount the anonymous volume using the\nrandom volume ID.\n\n## Syntax"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::37",
+      "score": 0.75196,
+      "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::5",
+      "score": 0.7325,
+      "text": "ailable to Docker\nand isn't removed automatically. You can remove unused volumes using `docker\nvolume prune`.\n\n## Mounting a volume over existing data\n\nIf you mount a _non-empty volume_ into a directory in the container in which\nfiles or directories exist, the pre-existing files are obscured by the mount.\nThis is similar to if you were to save files into `/mnt` on a Linux host, and\nthen mounted a USB drive into `/mnt`. The contents of `/mnt` would be obscured\nby the contents of the USB drive until the USB drive was unmounted.\n\nWith containers, there's no straightforward way of removing a mount to reveal\nthe obscured files again. Your best option is to recreate the container without\nthe mount."
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::4",
+      "score": 0.72208,
+      "text": ") to avoid storing the data anywhere permanently, and to\nincrease the container's performance by avoiding writing into the container's\nwritable layer.\n\nVolumes use `rprivate` (recursive private) bind propagation, and bind propagation isn't\nconfigurable for volumes.\n\n## A volume's lifecycle\n\nA volume's contents exist outside the lifecycle of a given container. When a\ncontainer is destroyed, the writable layer is destroyed with it. Using a volume\nensures that the data is persisted even if the container using it is removed.\n\nA given volume can be mounted into multiple containers simultaneously. When no\nrunning container is using a volume, the volume is still available to Docker\nand isn't removed automatically. You can remove unused volumes using `docker\nvolume prune`.\n\n## Mounting a volume over existing data"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::38",
+      "score": 0.71277,
+      "text": "`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```\n\n> [!NOTE]\n>\n> If another container binds the volumes with\n> `--volumes-from`, the volume definitions are _copied_ and the\n> anonymous volume also stays after the first container is removed.\n\n### Remove all volumes\n\nTo remove all unused volumes and free up space:\n\n```console\n$ docker volume prune\n```\n\n## Next steps\n\n- Learn about [bind mounts](bind-mounts.md).\n- Learn about [tmpfs mounts](tmpfs.md).\n- Learn about [image mounts](image-mounts.md).\n- Learn about [storage drivers](/engine/storage/drivers/).\n- Learn about [third-party volume driver plugins](/engine/extend/legacy_plugins/)."
+    }
+  ],
+  "answer": "To keep the data contained in anonymous volumes after their associated container is removed, you should use named volumes instead of anonymous volumes. Anonymous volumes are deleted along with the container by default unless you explicitly tell Docker to retain them using the `--volumes-from` option or convert them into named volumes before removing the original container.\n\nIf you need to preserve the data, consider renaming the anonymous volume to a named one before stopping and removing the container that was using it. This way, the data will persist even if the container is deleted.",
+  "prompt_sha256": "f2c70a44abe89b83ae34e03e78ecf49986a64dad9b6e8c007750d7e41c296362",
+  "timings_s": {
+    "retrieve": 0.32,
+    "generate": 36.29
+  }
+}

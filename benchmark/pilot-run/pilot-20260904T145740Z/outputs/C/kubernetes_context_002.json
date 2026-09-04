@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_context_002",
+  "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::16",
+      "score": 0.7126,
+      "text": "ner, though\nthe Pod is allowed to start.\n\n## Immutable ConfigMaps {#configmap-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nThe Kubernetes feature _Immutable Secrets and ConfigMaps_ provides an option to set\nindividual Secrets and ConfigMaps as immutable. For clusters that extensively use ConfigMaps\n(at least tens of thousands of unique ConfigMap to Pod mounts), preventing changes to their\ndata has the following advantages:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- improves performance of your cluster by significantly reducing load on kube-apiserver, by\n  closing watches for ConfigMaps marked as immutable.\n\nYou can create an immutable ConfigMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::41",
+      "score": 0.65621,
+      "text": "p text=\"static Pods\" term_id=\"static-pod\" >}}.\n\n## Immutable Secrets {#secret-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nKubernetes lets you mark specific Secrets (and ConfigMaps) as _immutable_.\nPreventing changes to the data of an existing Secret has the following benefits:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- (for clusters that extensively use Secrets - at least tens of thousands of unique Secret\n  to Pod mounts), switching to immutable Secrets improves the performance of your cluster\n  by significantly reducing load on kube-apiserver. The kubelet does not need to maintain\n  a [watch] on any Secrets that are marked as immutable.\n\n### Marking a Secret as immutable {#secret-immutable-create}\n\nYou can create an immutable Secret by setting the `immutable` field to `true`. For example,\n\n```yaml\napiVersion: v1\nkind: Secret\nmetadata: ...\ndata: ...\nimmutable: true\n```"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::17",
+      "score": 0.63028,
+      "text": "igMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```\n\nOnce a ConfigMap is marked as immutable, it is _not_ possible to revert this change\nnor to mutate the contents of the `data` or the `binaryData` field. You can\nonly delete and recreate the ConfigMap. Because existing Pods maintain a mount point\nto the deleted ConfigMap, it is recommended to recreate these pods.\n\n## {{% heading \"whatsnext\" %}}\n\n* Read about [Secrets](/docs/concepts/configuration/secret/).\n* Read [Configure a Pod to Use a ConfigMap](/docs/tasks/configure-pod-container/configure-pod-configmap/).\n* Read about [changing a ConfigMap (or any other Kubernetes object)](/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/)\n* Read [The Twelve-Factor App](https://12factor.net/) to understand the motivation for\n  separating code from configuration."
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/assign-pod-node.md::24",
+      "score": 0.59783,
+      "text": "bout how these work.\n\nIn principle, the `topologyKey` can be any allowed label key with the following\nexceptions for performance and security reasons:\n\n- For Pod affinity and anti-affinity, an empty `topologyKey` field is not allowed in both\n  `requiredDuringSchedulingIgnoredDuringExecution`\n  and `preferredDuringSchedulingIgnoredDuringExecution`.\n- For `requiredDuringSchedulingIgnoredDuringExecution` Pod anti-affinity rules,\n  the admission controller `LimitPodHardAntiAffinityTopology` limits\n  `topologyKey` to `kubernetes.io/hostname`. You can modify or disable the\n  admission controller if you want to allow custom topologies.\n\nIn addition to `labelSelector` and `topologyKey`, you can optionally specify a list\nof namespaces which the `labelSelector` should match against using the\n`namespaces` field at the same level as `labelSelector` and `topologyKey`.\nIf omitted or empty, `namespaces` defaults to the namespace of the Pod where the\naffinity/anti-affinity definition appears."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::4",
+      "score": 0.59135,
+      "text": "}}\n\nHere's an example ConfigMap that has some keys with single values,\nand other keys where the value looks like a fragment of a configuration\nformat.\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: game-demo\ndata:\n  # property-like keys; each key maps to a simple value\n  player_initial_lives: \"3\"\n  ui_properties_file_name: \"user-interface.properties\"\n\n  # file-like keys\n  game.properties: |\n    enemy.types=aliens,monsters\n    player.maximum-lives=5\n  user-interface.properties: |\n    color.good=purple\n    color.bad=yellow\n    allow.textmode=true\n```\n\nThere are four different ways that you can use a ConfigMap to configure\na container inside a Pod:\n\n1. Inside a container command and args\n1. Environment variables for a container\n1. Add a file in read-only volume, for the application to read\n1. Write code to run inside the Pod that uses the Kubernetes API to read a ConfigMap"
+    }
+  ],
+  "answer": "By marking a Kubernetes ConfigMap as immutable, you gain protection against accidental or unwanted updates that could cause application outages. Additionally, for clusters that extensively use ConfigMaps (at least tens of thousands of unique ConfigMap to Pod mounts), this can improve cluster performance by significantly reducing load on the kube-apiserver.",
+  "prompt_sha256": "92b43dbde3c63fc629814be2ded70c1696b374e67d8b834d9d24c02db6368c03",
+  "timings_s": {
+    "retrieve": 0.4,
+    "generate": 33.05
+  }
+}

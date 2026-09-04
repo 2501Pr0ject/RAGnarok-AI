@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_trap_001",
+  "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/autoscaling/horizontal-pod-autoscale.md::12",
+      "score": 0.0,
+      "text": "ult is 30 seconds.\nOnce a pod has become ready, it considers any transition to\nready to be the first if it occurred within a longer, configurable time\nsince it started. This value is configured with the\n`--horizontal-pod-autoscaler-cpu-initialization-period` command line option,\nand its default is 5 minutes.\n\nThe \\\\( currentMetricValue \\over desiredMetricValue \\\\) base scale ratio is then\ncalculated, using the remaining pods not set aside or discarded from above.\n\nIf there were any missing metrics, the control plane recomputes the average more\nconservatively, assuming those pods were consuming 100% of the desired\nvalue in case of a scale down, and 0% in case of a scale up. This dampens\nthe magnitude of any potential scale."
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::90",
+      "score": 0.0,
+      "text": "e details.\n\n\nUsing file rotation\n-------------------\n\n.. sectionauthor:: Doug Hellmann, Vinay Sajip (changes)\n.. (see <https://pymotw.com/3/logging/>)\n\nSometimes you want to let a log file grow to a certain size, then open a new\nfile and log to that. You may want to keep a certain number of these files, and\nwhen that many files have been created, rotate the files so that the number of\nfiles and the size of the files both remain bounded. For this usage pattern, the\nlogging package provides a :class:`RotatingFileHandler`::\n\n   import glob\n   import logging\n   import logging.handlers\n\n   LOG_FILENAME = 'logging_rotatingfile_example.out'\n\n   # Set up a specific logger with our desired output level\n   my_logger = logging.getLogger('MyLogger')\n   my_logger.setLevel(logging.DEBUG)\n\n   # Add the log message handler to the logger\n   handler = logging.handlers.RotatingFileHandler(\n                 LOG_FILENAME, maxBytes=20, backupCount=5)\n\n   my_logger.addHandler(handler)"
+    },
+    {
+      "id": "kubernetes/concepts/extend-kubernetes/operator.md::6",
+      "score": 0.0,
+      "text": "``shell\nkubectl get SampleDB                   # find configured databases\n\nkubectl edit SampleDB/example-database # manually change some settings\n```\n\n&hellip;and that's it! The operator will take care of applying the changes\nas well as keeping the existing service in good shape.\n\n## Writing your own operator {#writing-operator}\n\nIf there isn't an operator in the ecosystem that implements the behavior you\nwant, you can code your own. \n\nYou also implement an operator (that is, a Controller) using any language / runtime\nthat can act as a [client for the Kubernetes API](/docs/reference/using-api/client-libraries/).\n\nFollowing are a few libraries and tools you can use to write your own cloud native\noperator.\n\n{{% thirdparty-content %}}"
+    },
+    {
+      "id": "python/howto/regex.rst::26",
+      "score": 0.0,
+      "text": "ch object <match-objects>` instance is returned,\ncontaining information about the match: where it starts and ends, the substring\nit matched, and more.\n\nYou can learn about this by interactively experimenting with the :mod:`re`\nmodule.\n\nThis HOWTO uses the standard Python interpreter for its examples. First, run the\nPython interpreter, import the :mod:`re` module, and compile a RE::\n\n   >>> import re\n   >>> p = re.compile('[a-z]+')\n   >>> p\n   re.compile('[a-z]+')\n\nNow, you can try matching various strings against the RE ``[a-z]+``.  An empty\nstring shouldn't match at all, since ``+`` means 'one or more repetitions'.\n:meth:`~re.Pattern.match` should return ``None`` in this case, which will cause the\ninterpreter to print no output.  You can explicitly print the result of\n:meth:`!match` to make this clear. ::\n\n   >>> p.match(\"\")\n   >>> print(p.match(\"\"))\n   None"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/network-policies.md::14",
+      "score": 0.0,
+      "text": "P CIDR ranges to allow as ingress sources or egress\ndestinations. These should be cluster-external IPs, since Pod IPs are ephemeral and unpredictable.\n\nCluster ingress and egress mechanisms often require rewriting the source or destination IP\nof packets. In cases where this happens, it is not defined whether this happens before or\nafter NetworkPolicy processing, and the behavior may be different for different\ncombinations of network plugin, cloud provider, `Service` implementation, etc.\n\nIn the case of ingress, this means that in some cases you may be able to filter incoming\npackets based on the actual original source IP, while in other cases, the \"source IP\" that\nthe NetworkPolicy acts on may be the IP of a `LoadBalancer` or of the Pod's node, etc.\n\nFor egress, this means that connections from pods to `Service` IPs that get rewritten to\ncluster-external IPs may or may not be subject to `ipBlock`-based policies.\n\n## Default policies"
+    }
+  ],
+  "answer": "The information provided does not contain details about why names starting with an underscore get imported when using `from module import *`. Therefore, I cannot answer the question based on the given context.",
+  "prompt_sha256": "3e486e66607c9007a154d959941b25c45f6c8cf4b1e03d04bd6a8bec291baccb",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 24.86
+  }
+}

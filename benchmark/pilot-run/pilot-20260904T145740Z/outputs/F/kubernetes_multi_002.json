@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_multi_002",
+  "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/drivers/btrfs-driver.md::4",
+      "score": 0.0,
+      "text": "s for Btrfs, including striping and RAID. See the\n   [Btrfs documentation](https://btrfs.wiki.kernel.org/index.php/Using_Btrfs_with_Multiple_Devices).\n\n4. Mount the new Btrfs filesystem on the `/var/lib/docker/` mount point. You\n   can specify any of the block devices used to create the Btrfs filesystem.\n\n   ```console\n   $ sudo mount -t btrfs /dev/xvdf /var/lib/docker\n   ```\n\n   > [!NOTE]\n   >\n   > Make the change permanent across reboots by adding an entry to\n   > `/etc/fstab`.\n\n5. Copy the contents of `/var/lib/docker.bk` to `/var/lib/docker/`.\n\n   ```console\n   $ sudo cp -au /var/lib/docker.bk/* /var/lib/docker/\n   ```"
+    },
+    {
+      "id": "fastapi/tutorial/path-params-numeric-validations.md::7",
+      "score": 0.0,
+      "text": "en you import `Query`, `Path` and others from `fastapi`, they are actually functions.\n\nThat when called, return instances of classes of the same name.\n\nSo, you import `Query`, which is a function. And when you call it, it returns an instance of a class also named `Query`.\n\nThese functions are there (instead of just using the classes directly) so that your editor doesn't mark errors about their types.\n\nThat way you can use your normal editor and coding tools without having to add custom configurations to disregard those errors.\n\n///"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-condition.md::10",
+      "score": 0.0,
+      "text": "sets the `Initialized` condition to `True` before sandbox creation and network configuration starts.\n\n## Other Pod conditions {#other-pod-conditions}\n\nThe following conditions are not part of the normal Pod lifecycle progression.\nThey are set in response to specific operations or events.\n\n### DisruptionTarget {#disruption-target}\n\nA dedicated Pod `DisruptionTarget` condition is added to indicate that\nthe Pod is about to be deleted due to a {{<glossary_tooltip term_id=\"disruption\" text=\"disruption\">}}.\nThe `reason` field of the condition additionally\nindicates one of the following reasons for the Pod termination:\n\n`PreemptionByScheduler`\n: Pod is due to be {{<glossary_tooltip term_id=\"preemption\" text=\"preempted\">}} by a scheduler in order to accommodate a new Pod with a higher priority. For more information, see [Pod priority preemption](/docs/concepts/scheduling-eviction/pod-priority-preemption/)."
+    },
+    {
+      "id": "kubernetes/concepts/security/secrets-good-practices.md::1",
+      "score": 0.0,
+      "text": "od practices that cluster administrators can use to\nimprove the security of confidential information in the cluster.\n\n### Configure encryption at rest\n\nBy default, Secret objects are stored unencrypted in {{<glossary_tooltip\nterm_id=\"etcd\" text=\"etcd\">}}. You should configure encryption of your Secret\ndata in `etcd`. For instructions, refer to\n[Encrypt Secret Data at Rest](/docs/tasks/administer-cluster/encrypt-data/).\n\n### Configure least-privilege access to Secrets {#least-privilege-secrets}\n\nWhen planning your access control mechanism, such as Kubernetes\n{{<glossary_tooltip term_id=\"rbac\" text=\"Role-based Access Control\">}} [(RBAC)](/docs/reference/access-authn-authz/rbac/),\nconsider the following guidelines for access to `Secret` objects. You should\nalso follow the other guidelines in\n[RBAC good practices](/docs/concepts/security/rbac-good-practices)."
+    },
+    {
+      "id": "python/howto/logging-cookbook.rst::50",
+      "score": 0.0,
+      "text": "e string,\nyou just need to subclass :class:`LoggerAdapter` and override\n:meth:`~LoggerAdapter.process` to do what you need. Here is a simple example::\n\n    class CustomAdapter(logging.LoggerAdapter):\n        \"\"\"\n        This example adapter expects the passed in dict-like object to have a\n        'connid' key, whose value in brackets is prepended to the log message.\n        \"\"\"\n        def process(self, msg, kwargs):\n            return '[%s] %s' % (self.extra['connid'], msg), kwargs\n\nwhich you can use like this::\n\n    logger = logging.getLogger(__name__)\n    adapter = CustomAdapter(logger, {'connid': some_conn_id})\n\nThen any events that you log to the adapter will have the value of\n``some_conn_id`` prepended to the log messages.\n\nUsing objects other than dicts to pass contextual information\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    }
+  ],
+  "answer": "You should put the API token in a Secret. By default, Secret objects are stored unencrypted in etcd, but you can configure encryption of your Secret data in etcd for added security. Additionally, using Secrets is recommended over ConfigMaps for sensitive information like API tokens because Secrets are designed to handle such data securely, including providing mechanisms for encryption at rest and configuring least-privilege access to the secrets.",
+  "prompt_sha256": "1931afbef94b987c9a09810d437c6c80c775f17b65e79aaf5f7a12d961d2a455",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 30.66
+  }
+}

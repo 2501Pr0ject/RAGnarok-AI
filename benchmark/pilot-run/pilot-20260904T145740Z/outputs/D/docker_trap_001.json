@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_trap_001",
+  "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::37",
+      "score": 0.86588,
+      "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+    }
+  ],
+  "answer": "To keep the data in an anonymous volume when its container is removed, you would need to mount that volume to a host directory or convert it into a named volume. Here are two common methods:\n\n1. **Mounting to a Host Directory:**\n   You can create a directory on your host machine and mount this directory as a volume inside the container. This way, any data written to the volume will be stored in the host directory.\n\n   ```console\n   $ docker run --rm -v /path/on/host:/foo busybox top\n   ```\n\n2. **Converting Anonymous Volume to Named Volume:**\n   After using the `--rm` option to clean up anonymous volumes, you can recreate them as named volumes and then mount these named volumes.\n\n   ```console\n   $ docker run --name my_container -v /foo -v awesome:/bar busybox top\n   ```\n\nBy doing this, any data written to `/foo` will be stored in a named volume that persists even after the container is removed.",
+  "prompt_sha256": "3909dd9d8ada03ec4c0a1cc4399e261081e14fc58113c6705d8935f2791ab2eb",
+  "timings_s": {
+    "retrieve": 0.84,
+    "generate": 46.94
+  }
+}

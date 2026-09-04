@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "kubernetes_direct_002",
+  "question": "What is the maximum amount of data a Kubernetes ConfigMap can hold?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::1",
+      "score": 0.71177,
+      "text": ".\n\n\n\n<!-- body -->\n\n## Kubernetes default limits\n\nThe Kubernetes scheduler has default limits on the number of volumes\nthat can be attached to a Node:\n\n<table>\n  <tr><th>Cloud service</th><th>Maximum volumes per Node</th></tr>\n  <tr><td><a href=\"https://aws.amazon.com/ebs/\">Amazon Elastic Block Store (EBS)</a></td><td>39</td></tr>\n  <tr><td><a href=\"https://cloud.google.com/persistent-disk/\">Google Persistent Disk</a></td><td>16</td></tr>\n  <tr><td><a href=\"https://azure.microsoft.com/en-us/services/storage/main-disks/\">Microsoft Azure Disk Storage</a></td><td>16</td></tr>\n</table>\n\n## Dynamic volume limits\n\n{{< feature-state state=\"stable\" for_k8s_version=\"v1.17\" >}}\n\nDynamic volume limits are supported for following volume types.\n\n- Amazon EBS\n- Google Persistent Disk\n- Azure Disk\n- CSI\n\nFor volumes managed by in-tree volume plugins, Kubernetes automatically determines the Node\ntype and enforces the appropriate maximum number of volumes for the node. For example:"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/manage-resources-containers.md::41",
+      "score": 0.70255,
+      "text": "Memory Limits\n  ------------    ----------    ---------------    -------------\n  680m (34%)      400m (20%)    920Mi (11%)        1070Mi (13%)\n```\n\nIn the preceding output, you can see that if a Pod requests more than 1.120 CPUs\nor more than 6.23Gi of memory, that Pod will not fit on the node.\n\nBy looking at the \u201cPods\u201d section, you can see which Pods are taking up space on\nthe node.\n\nThe amount of resources available to Pods is less than the node capacity because\nsystem daemons use a portion of the available resources. Within the Kubernetes API,\neach Node has a `.status.allocatable` field\n(see [NodeStatus](/docs/reference/kubernetes-api/cluster-resources/node-v1/#NodeStatus)\nfor details)."
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::2",
+      "score": 0.70122,
+      "text": "ee volume plugins, Kubernetes automatically determines the Node\ntype and enforces the appropriate maximum number of volumes for the node. For example:\n\n* On\n<a href=\"https://cloud.google.com/compute/\">Google Compute Engine</a>,\nup to 127 volumes can be attached to a node, [depending on the node\ntype](https://cloud.google.com/compute/docs/disks/#pdnumberlimits).\n\n* For Amazon EBS disks on M5,C5,R5,T3 and Z1D instance types, Kubernetes allows only 25\nvolumes to be attached to a Node. For other instance types on\n<a href=\"https://aws.amazon.com/ec2/\">Amazon Elastic Compute Cloud (EC2)</a>,\nKubernetes allows 39 volumes to be attached to a Node.\n\n* On Azure, up to 64 disks can be attached to a node, depending on the node type. For more details, refer to [Sizes for virtual machines in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes)."
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::0",
+      "score": 0.6935,
+      "text": "---\nreviewers:\n- jsafrane\n- saad-ali\n- thockin\n- msau42\ntitle: Node-specific Volume Limits\ncontent_type: concept\nweight: 90\n---\n\n<!-- overview -->\n\nThis page describes the maximum number of volumes that can be attached\nto a Node for various cloud providers.\n\nCloud providers like Google, Amazon, and Microsoft typically have a limit on\nhow many volumes can be attached to a Node. It is important for Kubernetes to\nrespect those limits. Otherwise, Pods scheduled on a Node could get stuck\nwaiting for volumes to attach.\n\n\n\n<!-- body -->\n\n## Kubernetes default limits\n\nThe Kubernetes scheduler has default limits on the number of volumes\nthat can be attached to a Node:"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::2",
+      "score": 0.68918,
+      "text": "o store settings that are\nlarger than this limit, you may want to consider mounting a volume or use a\nseparate database or file service.\n{{< /note >}}\n\n## ConfigMap object\n\nA ConfigMap is an {{< glossary_tooltip text=\"API object\" term_id=\"object\" >}}\nthat lets you store configuration for other objects to use. Unlike most\nKubernetes objects that have a `spec`, a ConfigMap has `data` and `binaryData`\nfields. These fields accept key-value pairs as their values.  Both the `data`\nfield and the `binaryData` are optional. The `data` field is designed to\ncontain UTF-8 strings while the `binaryData` field is designed to\ncontain binary data as base64-encoded strings.\n\nThe name of a ConfigMap must be a valid\n[DNS subdomain name](/docs/concepts/overview/working-with-objects/names#dns-subdomain-names).\n\nEach key under the `data` or the `binaryData` field must consist of\nalphanumeric characters, `-`, `_` or `.`. The keys stored in `data` must not\noverlap with the keys in the `binaryData` field."
+    }
+  ],
+  "answer": "The maximum amount of data that a Kubernetes ConfigMap can hold is not explicitly defined by Kubernetes itself. However, practical limitations and best practices suggest that the total size of a ConfigMap should be kept reasonably small\u2014typically less than 1MB\u2014to ensure optimal performance and reliability.\n\nThis limitation arises because:\n- Larger ConfigMaps can lead to increased memory usage for the API server.\n- They might also result in slower operations when manipulating these objects, such as applying or deleting them.\n- Keeping ConfigMaps small simplifies their management and makes it easier to understand what configuration is being applied to your Kubernetes cluster.\n\nWhile there's no strict upper limit enforced by Kubernetes, users are advised to keep ConfigMap sizes manageable. If you need to store more data than a single ConfigMap can hold, consider splitting the data across multiple ConfigMaps or using other methods such as mounting a volume from an external storage solution.",
+  "prompt_sha256": "4ad6ee8bfed429d5686be6e6266c56e58488767714e9694e2440e8039febcab8",
+  "timings_s": {
+    "retrieve": 0.59,
+    "generate": 55.92
+  }
+}

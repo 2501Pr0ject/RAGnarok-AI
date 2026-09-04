@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_direct_001",
+  "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::16",
+      "score": 0.87702,
+      "text": "`default`\n: Kubernetes includes this namespace so that you can start using your new cluster without first creating a namespace"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::15",
+      "score": 0.80269,
+      "text": "ose.\n{{< /note >}}\n\n## Initial namespaces\n\nKubernetes starts with four initial namespaces:"
+    },
+    {
+      "id": "kubernetes/concepts/policy/limit-range.md::39",
+      "score": 0.77042,
+      "text": "The following examples operate within the default namespace of your cluster, as the namespace"
+    },
+    {
+      "id": "kubernetes/concepts/security/multi-tenancy.md::225",
+      "score": 0.75219,
+      "text": "across all namespaces in the cluster.\n\nIn multi-tenant environments where tenants can access pods and other Kubernetes resource"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::60",
+      "score": 0.74878,
+      "text": "* Learn more about [creating a new namespace](/docs/tasks/administer-cluster/namespaces/#creating-a-new-namespace)."
+    }
+  ],
+  "answer": "A fresh Kubernetes cluster starts with four initial namespaces.",
+  "prompt_sha256": "1f673109d562557dd827e9ae09e2e435e088a6616f7d2c3c65b576af70a8b0d3",
+  "timings_s": {
+    "retrieve": 6.93,
+    "generate": 3.02
+  }
+}

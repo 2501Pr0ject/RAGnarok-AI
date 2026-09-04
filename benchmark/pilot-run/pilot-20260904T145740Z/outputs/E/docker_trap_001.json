@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "docker_trap_001",
+  "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::37",
+      "score": 0.86588,
+      "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::7",
+      "score": 0.82497,
+      "text": "-existing files into an empty\nvolume, use the `volume-nocopy` option, see [Options for --mount](#options-for---mount).\n\n## Named and anonymous volumes\n\nA volume may be named or anonymous. Anonymous volumes are given a random name\nthat's guaranteed to be unique within a given Docker host. Just like named\nvolumes, anonymous volumes persist even if you remove the container that uses\nthem, except if you use the `--rm` flag when creating the container, in which\ncase the anonymous volume associated with the container is destroyed. See\n[Remove anonymous volumes](volumes.md#remove-anonymous-volumes).\n\nIf you create multiple containers consecutively that each use anonymous\nvolumes, each container creates its own volume. Anonymous volumes aren't reused\nor shared between containers automatically. To share an anonymous volume\nbetween two or more containers, you must mount the anonymous volume using the\nrandom volume ID.\n\n## Syntax"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::38",
+      "score": 0.81862,
+      "text": "`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```\n\n> [!NOTE]\n>\n> If another container binds the volumes with\n> `--volumes-from`, the volume definitions are _copied_ and the\n> anonymous volume also stays after the first container is removed.\n\n### Remove all volumes\n\nTo remove all unused volumes and free up space:\n\n```console\n$ docker volume prune\n```\n\n## Next steps\n\n- Learn about [bind mounts](bind-mounts.md).\n- Learn about [tmpfs mounts](tmpfs.md).\n- Learn about [image mounts](image-mounts.md).\n- Learn about [storage drivers](/engine/storage/drivers/).\n- Learn about [third-party volume driver plugins](/engine/extend/legacy_plugins/)."
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/node-pressure-eviction.md::16",
+      "score": 0.0,
+      "text": "threshold as\neither `memory.available<10%` or `memory.available<1Gi` (you cannot use both).\n\n#### Soft eviction thresholds {#soft-eviction-thresholds}\n\nA soft eviction threshold pairs an eviction threshold with a required\nadministrator-specified grace period. The kubelet does not evict pods until the\ngrace period is exceeded. The kubelet returns an error on startup if you do\nnot specify a grace period.\n\nYou can specify both a soft eviction threshold grace period and a maximum\nallowed pod termination grace period for kubelet to use during evictions. If you\nspecify a maximum allowed grace period and the soft eviction threshold is met,\nthe kubelet uses the lesser of the two grace periods. If you do not specify a\nmaximum allowed grace period, the kubelet kills evicted pods immediately without\ngraceful termination.\n\nYou can use the following flags to configure soft eviction thresholds:"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/flow-control.md::26",
+      "score": 0.0,
+      "text": "one of its `resourceRules` or `nonResourceRules` (depending on whether the\nincoming request is for a resource or non-resource URL) match the request.\n\nFor the `name` field in subjects, and the `verbs`, `apiGroups`, `resources`,\n`namespaces`, and `nonResourceURLs` fields of resource and non-resource rules,\nthe wildcard `*` may be specified to match all values for the given field,\neffectively removing it from consideration.\n\nA FlowSchema's `distinguisherMethod.type` determines how requests matching that\nschema will be separated into flows. It may be `ByUser`, in which one requesting\nuser will not be able to starve other users of capacity; `ByNamespace`, in which\nrequests for resources in one namespace will not be able to starve requests for\nresources in other namespaces of capacity; or blank (or `distinguisherMethod` may be\nomitted entirely), in which all requests matched by this FlowSchema will be\nconsidered part of a single flow. The correct choice for a given FlowSchema"
+    }
+  ],
+  "answer": "To keep the data contained within anonymous volumes after their associated container is removed, you would need to mount the anonymous volume into another container or manage it in a way that ensures its persistence. Since anonymous volumes are given random names and Docker does not automatically persist them across containers without explicit actions, you can:\n\n1. **Manually Rename and Reuse**: After identifying the ID of an anonymous volume using `docker volume ls`, you could manually rename it to a named volume with a desired name using `docker volume rename`. Then use that named volume in subsequent container definitions.\n\n2. **Use --volumes-from**: If another container needs access to the data, you can use the `--volumes-from` option to share volumes between containers.\n\n3. **Scripted Management**: Write scripts or use Docker Compose to manage and reuse anonymous volumes across different container setups.\n\nBy taking these steps, you can effectively keep the data from anonymous volumes persistent as needed.",
+  "prompt_sha256": "4715986b699d6bca5f1d90ec2e1f596abc9256645bc7c8d4186ff00ec7717c8d",
+  "timings_s": {
+    "retrieve": 0.65,
+    "generate": 54.84
+  }
+}

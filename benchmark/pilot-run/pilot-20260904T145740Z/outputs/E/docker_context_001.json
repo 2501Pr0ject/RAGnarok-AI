@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "docker_context_001",
+  "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::84",
+      "score": 0.88234,
+      "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::4",
+      "score": 0.8619,
+      "text": "cy details](#restart-policy-details))                                                                                                                |\n| `unless-stopped`           | Similar to `always`, except that when the container is stopped (manually or otherwise), it isn't restarted even after Docker daemon restarts.                                                                                                                                                                                                                         |\n\nThe following command starts a Redis container with the `unless-stopped`\nrestart policy. Docker restarts the container if it exits or if the daemon\nrestarts, but not if you stopped the container yourself.\n\n```console\n$ docker run -d --name redis --restart unless-stopped redis\n```\n\nThe following command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```"
+    },
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::6",
+      "score": 0.85936,
+      "text": "a container, the restart policy is ignored until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop.\n\n- Restart policies only apply to containers. To configure restart policies for\n  Swarm services, see\n  [flags related to service restart](/reference/cli/docker/service/create/).\n\n### Restarting foreground containers\n\nWhen you run a container in the foreground, stopping a container causes the\nattached CLI to exit as well, regardless of the restart policy of the\ncontainer. This behavior is illustrated in the following example.\n\n1. Create a Dockerfile that prints the numbers 1 to 5 and then exits.\n\n   ```dockerfile\n   FROM busybox:latest\n   COPY --chmod=755 <<\"EOF\" /start.sh\n   echo \"Starting...\"\n   for i in $(seq 1 5); do\n     echo \"$i\"\n     sleep 1\n   done\n   echo \"Exiting...\"\n   exit 1\n   EOF\n   ENTRYPOINT /start.sh\n   ```\n\n2. Build an image from the Dockerfile.\n\n   ```console\n   $ docker build -t startstop .\n   ```"
+    },
+    {
+      "id": "python/howto/urllib2.rst::34",
+      "score": 0.0,
+      "text": "www.voidspace.org.uk')\n    response = urllib.request.urlopen(req)\n\n\n-------\n\n\nFootnotes\n=========\n\nThis document was reviewed and revised by John Lee.\n\n.. [#] Google for example.\n.. [#] Browser sniffing is a very bad practice for website design - building\n       sites using web standards is much more sensible. Unfortunately a lot of\n       sites still send different versions to different browsers.\n.. [#] The user agent for MSIE 6 is\n       *'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)'*\n.. [#] For details of more HTTP request headers, see\n       `Quick Reference to HTTP Headers`_.\n.. [#] In my case I have to use a proxy to access the internet at work. If you\n       attempt to fetch *localhost* URLs through this proxy it blocks them. IE\n       is set to use the proxy, which urllib picks up on. In order to test\n       scripts with a localhost server, I have to prevent urllib from using\n       the proxy."
+    },
+    {
+      "id": "docker/reference/compose-file/build.md::8",
+      "score": 0.0,
+      "text": "r image.\n\n```yml\nargs:\n  - GIT_COMMIT\n```\n\n### `cache_from`\n\n`cache_from` defines a list of sources the image builder should use for cache resolution.\n\nCache location syntax follows the global format `[NAME|type=TYPE[,KEY=VALUE]]`. Simple `NAME` is actually a shortcut notation for `type=registry,ref=NAME`.\n\nCompose Build implementations may support custom types, the Compose Specification defines canonical types which must be supported:\n\n- `registry` to retrieve build cache from an OCI image set by key `ref`\n\n```yml\nbuild:\n  context: .\n  cache_from:\n    - alpine:latest\n    - type=local,src=path/to/cache\n    - type=gha\n```\n\nUnsupported caches are ignored and don't prevent you from building images.\n\n### `cache_to`\n\n`cache_to` defines a list of export locations to be used to share build cache with future builds.\n\n```yml\nbuild:\n  context: .\n  cache_to:\n    - user/app:cache\n    - type=local,dest=path/to/cache\n```"
+    }
+  ],
+  "answer": "When you manually stopped a container with the `always` restart policy and then the Docker daemon restarts, the container will be automatically restarted by the Docker daemon. This is because the `always` policy ensures that the container is always restarted regardless of its exit status or manual stopping, unless explicitly removed.",
+  "prompt_sha256": "29f4384a9967274604139a4739b5b26af895bd986441773a247b34712e068bd0",
+  "timings_s": {
+    "retrieve": 0.66,
+    "generate": 29.07
+  }
+}

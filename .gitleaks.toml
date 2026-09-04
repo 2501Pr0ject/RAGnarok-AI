@@ -1,0 +1,24 @@
+# Gitleaks configuration.
+#
+# The benchmark study commits two kinds of content that trip the
+# generic-api-key rule but are not secrets:
+#
+# 1. benchmark/corpora/** — frozen verbatim copies of public upstream
+#    documentation (Docker/Python/FastAPI/Kubernetes). Some upstream
+#    pages contain *example* tokens (e.g. the Splunk logging driver
+#    docs). These files are immutable experimental data pinned by
+#    SHA-256 manifests and cannot be edited.
+# 2. benchmark/pilot-run/** — experimental run journals whose
+#    "secrets" are SHA-256 digests (corpus hashes, model digests,
+#    prompt hashes).
+#
+# Everything else in the repository remains fully scanned.
+
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''benchmark/corpora/.*''',
+  '''benchmark/pilot-run/.*''',
+]

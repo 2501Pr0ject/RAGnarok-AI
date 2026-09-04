@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_contra_001",
+  "question": "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?",
+  "retrieved": [
+    {
+      "id": "docker/get-started/docker-concepts/running-containers/multi-container-applications.md::20",
+      "score": 0.78116,
+      "text": "` commands is tedious and error-prone.\n\nThat's where Docker Compose comes to the rescue."
+    },
+    {
+      "id": "docker/get-started/docker-concepts/running-containers/multi-container-applications.md::28",
+      "score": 0.7799,
+      "text": "- It's easy to set environment variables once in your Docker Compose file."
+    },
+    {
+      "id": "docker/reference/compose-file/configs.md::9",
+      "score": 0.76854,
+      "text": "- `environment`: The config content is created with the value of an environment variable. Introduced in Docker Compose version"
+    },
+    {
+      "id": "docker/manuals/engine/swarm/configs.md::74",
+      "score": 0.76126,
+      "text": "### Defining and using configs in compose files\n\nThe `docker stack` command supports defining configs in a Compose file."
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::506",
+      "score": 0.75692,
+      "text": "ed as a hint for Compose to offer richer behavior for protocols that it understands. Introduced in Docker Compose version [2.26."
+    }
+  ],
+  "answer": "The information provided does not mention the `command` field or its support for shell features such as environment variable expansion. Therefore, based on the given context, I cannot provide an answer to this specific question.",
+  "prompt_sha256": "832de6f6e35b6c148361b916092be665b3c80912e53eecef8cafe1d822ca54ac",
+  "timings_s": {
+    "retrieve": 8.57,
+    "generate": 10.93
+  }
+}

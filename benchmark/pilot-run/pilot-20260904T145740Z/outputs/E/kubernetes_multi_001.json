@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_multi_001",
+  "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/_index.md::2",
+      "score": 0.75971,
+      "text": "if needed.\n(Deployments are a replacement for the legacy\n{{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}} API).\n\nA [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\nmanage one or more Pods \u2013 all running the same application code \u2013 where the Pods rely\non having a distinct identity. This is different from a Deployment where the Pods are\nexpected to be interchangeable.\nThe most common use for a StatefulSet is to be able to make a link between its Pods and\ntheir persistent storage. For example, you can run a StatefulSet that associates each Pod\nwith a [PersistentVolume](/docs/concepts/storage/persistent-volumes/). If one of the Pods\nin the StatefulSet fails, Kubernetes makes a replacement Pod that is connected to the\nsame PersistentVolume."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/_index.md::2",
+      "score": 0.74235,
+      "text": "ip term_id=\"controller\" text=\"controllers\" >}}\nthat make sure the right number of the right kind of pod are running, to match the state\nyou specified.\n\nKubernetes provides several built-in workload resources:\n\n* [Deployment](/docs/concepts/workloads/controllers/deployment/) and [ReplicaSet](/docs/concepts/workloads/controllers/replicaset/)\n  (replacing the legacy resource\n  {{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}}).\n  Deployment is a good fit for managing a stateless application workload on your cluster,\n  where any Pod in the Deployment is interchangeable and can be replaced if needed.\n* [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\n  run one or more related Pods that do track state somehow. For example, if your workload\n  records data persistently, you can run a StatefulSet that matches each Pod with a\n  [PersistentVolume](/docs/concepts/storage/persistent-volumes/). Your code, running in the"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::1",
+      "score": 0.73862,
+      "text": "ides declarative updates for {{< glossary_tooltip text=\"Pods\" term_id=\"pod\" >}} and\n{{< glossary_tooltip term_id=\"replica-set\" text=\"ReplicaSets\" >}}.\n\nYou describe a _desired state_ in a Deployment, and the Deployment {{< glossary_tooltip term_id=\"controller\" >}} changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.\n\n{{< note >}}\nDo not manage ReplicaSets owned by a Deployment. Consider opening an issue in the main Kubernetes repository if your use case is not covered below.\n{{< /note >}}\n\n<!-- body -->\n\n## Use Case\n\nThe following are typical use cases for Deployments:"
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/scheduler-perf-tuning.md::5",
+      "score": 0.0,
+      "text": "be a value between 1 and 100 with the default\nvalue being calculated based on the cluster size. There is also a hardcoded\nminimum value of 100 nodes.\n\n{{< note >}}In clusters with less than 100 feasible nodes, the scheduler still\nchecks all the nodes because there are not enough feasible nodes to stop\nthe scheduler's search early.\n\nIn a small cluster, if you set a low value for `percentageOfNodesToScore`, your\nchange will have no or little effect, for a similar reason.\n\nIf your cluster has several hundred Nodes or fewer, leave this configuration option\nat its default value. Making changes is unlikely to improve the\nscheduler's performance significantly.\n{{< /note >}}"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/networking.md::0",
+      "score": 0.0,
+      "text": "---\nreviewers:\n- thockin\ntitle: Cluster Networking\ncontent_type: concept\nweight: 50\n---\n\n<!-- overview -->\nNetworking is a central part of Kubernetes, but it can be challenging to\nunderstand exactly how it is expected to work.  There are 4 distinct networking\nproblems to address:\n\n1. Highly-coupled container-to-container communications: this is solved by\n   {{< glossary_tooltip text=\"Pods\" term_id=\"pod\" >}} and `localhost` communications.\n2. Pod-to-Pod communications: this is the primary focus of this document.\n3. Pod-to-Service communications: this is covered by [Services](/docs/concepts/services-networking/service/).\n4. External-to-Service communications: this is also covered by Services.\n\n<!-- body -->"
+    }
+  ],
+  "answer": "When you need to manage one or more Pods where each Pod has a distinct identity and relies on having persistent storage, you should use a StatefulSet instead of a Deployment. This is because StatefulSets are designed for workloads where the Pods are not interchangeable, and there is a need to maintain a stable identifier and state across the lifecycle of the Pods. Deployments, on the other hand, are better suited for managing stateless applications where any Pod can be replaced with another without affecting the application's functionality or state.",
+  "prompt_sha256": "9a2889e9b85c9532dd44e5c4563cbcf280d9f9e66ca9cc8ec3d107f9a32e1ed5",
+  "timings_s": {
+    "retrieve": 2.49,
+    "generate": 50.76
+  }
+}

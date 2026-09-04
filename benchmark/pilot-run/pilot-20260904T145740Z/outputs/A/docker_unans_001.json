@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "docker_unans_001",
+  "question": "What are the main changes introduced in Docker Engine version 28?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/install/_index.md::7",
+      "score": 0.7276,
+      "text": "ons released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability.\n\nUse the test channel with caution. Pre-release versions include experimental and\nearly-access features that are subject to breaking changes.\n\n## Support\n\nDocker Engine is an open source project, supported by the Moby project maintainers\nand community members. Docker doesn't provide support for Docker Engine.\nDocker provides support for Docker products, including Docker Desktop, which uses\nDocker Engine as one of its components.\n\nFor information about the open source project, refer to the\n[Moby project website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing"
+    },
+    {
+      "id": "docker/manuals/engine/_index.md::1",
+      "score": 0.69215,
+      "text": "rces.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon.\n  icon: adjustments-horizontal\n  link: /config/daemon\n- title: Rootless mode\n  description: Run Docker without root privileges.\n  icon: shield-check\n  link: /engine/security/rootless\n- title: Deprecated features\n  description: Find out what features of Docker Engine you should stop using.\n  icon: folder-minus\n  link: /engine/deprecated/\n- title: Release notes\n  description: Read the release notes for the latest version.\n  icon: document-plus\n  link: /engine/release-notes\naliases:\n- /edge/\n- /engine/ce-ee-node-activate/\n- /engine/migration/\n- /engine/misc/\n- /linux/\n---\n\nDocker Engine is an open source containerization technology for building and\ncontainerizing your applications. Docker Engine acts as a client-server\napplication with:"
+    },
+    {
+      "id": "docker/manuals/engine/install/_index.md::8",
+      "score": 0.68889,
+      "text": "website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing\n\nCommercial use of Docker Engine obtained via Docker Desktop\nwithin larger enterprises (exceeding 250 employees OR with annual revenue surpassing\n$10 million USD), requires a [paid subscription](https://www.docker.com/pricing?ref=Docs&refAction=DocsEngineInstall).\nApache License, Version 2.0. See [LICENSE](https://github.com/moby/moby/blob/master/LICENSE) for the full license.\n\n## Reporting security issues\n\nIf you discover a security issue, we request that you bring it to our attention immediately.\n\nDO NOT file a public issue. Instead, submit your report privately to security@docker.com.\n\nSecurity reports are greatly appreciated, and Docker will publicly thank you for it.\n\n## Get started\n\nAfter setting up Docker, you can learn the basics with\n[Getting started with Docker](/get-started/introduction/_index.md)."
+    },
+    {
+      "id": "docker/manuals/engine/install/debian.md::0",
+      "score": 0.68723,
+      "text": "---\ndescription: Learn how to install Docker Engine on Debian. These instructions cover\n  the different installation methods, how to uninstall, and next steps.\nkeywords: requirements, apt, installation, debian, install, uninstall, install debian, docker engine, install docker engine, upgrade, update\ntitle: Install Docker Engine on Debian\nlinkTitle: Debian\nweight: 20\ntoc_max: 4\naliases:\n- /engine/installation/debian/\n- /engine/installation/linux/debian/\n- /engine/installation/linux/docker-ce/debian/\n- /install/linux/docker-ce/debian/\ndownload-url-base: https://download.docker.com/linux/debian\n---\n\nTo get started with Docker Engine on Debian, make sure you\n[meet the prerequisites](#prerequisites), and then follow the\n[installation steps](#installation-methods).\n\n## Prerequisites\n\n### Firewall limitations\n\n> [!WARNING]\n>\n> Before you install Docker, make sure you consider the following\n> security implications and firewall incompatibilities."
+    },
+    {
+      "id": "docker/manuals/engine/install/fedora.md::0",
+      "score": 0.68514,
+      "text": "---\ndescription: Learn how to install Docker Engine on Fedora. These instructions cover\n  the different installation methods, how to uninstall, and next steps.\nkeywords: requirements, dnf, installation, fedora, install fedora, install docker engine, rpm, install, uninstall, upgrade,\n  update\ntitle: Install Docker Engine on Fedora\nlinkTitle: Fedora\nweight: 40\ntoc_max: 4\naliases:\n- /engine/installation/fedora/\n- /engine/installation/linux/fedora/\n- /engine/installation/linux/docker-ce/fedora/\n- /install/linux/docker-ce/fedora/\ndownload-url-base: https://download.docker.com/linux/fedora\n---\n\nTo get started with Docker Engine on Fedora, make sure you\n[meet the prerequisites](#prerequisites), and then follow the\n[installation steps](#installation-methods).\n\n## Prerequisites\n\n### OS requirements\n\nTo install Docker Engine, you need a maintained version of one of the following\nFedora versions:\n\n- Fedora 44\n- Fedora 43\n\n### Uninstall old versions"
+    }
+  ],
+  "answer": "The provided context does not contain information about main changes introduced in Docker Engine version 28. Therefore, I cannot answer this question based on the given documentation.",
+  "prompt_sha256": "0eb274460265324809d8c89b556bf73d09b9a7ea4b815b1d8f7c4356309589ec",
+  "timings_s": {
+    "retrieve": 3.12,
+    "generate": 34.9
+  }
+}

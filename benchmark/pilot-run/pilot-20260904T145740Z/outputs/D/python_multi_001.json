@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "python_multi_001",
+  "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/datastructures.rst::6",
+      "score": 0.73257,
+      "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+    }
+  ],
+  "answer": "In Python, a plain list can be used as a stack because stacks follow the Last-In-First-Out (LIFO) principle, where elements are added and removed from the end of the list. Appends and pops from the end of a list are fast operations.\n\nHowever, using a plain list as a queue is not recommended because queues follow the First-In-First-Out (FIFO) principle, which requires efficient insertion and removal from both ends. Pops or inserts from the beginning of a list are slow due to the need to shift all other elements by one position.\n\nFor implementing a queue with fast appends and pops from both ends, you should use :class:`collections.deque` instead.",
+  "prompt_sha256": "29c512c2a6540a4c02e35bbbff769dd0bda0e799a9f916f2f9074e2c13c2509d",
+  "timings_s": {
+    "retrieve": 0.6,
+    "generate": 33.01
+  }
+}

@@ -1,0 +1,437 @@
+{
+  "batch_id": "python-b01",
+  "domain": "python",
+  "smoke": false,
+  "study_version": "pilot-20260904T145740Z",
+  "items": [
+    {
+      "item_key": "c738df3869",
+      "case_id": "python_context_001",
+      "domain": "python",
+      "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+      "reference_information": "When multiple records have the same key, their original order is preserved. This is useful for multi-pass sorting (e.g. sort by one key, then by another, keeping the first order among ties).",
+      "reference_chunks": [
+        "howto/sorting.rst"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/howto/sorting.rst::7",
+          "text": "'age'), reverse=True)\n    [('john', 'A', 15), ('jane', 'B', 12), ('dave', 'B', 10)]\n\nSort Stability and Complex Sorts\n================================\n\nSorts are guaranteed to be `stable\n<https://en.wikipedia.org/wiki/Sorting_algorithm#Stability>`_\\. That means that\nwhen multiple records have the same key, their original order is preserved.\n\n.. doctest::\n\n    >>> data = [('red', 1), ('blue', 1), ('red', 2), ('blue', 2)]\n    >>> sorted(data, key=itemgetter(0))\n    [('blue', 1), ('blue', 2), ('red', 1), ('red', 2)]\n\nNotice how the two records for *blue* retain their original order so that\n``('blue', 1)`` is guaranteed to precede ``('blue', 2)``.\n\nThis wonderful property lets you build complex sorts in a series of sorting\nsteps. For example, to sort the student data by descending *grade* and then\nascending *age*, do the *age* sort first and then sort again using *grade*:\n\n.. doctest::"
+        },
+        {
+          "id": "python/howto/sorting.rst::0",
+          "text": ".. _sortinghowto:\n\nSorting Techniques\n******************\n\n:Author: Andrew Dalke and Raymond Hettinger\n\n\nPython lists have a built-in :meth:`list.sort` method that modifies the list\nin-place.  There is also a :func:`sorted` built-in function that builds a new\nsorted list from an iterable.\n\nIn this document, we explore the various techniques for sorting data using Python.\n\n\nSorting Basics\n==============\n\nA simple ascending sort is very easy: just call the :func:`sorted` function. It\nreturns a new sorted list:\n\n.. doctest::\n\n    >>> sorted([5, 2, 3, 1, 4])\n    [1, 2, 3, 4, 5]\n\nYou can also use the :meth:`list.sort` method. It modifies the list\nin-place (and returns ``None`` to avoid confusion). Usually it's less convenient\nthan :func:`sorted` - but if you don't need the original list, it's slightly\nmore efficient.\n\n.. doctest::\n\n    >>> a = [5, 2, 3, 1, 4]\n    >>> a.sort()\n    >>> a\n    [1, 2, 3, 4, 5]"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::4",
+          "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/howto/sorting.rst::11",
+          "text": "ist, but including it gives two benefits:\n\n* The sort is stable -- if two items have the same key, their order will be\n  preserved in the sorted list.\n\n* The original items do not have to be comparable because the ordering of the\n  decorated tuples will be determined by at most the first two items. So for\n  example the original list could contain complex numbers which cannot be sorted\n  directly.\n\nAnother name for this idiom is\n`Schwartzian transform <https://en.wikipedia.org/wiki/Schwartzian_transform>`_\\,\nafter Randal L. Schwartz, who popularized it among Perl programmers.\n\nNow that Python sorting provides key-functions, this technique is not often needed.\n\nComparison Functions\n====================\n\nUnlike key functions that return an absolute value for sorting, a comparison\nfunction computes the relative ordering for two inputs."
+        },
+        {
+          "id": "python/tutorial/appetite.rst::2",
+          "text": "st-draft\nprogram.  Python is simpler to use, available on Windows, macOS, and Unix\noperating systems, and will help you get the job done more quickly.\n\nPython is simple to use, but it is a real programming language, offering much\nmore structure and support for large programs than shell scripts or batch files\ncan offer.  On the other hand, Python also offers much more error checking than\nC, and, being a *very-high-level language*, it has high-level data types built\nin, such as flexible arrays and dictionaries.  Because of its more general data\ntypes Python is applicable to a much larger problem domain than Awk or even\nPerl, yet many things are at least as easy in Python as in those languages."
+        }
+      ],
+      "answer": "Python's sorts are documented as stable, which means that when multiple records have the same key, their original order is preserved. This property is useful when you need to perform complex sorts in a series of steps. For example, sorting by one key and then another without changing the relative order of items that have the same value for the first key."
+    },
+    {
+      "item_key": "4924eeb787",
+      "case_id": "python_unans_002",
+      "domain": "python",
+      "question": "How do I install Python on Windows?",
+      "reference_information": "Installation guides are not part of the corpus (tutorial + HOWTOs); the ideal response states that installation instructions are not in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/interpreter.rst::1",
+          "text": "places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)\n\nOn Windows machines where you have installed Python from the :ref:`Microsoft Store\n<windows-store>`, the :file:`python3.12` command will be available. If you have\nthe :ref:`py.exe launcher <launcher>` installed, you can use the :file:`py`\ncommand. See :ref:`setting-envvars` for other ways to launch Python.\n\nTyping an end-of-file character (:kbd:`Control-D` on Unix, :kbd:`Control-Z` on\nWindows) at the primary prompt causes the interpreter to exit with a zero exit\nstatus.  If that doesn't work, you can exit the interpreter by typing the\nfollowing command: ``quit()``."
+        },
+        {
+          "id": "python/tutorial/index.rst::0",
+          "text": ".. _tutorial-index:\n\n######################\n  The Python Tutorial\n######################\n\nPython is an easy to learn, powerful programming language. It has efficient\nhigh-level data structures and a simple but effective approach to\nobject-oriented programming. Python's elegant syntax and dynamic typing,\ntogether with its interpreted nature, make it an ideal language for scripting\nand rapid application development in many areas on most platforms.\n\nThe Python interpreter and the extensive standard library are freely available\nin source or binary form for all major platforms from the Python web site,\nhttps://www.python.org/, and may be freely distributed. The same site also\ncontains distributions of and pointers to many free third party Python modules,\nprograms and tools, and additional documentation."
+        },
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::5",
+          "text": "ill install packages from the `Python\nPackage Index <https://pypi.org>`_.  You can browse the Python\nPackage Index by going to it in your web browser.\n\n``pip`` has a number of subcommands: \"install\", \"uninstall\",\n\"freeze\", etc.  (Consult the :ref:`installing-index` guide for\ncomplete documentation for ``pip``.)\n\nYou can install the latest version of a package by specifying a package's name:\n\n.. code-block:: bash\n\n  (tutorial-env) $ python -m pip install novas\n  Collecting novas\n    Downloading novas-3.1.1.3.tar.gz (136kB)\n  Installing collected packages: novas\n    Running setup.py install for novas\n  Successfully installed novas-3.1.1.3\n\nYou can also install a specific version of a package by giving the\npackage name  followed by ``==`` and the version number:\n\n.. code-block:: bash"
+        },
+        {
+          "id": "python/howto/logging-cookbook.rst::189",
+          "text": "ck exit - you could do this if you don't need the handler any more.\n\nTo illustrate how it works, we can add the following block of code to the\nabove::\n\n    if __name__ == '__main__':\n        logger = logging.getLogger('foo')\n        logger.addHandler(logging.StreamHandler())\n        logger.setLevel(logging.INFO)\n        logger.info('1. This should appear just once on stderr.')\n        logger.debug('2. This should not appear.')\n        with LoggingContext(logger, level=logging.DEBUG):\n            logger.debug('3. This should appear once on stderr.')\n        logger.debug('4. This should not appear.')\n        h = logging.StreamHandler(sys.stdout)\n        with LoggingContext(logger, level=logging.DEBUG, handler=h, close=True):\n            logger.debug('5. This should appear twice - once on stderr and once on stdout.')\n        logger.info('6. This should appear just once on stderr.')\n        logger.debug('7. This should not appear.')"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service@release-1.28.md::19",
+          "text": "(the resource kind is plural) defines a list of network endpoints, typically\nreferenced by a Service to define which Pods the traffic can be sent to.\n\nThe EndpointSlice API is the recommended replacement for Endpoints.\n\n#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints\nobject. When there are over 1000 backing endpoints for a Service, Kubernetes\ntruncates the data in the Endpoints object. Because a Service can be linked\nwith more than one EndpointSlice, the 1000 backing endpoint limit only\naffects the legacy Endpoints API."
+        }
+      ],
+      "answer": "On Windows machines where you have installed Python from the Microsoft Store, the `python3.12` command will be available. If you have the py.exe launcher installed, you can use the `py` command."
+    },
+    {
+      "item_key": "ed052b7267",
+      "case_id": "python_multi_001",
+      "domain": "python",
+      "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+      "reference_information": "List methods make stacks easy and efficient: append() and pop() work at the end of the list (last-in, first-out). As a queue a list is inefficient because inserting or popping at the beginning requires shifting all other elements. Use collections.deque, designed for fast appends and pops from both ends.",
+      "reference_chunks": [
+        "tutorial/datastructures.rst#using-lists-as-stacks",
+        "tutorial/datastructures.rst#using-lists-as-queues"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/datastructures.rst::6",
+          "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::5",
+          "text": "7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\n\nThe list methods make it very easy to use a list as a stack, where the last\nelement added is the first element retrieved (\"last-in, first-out\").  To add an\nitem to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the\ntop of the stack, use :meth:`~list.pop` without an explicit index.  For example::\n\n   >>> stack = [3, 4, 5]\n   >>> stack.append(6)\n   >>> stack.append(7)\n   >>> stack\n   [3, 4, 5, 6, 7]\n   >>> stack.pop()\n   7\n   >>> stack\n   [3, 4, 5, 6]\n   >>> stack.pop()\n   6\n   >>> stack.pop()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::4",
+          "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/tutorial/appetite.rst::2",
+          "text": "st-draft\nprogram.  Python is simpler to use, available on Windows, macOS, and Unix\noperating systems, and will help you get the job done more quickly.\n\nPython is simple to use, but it is a real programming language, offering much\nmore structure and support for large programs than shell scripts or batch files\ncan offer.  On the other hand, Python also offers much more error checking than\nC, and, being a *very-high-level language*, it has high-level data types built\nin, such as flexible arrays and dictionaries.  Because of its more general data\ntypes Python is applicable to a much larger problem domain than Awk or even\nPerl, yet many things are at least as easy in Python as in those languages."
+        },
+        {
+          "id": "python/howto/logging-cookbook.rst::108",
+          "text": "and QueueListener- a ZeroMQ example\n------------------------------------------------------------\n\nSubclass ``QueueHandler``\n^^^^^^^^^^^^^^^^^^^^^^^^^\n\nYou can use a :class:`QueueHandler` subclass to send messages to other kinds\nof queues, for example a ZeroMQ 'publish' socket. In the example below,the\nsocket is created separately and passed to the handler (as its 'queue')::\n\n    import zmq   # using pyzmq, the Python binding for ZeroMQ\n    import json  # for serializing records portably\n\n    ctx = zmq.Context()\n    sock = zmq.Socket(ctx, zmq.PUB)  # or zmq.PUSH, or other suitable value\n    sock.bind('tcp://*:5556')        # or wherever\n\n    class ZeroMQSocketHandler(QueueHandler):\n        def enqueue(self, record):\n            self.queue.send_json(record.__dict__)\n\n\n    handler = ZeroMQSocketHandler(sock)\n\n\nOf course there are other ways of organizing this, for example passing in the\ndata needed by the handler to create the socket::"
+        }
+      ],
+      "answer": "In Python, a plain list can be used as a stack because you can efficiently append items to the end of the list using :meth:`~list.append` and remove items from the end using :meth:`~list.pop` without an index. However, using a list as a queue is not efficient because operations like inserting or removing elements from the beginning of the list are slow due to the need to shift other elements.\n\nFor implementing a queue with faster appends and pops from both ends, you should use :class:`collections.deque`."
+    },
+    {
+      "item_key": "d26485fddc",
+      "case_id": "python_direct_001",
+      "domain": "python",
+      "question": "What command do I run to create a virtual environment called tutorial-env?",
+      "reference_information": "python -m venv tutorial-env",
+      "reference_chunks": [
+        "tutorial/venv.rst#creating-virtual-environments"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/venv.rst::3",
+          "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+        }
+      ],
+      "answer": "The provided context does not contain the information needed to answer how to create a virtual environment called `tutorial-env`. It only describes how to activate an already created virtual environment."
+    },
+    {
+      "item_key": "c3aa2bdbe1",
+      "case_id": "python_trap_001",
+      "domain": "python",
+      "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+      "reference_information": "They don't \u2014 the premise is false. `from module import *` imports all names except those beginning with an underscore.",
+      "reference_chunks": [
+        "tutorial/modules.rst"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/modules.rst::5",
+          "text": "r).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace.\n\nThere is a variant of the :keyword:`import` statement that imports names from a\nmodule directly into the importing module's namespace.  For example::\n\n   >>> from fibo import fib, fib2\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis does not introduce the module name from which the imports are taken in the\nlocal namespace (so in the example, ``fibo`` is not defined).\n\nThere is even a variant to import all names that a module defines::\n\n   >>> from fibo import *\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis imports all names except those beginning with an underscore (``_``).\nIn most cases Python programmers do not use this facility since it introduces\nan unknown set of names into the interpreter, possibly hiding some things\nyou have already defined."
+        }
+      ],
+      "answer": "In most cases, when you run `from module import *`, names starting with an underscore (``_``) are not imported because they are excluded by default. However, the context provided explicitly states that this facility imports all names except those beginning with an underscore (``_``). Therefore, the information needed to directly answer the question is not present in the way it was phrased; typically, such imports exclude names starting with an underscore."
+    },
+    {
+      "item_key": "3ffdbd3c8b",
+      "case_id": "python_multi_001",
+      "domain": "python",
+      "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+      "reference_information": "List methods make stacks easy and efficient: append() and pop() work at the end of the list (last-in, first-out). As a queue a list is inefficient because inserting or popping at the beginning requires shifting all other elements. Use collections.deque, designed for fast appends and pops from both ends.",
+      "reference_chunks": [
+        "tutorial/datastructures.rst#using-lists-as-stacks",
+        "tutorial/datastructures.rst#using-lists-as-queues"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/datastructures.rst::6",
+          "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::5",
+          "text": "7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\n\nThe list methods make it very easy to use a list as a stack, where the last\nelement added is the first element retrieved (\"last-in, first-out\").  To add an\nitem to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the\ntop of the stack, use :meth:`~list.pop` without an explicit index.  For example::\n\n   >>> stack = [3, 4, 5]\n   >>> stack.append(6)\n   >>> stack.append(7)\n   >>> stack\n   [3, 4, 5, 6, 7]\n   >>> stack.pop()\n   7\n   >>> stack\n   [3, 4, 5, 6]\n   >>> stack.pop()\n   6\n   >>> stack.pop()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::4",
+          "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "docker/manuals/engine/swarm/swarm-mode.md::3",
+          "text": "etwork named `ingress` for publishing service ports\nexternal to the swarm.\n* Creates an overlay default IP addresses and subnet mask for your networks\n\nThe output for `docker swarm init` provides the connection command to use when\nyou join new worker nodes to the swarm:\n\n```console\n$ docker swarm init\nSwarm initialized: current node (dxn1zf6l61qsb1josjja83ngz) is now a manager.\n\nTo add a worker to this swarm, run the following command:\n\n    docker swarm join \\\n    --token SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \\\n    192.168.99.100:2377\n\nTo add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.\n```\n\n### Configuring default address pools"
+        },
+        {
+          "id": "fastapi/tutorial/sql-databases.md::4",
+          "text": "odel that it should create a **SQL index** for this column, that would allow faster lookups in the database when reading data filtered by this column.\n\n    SQLModel will know that something declared as `str` will be a SQL column of type `TEXT` (or `VARCHAR`, depending on the database).\n\n### Create an Engine { #create-an-engine }\n\nA SQLModel `engine` (underneath it's actually a SQLAlchemy `engine`) is what **holds the connections** to the database.\n\nYou would have **one single `engine` object** for all your code to connect to the same database.\n\n{* ../../docs_src/sql_databases/tutorial001_an_py310.py ln[14:18] hl[14:15,17:18] *}\n\nUsing `check_same_thread=False` allows FastAPI to use the same SQLite database in different threads. This is necessary as **one single request** could use **more than one thread** (for example in dependencies)."
+        }
+      ],
+      "answer": "In Python, a plain list can be used as a stack because the `append()` method adds elements to the end of the list quickly, and `pop()` without an index removes the last element added, which is the \"last-in, first-out\" (LIFO) behavior desired for a stack. However, using a list as a queue is not efficient because operations like `insert` or `pop` from the beginning of the list are slow due to the need to shift all other elements by one.\n\nFor implementing a queue more efficiently, you should use `collections.deque`, which provides fast appends and pops from both ends."
+    },
+    {
+      "item_key": "2d27358ffe",
+      "case_id": "python_unans_002",
+      "domain": "python",
+      "question": "How do I install Python on Windows?",
+      "reference_information": "Installation guides are not part of the corpus (tutorial + HOWTOs); the ideal response states that installation instructions are not in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/interpreter.rst::1",
+          "text": "places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)\n\nOn Windows machines where you have installed Python from the :ref:`Microsoft Store\n<windows-store>`, the :file:`python3.12` command will be available. If you have\nthe :ref:`py.exe launcher <launcher>` installed, you can use the :file:`py`\ncommand. See :ref:`setting-envvars` for other ways to launch Python.\n\nTyping an end-of-file character (:kbd:`Control-D` on Unix, :kbd:`Control-Z` on\nWindows) at the primary prompt causes the interpreter to exit with a zero exit\nstatus.  If that doesn't work, you can exit the interpreter by typing the\nfollowing command: ``quit()``."
+        },
+        {
+          "id": "python/tutorial/index.rst::0",
+          "text": ".. _tutorial-index:\n\n######################\n  The Python Tutorial\n######################\n\nPython is an easy to learn, powerful programming language. It has efficient\nhigh-level data structures and a simple but effective approach to\nobject-oriented programming. Python's elegant syntax and dynamic typing,\ntogether with its interpreted nature, make it an ideal language for scripting\nand rapid application development in many areas on most platforms.\n\nThe Python interpreter and the extensive standard library are freely available\nin source or binary form for all major platforms from the Python web site,\nhttps://www.python.org/, and may be freely distributed. The same site also\ncontains distributions of and pointers to many free third party Python modules,\nprograms and tools, and additional documentation."
+        },
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::5",
+          "text": "ill install packages from the `Python\nPackage Index <https://pypi.org>`_.  You can browse the Python\nPackage Index by going to it in your web browser.\n\n``pip`` has a number of subcommands: \"install\", \"uninstall\",\n\"freeze\", etc.  (Consult the :ref:`installing-index` guide for\ncomplete documentation for ``pip``.)\n\nYou can install the latest version of a package by specifying a package's name:\n\n.. code-block:: bash\n\n  (tutorial-env) $ python -m pip install novas\n  Collecting novas\n    Downloading novas-3.1.1.3.tar.gz (136kB)\n  Installing collected packages: novas\n    Running setup.py install for novas\n  Successfully installed novas-3.1.1.3\n\nYou can also install a specific version of a package by giving the\npackage name  followed by ``==`` and the version number:\n\n.. code-block:: bash"
+        },
+        {
+          "id": "python/tutorial/interpreter.rst::0",
+          "text": ".. _tut-using:\n\n****************************\nUsing the Python Interpreter\n****************************\n\n\n.. _tut-invoking:\n\nInvoking the Interpreter\n========================\n\nThe Python interpreter is usually installed as :file:`/usr/local/bin/python3.12`\non those machines where it is available; putting :file:`/usr/local/bin` in your\nUnix shell's search path makes it possible to start it by typing the command:\n\n.. code-block:: text\n\n   python3.12\n\nto the shell. [#]_ Since the choice of the directory where the interpreter lives\nis an installation option, other places are possible; check with your local\nPython guru or system administrator.  (E.g., :file:`/usr/local/python` is a\npopular alternative location.)"
+        },
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::9",
+          "text": "o version control and\nshipped as part of an application.  Users can then install all the\nnecessary packages with ``install -r``:\n\n.. code-block:: bash\n\n  (tutorial-env) $ python -m pip install -r requirements.txt\n  Collecting novas==3.1.1.3 (from -r requirements.txt (line 1))\n    ...\n  Collecting numpy==1.9.2 (from -r requirements.txt (line 2))\n    ...\n  Collecting requests==2.7.0 (from -r requirements.txt (line 3))\n    ...\n  Installing collected packages: novas, numpy, requests\n    Running setup.py install for novas\n  Successfully installed novas-3.1.1.3 numpy-1.9.2 requests-2.7.0\n\n``pip`` has many more options.  Consult the :ref:`installing-index`\nguide for complete documentation for ``pip``.  When you've written\na package and want to make it available on the Python Package Index,\nconsult the :ref:`distributing-index` guide."
+        }
+      ],
+      "answer": "On Windows, installing Python is typically straightforward. Here\u2019s how you can generally proceed:\n\n1. **Download Python**:\n   - Visit the official Python website at https://www.python.org/downloads/.\n   - Look for the latest stable release and download the appropriate installer for Windows (usually a `.exe` file).\n\n2. **Run the Installer**:\n   - Double-click on the downloaded installer to run it.\n   - Follow the on-screen instructions. A common step is to check the box that says \"Add Python X.X to PATH\" if you want the `python3.12` command to be available in your Command Prompt or PowerShell.\n\n3. **Verify Installation**:\n   - Open a Command Prompt (CMD) window.\n   - Type `python --version` and press Enter to check that Python is correctly installed.\n   - Alternatively, you can use `python3.12 --version` if the command name differs based on your installation.\n   \n4. **Optional: Setting up a Virtual Environment**:\n   - You might want to create a virtual environment for your projects using tools like `venv`, or you can use package managers like `pip` to install specific versions of packages as needed.\n\n5. **Accessing the Python Interpreter**:\n   - Once installed, you should be able to open Command Prompt and type `python3.12` (or just `python` if you have it configured in your PATH) followed by pressing Enter.\n   - You can then test that everything works by typing a simple command like `print(\"Hello, world!\")`.\n\nRemember, for detailed steps or specific instructions, refer to the official Python documentation or follow any additional setup instructions provided during installation."
+    },
+    {
+      "item_key": "3f7deedc55",
+      "case_id": "python_unans_002",
+      "domain": "python",
+      "question": "How do I install Python on Windows?",
+      "reference_information": "Installation guides are not part of the corpus (tutorial + HOWTOs); the ideal response states that installation instructions are not in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/interpreter.rst::7",
+          "text": "On Windows machines where you have installed Python from the :ref:`Microsoft Store"
+        },
+        {
+          "id": "python/tutorial/appetite.rst::15",
+          "text": "program.  Python is simpler to use, available on Windows, macOS, and Unix"
+        },
+        {
+          "id": "python/tutorial/interpreter.rst::8",
+          "text": "<windows-store>`, the :file:`python3.12` command will be available. If you have"
+        },
+        {
+          "id": "fastapi/tutorial/debugging.md::17",
+          "text": "* Go to the \"Debug\" panel.\n* \"Add configuration...\".\n* Select \"Python\""
+        },
+        {
+          "id": "python/howto/curses.rst::31",
+          "text": "The Windows version of Python doesn't include the :mod:`curses`"
+        }
+      ],
+      "answer": "The provided context does not contain explicit steps for installing Python on Windows. It mentions that Python can be installed from the Microsoft Store and provides some configuration details after installation, but it does not detail the installation process itself. Therefore, the information about how to install Python on Windows is not present in the given documentation."
+    },
+    {
+      "item_key": "2901f45c80",
+      "case_id": "python_direct_001",
+      "domain": "python",
+      "question": "What command do I run to create a virtual environment called tutorial-env?",
+      "reference_information": "python -m venv tutorial-env",
+      "reference_chunks": [
+        "tutorial/venv.rst#creating-virtual-environments"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/venv.rst::28",
+          "text": "Once you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate"
+        },
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::28",
+          "text": "Once you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat"
+        },
+        {
+          "id": "python/tutorial/venv.rst::22",
+          "text": "This will create the ``tutorial-env`` directory if it doesn't exist,"
+        },
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::22",
+          "text": "This will create the ``tutorial-env`` directory if it doesn't exist,"
+        },
+        {
+          "id": "python/tutorial/venv.rst::20",
+          "text": "To create a virtual environment, decide upon a directory where you want to"
+        }
+      ],
+      "answer": "The provided context does not contain information on how to create a virtual environment. It only describes how to activate an already created virtual environment."
+    },
+    {
+      "item_key": "c6e48ea0c6",
+      "case_id": "python_multi_001",
+      "domain": "python",
+      "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+      "reference_information": "List methods make stacks easy and efficient: append() and pop() work at the end of the list (last-in, first-out). As a queue a list is inefficient because inserting or popping at the beginning requires shifting all other elements. Use collections.deque, designed for fast appends and pops from both ends.",
+      "reference_chunks": [
+        "tutorial/datastructures.rst#using-lists-as-stacks",
+        "tutorial/datastructures.rst#using-lists-as-queues"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/datastructures.rst::6",
+          "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::7",
+          "text": "shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::\n\n   >>> from collections import deque\n   >>> queue = deque([\"Eric\", \"John\", \"Michael\"])\n   >>> queue.append(\"Terry\")           # Terry arrives\n   >>> queue.append(\"Graham\")          # Graham arrives\n   >>> queue.popleft()                 # The first to arrive now leaves\n   'Eric'\n   >>> queue.popleft()                 # The second to arrive now leaves\n   'John'\n   >>> queue                           # Remaining queue in order of arrival\n   deque(['Michael', 'Terry', 'Graham'])\n\n\n.. _tut-listcomps:\n\nList Comprehensions\n-------------------\n\nList comprehensions provide a concise way to create lists.\nCommon applications are to make new lists where each element is the result of\nsome operations applied to each member of another sequence or iterable, or to\ncreate a subsequence of those elements that satisfy a certain condition."
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::5",
+          "text": "7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\n\nThe list methods make it very easy to use a list as a stack, where the last\nelement added is the first element retrieved (\"last-in, first-out\").  To add an\nitem to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the\ntop of the stack, use :meth:`~list.pop` without an explicit index.  For example::\n\n   >>> stack = [3, 4, 5]\n   >>> stack.append(6)\n   >>> stack.append(7)\n   >>> stack\n   [3, 4, 5, 6, 7]\n   >>> stack.pop()\n   7\n   >>> stack\n   [3, 4, 5, 6]\n   >>> stack.pop()\n   6\n   >>> stack.pop()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/tutorial/stdlib2.rst::15",
+          "text": "ed\n   Traceback (most recent call last):\n     File \"<stdin>\", line 1, in <module>\n       d['primary']                # entry was automatically removed\n     File \"C:/python312/lib/weakref.py\", line 46, in __getitem__\n       o = self.data[key]()\n   KeyError: 'primary'\n\n\n.. _tut-list-tools:\n\nTools for Working with Lists\n============================\n\nMany data structure needs can be met with the built-in list type. However,\nsometimes there is a need for alternative implementations with different\nperformance trade-offs.\n\nThe :mod:`array` module provides an :class:`~array.array` object that is like\na list that stores only homogeneous data and stores it more compactly.  The\nfollowing example shows an array of numbers stored as two byte unsigned binary\nnumbers (typecode ``\"H\"``) rather than the usual 16 bytes per entry for regular\nlists of Python int objects::"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::15",
+          "text": "until another value\nis assigned to it).  We'll find other uses for :keyword:`del` later.\n\n\n.. _tut-tuples:\n\nTuples and Sequences\n====================\n\nWe saw that lists and strings have many common properties, such as indexing and\nslicing operations.  They are two examples of *sequence* data types (see\n:ref:`typesseq`).  Since Python is an evolving language, other sequence data\ntypes may be added.  There is also another standard sequence data type: the\n*tuple*.\n\nA tuple consists of a number of values separated by commas, for instance::"
+        }
+      ],
+      "answer": "In Python, a plain list can be used as a stack because you can efficiently append items to the end using `list.append()` and pop items from the end using `list.pop()`, which is fast. However, using a list as a queue is not efficient because popping items from the beginning of the list (using `list.pop(0)`) is slow due to the need to shift all other elements by one.\n\nInstead of using a plain list for implementing a queue, you should use `collections.deque`, which was designed to have fast appends and pops from both ends. This makes it more suitable for implementing queues efficiently."
+    },
+    {
+      "item_key": "f8d8412fab",
+      "case_id": "python_context_001",
+      "domain": "python",
+      "question": "Python's sorts are documented as stable. What does that guarantee, and when is it useful?",
+      "reference_information": "When multiple records have the same key, their original order is preserved. This is useful for multi-pass sorting (e.g. sort by one key, then by another, keeping the first order among ties).",
+      "reference_chunks": [
+        "howto/sorting.rst"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/howto/sorting.rst::7",
+          "text": "'age'), reverse=True)\n    [('john', 'A', 15), ('jane', 'B', 12), ('dave', 'B', 10)]\n\nSort Stability and Complex Sorts\n================================\n\nSorts are guaranteed to be `stable\n<https://en.wikipedia.org/wiki/Sorting_algorithm#Stability>`_\\. That means that\nwhen multiple records have the same key, their original order is preserved.\n\n.. doctest::\n\n    >>> data = [('red', 1), ('blue', 1), ('red', 2), ('blue', 2)]\n    >>> sorted(data, key=itemgetter(0))\n    [('blue', 1), ('blue', 2), ('red', 1), ('red', 2)]\n\nNotice how the two records for *blue* retain their original order so that\n``('blue', 1)`` is guaranteed to precede ``('blue', 2)``.\n\nThis wonderful property lets you build complex sorts in a series of sorting\nsteps. For example, to sort the student data by descending *grade* and then\nascending *age*, do the *age* sort first and then sort again using *grade*:\n\n.. doctest::"
+        },
+        {
+          "id": "python/howto/sorting.rst::0",
+          "text": ".. _sortinghowto:\n\nSorting Techniques\n******************\n\n:Author: Andrew Dalke and Raymond Hettinger\n\n\nPython lists have a built-in :meth:`list.sort` method that modifies the list\nin-place.  There is also a :func:`sorted` built-in function that builds a new\nsorted list from an iterable.\n\nIn this document, we explore the various techniques for sorting data using Python.\n\n\nSorting Basics\n==============\n\nA simple ascending sort is very easy: just call the :func:`sorted` function. It\nreturns a new sorted list:\n\n.. doctest::\n\n    >>> sorted([5, 2, 3, 1, 4])\n    [1, 2, 3, 4, 5]\n\nYou can also use the :meth:`list.sort` method. It modifies the list\nin-place (and returns ``None`` to avoid confusion). Usually it's less convenient\nthan :func:`sorted` - but if you don't need the original list, it's slightly\nmore efficient.\n\n.. doctest::\n\n    >>> a = [5, 2, 3, 1, 4]\n    >>> a.sort()\n    >>> a\n    [1, 2, 3, 4, 5]"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::4",
+          "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "fastapi/tutorial/dependencies/dependencies-with-yield.md::6",
+          "text": "Handler](../handling-errors.md#install-custom-exception-handlers).\n\n## Dependencies with `yield` and `except` { #dependencies-with-yield-and-except }\n\nIf you catch an exception using `except` in a dependency with `yield` and you don't raise it again (or raise a new exception), FastAPI won't be able to notice there was an exception, the same way that would happen with regular Python:\n\n{* ../../docs_src/dependencies/tutorial008c_an_py310.py hl[15:16] *}\n\nIn this case, the client will see an *HTTP 500 Internal Server Error* response as it should, given that we are not raising an `HTTPException` or similar, but the server will **not have any logs** or any other indication of what was the error. \ud83d\ude31\n\n### Always `raise` in Dependencies with `yield` and `except` { #always-raise-in-dependencies-with-yield-and-except }\n\nIf you catch an exception in a dependency with `yield`, unless you are raising another `HTTPException` or similar, **you should re-raise the original exception**."
+        },
+        {
+          "id": "kubernetes/concepts/resource-management/resource-managers.md::11",
+          "text": "e to show alpha-level options.\n\nYou will still have to enable each option using the `cpuManagerPolicyOptions` field in the\nkubelet configuration file.\n\nFor more detail about the individual options you can configure, read on.\n\n###### `full-pcpus-only`\n\nIf the `full-pcpus-only` policy option is specified, the static policy will always allocate full physical cores.\nBy default, without this option, the static policy allocates CPUs using a topology-aware best-fit allocation.\nOn SMT enabled systems, the policy can allocate individual virtual cores, which correspond to hardware threads.\nThis can lead to different containers sharing the same physical cores; this behaviour in turn contributes\nto the [noisy neighbours problem](https://en.wikipedia.org/wiki/Cloud_computing_issues#Performance_interference_and_noisy_neighbors).\nWith the option enabled, the pod will be admitted by the kubelet only if the CPU request of all its containers\ncan be fulfilled by allocating full physical cores."
+        }
+      ],
+      "answer": "Python's sorts are guaranteed to be stable. This means that when multiple records have the same key, their original order is preserved. This property is useful when you need to perform complex sorts in a series of steps. For example, sorting by one key and then another without disrupting the order of items that have the same value for the first key."
+    },
+    {
+      "item_key": "fa2602ffeb",
+      "case_id": "python_trap_001",
+      "domain": "python",
+      "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+      "reference_information": "They don't \u2014 the premise is false. `from module import *` imports all names except those beginning with an underscore.",
+      "reference_chunks": [
+        "tutorial/modules.rst"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/modules.rst::242",
+          "text": "list of module names that should be imported when ``from package import *`` is"
+        },
+        {
+          "id": "python/tutorial/modules.rst::28",
+          "text": "the *first* time the module name is encountered in an import statement. [#]_"
+        },
+        {
+          "id": "python/tutorial/modules.rst::41",
+          "text": "This does not introduce the module name from which the imports are taken in the"
+        },
+        {
+          "id": "python/tutorial/modules.rst::39",
+          "text": "module directly into the importing module's namespace.  For example::"
+        },
+        {
+          "id": "fastapi/tutorial/debugging.md::10",
+          "text": "This won't happen if you import that module (file).\n\nSo, if you have another file `importer.py` with:"
+        }
+      ],
+      "answer": "The provided context does not contain specific information about why names starting with an underscore get imported when using `from module import *`. The context explains that the module name from which imports are taken is not introduced directly into the importing module's namespace, but it does not address the behavior of names starting with an underscore. Therefore, the information needed to answer this question is not present in the provided documentation."
+    },
+    {
+      "item_key": "b7017a5a82",
+      "case_id": "python_contra_002",
+      "domain": "python",
+      "question": "Which Python version does venv install into a new virtual environment?",
+      "reference_information": "The two corpus versions disagree: the current (3.12) doc says venv installs the Python version from which the command was run (python3.12 installs 3.12); the older (3.10) doc says venv will usually install the most recent version available. An ideal answer states the current semantics and/or flags the discrepancy.",
+      "reference_chunks": [
+        "tutorial/venv.rst",
+        "tutorial/venv@v3.10.14.rst"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::2",
+          "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+        },
+        {
+          "id": "python/tutorial/venv.rst::2",
+          "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will install the Python version from which\nthe command was run (as reported by the :option:`--version` option).\nFor instance, executing the command with ``python3.12`` will install\nversion 3.12.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+        },
+        {
+          "id": "python/tutorial/venv.rst::0",
+          "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+        },
+        {
+          "id": "python/tutorial/venv@v3.10.14.rst::0",
+          "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+        },
+        {
+          "id": "python/tutorial/venv.rst::1",
+          "text": "lication B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run.\n\nThe solution for this problem is to create a :term:`virtual environment`, a\nself-contained directory tree that contains a Python installation for a\nparticular version of Python, plus a number of additional packages.\n\nDifferent applications can then use different virtual environments.\nTo resolve the earlier example of conflicting requirements,\napplication A can have its own virtual environment with version 1.0\ninstalled while application B has another virtual environment with version 2.0.\nIf application B requires a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n============================="
+        }
+      ],
+      "answer": "The `venv` module installs the Python version from which the command was run. For example, if you use `python3.12 -m venv tutorial-env`, it will create a virtual environment with Python 3.12."
+    },
+    {
+      "item_key": "45011be667",
+      "case_id": "python_multi_001",
+      "domain": "python",
+      "question": "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?",
+      "reference_information": "List methods make stacks easy and efficient: append() and pop() work at the end of the list (last-in, first-out). As a queue a list is inefficient because inserting or popping at the beginning requires shifting all other elements. Use collections.deque, designed for fast appends and pops from both ends.",
+      "reference_chunks": [
+        "tutorial/datastructures.rst#using-lists-as-stacks",
+        "tutorial/datastructures.rst#using-lists-as-queues"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/tutorial/datastructures.rst::6",
+          "text": "p()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\nIt is also possible to use a list as a queue, where the first element added is\nthe first element retrieved (\"first-in, first-out\"); however, lists are not\nefficient for this purpose.  While appends and pops from the end of list are\nfast, doing inserts or pops from the beginning of a list is slow (because all\nof the other elements have to be shifted by one).\n\nTo implement a queue, use :class:`collections.deque` which was designed to\nhave fast appends and pops from both ends.  For example::"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::5",
+          "text": "7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>\n\n\nThe list methods make it very easy to use a list as a stack, where the last\nelement added is the first element retrieved (\"last-in, first-out\").  To add an\nitem to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the\ntop of the stack, use :meth:`~list.pop` without an explicit index.  For example::\n\n   >>> stack = [3, 4, 5]\n   >>> stack.append(6)\n   >>> stack.append(7)\n   >>> stack\n   [3, 4, 5, 6, 7]\n   >>> stack.pop()\n   7\n   >>> stack\n   [3, 4, 5, 6]\n   >>> stack.pop()\n   6\n   >>> stack.pop()\n   5\n   >>> stack\n   [3, 4]\n\n\n.. _tut-lists-as-queues:\n\nUsing Lists as Queues\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/tutorial/datastructures.rst::4",
+          "text": "e']\n    >>> fruits.sort()\n    >>> fruits\n    ['apple', 'apple', 'banana', 'banana', 'grape', 'kiwi', 'orange', 'pear']\n    >>> fruits.pop()\n    'pear'\n\nYou might have noticed that methods like ``insert``, ``remove`` or ``sort`` that\nonly modify the list have no return value printed -- they return the default\n``None``. [#]_  This is a design principle for all mutable data structures in\nPython.\n\nAnother thing you might notice is that not all data can be sorted or\ncompared.  For instance, ``[None, 'hello', 10]`` doesn't sort because\nintegers can't be compared to strings and ``None`` can't be compared to\nother types.  Also, there are some types that don't have a defined\nordering relation.  For example, ``3+4j < 5+7j`` isn't a valid\ncomparison.\n\n\n.. _tut-lists-as-stacks:\n\nUsing Lists as Stacks\n---------------------\n\n.. sectionauthor:: Ka-Ping Yee <ping@lfw.org>"
+        },
+        {
+          "id": "python/tutorial/appetite.rst::2",
+          "text": "st-draft\nprogram.  Python is simpler to use, available on Windows, macOS, and Unix\noperating systems, and will help you get the job done more quickly.\n\nPython is simple to use, but it is a real programming language, offering much\nmore structure and support for large programs than shell scripts or batch files\ncan offer.  On the other hand, Python also offers much more error checking than\nC, and, being a *very-high-level language*, it has high-level data types built\nin, such as flexible arrays and dictionaries.  Because of its more general data\ntypes Python is applicable to a much larger problem domain than Awk or even\nPerl, yet many things are at least as easy in Python as in those languages."
+        },
+        {
+          "id": "python/howto/logging-cookbook.rst::108",
+          "text": "and QueueListener- a ZeroMQ example\n------------------------------------------------------------\n\nSubclass ``QueueHandler``\n^^^^^^^^^^^^^^^^^^^^^^^^^\n\nYou can use a :class:`QueueHandler` subclass to send messages to other kinds\nof queues, for example a ZeroMQ 'publish' socket. In the example below,the\nsocket is created separately and passed to the handler (as its 'queue')::\n\n    import zmq   # using pyzmq, the Python binding for ZeroMQ\n    import json  # for serializing records portably\n\n    ctx = zmq.Context()\n    sock = zmq.Socket(ctx, zmq.PUB)  # or zmq.PUSH, or other suitable value\n    sock.bind('tcp://*:5556')        # or wherever\n\n    class ZeroMQSocketHandler(QueueHandler):\n        def enqueue(self, record):\n            self.queue.send_json(record.__dict__)\n\n\n    handler = ZeroMQSocketHandler(sock)\n\n\nOf course there are other ways of organizing this, for example passing in the\ndata needed by the handler to create the socket::"
+        }
+      ],
+      "answer": "In Python, a plain list can be used effectively as a stack because the append() method adds elements to the end of the list (which acts as the top of the stack), and the pop() method removes elements from the end of the list (retrieving items in LIFO - last-in-first-out order). This makes it straightforward to use lists for stack operations.\n\nHowever, a plain list is not recommended for queue implementations because:\n- **Pop Operation:** Popping an item from the beginning of the list requires shifting all preceding elements by one position, which has a time complexity of O(n) where n is the number of items in the list.\n- **Insertion:** Inserting an element at the beginning (front of the queue) also involves shifting other elements, again with a time complexity of O(n).\n\nFor efficient queue operations, especially when you need to maintain the first-in-first-out (FIFO) order without the overheads associated with list manipulations, the `collections.deque` class is recommended. Deques support fast appends and pops from both ends, making them ideal for implementing queues.\n\nHere's an example of using a deque as a queue:\n\n```python\nfrom collections import deque\n\n# Initialize a deque as a queue\nqueue = deque()\n\n# Add elements to the queue\nqueue.append('apple')\nqueue.append('banana')\n\n# Remove elements from the front (FIFO)\nprint(queue.popleft())  # Output: apple\nprint(queue.popleft())  # Output: banana\n\n# The queue is now empty\n```\n\nUsing `collections.deque` for queue operations ensures that both adding and removing elements are efficient, with a time complexity of O(1) for these operations."
+    }
+  ]
+}

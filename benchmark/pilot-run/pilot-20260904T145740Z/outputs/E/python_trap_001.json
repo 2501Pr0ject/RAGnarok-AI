@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "python_trap_001",
+  "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/modules.rst::5",
+      "score": 0.81612,
+      "text": "r).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace.\n\nThere is a variant of the :keyword:`import` statement that imports names from a\nmodule directly into the importing module's namespace.  For example::\n\n   >>> from fibo import fib, fib2\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis does not introduce the module name from which the imports are taken in the\nlocal namespace (so in the example, ``fibo`` is not defined).\n\nThere is even a variant to import all names that a module defines::\n\n   >>> from fibo import *\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis imports all names except those beginning with an underscore (``_``).\nIn most cases Python programmers do not use this facility since it introduces\nan unknown set of names into the interpreter, possibly hiding some things\nyou have already defined."
+    },
+    {
+      "id": "python/tutorial/modules.rst::7",
+      "score": 0.77686,
+      "text": ":`from` with similar effects::\n\n   >>> from fibo import fib as fibonacci\n   >>> fibonacci(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\n\n.. note::\n\n   For efficiency reasons, each module is only imported once per interpreter\n   session.  Therefore, if you change your modules, you must restart the\n   interpreter -- or, if it's just one module you want to test interactively,\n   use :func:`importlib.reload`, e.g. ``import importlib;\n   importlib.reload(modulename)``.\n\n\n.. _tut-modulesasscripts:\n\nExecuting modules as scripts\n----------------------------\n\nWhen you run a Python module with ::\n\n   python fibo.py <arguments>\n\nthe code in the module will be executed, just as if you imported it, but with\nthe ``__name__`` set to ``\"__main__\"``.  That means that by adding this code at\nthe end of your module::\n\n   if __name__ == \"__main__\":\n       import sys\n       fib(int(sys.argv[1]))"
+    },
+    {
+      "id": "python/tutorial/modules.rst::29",
+      "score": 0.76508,
+      "text": "could take a\nlong time and importing sub-modules might have unwanted side-effects that should\nonly happen when the sub-module is explicitly imported.\n\nThe only solution is for the package author to provide an explicit index of the\npackage.  The :keyword:`import` statement uses the following convention: if a package's\n:file:`__init__.py` code defines a list named ``__all__``, it is taken to be the\nlist of module names that should be imported when ``from package import *`` is\nencountered.  It is up to the package author to keep this list up-to-date when a\nnew version of the package is released.  Package authors may also decide not to\nsupport it, if they don't see a use for importing \\* from their package.  For\nexample, the file :file:`sound/effects/__init__.py` could contain the following\ncode::\n\n   __all__ = [\"echo\", \"surround\", \"reverse\"]\n\nThis would mean that ``from sound.effects import *`` would import the three\nnamed submodules of the :mod:`!sound.effects` package."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::17",
+      "score": 0.0,
+      "text": "of Pods are created above the desired number of Pods.\n  By default, it ensures that at most 125% of the desired number of Pods are up (25% max surge).\n\n  For example, if you look at the above Deployment closely, you will see that it first creates a new Pod,\n  then deletes an old Pod, and creates another new one. It does not kill old Pods until a sufficient number of\n  new Pods have come up, and does not create new Pods until a sufficient number of old Pods have been killed.\n  It makes sure that at least 3 Pods are available and that at max 4 Pods in total are available. In case of\n  a Deployment with 4 replicas, the number of Pods would be between 3 and 5."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-condition.md::1",
+      "score": 0.0,
+      "text": "progress, or whether the Pod is about to be disrupted due to a\n{{< glossary_tooltip text=\"taint\" term_id=\"taint\" >}}.\n\n## Structure of a Pod condition\n\nA Pod's status includes an array of\n[PodConditions](/docs/reference/generated/kubernetes-api/{{< param \"version\" >}}/#podcondition-v1-core)\nthat indicate whether the Pod has passed certain checkpoints.\n\nEach element of the PodCondition array has the following fields:\n\n{{< table caption=\"Fields of a PodCondition\" >}}\n| Field name           | Description                                                                                          |\n|:---------------------|:-----------------------------------------------------------------------------------------------------|\n| `type`               | Name of this Pod condition.                                                                          |\n| `status`             | Indicates whether that condition is applicable, with possible values `\"True\"`, `\"False\"`, or `\"Unknown\"`. |"
+    }
+  ],
+  "answer": "The context does not provide a specific reason for why names starting with an underscore are included when using `from module import *`. It only mentions that such names are excluded by default but notes that this behavior can be overridden. Therefore, based on the given information, I cannot explicitly state a reason for their inclusion.",
+  "prompt_sha256": "1051489e202120a60c3b517394bd4405db08ba54b39515157205e0aa04853a7b",
+  "timings_s": {
+    "retrieve": 0.69,
+    "generate": 31.14
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "docker_context_001",
+  "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/containers/start-containers-automatically.md::3",
+      "score": 0.79822,
+      "text": "|\n| `on-failure[:max-retries]` | Restart the container if it exits due to an error, which manifests as a non-zero exit code. Optionally, limit the number of times the Docker daemon attempts to restart the container using the `:max-retries` option. The `on-failure` policy only prompts a restart if the container exits with a failure. It doesn't restart the container if the daemon restarts. |\n| `always`                   | Always restart the container if it stops. If it's manually stopped, it's restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in [restart policy details](#restart-policy-details))                                                                                                                |"
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::84",
+      "score": 0.78321,
+      "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+    },
+    {
+      "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::64",
+      "score": 0.70552,
+      "text": "ts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run.md#restart)\nsection of the Docker run reference page.\n\n### runtime\n\n`runtime` specifies which runtime to use for the service\u2019s containers.\n\nFor example, `runtime` can be the name of [an implementation of OCI Runtime Spec](https://github.com/opencontainers/runtime-spec/blob/master/implementations.md), such as \"runc\".\n\n```yml\nweb:\n  image: busybox:latest\n  command: true\n  runtime: runc\n```\n\nThe default is `runc`. To use a different runtime, see [Alternative runtimes](/engine/daemon/alternative-runtimes.md).\n\n### scale"
+    },
+    {
+      "id": "docker/reference/compose-file/deploy.md::10",
+      "score": 0.6986,
+      "text": "and how to restart containers when they exit. If `restart_policy` is not set, Compose considers the `restart` field set by the service configuration.\n\n- `condition`. When set to:\n  - `none`, containers are not automatically restarted regardless of the exit status.\n  - `on-failure`, the container is restarted if it exits due to an error, which manifests as a non-zero exit code.\n  - `any` (default), containers are restarted regardless of the exit status. \n- `delay`: How long to wait between restart attempts, specified as a [duration](extension.md#specifying-durations). The default is 0, meaning restart attempts can occur immediately.\n- `max_attempts`: The maximum number of failed restart attempts allowed before giving up. (Default: unlimited retries.)\nA failed attempt only counts toward `max_attempts` if the container does not successfully restart within the time defined by `window`."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/pods/pod-lifecycle.md::22",
+      "score": 0.69013,
+      "text": "re`: Only restarts the container if it exits with an error (non-zero exit status).\n* `Never`: Does not automatically restart the terminated container.\n\n##### Restart behavior comparison\n\nThe following table shows how containers behave under different restart policies and exit codes:\n\n| Exit Code | `restartPolicy: Always` | `restartPolicy: OnFailure` | `restartPolicy: Never` | Sidecar Containers |\n|-----------|-------------------------|---------------------------|------------------------|-------------------|\n| 0 (Success) | Restarts | Does not restart | Does not restart | Always restarts |\n| Non-zero (Failure) | Restarts | Restarts | Does not restart | Always restarts |"
+    }
+  ],
+  "answer": "According to the provided context, if a container has the `always` restart policy and is manually stopped, it will only be restarted when:\n\n- The Docker daemon restarts.\n- The container itself is manually restarted.\n\nSince the question specifically asks about what happens when the Docker daemon restarts, the answer is that the container will be restarted when the Docker daemon restarts.",
+  "prompt_sha256": "b231f330e940690830dcbcc15a6e0e21f023965771c7566b8f5b7fcc255af0c9",
+  "timings_s": {
+    "retrieve": 0.38,
+    "generate": 32.46
+  }
+}

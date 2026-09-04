@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_direct_001",
+  "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/build.md::27",
+      "score": 0.81328,
+      "text": "The `build` subsection defines configuration options that are applied by Compose to build Docker images from source."
+    },
+    {
+      "id": "docker/get-started/docker-concepts/building-images/build-tag-and-publish-an-image.md::11",
+      "score": 0.80535,
+      "text": "ocs.docker.com/build/concepts/context/#what-is-a-build-context). At this location, the builder will find the `Dockerfile` and ot"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::28",
+      "score": 0.79632,
+      "text": "uild Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detai"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::24",
+      "score": 0.79035,
+      "text": "* A Docker image is built using the `custom` directory with the user's HOME as the Docker context. Compose displays a warning a"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::47",
+      "score": 0.78514,
+      "text": "[here](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-additional-build-contexts---build-context)."
+    }
+  ],
+  "answer": "If you do not set the `build` context explicitly in a Docker Compose file, it defaults to using the user's HOME directory as the Docker context.",
+  "prompt_sha256": "d02f534bde283adc3cd001e1b0b2ccfa7f54c3434bcc7a574196b50f403cbf0b",
+  "timings_s": {
+    "retrieve": 7.45,
+    "generate": 15.72
+  }
+}

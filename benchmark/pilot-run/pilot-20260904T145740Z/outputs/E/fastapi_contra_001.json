@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "fastapi_contra_001",
+  "question": "What is the recommended way to add string validation to a query parameter in FastAPI \u2014 for example a max length on q?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::0",
+      "score": 0.832,
+      "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+      "score": 0.82356,
+      "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::3",
+      "score": 0.79095,
+      "text": "_src/query_params_str_validations/tutorial002_an_py310.py hl[9] *}\n\nNotice that the default value is still `None`, so the parameter is still optional.\n\nBut now, having `Query(max_length=50)` inside of `Annotated`, we are telling FastAPI that we want it to have **additional validation** for this value, we want it to have maximum 50 characters. \ud83d\ude0e\n\n/// tip\n\nHere we are using `Query()` because this is a **query parameter**. Later we will see others like `Path()`, `Body()`, `Header()`, and `Cookie()`, that also accept the same arguments as `Query()`.\n\n///\n\nFastAPI will now:\n\n* **Validate** the data making sure that the max length is 50 characters\n* Show a **clear error** for the client when the data is not valid\n* **Document** the parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }"
+    },
+    {
+      "id": "kubernetes/concepts/policy/resource-quotas.md::33",
+      "score": 0.0,
+      "text": "space: foo-ns\nspec:\n  hard:\n    pods: \"0\"\n  scopeSelector:\n    matchExpressions:\n    - scopeName: CrossNamespacePodAffinity\n      operator: Exists\n```\n\nIf you want to disallow using `namespaces` and `namespaceSelector` by default, and\nonly allow it for specific namespaces, you could configure `CrossNamespacePodAffinity`\nas a limited resource by setting the kube-apiserver flag `--admission-control-config-file`\nto the path of the following configuration file:\n\n```yaml\napiVersion: apiserver.config.k8s.io/v1\nkind: AdmissionConfiguration\nplugins:\n- name: \"ResourceQuota\"\n  configuration:\n    apiVersion: apiserver.config.k8s.io/v1\n    kind: ResourceQuotaConfiguration\n    limitedResources:\n    - resource: pods\n      matchScopes:\n      - scopeName: CrossNamespacePodAffinity\n        operator: Exists\n```"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/dra.md::8",
+      "score": 0.0,
+      "text": "that node. With DRA, during Pod scheduling, the QPS and Burst parameters in the\nclient-go configuration within `kube-controller-manager` are critical.\n\nThe specific values to tune your cluster to depend on a variety of factors like\nnumber of nodes/pods, rate of pod creation, churn, even in non-DRA environments;\nsee the [SIG Scalability README on Kubernetes scalability\n thresholds](https://github.com/kubernetes/community/blob/main/sig-scalability/configs-and-limits/thresholds.md)\nfor more information. In scale tests performed against a DRA enabled cluster\nwith 100 nodes, involving 720 long-lived pods (90% saturation) and 80 churn pods\n(10% churn, 10 times), with a job creation QPS of 10, `kube-controller-manager`\nQPS could be set to as low as 75 and Burst to 150 to meet equivalent metric\ntargets for non-DRA deployments. At this lower bound, it was observed that the\nclient side rate limiter was triggered enough to protect the API server from"
+    }
+  ],
+  "answer": "To add string validation to a query parameter in FastAPI, such as enforcing a maximum length of 50 characters on `q`, you should use the `Query` function along with the `max_length` argument. Here is how it can be done:\n\n```python\nfrom fastapi import Query\n\nasync def func(q: str = Query(max_length=50)):\n    # Your code here\n```\n\nThis tells FastAPI to validate that the length of the `q` parameter does not exceed 50 characters, and will provide clear errors if the validation fails.",
+  "prompt_sha256": "2642b9b726b381117f10f13c12246f59f1d26088c8d314c2b5f8942d15c0859b",
+  "timings_s": {
+    "retrieve": 0.66,
+    "generate": 44.96
+  }
+}

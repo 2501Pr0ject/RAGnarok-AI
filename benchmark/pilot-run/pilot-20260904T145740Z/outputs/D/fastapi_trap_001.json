@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "fastapi_trap_001",
+  "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::9",
+      "score": 0.7729,
+      "text": "tiple reasons. \ud83e\udd13\n\nThe **default** value of the **function parameter** is the **actual default** value, that's more intuitive with Python in general. \ud83d\ude0c\n\nYou could **call** that same function in **other places** without FastAPI, and it would **work as expected**. If there's a **required** parameter (without a default value), your **editor** will let you know with an error, **Python** will also complain if you run it without passing the required parameter.\n\nWhen you don't use `Annotated` and instead use the **(old) default value style**, if you call that function without FastAPI in **other place**, you have to **remember** to pass the arguments to the function for it to work correctly, otherwise the values will be different from what you expect (e.g. `QueryInfo` or something similar instead of `str`). And your editor won't complain, and Python won't complain running that function, only when the operations inside error out."
+    }
+  ],
+  "answer": "In FastAPI, giving a query parameter a default value does not make it optional in terms of requiring it to be passed by the user. The context provided mentions that if there's a required parameter (without a default value), your editor will let you know with an error, and Python will also complain if you run it without passing the required parameter. This indicates that even when you provide a default value for a function parameter in FastAPI, it can still be considered required under certain contexts or configurations.\n\nThe context does not explicitly state why this is the case in FastAPI, but based on the information given, it suggests that the requirement might depend on how the route is defined and used within the application. Therefore, the answer to the question cannot be definitively stated from the provided context alone.",
+  "prompt_sha256": "d72ae06e3348614ccbba1c607a2114266f946a77236ae27221ebb94c6558014c",
+  "timings_s": {
+    "retrieve": 9.57,
+    "generate": 22.77
+  }
+}

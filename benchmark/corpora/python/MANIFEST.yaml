@@ -1,0 +1,165 @@
+name: python
+version: v3.12.6 @ a4a2d2b0d852
+source_url: https://github.com/python/cpython
+source_commit: a4a2d2b0d85273f746c3834ce2753e19c898949d
+retrieval_date: '2026-09-04'
+retrieved_by: assemble.py
+format: restructuredtext
+license: PSF-2.0
+license_url: https://docs.python.org/3/license.html
+license_file: LICENSE
+attribution: Python documentation © Python Software Foundation. PSF License.
+subset_rationale: 'The tutorial (progressive, self-contained concepts) and the HOWTOs
+  (deep single-topic documents ideal for contextual and multi-chunk questions). Reference
+  manual excluded: too large and too terse for human-verifiable references.'
+selection:
+  include:
+  - Doc/tutorial/**/*.rst
+  - Doc/howto/**/*.rst
+  strip_prefix: Doc/
+file_count: 42
+total_bytes: 1000176
+corpus_sha256: 6c03cb43b5c42a617fe6ed42df20d1a254955aac8986eea3d190d02fbe07f80c
+contradiction_pairs:
+- id: python_pair_01
+  files:
+  - tutorial/venv.rst
+  - tutorial/venv@v3.10.14.rst
+  old_ref: v3.10.14
+  nature: 'venv: Windows activation script renamed (activate.bat -> activate); which
+    Python version venv installs is described differently; pip invocations changed
+    to ''python -m pip''.'
+- id: python_pair_02
+  files:
+  - howto/logging.rst
+  - howto/logging@v3.10.14.rst
+  old_ref: v3.10.14
+  nature: 'logging HOWTO: pre-3.2 basicConfig behavior notes removed; level/default
+    documentation reworked between 3.10 and 3.12.'
+files:
+- path: howto/annotations.rst
+  sha256: 6b517a9af1275cecae8857f0d80beb9b261d39a7c2e66528195785f057f7a48c
+  bytes: 9332
+- path: howto/argparse.rst
+  sha256: 5a9d0ad7e5222ed05fa3d9cb6ac268fcf8455911b589101ec2076434135bbb46
+  bytes: 26172
+- path: howto/clinic.rst
+  sha256: 1ac95a02c346fff5cc8000206bcada3152bbf7460c22d08ca479a56d34b571f7
+  bytes: 343
+- path: howto/cporting.rst
+  sha256: 3500051a6db9b1dbf837cf8f473e937253e7cacd3b85d967b86c480b3f9c398e
+  bytes: 1006
+- path: howto/curses.rst
+  sha256: 57e21a41116b4f52ee0105ecd05e63d690981852ed11d9d5c960f495b6fcaf03
+  bytes: 25209
+- path: howto/descriptor.rst
+  sha256: 12aa142230c173214abc07b36b3540e02e8019d4cf82f136d19f2b7b80d807ae
+  bytes: 55519
+- path: howto/enum.rst
+  sha256: 1b244c9fa879fd9e8be36965ac44f808f4f9d40b817819ce509e538287b05c0d
+  bytes: 45151
+- path: howto/functional.rst
+  sha256: 899fb680aa0f70838710c9f0bd7c0661ed81e178198fd392ecf3bcb8f1f82129
+  bytes: 49487
+- path: howto/gdb_helpers.rst
+  sha256: 8d1093fe0402e287000815594feff95d1d63b2ca38b6873af634f2b07ed64ef0
+  bytes: 23648
+- path: howto/index.rst
+  sha256: a3c659d8fb64889a7d821e4db025aab6e075431de50907c8bfef3bd658aeac16
+  bytes: 733
+- path: howto/instrumentation.rst
+  sha256: 3e6c91a9bff1b53ec380208c8c51894849fcd3cbb6eacebce54c280c3f892ac0
+  bytes: 14968
+- path: howto/ipaddress.rst
+  sha256: b709a6233364441fd0a651f32e26bb148b303db9706012aa2c2a43aeda6f5b12
+  bytes: 11731
+- path: howto/isolating-extensions.rst
+  sha256: 0367b682e79b7ce898591855687fb35b691ceca13574d6dc2c9867d3e34fb097
+  bytes: 22390
+- path: howto/logging-cookbook.rst
+  sha256: b384d07809734a0a739f73f17a79adbe9fac5b5968bac6b428f10ee8c30f6065
+  bytes: 162775
+- path: howto/logging.rst
+  sha256: 1c1457354152d40e1f7ef28a56658e6856458c353576f68789f3a565ad5323f0
+  bytes: 50318
+- path: howto/logging@v3.10.14.rst
+  sha256: a8faaea0b31b3c5afdda92b6e26a6b26ca4a7d3d4450b0edf4cea5fdd19e648e
+  bytes: 48828
+- path: howto/mro.rst
+  sha256: e3359d27e290d18bad02a6fc5207b0ebafdf590ae771e3dd4fe66737903658a3
+  bytes: 22973
+- path: howto/perf_profiling.rst
+  sha256: 4c0a53003f587d8b5a422a675b40936c4758918dffddd59d64b80b4c4100cea0
+  bytes: 9610
+- path: howto/pyporting.rst
+  sha256: c896d18556a7434410f68af377868a5d02876e9ba7d6c30d33ddf505c2337511
+  bytes: 1314
+- path: howto/regex.rst
+  sha256: 69fd30034444ac74f456b3e9c14e852b6f127f08c9620bf703915450457c729b
+  bytes: 62724
+- path: howto/sockets.rst
+  sha256: e9f69766062b95b2f0d842e9a8f46d7c18bb867de6c422576e3e21d6cce8b4a9
+  bytes: 18795
+- path: howto/sorting.rst
+  sha256: c0e38a56c301e6968f5630a01e27048f07ca1288ffec45d37e6335fd909d2e4d
+  bytes: 12749
+- path: howto/unicode.rst
+  sha256: c5cf5081618e2b06a519d2ede00fb52a53922c5a8d636c4be337810fed2bd17c
+  bytes: 31886
+- path: howto/urllib2.rst
+  sha256: 3623450637a44259c0f708970a7930c0ac5d1564be67b323e0fb54ea6c370530
+  bytes: 24700
+- path: tutorial/appendix.rst
+  sha256: 8d0797e30e6987a9e90dd1feeb5d6cd39baa1427c3eada1a16e555ac1db0889e
+  bytes: 4631
+- path: tutorial/appetite.rst
+  sha256: c5766ddd864601b50b54a1882f2fbec67945d421339ddea67cd545d3b0ffad55
+  bytes: 4507
+- path: tutorial/classes.rst
+  sha256: c6c7e40b23ec440449d0eb42c3e67f1ca0fe229320fe17ea35ab9cf3e78e3119
+  bytes: 37049
+- path: tutorial/controlflow.rst
+  sha256: 07fa8e6ada15bc60e4521f159f1a23bd7ffb64a9eb3935f78fdc46caab18c64f
+  bytes: 39851
+- path: tutorial/datastructures.rst
+  sha256: 3c2b7a87519b3e7b1513f5fbb12c9d37ba715c402a6bf032f1b584d555eb979b
+  bytes: 24846
+- path: tutorial/errors.rst
+  sha256: f505e602d08bd1d3141beea26f2ce46aee0d1c8e2170b387329f6ebc5c6b3b84
+  bytes: 23106
+- path: tutorial/floatingpoint.rst
+  sha256: 8e648340d27e4ad469e40a53f8b47389d8490a7b10ea828f0bc76186c3863a55
+  bytes: 13025
+- path: tutorial/index.rst
+  sha256: cbe35a0878b649eca9d05bbc27c6fa69aec607a4e8698343883f4ca27d187d69
+  bytes: 2386
+- path: tutorial/inputoutput.rst
+  sha256: 13e550fdc65948d88196eda0985221df240a1dce40dc456e858ef3a55611a606
+  bytes: 20596
+- path: tutorial/interactive.rst
+  sha256: 9e89a965c17c29e7ae69b7fda7b0845644f846a81d11fe4f2d04ccf8c1ddde4e
+  bytes: 2417
+- path: tutorial/interpreter.rst
+  sha256: aad98b0071949d2b97ca2a93a898c5cb1e64347b67b8c7b16053f6a8f3cd87af
+  bytes: 6503
+- path: tutorial/introduction.rst
+  sha256: 63064d9dbec912a6d0e89089b16544e5488fbdc06293be4fa8df3c64d37739f0
+  bytes: 18984
+- path: tutorial/modules.rst
+  sha256: b391a3d94b7dd61785cb7749ba36837735404693eed3172248f5be2101eda16b
+  bytes: 25513
+- path: tutorial/stdlib.rst
+  sha256: b21e1b4adf2f2cd0c0c7b218a8562d1a7b3a6a17e06453e246b09d5d6ab7030c
+  bytes: 11407
+- path: tutorial/stdlib2.rst
+  sha256: f91102359e360dd1d4dfc47f1e3c7c9b77c8eeeb47bfa4e805970cbe19c30388
+  bytes: 15197
+- path: tutorial/venv.rst
+  sha256: f9dac36833979e1e2885ea9bdb1975548b6ff6fca7f57bb3ba6a77810c93d7ac
+  bytes: 7416
+- path: tutorial/venv@v3.10.14.rst
+  sha256: 8552f776d3dbf3a557158b2d7e505c883b2a75148725f2cf5dcc6c35c2736919
+  bytes: 7184
+- path: tutorial/whatnow.rst
+  sha256: f2f4243d916a0403c405cfc74f643e715af121223b771fd620ff7361cfbeff38
+  bytes: 3197

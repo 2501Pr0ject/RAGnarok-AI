@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_context_002",
+  "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::311",
+      "score": 0.84697,
+      "text": "Kubernetes lets you mark specific Secrets (and ConfigMaps) as _immutable_."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::125",
+      "score": 0.79073,
+      "text": "Once a ConfigMap is marked as immutable, it is _not_ possible to revert this change"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::123",
+      "score": 0.76357,
+      "text": "closing watches for ConfigMaps marked as immutable.\n\nYou can create an immutable ConfigMap by setting the `immutable` field t"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::25",
+      "score": 0.75928,
+      "text": "definition to create an [immutable ConfigMap](#configmap-immutable).\n\n## ConfigMaps and Pods"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::24",
+      "score": 0.74745,
+      "text": "Starting from v1.19, you can add an `immutable` field to a ConfigMap"
+    }
+  ],
+  "answer": "By marking a Kubernetes ConfigMap as immutable, you ensure that the ConfigMap cannot be modified once it has been created. This provides a level of data integrity and security, preventing accidental or unauthorized changes to the configuration data.",
+  "prompt_sha256": "7cb6043ac263911337744c5f7fe8380a2d91f346775c631fd43b1d5ac11bce0a",
+  "timings_s": {
+    "retrieve": 8.79,
+    "generate": 12.07
+  }
+}

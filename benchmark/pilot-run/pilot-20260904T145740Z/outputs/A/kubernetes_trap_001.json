@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "kubernetes_trap_001",
+  "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::4",
+      "score": 0.76312,
+      "text": ", `kube-controller-manager`,\n`kube-apiserver`, `kubectl`, or other third-party automation) which add labels\nto end-user objects must specify a prefix.\n\nThe `kubernetes.io/` and `k8s.io/` prefixes are\n[reserved](/docs/reference/labels-annotations-taints/) for Kubernetes core components.\n\nValid label value:\n\n* must be 63 characters or less (can be empty),\n* unless empty, must begin and end with an alphanumeric character (`[a-z0-9A-Z]`),\n* could contain dashes (`-`), underscores (`_`), dots (`.`), and alphanumerics between.\n\nFor example, here's a manifest for a Pod that has two labels\n`environment: production` and `app: nginx`:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: label-demo\n  labels:\n    environment: production\n    app: nginx\nspec:\n  containers:\n  - name: nginx\n    image: nginx:1.14.2\n    ports:\n    - containerPort: 80\n```\n\n## Label selectors"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::17",
+      "score": 0.76127,
+      "text": "nt.\n\n## In-place updates of resources\n\nSometimes it's necessary to make narrow, non-disruptive updates to resources you've created.\n\n### kubectl apply\n\nIt is suggested to maintain a set of configuration files in source control\n(see [configuration as code](https://martinfowler.com/bliki/InfrastructureAsCode.html)),\nso that they can be maintained and versioned along with the code for the resources they configure.\nThen, you can use [`kubectl apply`](/docs/reference/kubectl/generated/kubectl_apply/)\nto push your configuration changes to the cluster.\n\nThis command will compare the version of the configuration that you're pushing with the previous\nversion and apply the changes you've made, without overwriting any automated changes to properties\nyou haven't specified.\n\n```shell\nkubectl apply -f https://k8s.io/examples/application/nginx/nginx-deployment.yaml\n```\n\n```none\ndeployment.apps/my-nginx configured\n```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/management.md::9",
+      "score": 0.76093,
+      "text": "rning more about `kubectl`, go ahead and read\n[Command line tool (kubectl)](/docs/reference/kubectl/).\n\n## Updating your application without an outage\n\nAt some point, you'll eventually need to update your deployed application, typically by specifying\na new image or image tag. `kubectl` supports several update operations, each of which is applicable\nto different scenarios.\n\nYou can run multiple copies of your app, and use a _rollout_ to gradually shift the traffic to\nnew healthy Pods. Eventually, all the running Pods would have the new software.\n\nThis section of the page guides you through how to create and update applications with Deployments.\n\nLet's say you were running version 1.14.2 of nginx:\n\n```shell\nkubectl create deployment my-nginx --image=nginx:1.14.2\n```\n\n```none\ndeployment.apps/my-nginx created\n```\n\nEnsure that there is 1 replica:\n\n```shell\nkubectl scale --replicas 1 deployments/my-nginx --subresource='scale' --type='merge' -p '{\"spec\":{\"replicas\": 1}}'\n```"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/labels.md::17",
+      "score": 0.75266,
+      "text": "llows the recommended Kubernetes\nlabeling conventions and is better suited for tooling and automation.\n\nThe frontend could carry the following labels:\n\n```yaml\nlabels:\n  app: guestbook\n  app.kubernetes.io/name: guestbook\n  tier: frontend\n```\n\nwhile the Redis master and replica would have different `tier` labels, and perhaps even an\nadditional `role` label:\n\n```yaml\nlabels:\n  app: guestbook\n  app.kubernetes.io/name: guestbook\n  tier: backend\n  role: master\n```\n\nand\n\n```yaml\nlabels:\n  app: guestbook\n  app.kubernetes.io/name: guestbook\n  tier: backend\n  role: replica\n```\n\nThe labels allow for slicing and dicing the resources along any dimension specified by a label:\n\n```shell\nkubectl apply -f examples/guestbook/all-in-one/guestbook-all-in-one.yaml\nkubectl get pods -Lapp -Ltier -Lrole\n```"
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/topology-spread-constraints.md::12",
+      "score": 0.75106,
+      "text": "that is, you edit the Pod and not a Deployment),\n  kube-apiserver doesn't reflect the label update onto the merged `labelSelector`.\n  {{< /caution >}}\n\n  With `matchLabelKeys`, you don't need to update the `pod.spec` between different revisions.\n  The controller/operator just needs to set different values to the same label key for different\n  revisions. For example, if you are configuring a Deployment, you can use the label keyed with\n  [pod-template-hash](/docs/concepts/workloads/controllers/deployment/#pod-template-hash-label), which\n  is added automatically by the Deployment controller, to distinguish between different revisions\n  in a single Deployment.\n\n  ```yaml\n      topologySpreadConstraints:\n          - maxSkew: 1\n            topologyKey: kubernetes.io/hostname\n            whenUnsatisfiable: DoNotSchedule\n            labelSelector:\n              matchLabels:\n                app: foo\n            matchLabelKeys:\n              - pod-template-hash\n  ```"
+    }
+  ],
+  "answer": "The information provided does not specify a direct `kubectl` command to update the label selector of an existing Kubernetes Deployment. The context mentions maintaining labels and using `kubectl apply` for in-place updates but does not detail updating the label selector specifically through a `kubectl` command. Therefore, based on the given context, the specific command to update the label selector of an existing Deployment is not present.",
+  "prompt_sha256": "d006a81b8432a55abfa43718049731fb24142b708b7d7c741792939bb7b9b468",
+  "timings_s": {
+    "retrieve": 0.86,
+    "generate": 35.11
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "kubernetes_context_001",
+  "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::84",
+      "score": 0.69427,
+      "text": "yment will not trigger new rollouts as long as it is paused. A Deployment is not paused by default when\nit is created.\n\n## {{% heading \"whatsnext\" %}}\n\n* Learn more about [Pods](/docs/concepts/workloads/pods).\n* [Run a stateless application using a Deployment](/docs/tasks/run-application/run-stateless-application-deployment/).\n* Read the {{< api-reference page=\"apps/deployment-v1\" >}} to understand the Deployment API.\n* Read about [PodDisruptionBudget](/docs/concepts/workloads/pods/disruptions/) and how\n  you can use it to manage application availability during disruptions.\n* Use kubectl to [create a Deployment](/docs/tutorials/kubernetes-basics/deploy-app/deploy-intro/)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::80",
+      "score": 0.68801,
+      "text": "yment will not trigger new rollouts as long as it is paused. A Deployment is not paused by default when\nit is created.\n\n## {{% heading \"whatsnext\" %}}\n\n* Learn more about [Pods](/docs/concepts/workloads/pods).\n* [Run a stateless application using a Deployment](/docs/tasks/run-application/run-stateless-application-deployment/).\n* Read the {{< api-reference page=\"workload-resources/deployment-v1\" >}} to understand the Deployment API.\n* Read about [PodDisruptionBudget](/docs/concepts/workloads/pods/disruptions/) and how\n  you can use it to manage application availability during disruptions.\n* Use kubectl to [create a Deployment](/docs/tutorials/kubernetes-basics/deploy-app/deploy-intro/)."
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::42",
+      "score": 0.68013,
+      "text": "oyment --min=10 --max=15 --cpu-percent=80\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/autoscaling/horizontal-pod-autoscale.md::1",
+      "score": 0.66902,
+      "text": "scaling, which for Kubernetes would mean\nassigning more resources (for example: memory or CPU) to the Pods that are already\nrunning for the workload.\n\nIf the load decreases, and the number of Pods is above the configured minimum,\nthe HorizontalPodAutoscaler instructs the workload resource (the Deployment, StatefulSet,\nor other similar resource) to scale back down.\n\nHorizontal pod autoscaling does not apply to objects that can't be scaled (for example:\na {{< glossary_tooltip text=\"DaemonSet\" term_id=\"daemonset\" >}}.)"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/deployment.md::43",
+      "score": 0.66631,
+      "text": "yment --min=10 --max=15 --cpu-percent=80%\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+    }
+  ],
+  "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. Therefore, based on the given information, I cannot provide a definitive answer to this question.",
+  "prompt_sha256": "496c1b711605a9642b9d597ac2f0689e2b664d14317c5c0f762bb205c1529735",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 23.29
+  }
+}

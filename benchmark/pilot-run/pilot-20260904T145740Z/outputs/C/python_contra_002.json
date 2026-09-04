@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_contra_002",
+  "question": "Which Python version does venv install into a new virtual environment?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv.rst::2",
+      "score": 0.76322,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will install the Python version from which\nthe command was run (as reported by the :option:`--version` option).\nFor instance, executing the command with ``python3.12`` will install\nversion 3.12.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::2",
+      "score": 0.76268,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::0",
+      "score": 0.64543,
+      "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::0",
+      "score": 0.64543,
+      "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+    },
+    {
+      "id": "python/tutorial/venv.rst::3",
+      "score": 0.55511,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    }
+  ],
+  "answer": "The context states that :mod:`venv` will usually install the most recent version of Python that you have available. If you have multiple versions of Python on your system, you can select a specific Python version by running ``python3`` or whichever version you want.\n\nTherefore, without specifying a particular Python version, venv installs the most recent version of Python available on your system into a new virtual environment.",
+  "prompt_sha256": "e1cfbed7df7dbbb2b1d73176436023896e813231164a75ee376d2e783c07b08d",
+  "timings_s": {
+    "retrieve": 0.31,
+    "generate": 26.24
+  }
+}

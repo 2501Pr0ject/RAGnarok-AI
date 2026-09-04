@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "python_direct_001",
+  "question": "What command do I run to create a virtual environment called tutorial-env?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::3",
+      "score": 0.63901,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate.bat\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    },
+    {
+      "id": "python/tutorial/venv.rst::3",
+      "score": 0.62191,
+      "text": "l-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files.\n\nA common directory location for a virtual environment is ``.venv``.\nThis name keeps the directory typically hidden in your shell and thus\nout of the way while giving it a name that explains why the directory\nexists. It also prevents clashing with ``.env`` environment variable\ndefinition files that some tooling supports.\n\nOnce you've created a virtual environment, you may activate it.\n\nOn Windows, run::\n\n  tutorial-env\\Scripts\\activate\n\nOn Unix or MacOS, run::\n\n  source tutorial-env/bin/activate\n\n(This script is written for the bash shell.  If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)"
+    },
+    {
+      "id": "python/tutorial/venv.rst::2",
+      "score": 0.58977,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will install the Python version from which\nthe command was run (as reported by the :option:`--version` option).\nFor instance, executing the command with ``python3.12`` will install\nversion 3.12.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::2",
+      "score": 0.58134,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::4",
+      "score": 0.48624,
+      "text": "If you use the\n:program:`csh` or :program:`fish` shells, there are alternate\n``activate.csh`` and ``activate.fish`` scripts you should use\ninstead.)\n\nActivating the virtual environment will change your shell's prompt to show what\nvirtual environment you're using, and modify the environment so that running\n``python`` will get you that particular version and installation of Python.\nFor example:\n\n.. code-block:: bash\n\n  $ source ~/envs/tutorial-env/bin/activate\n  (tutorial-env) $ python\n  Python 3.5.1 (default, May  6 2016, 10:59:36)\n    ...\n  >>> import sys\n  >>> sys.path\n  ['', '/usr/local/lib/python35.zip', ...,\n  '~/envs/tutorial-env/lib/python3.5/site-packages']\n  >>>\n\nTo deactivate a virtual environment, type::\n\n    deactivate\n\ninto the terminal.\n\nManaging Packages with pip\n=========================="
+    }
+  ],
+  "answer": "The command to create a virtual environment called `tutorial-env` is:\n\n```bash\npython -m venv tutorial-env\n```",
+  "prompt_sha256": "fa51175f35059ec4418bb093ad12e4b940e257c59d46bd535d422d80da9d1883",
+  "timings_s": {
+    "retrieve": 0.36,
+    "generate": 20.53
+  }
+}

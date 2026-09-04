@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_multi_002",
+  "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::99",
+      "score": 0.76134,
+      "text": "A `kubernetes.io/service-account-token` type of Secret is used to store a\ntoken credential that identifies a"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::125",
+      "score": 0.74638,
+      "text": "After creating the Secret, wait for Kubernetes to populate the `token` key in the `data` field."
+    },
+    {
+      "id": "kubernetes/concepts/storage/volumes.md::322",
+      "score": 0.74494,
+      "text": "Pods. You can store secrets in the Kubernetes API and mount them as files for"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::13",
+      "score": 0.73616,
+      "text": "Kubernetes Secrets are, by default, stored unencrypted in the API server's underlying data store"
+    },
+    {
+      "id": "kubernetes/concepts/security/_index.md::9",
+      "score": 0.73459,
+      "text": "A key security mechanism for any Kubernetes cluster is to\n[control access to the Kubernetes API](/docs/concepts/security/contr"
+    }
+  ],
+  "answer": "For storing an API token that needs to be accessed by your Kubernetes application, you should use a Secret rather than a ConfigMap. This is because Secrets are designed to hold sensitive information such as tokens, passwords, and keys, which require encryption at rest. While the context mentions that Secrets are stored unencrypted by default in the API server's underlying data store, this can be mitigated using Kubernetes features like `k8s.io/client-go/tools/clientcmd/api` for encrypting secrets or leveraging a secret management solution.\n\nConfigMaps are generally used for non-sensitive data such as configuration settings. Therefore, to securely manage and access an API token in your Kubernetes application, a Secret is the appropriate choice.",
+  "prompt_sha256": "771892804d486a7669712f51106bcb15ebada9bdd2786ce509e1f92acb37ee56",
+  "timings_s": {
+    "retrieve": 7.23,
+    "generate": 30.34
+  }
+}

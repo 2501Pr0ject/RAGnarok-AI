@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_unans_001",
+  "question": "What are the steps to install kubectl on my machine?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/schema-extra-example.md::3",
+      "score": 0.0,
+      "text": "ith-multiple-examples }\n\nYou can of course also pass multiple `examples`:\n\n{* ../../docs_src/schema_extra_example/tutorial004_an_py310.py hl[23:38] *}\n\nWhen you do this, the examples will be part of the internal **JSON Schema** for that body data.\n\nNevertheless, at the <dfn title=\"2023-08-26\">time of writing this</dfn>, Swagger UI, the tool in charge of showing the docs UI, doesn't support showing multiple examples for the data in **JSON Schema**. But read below for a workaround.\n\n### OpenAPI-specific `examples` { #openapi-specific-examples }\n\nSince before **JSON Schema** supported `examples`, OpenAPI had support for a different field also called `examples`.\n\nThis **OpenAPI-specific** `examples` goes in another section in the OpenAPI specification. It goes in the **details for each *path operation***, not inside each JSON Schema.\n\nAnd Swagger UI has supported this particular `examples` field for a while. So, you can use it to **show** different **examples in the docs UI**."
+    },
+    {
+      "id": "python/tutorial/introduction.rst::7",
+      "score": 0.0,
+      "text": "strings\n   '1975'\n\nTo quote a quote, we need to \"escape\" it, by preceding it with ``\\``.\nAlternatively, we can use the other type of quotation marks::\n\n   >>> 'doesn\\'t'  # use \\' to escape the single quote...\n   \"doesn't\"\n   >>> \"doesn't\"  # ...or use double quotes instead\n   \"doesn't\"\n   >>> '\"Yes,\" they said.'\n   '\"Yes,\" they said.'\n   >>> \"\\\"Yes,\\\" they said.\"\n   '\"Yes,\" they said.'\n   >>> '\"Isn\\'t,\" they said.'\n   '\"Isn\\'t,\" they said.'\n\nIn the Python shell, the string definition and output string can look\ndifferent.  The :func:`print` function produces a more readable output, by\nomitting the enclosing quotes and by printing escaped and special characters::\n\n   >>> s = 'First line.\\nSecond line.'  # \\n means newline\n   >>> s  # without print(), special characters are included in the string\n   'First line.\\nSecond line.'\n   >>> print(s)  # with print(), special characters are interpreted, so \\n produces new line\n   First line.\n   Second line."
+    },
+    {
+      "id": "kubernetes/concepts/scheduling-eviction/podgroup-scheduling.md::11",
+      "score": 0.0,
+      "text": "d groups, finding a valid placement is not guaranteed.\n\n* For Pod groups with **inter-Pod dependencies**, finding a valid placement is not guaranteed.\n\nIn addition to the above, for cases involving **intra-group dependencies**\n(e.g., when the schedulability of one Pod depends on another group member via inter-Pod affinity),\nthis algorithm may fail to find a placement regardless of cluster state due to its deterministic processing order.\n\nFor consistent behavior throughout the entire cycle, the algorithm requires that all Pods belonging to a single PodGroup\nshare the same `.spec.schedulerName`. This requirement is validated before the cycle starts,\nand the PodGroup is rejected if the constraint is not met.\n\n## Hierarchical scheduling with CompositePodGroups\n\n{{< feature-state feature_gate_name=\"CompositePodGroup\" >}}"
+    },
+    {
+      "id": "docker/manuals/engine/install/fedora.md::0",
+      "score": 0.0,
+      "text": "---\ndescription: Learn how to install Docker Engine on Fedora. These instructions cover\n  the different installation methods, how to uninstall, and next steps.\nkeywords: requirements, dnf, installation, fedora, install fedora, install docker engine, rpm, install, uninstall, upgrade,\n  update\ntitle: Install Docker Engine on Fedora\nlinkTitle: Fedora\nweight: 40\ntoc_max: 4\naliases:\n- /engine/installation/fedora/\n- /engine/installation/linux/fedora/\n- /engine/installation/linux/docker-ce/fedora/\n- /install/linux/docker-ce/fedora/\ndownload-url-base: https://download.docker.com/linux/fedora\n---\n\nTo get started with Docker Engine on Fedora, make sure you\n[meet the prerequisites](#prerequisites), and then follow the\n[installation steps](#installation-methods).\n\n## Prerequisites\n\n### OS requirements\n\nTo install Docker Engine, you need a maintained version of one of the following\nFedora versions:\n\n- Fedora 44\n- Fedora 43\n\n### Uninstall old versions"
+    },
+    {
+      "id": "docker/manuals/engine/manage-resources/pruning.md::9",
+      "score": 0.0,
+      "text": "the `--filter` flag. For instance, the\nfollowing command removes items older than 24 hours:\n\n```console\n$ docker system prune --filter \"until=24h\"\n```\n\nOther filtering expressions are available. See the\n[`docker system prune` reference](/reference/cli/docker/system/prune/)\nfor more examples."
+    }
+  ],
+  "answer": "The provided context does not contain any information about installing kubectl. Therefore, I cannot answer the question based on the given documentation.",
+  "prompt_sha256": "bc93d0aa6f262dd7f9fe96facef49c0c8e93a0e102c6acd06f7150ce721dc1d8",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 21.13
+  }
+}

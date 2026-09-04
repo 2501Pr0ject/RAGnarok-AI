@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_context_002",
+  "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/configmap.md::16",
+      "score": 0.75384,
+      "text": "ner, though\nthe Pod is allowed to start.\n\n## Immutable ConfigMaps {#configmap-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nThe Kubernetes feature _Immutable Secrets and ConfigMaps_ provides an option to set\nindividual Secrets and ConfigMaps as immutable. For clusters that extensively use ConfigMaps\n(at least tens of thousands of unique ConfigMap to Pod mounts), preventing changes to their\ndata has the following advantages:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- improves performance of your cluster by significantly reducing load on kube-apiserver, by\n  closing watches for ConfigMaps marked as immutable.\n\nYou can create an immutable ConfigMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```"
+    }
+  ],
+  "answer": "By marking a Kubernetes ConfigMap as immutable, you gain the following advantages:\n\n- Protection against accidental (or unwanted) updates that could cause application outages.\n- Improved performance of your cluster by reducing the load on the kube-apiserver through the closure of watches for immutable ConfigMaps.",
+  "prompt_sha256": "2dc7cb04d4bd9832385c491758401d7c1896db4552eb275b014fe140b97affff",
+  "timings_s": {
+    "retrieve": 0.68,
+    "generate": 15.33
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "kubernetes_direct_002",
+  "question": "What is the maximum amount of data a Kubernetes ConfigMap can hold?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/overview/_index.md::29",
+      "score": 0.75775,
+      "text": "You tell Kubernetes how much CPU and memory (RAM) each container needs. Kubernetes can fit"
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::19",
+      "score": 0.7509,
+      "text": "d (EC2)</a>,\nKubernetes allows 39 volumes to be attached to a Node."
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::5",
+      "score": 0.74851,
+      "text": "## Kubernetes default limits\n\nThe Kubernetes scheduler has default limits on the number of volumes"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::140",
+      "score": 0.74139,
+      "text": "#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::139",
+      "score": 0.74017,
+      "text": "Kubernetes limits the number of endpoints that can fit in a single Endpoints"
+    }
+  ],
+  "answer": "The provided context does not contain information about the maximum amount of data a Kubernetes ConfigMap can hold.",
+  "prompt_sha256": "094c6240e0daaf03dada337e87ad21afdedfb02ef600df7fde0029392b94143b",
+  "timings_s": {
+    "retrieve": 7.22,
+    "generate": 4.16
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "fastapi_multi_001",
+  "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::3",
+      "score": 0.79445,
+      "text": "//127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```\n\nor any other case variation (uppercase, first letter in uppercase, etc), your function will see the parameter `short` with a `bool` value of `True`. Otherwise as `False`.\n\n\n## Multiple path and query parameters { #multiple-path-and-query-parameters }\n\nYou can declare multiple path parameters and query parameters at the same time, **FastAPI** knows which is which.\n\nAnd you don't have to declare them in any specific order.\n\nThey will be detected by name:\n\n{* ../../docs_src/query_params/tutorial004_py310.py hl[6,8] *}\n\n## Required query parameters { #required-query-parameters }\n\nWhen you declare a default value for non-path parameters (for now, we have only seen query parameters), then it is not required.\n\nIf you don't want to add a specific value but just make it optional, set the default as `None`."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::5",
+      "score": 0.77999,
+      "text": "parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</abbr>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n!!! tip\n    For new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002.py!}\n    ```"
+    },
+    {
+      "id": "fastapi/tutorial/path-params-numeric-validations.md::0",
+      "score": 0.77734,
+      "text": "# Path Parameters and Numeric Validations { #path-parameters-and-numeric-validations }\n\nIn the same way that you can declare more validations and metadata for query parameters with `Query`, you can declare the same type of validations and metadata for path parameters with `Path`.\n\n## Import `Path` { #import-path }\n\nFirst, import `Path` from `fastapi`, and import `Annotated`:\n\n{* ../../docs_src/path_params_numeric_validations/tutorial001_an_py310.py hl[1,3] *}\n\n/// note\n\nFastAPI added support for `Annotated` (and started recommending it) in version 0.95.0.\n\nIf you have an older version, you would get errors when trying to use `Annotated`.\n\nMake sure you [Upgrade the FastAPI version](../deployment/versions.md#upgrading-the-fastapi-versions) to at least 0.95.1 before using `Annotated`.\n\n///\n\n## Declare metadata { #declare-metadata }\n\nYou can declare all the same parameters as for `Query`.\n\nFor example, to declare a `title` metadata value for the path parameter `item_id` you can type:"
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-capacity.md::0",
+      "score": 0.0,
+      "text": "---\nreviewers:\n- jsafrane\n- saad-ali\n- msau42\n- xing-yang\n- pohly\ntitle: Storage Capacity\ncontent_type: concept\nweight: 80\n---\n\n<!-- overview -->\n\nStorage capacity is limited and may vary depending on the node on\nwhich a pod runs: network-attached storage might not be accessible by\nall nodes, or storage is local to a node to begin with.\n\n{{< feature-state for_k8s_version=\"v1.24\" state=\"stable\" >}}\n\nThis page describes how Kubernetes keeps track of storage capacity and\nhow the scheduler uses that information to [schedule Pods](/docs/concepts/scheduling-eviction/) onto nodes\nthat have access to enough storage capacity for the remaining missing\nvolumes. Without storage capacity tracking, the scheduler may choose a\nnode that doesn't have enough capacity to provision a volume and\nmultiple scheduling retries will be needed.\n\n## {{% heading \"prerequisites\" %}}"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/controllers/job.md::25",
+      "score": 0.0,
+      "text": "ller defers\n`Workload` ownership to that parent. Whether the Job controller still creates the\nruntime `PodGroup` depends on what the parent delegates:\n\n- If the parent sets the `scheduling.k8s.io/group-template-name` annotation on the\n  Job, the Job controller creates and owns the `PodGroup`, mapped to the parent's\n  named `PodGroupTemplate`.\n- Otherwise, the parent owns both objects and the Job controller creates neither;\n  it discovers the existing objects and uses them when creating Pods.\n\nIf a Job's Pod template already has `.spec.template.spec.schedulingGroup` set, the\nJob controller creates neither object, letting you (or a higher-level controller)\nmanage the `Workload`/`PodGroup` lifecycle yourself.\n\n### CronJob behavior"
+    }
+  ],
+  "answer": "In FastAPI, path parameters and query parameters differ in their declaration and requirement as follows:\n\n- **Path Parameters**: These are part of the URL's path and must be provided to access a specific resource. They do not have default values and are required unless explicitly made optional.\n\n- **Query Parameters**: These are appended to the URL after a question mark (`?`) and can have default values, making them optional if no value is provided in the request.",
+  "prompt_sha256": "7c34014ea21bb30d7a2b3f84571f6f714ebd6f2c62d6c7bba2ddcd46588d6054",
+  "timings_s": {
+    "retrieve": 0.78,
+    "generate": 38.37
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_contra_001",
+  "question": "On Windows, what command activates a virtual environment created with venv?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/security/application-security-checklist.md::7",
+      "score": 0.0,
+      "text": "eploy to different clusters,\nconsider whether you can assume that NetworkPolicy is available and enforced.\n\n## Advanced security hardening {#advanced}\n\nThis section of this guide covers some advanced security hardening points\nwhich might be valuable based on different Kubernetes environment setup.\n\n### Linux container security\n\nConfigure {{< glossary_tooltip text=\"Security Context\" term_id=\"Security-Context\" >}}\nfor the pod-container.\n\n- [ ] [Set the Seccomp Profile for a Container](/docs/tasks/configure-pod-container/security-context/#set-the-seccomp-profile-for-a-container).\n- [ ] [Restrict a Container's Access to Resources with AppArmor](/docs/tutorials/security/apparmor/).\n- [ ] [Assign SELinux Labels to a Container](/docs/tasks/configure-pod-container/security-context/#assign-selinux-labels-to-a-container).\n\n### Runtime classes\n\n- [ ] Configure appropriate runtime classes for containers.\n\n{{% thirdparty-content %}}"
+    },
+    {
+      "id": "python/howto/descriptor.rst::28",
+      "score": 0.0,
+      "text": "le\n        if descr_get is not null:\n            return descr_get(cls_var, obj, objtype)         # non-data descriptor\n        if cls_var is not null:\n            return cls_var                                  # class variable\n        raise AttributeError(name)\n\n\n.. testcode::\n    :hide:\n\n    # Test the fidelity of object_getattribute() by comparing it with the\n    # normal object.__getattribute__().  The former will be accessed by\n    # square brackets and the latter by the dot operator.\n\n    class Object:\n\n        def __getitem__(obj, name):\n            try:\n                return object_getattribute(obj, name)\n            except AttributeError:\n                if not hasattr(type(obj), '__getattr__'):\n                    raise\n            return type(obj).__getattr__(obj, name)             # __getattr__\n\n    class DualOperator(Object):\n\n        x = 10\n\n        def __init__(self, z):\n            self.z = z\n\n        @property\n        def p2(self):\n            return 2 * self.x"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/dra.md::11",
+      "score": 0.0,
+      "text": "conds_bucket{name=\"resource_claim\"}[5m]))\n  by (le)){{< /highlight >}} to understand the speed at which the ResourceClaim controller\n  processes work.\n\nIf you are experiencing low Workqueue Add Rate, high Workqueue Depth, and/or\nhigh Workqueue Work Duration, this suggests the controller isn't performing\noptimally. Consider tuning parameters like QPS, burst, and CPU/memory\nconfigurations.\n\nIf you are experiencing high Workequeue Add Rate, high Workqueue Depth, but\nreasonable Workqueue Work Duration, this indicates the controller is processing\nwork, but concurrency might be insufficient. Concurrency is hardcoded in the\ncontroller, so as a cluster administrator, you can tune for this by reducing the\npod creation QPS, so the add rate to the resource claim workqueue is more\nmanageable.\n\n### `kube-scheduler` metrics"
+    },
+    {
+      "id": "docker/manuals/engine/logging/drivers/splunk.md::7",
+      "score": 0.0,
+      "text": "|\n| `splunk-insecureskipverify` | optional | Ignore server certificate validation.                                                                                                                                                                                                                                                                                                      |\n| `splunk-format`             | optional | Message format. Can be `inline`, `json` or `raw`. Defaults to `inline`.                                                                                                                                                                                                                                                                    |"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::6",
+      "score": 0.0,
+      "text": "meters to `Query`. In this case, the `max_length` parameter that applies to strings:\n\n```Python\nq: str | None = Query(default=None, max_length=50)\n```\n\nThis will validate the data, show a clear error when the data is not valid, and document the parameter in the OpenAPI schema *path operation*.\n\n### `Query` as the default value or in `Annotated` { #query-as-the-default-value-or-in-annotated }\n\nKeep in mind that when using `Query` inside of `Annotated` you cannot use the `default` parameter for `Query`.\n\nInstead, use the actual default value of the function parameter. Otherwise, it would be inconsistent.\n\nFor example, this is not allowed:\n\n```Python\nq: Annotated[str, Query(default=\"rick\")] = \"morty\"\n```\n\n...because it's not clear if the default value should be `\"rick\"` or `\"morty\"`.\n\nSo, you would use (preferably):\n\n```Python\nq: Annotated[str, Query()] = \"rick\"\n```\n\n...or in older code bases you will find:\n\n```Python\nq: str = Query(default=\"rick\")\n```"
+    }
+  ],
+  "answer": "The information provided in the context does not contain an answer to the question about the command to activate a virtual environment on Windows created with venv. Therefore, the required information is not present in the given documentation.",
+  "prompt_sha256": "40ac35da222816915577867e5314033fe64bf8869d6acbe6111ec721dd836ebe",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 25.46
+  }
+}

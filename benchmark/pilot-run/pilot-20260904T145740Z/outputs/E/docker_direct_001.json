@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "docker_direct_001",
+  "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/build.md::3",
+      "score": 0.84175,
+      "text": "this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file.\n- A Docker image is built using the `custom` directory with the user's `$HOME` as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n\n- A relative path to the Compose file's folder. This path must be a directory and must contain a `Dockerfile`"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::4",
+      "score": 0.84084,
+      "text": "t using the `custom` directory with the user's HOME as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n- A relative path to the Compose file's parent folder. This path must be a directory and must contain a `Dockerfile`\n\n  ```yml\n  services:\n    webapp:\n      build: ./dir\n  ```"
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::7",
+      "score": 0.814,
+      "text": "directory and Git repository URLs, like [context](#context) does. Other context flavours\nmust be prefixed to avoid ambiguity with a `type://` prefix.\n\nCompose warns you if the image builder does not support additional contexts and may list\nthe unused contexts.\n\nIllustrative examples of how this is used in Buildx can be found\n[here](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-additional-build-contexts---build-context).\n\n### args\n\n`args` define build arguments, i.e. Dockerfile `ARG` values.\n\nUsing the following Dockerfile as an example:\n\n```Dockerfile\nARG GIT_COMMIT\nRUN echo \"Based on commit: $GIT_COMMIT\"\n```\n\n`args` can be set in the Compose file under the `build` key to define `GIT_COMMIT`. `args` can be set as a mapping or a list:\n\n```yml\nbuild:\n  context: .\n  args:\n    GIT_COMMIT: cdc3b19\n```\n\n```yml\nbuild:\n  context: .\n  args:\n    - GIT_COMMIT=cdc3b19\n```"
+    },
+    {
+      "id": "docker/manuals/engine/install/centos.md::4",
+      "score": 0.0,
+      "text": "Set up the repository\n\nInstall the `dnf-plugins-core` package (which provides the commands to manage\nyour DNF repositories) and set up the repository.\n\n```console\n$ sudo dnf -y install dnf-plugins-core\n$ sudo dnf config-manager --add-repo {{% param \"download-url-base\" %}}/docker-ce.repo\n```\n\n#### Install Docker Engine\n\n1. Install the Docker packages.\n\n   {{< tabs >}}\n   {{< tab name=\"Latest\" >}}\n\n   To install the latest version, run:\n\n   ```console\n   $ sudo dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin\n   ```\n\n   If prompted to accept the GPG key, verify that the fingerprint matches\n   `060A 61C5 1B55 8A7F 742B 77AA C52F EB6B 621E 9F35`, and if so, accept it.\n\n   This command installs Docker, but it doesn't start Docker. It also creates a\n   `docker` group, however, it doesn't add any users to the group by default.\n\n   {{< /tab >}}\n   {{< tab name=\"Specific version\" >}}"
+    },
+    {
+      "id": "docker/manuals/engine/swarm/configs.md::4",
+      "score": 0.0,
+      "text": "log is replicated across the other managers, ensuring\nthe same high availability guarantees for configs as for the rest of the swarm\nmanagement data.\n\nWhen you grant a newly-created or running service access to a config, the config\nis mounted as a file in the container. The location of the mount point within\nthe container defaults to `/<config-name>` in Linux containers. In Windows\ncontainers, configs are all mounted into `C:\\ProgramData\\Docker\\configs` and\nsymbolic links are created to the desired location, which defaults to\n`C:\\<config-name>`.\n\nYou can set the ownership (`uid` and `gid`) for the config, using either the\nnumerical ID or the name of the user or group. You can also specify the file\npermissions (`mode`). These settings are ignored for Windows containers."
+    }
+  ],
+  "answer": "The provided context does not explicitly state what the build context is if it is not set explicitly. However, based on the information given, the build context can be configured as either:\n\n- A relative path to the Compose file's parent folder.\n- A string containing a path to the build context.\n\nIf no explicit build context is set, it would default to the directory containing the Docker Compose file, which is the parent folder of the compose file.",
+  "prompt_sha256": "0c55edb7d6bfe24965d1e4f291033071dbf6a3ab5f2a32a0ab800771aa7a4461",
+  "timings_s": {
+    "retrieve": 0.57,
+    "generate": 42.94
+  }
+}

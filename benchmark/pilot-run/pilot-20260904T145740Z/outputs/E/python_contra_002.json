@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "python_contra_002",
+  "question": "Which Python version does venv install into a new virtual environment?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/venv@v3.10.14.rst::2",
+      "score": 0.78093,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will usually install the most recent version of\nPython that you have available. If you have multiple versions of Python on your\nsystem, you can select a specific Python version by running ``python3`` or\nwhichever version you want.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::2",
+      "score": 0.78039,
+      "text": "a library be upgraded to version 3.0, this will\nnot affect application A's environment.\n\n\nCreating Virtual Environments\n=============================\n\nThe module used to create and manage virtual environments is called\n:mod:`venv`.  :mod:`venv` will install the Python version from which\nthe command was run (as reported by the :option:`--version` option).\nFor instance, executing the command with ``python3.12`` will install\nversion 3.12.\n\nTo create a virtual environment, decide upon a directory where you want to\nplace it, and run the :mod:`venv` module as a script with the directory path::\n\n   python -m venv tutorial-env\n\nThis will create the ``tutorial-env`` directory if it doesn't exist,\nand also create directories inside it containing a copy of the Python\ninterpreter and various supporting files."
+    },
+    {
+      "id": "python/tutorial/venv.rst::0",
+      "score": 0.77917,
+      "text": ".. _tut-venv:\n\n*********************************\nVirtual Environments and Packages\n*********************************\n\nIntroduction\n============\n\nPython applications will often use packages and modules that don't\ncome as part of the standard library.  Applications will sometimes\nneed a specific version of a library, because the application may\nrequire that a particular bug has been fixed or the application may be\nwritten using an obsolete version of the library's interface.\n\nThis means it may not be possible for one Python installation to meet\nthe requirements of every application.  If application A needs version\n1.0 of a particular module but application B needs version 2.0, then\nthe requirements are in conflict and installing either version 1.0 or 2.0\nwill leave one application unable to run."
+    },
+    {
+      "id": "kubernetes/concepts/security/pod-security-standards.md::3",
+      "score": 0.0,
+      "text": "bject for _all defined\ncontainers_. If any of the listed containers fails to meet the requirements, the entire pod will\nfail validation.\n{{< /note >}}\n\n<table>\n\t<caption style=\"display:none\">Baseline policy specification</caption>\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>Control</th>\n\t\t\t<th>Policy</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"white-space: nowrap\">HostProcess</td>\n\t\t\t<td>\n\t\t\t\t<p>Windows Pods offer the ability to run <a href=\"/docs/tasks/configure-pod-container/create-hostprocess-pod\">HostProcess containers</a> which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy. {{< feature-state for_k8s_version=\"v1.26\" state=\"stable\" >}}</p>\n\t\t\t\t<p><strong>Restricted Fields</strong></p>\n\t\t\t\t<ul>\n\t\t\t\t\t<li><code>spec.securityContext.windowsOptions.hostProcess</code></li>\n\t\t\t\t\t<li><code>spec.containers[*].securityContext.windowsOptions.hostProcess</code></li>"
+    },
+    {
+      "id": "kubernetes/concepts/overview/working-with-objects/namespaces.md::3",
+      "score": 0.0,
+      "text": "pace is only a convention, not a requirement.\n\n`kube-system`\n: The namespace for objects created by the Kubernetes system.\n\n## Working with Namespaces\n\nCreation and deletion of namespaces are described in the\n[Admin Guide documentation for namespaces](/docs/tasks/administer-cluster/namespaces).\n\n{{< note >}}\nAvoid creating namespaces with the prefix `kube-`, since it is reserved for Kubernetes system namespaces.\n{{< /note >}}\n\n### Viewing namespaces\n\nYou can list the current namespaces in a cluster using:\n\n```shell\nkubectl get namespace\n```\n```\nNAME              STATUS   AGE\ndefault           Active   1d\nkube-node-lease   Active   1d\nkube-public       Active   1d\nkube-system       Active   1d\n```\n\n\n### Setting the namespace for a request\n\nTo set the namespace for a current request, use the `--namespace` flag.\n\nFor example:\n\n```shell\nkubectl run nginx --image=nginx --namespace=<insert-namespace-name-here>\nkubectl get pods --namespace=<insert-namespace-name-here>\n```"
+    }
+  ],
+  "answer": "The :mod:`venv` module will install the Python version from which the command was run. For instance, executing the command with ``python3.12`` will install version 3.12. Therefore, the Python version installed into a new virtual environment using :mod:`venv` depends on which Python interpreter is used to run the `python -m venv` command.",
+  "prompt_sha256": "30ea2b8b8b487ea1fe37256def6a9573dc0baf1d29605d3065bc272df94fe484",
+  "timings_s": {
+    "retrieve": 0.57,
+    "generate": 31.89
+  }
+}

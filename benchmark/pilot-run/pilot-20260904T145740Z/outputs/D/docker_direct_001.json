@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "docker_direct_001",
+  "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/build.md::3",
+      "score": 0.84175,
+      "text": "this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file.\n- A Docker image is built using the `custom` directory with the user's `$HOME` as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n\n- A relative path to the Compose file's folder. This path must be a directory and must contain a `Dockerfile`"
+    }
+  ],
+  "answer": "If you do not set the `build` attribute explicitly in a Docker Compose file, there is no specified build context provided. Therefore, the information is not present in the provided documentation regarding an implicit default build context when none is set.",
+  "prompt_sha256": "76be995bf011a9be945145c2ccc5ab041d07d323e876b60058edd9250cbcd1fe",
+  "timings_s": {
+    "retrieve": 1.25,
+    "generate": 14.79
+  }
+}

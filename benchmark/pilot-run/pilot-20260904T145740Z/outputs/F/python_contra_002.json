@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_contra_002",
+  "question": "Which Python version does venv install into a new virtual environment?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/storage/persistent-volumes.md::24",
+      "score": 0.0,
+      "text": "/magicstorage\nparameters:\n  resturl: \"http://192.168.10.100:8080\"\n  restuser: \"\"\n  secretNamespace: \"\"\n  secretName: \"\"\nallowVolumeExpansion: true\n```\n\nTo request a larger volume for a PVC, edit the PVC object and specify a larger\nsize. This triggers expansion of the volume that backs the underlying PersistentVolume. A\nnew PersistentVolume is never created to satisfy the claim. Instead, an existing volume is resized.\n\n{{< warning >}}\nDirectly editing the size of a PersistentVolume can prevent an automatic resize of that volume.\nIf you edit the capacity of a PersistentVolume, and then edit the `.spec` of a matching\nPersistentVolumeClaim to make the size of the PersistentVolumeClaim match the PersistentVolume,\nthen no storage resize happens.\nThe Kubernetes control plane will see that the desired state of both resources matches,\nconclude that the backing volume size has been manually\nincreased and that no resize is necessary.\n{{< /warning >}}\n\n#### CSI Volume expansion"
+    },
+    {
+      "id": "kubernetes/concepts/storage/storage-classes.md::9",
+      "score": 0.0,
+      "text": "configured to be expandable. This allows you to resize the\nvolume by editing the corresponding PVC object, requesting a new larger amount of\nstorage.\n\nThe following types of volumes support volume expansion, when the underlying\nStorageClass has the field `allowVolumeExpansion` set to true.\n\n{{< table caption = \"Table of Volume types and the version of Kubernetes they require\"  >}}\n\n| Volume type          | Required Kubernetes version for volume expansion |\n| :------------------- | :----------------------------------------------- |\n| Azure File           | 1.11                                             |\n| CSI                  | 1.24                                             |\n| FlexVolume           | 1.13                                             |\n| Portworx             | 1.11                                             |\n| rbd                  | 1.11                                             |\n\n{{< /table >}}"
+    },
+    {
+      "id": "docker/manuals/engine/logging/drivers/json-file.md::6",
+      "score": 0.0,
+      "text": "| `--log-opt compress=true`                          |\n\n### Examples\n\nThis example starts an `alpine` container which can have a maximum of 3 log\nfiles no larger than 10 megabytes each.\n\n```console\n$ docker run -it --log-opt max-size=10m --log-opt max-file=3 alpine ash\n```"
+    },
+    {
+      "id": "kubernetes/concepts/storage/volume-health-monitoring.md::10",
+      "score": 0.0,
+      "text": "er_name`, `status`, and `reason`, with a value of `1` for each storage-backend\ncondition currently reported for a driver on that node.\n\n## Limitations\n\n- Kubernetes only surfaces these health reports; it does not act on them.\n  Nothing in Kubernetes reschedules Pods, fails over volumes, or otherwise reacts\n  to a reported condition on its own. Building a remediation controller on top of\n  these status fields is left to cluster operators and vendors.\n- An older, alpha implementation of the same `CSIVolumeHealth` feature gate (available\n  starting in Kubernetes v1.21) reported abnormal volume conditions using Kubernetes\n  Events and a `kubelet_volume_stats_health_status_abnormal` metric. That mechanism\n  has been replaced by the status fields and RPCs described on this page, and no\n  longer exists.\n\n## {{% heading \"whatsnext\" %}}"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/ingress.md::27",
+      "score": 0.0,
+      "text": "to expose a single Service\n(see [alternatives](#alternatives)). You can also do this with an Ingress by specifying a\n*default backend* with no rules.\n\n{{% code_sample file=\"service/networking/test-ingress.yaml\" %}}\n\nIf you create it using `kubectl apply -f` you should be able to view the state\nof the Ingress you added:\n\n```bash\nkubectl get ingress test-ingress\n```\n\n```\nNAME           CLASS         HOSTS   ADDRESS         PORTS   AGE\ntest-ingress   external-lb   *       203.0.113.123   80      59s\n```\n\nWhere `203.0.113.123` is the IP allocated by the Ingress controller to satisfy\nthis Ingress.\n\n{{< note >}}\nIngress controllers and load balancers may take a minute or two to allocate an IP address.\nUntil that time, you often see the address listed as `<pending>`.\n{{< /note >}}\n\n### Simple fanout"
+    }
+  ],
+  "answer": "The information needed to answer the question about which Python version `venv` installs into a new virtual environment is not present in the provided documentation.",
+  "prompt_sha256": "542e43ad3e46c483a51508df3a72d6831a173219455b23b07654ba09e8ccd47b",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 20.96
+  }
+}

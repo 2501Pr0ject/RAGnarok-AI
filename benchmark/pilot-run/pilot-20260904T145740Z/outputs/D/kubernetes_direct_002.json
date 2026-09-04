@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_direct_002",
+  "question": "What is the maximum amount of data a Kubernetes ConfigMap can hold?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/storage/storage-limits.md::1",
+      "score": 0.71177,
+      "text": ".\n\n\n\n<!-- body -->\n\n## Kubernetes default limits\n\nThe Kubernetes scheduler has default limits on the number of volumes\nthat can be attached to a Node:\n\n<table>\n  <tr><th>Cloud service</th><th>Maximum volumes per Node</th></tr>\n  <tr><td><a href=\"https://aws.amazon.com/ebs/\">Amazon Elastic Block Store (EBS)</a></td><td>39</td></tr>\n  <tr><td><a href=\"https://cloud.google.com/persistent-disk/\">Google Persistent Disk</a></td><td>16</td></tr>\n  <tr><td><a href=\"https://azure.microsoft.com/en-us/services/storage/main-disks/\">Microsoft Azure Disk Storage</a></td><td>16</td></tr>\n</table>\n\n## Dynamic volume limits\n\n{{< feature-state state=\"stable\" for_k8s_version=\"v1.17\" >}}\n\nDynamic volume limits are supported for following volume types.\n\n- Amazon EBS\n- Google Persistent Disk\n- Azure Disk\n- CSI\n\nFor volumes managed by in-tree volume plugins, Kubernetes automatically determines the Node\ntype and enforces the appropriate maximum number of volumes for the node. For example:"
+    }
+  ],
+  "answer": "The information provided in the context does not contain details about the maximum amount of data a Kubernetes ConfigMap can hold.",
+  "prompt_sha256": "56e36b1651f27d6b19631ca67ccb1f4022956736defa54e273b54a0d84940916",
+  "timings_s": {
+    "retrieve": 0.58,
+    "generate": 9.35
+  }
+}

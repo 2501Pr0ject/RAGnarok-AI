@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "python_unans_001",
+  "question": "What are the parameters of str.split() and what are their default values?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/security/service-accounts.md::18",
+      "score": 0.0,
+      "text": "rnetes.io/enforce-mountable-secrets` is deprecated since Kubernetes v1.32. Use separate namespaces to isolate access to mounted secrets.\n{{< /note >}}\n\nKubernetes provides an annotation called `kubernetes.io/enforce-mountable-secrets`\nthat you can add to your ServiceAccounts. When this annotation is applied,\nthe ServiceAccount's secrets can only be mounted on specified types of resources,\nenhancing the security posture of your cluster.\n\nYou can add the annotation to a ServiceAccount using a manifest:\n\n```yaml\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  annotations:\n    kubernetes.io/enforce-mountable-secrets: \"true\"\n  name: my-serviceaccount\n  namespace: my-namespace\n```\nWhen this annotation is set to \"true\", the Kubernetes control plane ensures that\nthe Secrets from this ServiceAccount are subject to certain mounting restrictions."
+    },
+    {
+      "id": "kubernetes/concepts/security/service-accounts.md::14",
+      "score": 0.0,
+      "text": "ure-gates-removed)\n  (which was enabled by default from Kubernetes v1.24 to v1.26),  prevented Kubernetes from automatically creating these tokens for\n  ServiceAccounts. The feature gate is removed in v1.27, because it was elevated to GA status; you can still create indefinite service account tokens manually, but should take into account the security implications.\n\n#### Node audience restriction for service account tokens {#node-audience-restriction}\n\n{{< feature-state feature_gate_name=\"ServiceAccountNodeAudienceRestriction\" >}}"
+    },
+    {
+      "id": "docker/manuals/engine/cli/filter.md::3",
+      "score": 0.0,
+      "text": "rs by passing multiple `--filter` flags. The\nfollowing example shows how to print all images that match `alpine:latest` or\n`busybox` - a logical `OR`.\n\n```console\n$ docker images\nREPOSITORY   TAG       IMAGE ID       CREATED       SIZE\nubuntu       24.04     33a5cc25d22c   2 hours ago   101MB\nubuntu       22.04     152dc042452c   2 hours ago   88.1MB\nalpine       3.21      a8cbb8c69ee7   2 hours ago   8.67MB\nalpine       latest    7144f7bab3d4   2 hours ago   11.7MB\nbusybox      uclibc    3e516f71d880   2 hours ago   2.4MB\nbusybox      glibc     7338d0c72c65   2 hours ago   6.09MB\n$ docker images --filter reference=alpine:latest --filter=reference=busybox\nREPOSITORY   TAG       IMAGE ID       CREATED       SIZE\nalpine       latest    7144f7bab3d4   2 hours ago   11.7MB\nbusybox      uclibc    3e516f71d880   2 hours ago   2.4MB\nbusybox      glibc     7338d0c72c65   2 hours ago   6.09MB\n```\n\n### Multiple negated filters"
+    },
+    {
+      "id": "python/howto/gdb_helpers.rst::17",
+      "score": 0.0,
+      "text": "e to read python frame information)\n        (gdb) py-down\n        Unable to find a newer python frame\n\n   and we're at the bottom of the Python stack.\n\n   Note that in Python 3.12 and newer, the same C stack frame can be used for\n   multiple Python stack frames. This means that ``py-up`` and ``py-down``\n   may move multiple Python frames at once. For example::\n\n      (gdb) py-up\n      #6 Frame 0x7ffff7fb62b0, for file /tmp/rec.py, line 5, in recursive_function (n=0)\n         time.sleep(5)\n      #6 Frame 0x7ffff7fb6240, for file /tmp/rec.py, line 7, in recursive_function (n=1)\n         recursive_function(n-1)\n      #6 Frame 0x7ffff7fb61d0, for file /tmp/rec.py, line 7, in recursive_function (n=2)\n         recursive_function(n-1)\n      #6 Frame 0x7ffff7fb6160, for file /tmp/rec.py, line 7, in recursive_function (n=3)\n         recursive_function(n-1)\n      #6 Frame 0x7ffff7fb60f0, for file /tmp/rec.py, line 7, in recursive_function (n=4)\n         recursive_function(n-1)"
+    },
+    {
+      "id": "kubernetes/concepts/windows/intro.md::15",
+      "score": 0.0,
+      "text": "Windows as there is no GID support\n* `securityContext.runAsNonRoot` -\n   this setting will prevent containers from running as `ContainerAdministrator`\n   which is the closest equivalent to a root user on Windows.\n* `securityContext.runAsUser` -\n   use [`runAsUserName`](/docs/tasks/configure-pod-container/configure-runasusername)\n   instead\n* `securityContext.seLinuxOptions` -\n   not possible on Windows as SELinux is Linux-specific\n* `terminationMessagePath` -\n   this has some limitations in that Windows doesn't support mapping single files. The\n   default value is `/dev/termination-log`, which does work because it does not\n   exist on Windows by default.\n\n#### Field compatibility for Pod specifications {#compatibility-v1-pod}\n\nThe following list documents differences between how Pod specifications work between Windows and Linux:"
+    }
+  ],
+  "answer": "The information provided in the context does not contain details about the `str.split()` method or its parameters. Therefore, I cannot answer the question based on the given context.\n\nThe default usage of `str.split()` in Python is without any parameters, where it splits the string at the default whitespace and returns a list of the split parts. However, this information is not present in the provided documentation.",
+  "prompt_sha256": "baf4417d2cde3c55612ebe14fbdf16acc4078b4fb286cd6c7bf2c4f680d879ae",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 35.18
+  }
+}

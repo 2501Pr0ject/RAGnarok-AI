@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "python_unans_001",
+  "question": "What are the parameters of str.split() and what are their default values?",
+  "retrieved": [
+    {
+      "id": "python/howto/regex.rst::70",
+      "score": 0.66014,
+      "text": ",  but     |\n|                  | returns the new string and the number of      |\n|                  | replacements                                  |\n+------------------+-----------------------------------------------+\n\n\nSplitting Strings\n-----------------\n\nThe :meth:`~re.Pattern.split` method of a pattern splits a string apart\nwherever the RE matches, returning a list of the pieces. It's similar to the\n:meth:`~str.split` method of strings but provides much more generality in the\ndelimiters that you can split by; string :meth:`!split` only supports splitting by\nwhitespace or by a fixed string.  As you'd expect, there's a module-level\n:func:`re.split` function, too.\n\n\n.. method:: .split(string [, maxsplit=0])\n   :noindex:\n\n   Split *string* by the matches of the regular expression.  If capturing\n   parentheses are used in the RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed."
+    },
+    {
+      "id": "fastapi/tutorial/response-model.md::15",
+      "score": 0.6261,
+      "text": "odel-encoding-parameters }\n\nYour response model could have default values, like:\n\n{* ../../docs_src/response_model/tutorial004_py310.py hl[9,11:12] *}\n\n* `description: Union[str, None] = None` (or `str | None = None` in Python 3.10) has a default of `None`.\n* `tax: float = 10.5` has a default of `10.5`.\n* `tags: List[str] = []` has a default of an empty list: `[]`.\n\nbut you might want to omit them from the result if they were not actually stored.\n\nFor example, if you have models with many optional attributes in a NoSQL database, but you don't want to send very long JSON responses full of default values.\n\n### Use the `response_model_exclude_unset` parameter { #use-the-response-model-exclude-unset-parameter }\n\nYou can set the *path operation decorator* parameter `response_model_exclude_unset=True`:\n\n{* ../../docs_src/response_model/tutorial004_py310.py hl[22] *}\n\nand those default values won't be included in the response, only the values actually set."
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::21",
+      "score": 0.62072,
+      "text": "`description`\n* `deprecated`\n\nValidations specific for strings:\n\n* `min_length`\n* `max_length`\n* `pattern`\n\nCustom validations using `AfterValidator`.\n\nIn these examples you saw how to declare validations for `str` values.\n\nSee the next chapters to learn how to declare validations for other types, like numbers."
+    },
+    {
+      "id": "python/howto/regex.rst::71",
+      "score": 0.61355,
+      "text": "RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed.\n\nYou can limit the number of splits made, by passing a value for *maxsplit*.\nWhen *maxsplit* is nonzero, at most *maxsplit* splits will be made, and the\nremainder of the string is returned as the final element of the list.  In the\nfollowing example, the delimiter is any sequence of non-alphanumeric characters.\n::\n\n   >>> p = re.compile(r'\\W+')\n   >>> p.split('This is a test, short and sweet, of split().')\n   ['This', 'is', 'a', 'test', 'short', 'and', 'sweet', 'of', 'split', '']\n   >>> p.split('This is a test, short and sweet, of split().', 3)\n   ['This', 'is', 'a', 'test, short and sweet, of split().']"
+    },
+    {
+      "id": "fastapi/advanced/settings@0.100.0.md::5",
+      "score": 0.60075,
+      "text": "hon from an environment variable will be a `str`, and any conversion to a different type or validation has to be done in code.\n\n## Pydantic `Settings`\n\nFortunately, Pydantic provides a great utility to handle these settings coming from environment variables with <a href=\"https://docs.pydantic.dev/latest/usage/pydantic_settings/\" class=\"external-link\" target=\"_blank\">Pydantic: Settings management</a>.\n\n### Install `pydantic-settings`\n\nFirst, install the `pydantic-settings` package:\n\n<div class=\"termy\">\n\n```console\n$ pip install pydantic-settings\n---> 100%\n```\n\n</div>\n\nIt also comes included when you install the `all` extras with:\n\n<div class=\"termy\">\n\n```console\n$ pip install \"fastapi[all]\"\n---> 100%\n```\n\n</div>\n\n!!! info\n    In Pydantic v1 it came included with the main package. Now it is distributed as this independent package so that you can choose to install it or not if you don't need that functionality.\n\n### Create the `Settings` object"
+    }
+  ],
+  "answer": "The `str.split()` method in Python has the following parameters:\n\n- **string**: The string to be split.\n- **maxsplit** (optional): The maximum number of splits to perform. The default value is 0, which means no limit on the number of splits.\n\nHere's how these parameters are documented from the provided context:\n\n```python\n:meth:`str.split`(string [, maxsplit=0])\n```\n\nThe `maxsplit` parameter defaults to 0 if not specified, allowing for unlimited splits.",
+  "prompt_sha256": "4dc9d1f7528c10750ad65e564938e899f2c28b7bd9a08a0ef426e9fe1325bfa7",
+  "timings_s": {
+    "retrieve": 0.71,
+    "generate": 38.58
+  }
+}

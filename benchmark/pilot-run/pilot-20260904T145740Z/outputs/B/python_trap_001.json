@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "python_trap_001",
+  "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/modules.rst::242",
+      "score": 0.7952,
+      "text": "list of module names that should be imported when ``from package import *`` is"
+    },
+    {
+      "id": "python/tutorial/modules.rst::28",
+      "score": 0.77538,
+      "text": "the *first* time the module name is encountered in an import statement. [#]_"
+    },
+    {
+      "id": "python/tutorial/modules.rst::41",
+      "score": 0.75425,
+      "text": "This does not introduce the module name from which the imports are taken in the"
+    },
+    {
+      "id": "python/tutorial/modules.rst::39",
+      "score": 0.75122,
+      "text": "module directly into the importing module's namespace.  For example::"
+    },
+    {
+      "id": "fastapi/tutorial/debugging.md::10",
+      "score": 0.73632,
+      "text": "This won't happen if you import that module (file).\n\nSo, if you have another file `importer.py` with:"
+    }
+  ],
+  "answer": "The provided context does not contain specific information about why names starting with an underscore get imported when using `from module import *`. The context explains that the module name from which imports are taken is not introduced directly into the importing module's namespace, but it does not address the behavior of names starting with an underscore. Therefore, the information needed to answer this question is not present in the provided documentation.",
+  "prompt_sha256": "630e92f6a3ac31faa3f1f7d6bd2d656d96626d3fcbfd531e50dc4c33fba3c053",
+  "timings_s": {
+    "retrieve": 8.4,
+    "generate": 18.55
+  }
+}

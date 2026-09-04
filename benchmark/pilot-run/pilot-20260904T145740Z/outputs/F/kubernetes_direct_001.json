@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "kubernetes_direct_001",
+  "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/cluster-administration/node-autoscaling.md::1",
+      "score": 0.0,
+      "text": "o provide needed\ncapacity while optimizing cost. Autoscaling is performed by Node [_autoscalers_](#autoscalers).\n\n## Node provisioning {#provisioning}\n\nIf there are Pods in a cluster that can't be scheduled on existing Nodes, new Nodes can be\nautomatically added to the cluster&mdash;_provisioned_&mdash;to accommodate the Pods. This is\nespecially useful if the number of Pods changes over time, for example as a result of\n[combining horizontal workload with Node autoscaling](#horizontal-workload-autoscaling).\n\nAutoscalers provision the Nodes by creating and deleting cloud provider resources backing them. Most\ncommonly, the resources backing the Nodes are Virtual Machines."
+    },
+    {
+      "id": "docker/get-started/docker-concepts/building-images/multi-stage-builds.md::14",
+      "score": 0.0,
+      "text": "lication\n\n1. Now that you have an image built, it's time to run the container.\n\n    ```console\n    $ docker run -p 8080:8080 spring-helloworld\n    ```\n\n    You'll then see output similar to the following in the container log:\n\n    ```plaintext\n    [INFO] --- spring-boot:3.3.4:run (default-cli) @ spring-boot-docker ---\n    [INFO] Attaching agents: []\n    \n         .   ____          _            __ _ _\n        /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n       ( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n        \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n         '  |____| .__|_| |_|_| |_\\__, | / / / /\n        =========|_|==============|___/=/_/_/_/\n    \n        :: Spring Boot ::                (v3.3.4)\n    \n    2024-09-29T23:54:07.157Z  INFO 159 --- [spring-boot-docker] [           main]\n    c.e.s.SpringBootDockerApplication        : Starting SpringBootDockerApplication using Java\n    21.0.2 with PID 159 (/app/target/classes started by root in /app)\n     \u2026.\n     ```"
+    },
+    {
+      "id": "kubernetes/concepts/workloads/compositepodgroup-api/_index.md::2",
+      "score": 0.0,
+      "text": "`. When a workload controller creates a\n`CompositePodGroup`, this policy is copied from the `Workload`'s `CompositePodGroupTemplate`\nat creation time.\n\nFor a `gang` policy on a `CompositePodGroup`, the `minGroupCount` field specifies the\nminimum number of child groups that must be schedulable simultaneously:\n\n```yaml\nspec:\n  schedulingPolicy:\n    gang:\n      minGroupCount: 2\n```\n\n### Parent group reference\n\nNon-root `CompositePodGroup` resources specify their parent group using\n`spec.parentCompositePodGroupName`. Root `CompositePodGroup` objects leave this field unset.\n\n```yaml\nspec:\n  parentCompositePodGroupName: root-group-0\n```\n\n### Workload reference\n\nThe `spec.workloadRef` field links the `CompositePodGroup` back to the\n`CompositePodGroupTemplate` in the `Workload` object it was derived from.\n\n```yaml\nspec:\n  workloadRef:\n    workloadName: hierarchical-workload\n    templateName: replica-group\n```\n\n### Status"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/ingress.md::1",
+      "score": 0.0,
+      "text": "using [Gateway](https://gateway-api.sigs.k8s.io/) instead of\n[Ingress](/docs/concepts/services-networking/ingress/).\nThe Ingress API has been frozen.\n\nThis means that:\n* The Ingress API is generally available, and is subject to the [stability guarantees](/docs/reference/using-api/deprecation-policy/#deprecating-parts-of-the-api) for generally available APIs.\n  The Kubernetes project has no plans to remove Ingress from Kubernetes.\n* The Ingress API is no longer being developed, and will have no further changes\n  or updates made to it.\n{{< /note >}}\n\n<!-- body -->\n\n\n## Terminology\n\nFor clarity, this guide defines the following terms:"
+    },
+    {
+      "id": "docker/manuals/engine/network/firewall-nftables.md::5",
+      "score": 0.0,
+      "text": "et to `DROP` by Docker with iptables, or as part of your host's\nfirewall configuration. See [FORWARD policy in iptables](#forward-policy-in-iptables).\n\n### IP forwarding\n\nIP forwarding on the Docker host enables Docker functionality including port\npublishing, communication between bridge networks, and direct routing from\noutside the host to containers in bridge networks.\n\nWhen running with iptables, depending on network and daemon configuration,\nDocker may enable IPv4 and IPv6 forwarding on the host.\n\nWith its nftables firewall backend enabled, Docker will not enable IP forwarding\nitself. It will report an error if forwarding is needed, but not already enabled.\nTo disable Docker's check for IP forwarding, letting it start and create networks\nwhen it determines that forwarding is disabled, use Daemon option `--ip-forward=false`,\nor `\"ip-forward\": false` in its configuration file."
+    }
+  ],
+  "answer": "The provided context does not contain information about the namespaces that a fresh Kubernetes cluster starts with. Therefore, the information is not present in the given documentation.",
+  "prompt_sha256": "882602e9392e753a95ca394bc8e694427a3fd4c6af925385b56e0ad749ee0346",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 22.35
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "G",
+  "config_name": "hallucination_prone",
+  "case_id": "kubernetes_multi_002",
+  "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::2",
+      "score": 0.79154,
+      "text": "orage.\n\nSecrets are similar to {{< glossary_tooltip text=\"ConfigMaps\" term_id=\"configmap\" >}}\nbut are specifically intended to hold confidential data.\n\n{{< caution >}}\nKubernetes Secrets are, by default, stored unencrypted in the API server's underlying data store\n(etcd). Anyone with API access can retrieve or modify a Secret, and so can anyone with access to etcd.\nAdditionally, anyone who is authorized to create a Pod in a namespace can use that access to read\nany Secret in that namespace; this includes indirect access such as the ability to create a\nDeployment.\n\nIn order to safely use Secrets, take at least the following steps:"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::43",
+      "score": 0.76741,
+      "text": "## Information security for Secrets\n\nAlthough ConfigMap and Secret work similarly, Kubernetes applies some additional\nprotection for Secret objects.\n\nSecrets often hold values that span a spectrum of importance, many of which can\ncause escalations within Kubernetes (e.g. service account tokens) and to\nexternal systems. Even if an individual app can reason about the power of the\nSecrets it expects to interact with, other apps within the same namespace can\nrender those assumptions invalid.\n\nAuthorization configuration affects how Secret data can be accessed within a namespace. \nFor example, granting **list** or **watch** permissions on Secrets allows a subject\nto read all Secret data in that namespace, not only the Secrets explicitly \nreferenced by its Pods. Restrict access to the minimum set of permissions \nrequired for a workload to function, and avoid granting broad roles such as \n`cluster-admin` unless required for administrative purposes."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::1",
+      "score": 0.75277,
+      "text": "ry_tooltip text=\"container image\" term_id=\"image\" >}}. Using a\nSecret means that you don't need to include confidential data in your\napplication code.\n\nBecause Secrets can be created independently of the Pods that use them, there\nis less risk of the Secret (and its data) being exposed during the workflow of\ncreating, viewing, and editing Pods. Kubernetes, and applications that run in\nyour cluster, can also take additional precautions with Secrets, such as avoiding\nwriting sensitive data to nonvolatile storage.\n\nSecrets are similar to {{< glossary_tooltip text=\"ConfigMaps\" term_id=\"configmap\" >}}\nbut are specifically intended to hold confidential data."
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::7",
+      "score": 0.74987,
+      "text": "o trick the application\nserver into doing something rather arbitrary, which may be harder than getting\nit to read a file.\n\n### Alternatives to Secrets\n\nRather than using a Secret to protect confidential data, you can pick from alternatives.\n\nHere are some of your options:\n\n- If your cloud-native component needs to authenticate to another application that you\n  know is running within the same Kubernetes cluster, you can use a\n  [ServiceAccount](/docs/reference/access-authn-authz/authentication/#service-account-tokens)\n  and its tokens to identify your client.\n- There are third-party tools that you can run, either within or outside your cluster,\n  that manage sensitive data. For example, a service that Pods access over HTTPS,\n  that reveals a Secret if the client correctly authenticates (for example, with a ServiceAccount\n  token).\n- For authentication, you can implement a custom signer for X.509 certificates, and use"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/secret.md::9",
+      "score": 0.72876,
+      "text": "ed Platform Module, configured out-of-band.\n\nYou can also combine two or more of those options, including the option to use Secret objects themselves.\n\nFor example: implement (or deploy) an {{< glossary_tooltip text=\"operator\" term_id=\"operator-pattern\" >}}\nthat fetches short-lived session tokens from an external service, and then creates Secrets based\non those short-lived session tokens. Pods running in your cluster can make use of the session tokens,\nand operator ensures they are valid. This separation means that you can run Pods that are unaware of\nthe exact mechanisms for issuing and refreshing those session tokens.\n\n## Types of Secret {#secret-types}\n\nWhen creating a Secret, you can specify its type using the `type` field of\nthe [Secret](/docs/reference/kubernetes-api/config-and-storage-resources/secret-v1/)\nresource, or certain equivalent `kubectl` command line flags (if available).\nThe Secret type is used to facilitate programmatic handling of the Secret data."
+    }
+  ],
+  "answer": "For storing an API token in your Kubernetes application, you should use a Secret rather than a ConfigMap for several important reasons:\n\n1. **Confidentiality**: API tokens often contain sensitive information that needs to be kept confidential. Storing such data in a Secret ensures it is encrypted at rest (in etcd) by default, providing an additional layer of security compared to plain text stored in a ConfigMap.\n\n2. **Access Control**: Secrets can be fine-tuned with more restrictive access controls. For example, you can limit who has `list`, `get`, or `watch` permissions on the Secret resource. This is particularly useful if different components within your namespace should not have access to all secrets.\n\n3. **Security Compliance**: Using Secrets aligns better with security best practices for handling sensitive data. Kubernetes offers robust mechanisms for managing and securing secrets, making it easier to comply with organizational or regulatory requirements related to data protection.\n\n4. **Application Decoupling**: While both ConfigMaps and Secrets can hold sensitive information like API tokens, using a Secret indicates that the data is intended to be confidential. This makes your application\u2019s code cleaner and more explicit about which pieces of data should not be exposed in plaintext.\n\nHere's an example of how you might create a Secret for storing an API token:\n\n```yaml\napiVersion: v1\nkind: Secret\nmetadata:\n  name: api-token-secret\ntype: Opaque # or another appropriate type if needed\ndata:\n  api_token: <base64EncodedValueOfYourToken>\n```\n\nTo generate the base64 encoding of your token, you can use tools like `echo -n 'your-api-token' | base64` in a terminal. Then, deploy this Secret to your cluster using:\n\n```bash\nkubectl apply -f path/to/secret.yaml\n```\n\nBy following these practices, you ensure that your API token is securely stored and managed within Kubernetes.",
+  "prompt_sha256": "bb5ceeae669f51ae4b3e9371bfc8f43834bb35f71e1b80d99bef7defae390727",
+  "timings_s": {
+    "retrieve": 0.72,
+    "generate": 99.43
+  }
+}

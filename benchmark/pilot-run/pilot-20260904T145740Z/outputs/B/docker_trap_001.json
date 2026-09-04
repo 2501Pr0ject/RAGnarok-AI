@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_trap_001",
+  "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::282",
+      "score": 0.86696,
+      "text": "- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::280",
+      "score": 0.83449,
+      "text": "## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::54",
+      "score": 0.80455,
+      "text": "volumes, anonymous volumes persist even if you remove the container that uses"
+    },
+    {
+      "id": "docker/manuals/engine/storage/_index.md::20",
+      "score": 0.80323,
+      "text": "retain data even after the containers using them are removed. Volume data is"
+    },
+    {
+      "id": "docker/manuals/engine/manage-resources/pruning.md::33",
+      "score": 0.78535,
+      "text": "host. Volumes are never removed automatically, because to do so could destroy\ndata.\n\n```console\n$ docker volume prune"
+    }
+  ],
+  "answer": "The information provided in the context does not support the claim that Docker deletes anonymous volumes automatically when their container is removed. In fact, it states that \"Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon\" which implies that anonymous volumes do not get deleted automatically and need to be managed explicitly.\n\nTo keep the data contained in an anonymous volume, you should use commands like `docker volume inspect` to identify the volume ID or name, then use `docker run -v <volume_name>:<mount_point> <image>` to mount it to another container if needed. Alternatively, you can use `docker volume prune` to remove unused volumes, but this command removes only volumes that are not in use by any containers, not all anonymous volumes.\n\nSince Docker does not automatically delete anonymous volumes when their associated containers are removed, there is no need or method to keep the data they contain as a result of automatic deletion.",
+  "prompt_sha256": "5f90e001904e21657c8623e7c882c2dda03856be1e0d824a3cbb76ef9ff6bc36",
+  "timings_s": {
+    "retrieve": 9.09,
+    "generate": 43.43
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "A",
+  "config_name": "baseline",
+  "case_id": "docker_trap_001",
+  "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::37",
+      "score": 0.86588,
+      "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::7",
+      "score": 0.82497,
+      "text": "-existing files into an empty\nvolume, use the `volume-nocopy` option, see [Options for --mount](#options-for---mount).\n\n## Named and anonymous volumes\n\nA volume may be named or anonymous. Anonymous volumes are given a random name\nthat's guaranteed to be unique within a given Docker host. Just like named\nvolumes, anonymous volumes persist even if you remove the container that uses\nthem, except if you use the `--rm` flag when creating the container, in which\ncase the anonymous volume associated with the container is destroyed. See\n[Remove anonymous volumes](volumes.md#remove-anonymous-volumes).\n\nIf you create multiple containers consecutively that each use anonymous\nvolumes, each container creates its own volume. Anonymous volumes aren't reused\nor shared between containers automatically. To share an anonymous volume\nbetween two or more containers, you must mount the anonymous volume using the\nrandom volume ID.\n\n## Syntax"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::38",
+      "score": 0.81862,
+      "text": "`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```\n\n> [!NOTE]\n>\n> If another container binds the volumes with\n> `--volumes-from`, the volume definitions are _copied_ and the\n> anonymous volume also stays after the first container is removed.\n\n### Remove all volumes\n\nTo remove all unused volumes and free up space:\n\n```console\n$ docker volume prune\n```\n\n## Next steps\n\n- Learn about [bind mounts](bind-mounts.md).\n- Learn about [tmpfs mounts](tmpfs.md).\n- Learn about [image mounts](image-mounts.md).\n- Learn about [storage drivers](/engine/storage/drivers/).\n- Learn about [third-party volume driver plugins](/engine/extend/legacy_plugins/)."
+    },
+    {
+      "id": "docker/manuals/engine/manage-resources/pruning.md::4",
+      "score": 0.81467,
+      "text": "and take up space on the Docker\nhost. Volumes are never removed automatically, because to do so could destroy\ndata.\n\n```console\n$ docker volume prune\n\nWARNING! This will remove anonymous local volumes not used by at least one container.\nAre you sure you want to continue? [y/N] y\n```\n\nBy default, you are prompted to continue. To bypass the prompt, use the `-f` or\n`--force` flag.\n\nBy default, only **anonymous** unused volumes are removed. Named volumes that\naren't attached to a container are left alone unless you pass `--all` / `-a`.\nYou can also limit the scope with the `--filter` flag. For instance, the\nfollowing command only removes volumes which aren't labelled with the `keep`\nlabel:\n\n```console\n$ docker volume prune --filter \"label!=keep\"\n```\n\nOther filtering expressions are available. See the\n[`docker volume prune` reference](/reference/cli/docker/volume/prune/)\nfor more examples.\n\n## Prune networks"
+    },
+    {
+      "id": "docker/get-started/docker-concepts/running-containers/persisting-container-data.md::8",
+      "score": 0.78674,
+      "text": "revious container, do so with the following command (the `-f` will stop the container first and then remove it):\n\n```console\n$ docker rm -f new-db\n```\n\nThere are a few methods to remove volumes, including the following:\n\n- Select the **Delete Volume** option on a volume in the Docker Desktop Dashboard.\n- Use the `docker volume rm` command:\n\n    ```console\n    $ docker volume rm postgres_data\n    ```\n- Use the `docker volume prune` command to remove all unused volumes:\n\n    ```console\n    $ docker volume prune\n    ```\n\n\n## Additional resources\n\nThe following resources will help you learn more about volumes:\n\n- [Manage data in Docker](/engine/storage)\n- [Volumes](/engine/storage/volumes)\n- [Volume mounts](/engine/containers/run/#volume-mounts)\n\n\n## Next steps\n\nNow that you have learned about persisting container data, it\u2019s time to learn about sharing local files with containers.\n\n{{< button text=\"Sharing local files with containers\" url=\"sharing-local-files\" >}}"
+    }
+  ],
+  "answer": "To keep the data contained in anonymous volumes after their associated container is removed, you need to mount these anonymous volumes as named volumes or bind mounts. This way, the data will persist even if the original container is deleted without the `--rm` flag.\n\nHere\u2019s how you can do it:\n\n1. **Mount as a Named Volume:**\n   You can explicitly name the volume when creating the container and then use that named volume in subsequent containers where you need to share the data.\n\n    ```console\n    $ docker run -v my_named_volume:/path/to/mount busybox top\n    ```\n\n2. **Use `docker volume create`:**\n   Create a named volume first, and then mount it in your container.\n\n    ```console\n    $ docker volume create my_named_volume\n    $ docker run -v my_named_volume:/path/to/mount busybox top\n    ```\n\nBy using named volumes instead of anonymous ones, you ensure that the data persists beyond the lifecycle of a single container.",
+  "prompt_sha256": "4a6ed23e306aa7ed3d34a1a4e1b98c3f3fa3ff268c5504e26d9b467399b4ce32",
+  "timings_s": {
+    "retrieve": 0.8,
+    "generate": 84.43
+  }
+}

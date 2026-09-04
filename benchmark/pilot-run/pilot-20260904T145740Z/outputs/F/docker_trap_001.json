@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "docker_trap_001",
+  "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/resource-management/dynamic-resource-allocation/dra-api.md::17",
+      "score": 0.0,
+      "text": "oup and its ResourceClaimTemplate exist. The\nResourceClaim is deleted after the PodGroup has been deleted and the\nResourceClaim is no longer reserved.\n\nConsider the following example:\n\n```yaml\napiVersion: scheduling.k8s.io/v1beta1\nkind: PodGroup\nmetadata:\n  name: training-group\n  namespace: some-ns\nspec:\n  ...\n  resourceClaims:\n  - name: pg-claim\n    resourceClaimName: my-pg-claim\n  - name: pg-claim-template\n    resourceClaimTemplateName: my-pg-template\n---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: training-group-pod-1\n  namespace: some-ns\nspec:\n  ...\n  schedulingGroup:\n    podGroupName: training-group\n  resourceClaims:\n  - name: pod-claim\n    resourceClaimName: my-pod-claim\n  - name: pod-claim-template\n    resourceClaimTemplateName: my-pod-template\n  - name: pg-claim\n    resourceClaimName: my-pg-claim\n  - name: pg-claim-template\n    resourceClaimTemplateName: my-pg-template\n```"
+    },
+    {
+      "id": "python/howto/enum.rst::59",
+      "score": 0.0,
+      "text": "an be used instead.\n\n\nPlanet\n^^^^^^\n\nIf :meth:`__new__` or :meth:`__init__` is defined, the value of the enum member\nwill be passed to those methods::\n\n    >>> class Planet(Enum):\n    ...     MERCURY = (3.303e+23, 2.4397e6)\n    ...     VENUS   = (4.869e+24, 6.0518e6)\n    ...     EARTH   = (5.976e+24, 6.37814e6)\n    ...     MARS    = (6.421e+23, 3.3972e6)\n    ...     JUPITER = (1.9e+27,   7.1492e7)\n    ...     SATURN  = (5.688e+26, 6.0268e7)\n    ...     URANUS  = (8.686e+25, 2.5559e7)\n    ...     NEPTUNE = (1.024e+26, 2.4746e7)\n    ...     def __init__(self, mass, radius):\n    ...         self.mass = mass       # in kilograms\n    ...         self.radius = radius   # in meters\n    ...     @property\n    ...     def surface_gravity(self):\n    ...         # universal gravitational constant  (m3 kg-1 s-2)\n    ...         G = 6.67300E-11\n    ...         return G * self.mass / (self.radius * self.radius)\n    ...\n    >>> Planet.EARTH.value\n    (5.976e+24, 6378140.0)"
+    },
+    {
+      "id": "fastapi/tutorial/path-params.md::5",
+      "score": 0.0,
+      "text": "chapters of the tutorial.\n\n## Order matters { #order-matters }\n\nWhen creating *path operations*, you can find situations where you have a fixed path.\n\nLike `/users/me`, let's say that it's to get data about the current user.\n\nAnd then you can also have a path `/users/{user_id}` to get data about a specific user by some user ID.\n\nBecause *path operations* are evaluated in order, you need to make sure that the path for `/users/me` is declared before the one for `/users/{user_id}`:\n\n{* ../../docs_src/path_params/tutorial003_py310.py hl[6,11] *}\n\nOtherwise, the path for `/users/{user_id}` would match also for `/users/me`, \"thinking\" that it's receiving a parameter `user_id` with a value of `\"me\"`.\n\nSimilarly, you cannot redefine a path operation:\n\n{* ../../docs_src/path_params/tutorial003b_py310.py hl[6,11] *}\n\nThe first one will always be used since the path matches first.\n\n## Predefined values { #predefined-values }"
+    },
+    {
+      "id": "python/howto/descriptor.rst::63",
+      "score": 0.0,
+      "text": "ned decorators.  For example, a classmethod and property could be\nchained together.  In Python 3.11, this functionality was deprecated.\n\n.. testcode::\n\n    class G:\n        @classmethod\n        @property\n        def __doc__(cls):\n            return f'A doc for {cls.__name__!r}'\n\n.. doctest::\n\n    >>> G.__doc__\n    \"A doc for 'G'\"\n\nThe :func:`functools.update_wrapper` call in ``ClassMethod`` adds a\n``__wrapped__`` attribute that refers to the underlying function.  Also\nit carries forward the attributes necessary to make the wrapper look\nlike the wrapped function: :attr:`~function.__name__`,\n:attr:`~function.__qualname__`, :attr:`~function.__doc__`,\nand :attr:`~function.__annotations__`.\n\n\nMember objects and __slots__\n----------------------------\n\nWhen a class defines ``__slots__``, it replaces instance dictionaries with a\nfixed-length array of slot values.  From a user point of view that has\nseveral effects:"
+    },
+    {
+      "id": "python/tutorial/stdlib.rst::11",
+      "score": 0.0,
+      "text": "eloping high quality software is to write tests for each\nfunction as it is developed and to run those tests frequently during the\ndevelopment process.\n\nThe :mod:`doctest` module provides a tool for scanning a module and validating\ntests embedded in a program's docstrings.  Test construction is as simple as\ncutting-and-pasting a typical call along with its results into the docstring.\nThis improves the documentation by providing the user with an example and it\nallows the doctest module to make sure the code remains true to the\ndocumentation::\n\n   def average(values):\n       \"\"\"Computes the arithmetic mean of a list of numbers.\n\n       >>> print(average([20, 30, 70]))\n       40.0\n       \"\"\"\n       return sum(values) / len(values)\n\n   import doctest\n   doctest.testmod()   # automatically validate the embedded tests\n\nThe :mod:`unittest` module is not as effortless as the :mod:`doctest` module,\nbut it allows a more comprehensive set of tests to be maintained in a separate\nfile::"
+    }
+  ],
+  "answer": "The information provided in the context does not contain details about Docker or its volume management. Therefore, based on the given documentation, I cannot provide an answer to the question regarding Docker and anonymous volumes.",
+  "prompt_sha256": "ec9778ef928d6c13b36c1c3b032a2afcaf47627c75e0b3d15bb79d6f15ec0a76",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 30.54
+  }
+}

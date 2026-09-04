@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "kubernetes_contra_001",
+  "question": "Is the Kubernetes Endpoints API deprecated?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/services-networking/service.md::19",
+      "score": 0.81128,
+      "text": "ices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}\n\nThe EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:\n\n  - It does not support dual-stack clusters.\n  - It does not contain information needed to support newer features, such as\n    [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution).\n  - It will truncate the list of endpoints if it is too long to fit in a single object.\n\nBecause of this, it is recommended that all clients use the\nEndpointSlice API rather than Endpoints.\n\n#### Over-capacity endpoints"
+    },
+    {
+      "id": "kubernetes/concepts/services-networking/service@release-1.28.md::19",
+      "score": 0.79756,
+      "text": "(the resource kind is plural) defines a list of network endpoints, typically\nreferenced by a Service to define which Pods the traffic can be sent to.\n\nThe EndpointSlice API is the recommended replacement for Endpoints.\n\n#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints\nobject. When there are over 1000 backing endpoints for a Service, Kubernetes\ntruncates the data in the Endpoints object. Because a Service can be linked\nwith more than one EndpointSlice, the 1000 backing endpoint limit only\naffects the legacy Endpoints API."
+    },
+    {
+      "id": "kubernetes/concepts/overview/kubernetes-api.md::18",
+      "score": 0.78382,
+      "text": "he `v1beta1` version is deprecated and removed.\nAt that point you can continue accessing and modifying the object using the `v1` API.\n\n### API changes\n\nAny system that is successful needs to grow and change as new use cases emerge or existing ones change.\nTherefore, Kubernetes has designed the Kubernetes API to continuously change and grow.\nThe Kubernetes project aims to _not_ break compatibility with existing clients, and to maintain that\ncompatibility for a length of time so that other projects have an opportunity to adapt.\n\nIn general, new API resources and new resource fields can be added often and frequently.\nElimination of resources or fields requires following the\n[API deprecation policy](/docs/reference/using-api/deprecation-policy/)."
+    },
+    {
+      "id": "docker/manuals/engine/swarm/secrets.md::46",
+      "score": 0.0,
+      "text": ".  Do not clean up any services or secrets if you intend to proceed to the next\n    example, which demonstrates how to rotate the MySQL root password.\n\n### Example: Rotate a secret\n\nThis example builds upon the previous one. In this scenario, you create a new\nsecret with a new MySQL password, update the `mysql` and `wordpress` services to\nuse it, then remove the old secret.\n\n> [!NOTE]\n>\n> Changing the password on a MySQL database involves running extra\n> queries or commands, as opposed to just changing a single environment variable\n> or a file, since the image only sets the MySQL password if the database doesn\u2019t\n> already exist, and MySQL stores the password within a MySQL database by default.\n> Rotating passwords or other secrets may involve additional steps outside of\n> Docker.\n\n1.  Create the new password and store it as a secret named `mysql_password_v2`.\n\n    ```console\n    $ openssl rand -base64 20 | docker secret create mysql_password_v2 -\n    ```"
+    },
+    {
+      "id": "python/howto/argparse.rst::18",
+      "score": 0.0,
+      "text": "prog.py: error: argument -v/--verbosity: invalid choice: 3 (choose from 0, 1, 2)\n   $ python prog.py 4 -h\n   usage: prog.py [-h] [-v {0,1,2}] square\n\n   positional arguments:\n     square                display a square of a given number\n\n   options:\n     -h, --help            show this help message and exit\n     -v {0,1,2}, --verbosity {0,1,2}\n                           increase output verbosity\n\nNote that the change also reflects both in the error message as well as the\nhelp string.\n\nNow, let's use a different approach of playing with verbosity, which is pretty\ncommon. It also matches the way the CPython executable handles its own\nverbosity argument (check the output of ``python --help``)::"
+    }
+  ],
+  "answer": "Yes, the Kubernetes Endpoints API is deprecated. The context states that the EndpointSlice API is recommended as a replacement and that the deprecated Endpoints API has several problems relative to EndpointSlice.",
+  "prompt_sha256": "8f46b6f47d7e4779c79fb33d968452c76e41373b6a83695ca3dd32fde04d1028",
+  "timings_s": {
+    "retrieve": 0.84,
+    "generate": 23.41
+  }
+}

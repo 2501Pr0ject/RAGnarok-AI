@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "F",
+  "config_name": "broken_retrieval",
+  "case_id": "fastapi_context_001",
+  "question": "In FastAPI, what makes a query parameter required rather than optional?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/swarm/services.md::9",
+      "score": 0.0,
+      "text": "a\"\n$ contents=\"{...}\"\n$ echo $contents > contents.json\n```\n\nMake sure that the nodes to which you are deploying are correctly configured for the gMSA.\n\n To use a config as a credential spec, create a Docker config in a credential spec file named `credpspec.json`. \n You can specify any name for the name of the `config`. \n\n```console\n$ docker config create --label com.docker.gmsa.name=mygmsa credspec credspec.json\n```\n\nNow you can create a service using this credential spec. Specify the `--credential-spec` flag with the config name:\n\n```console\n$ docker service create --credential-spec=\"config://credspec\" <your image>\n```\n\n Your service uses the gMSA credential spec when it starts, but unlike a typical Docker config (used by passing the --config flag), the credential spec is not mounted into the container.\n\n## Update a service"
+    },
+    {
+      "id": "python/howto/functional.rst::35",
+      "score": 0.0,
+      "text": "need to run cleanup code when a :exc:`GeneratorExit` occurs, I suggest\n  using a ``try: ... finally:`` suite instead of catching :exc:`GeneratorExit`.\n\nThe cumulative effect of these changes is to turn generators from one-way\nproducers of information into both producers and consumers.\n\nGenerators also become **coroutines**, a more generalized form of subroutines.\nSubroutines are entered at one point and exited at another point (the top of the\nfunction, and a ``return`` statement), but coroutines can be entered, exited,\nand resumed at many different points (the ``yield`` statements).\n\n\nBuilt-in functions\n==================\n\nLet's look in more detail at built-in functions often used with iterators.\n\nTwo of Python's built-in functions, :func:`map` and :func:`filter` duplicate the\nfeatures of generator expressions:\n\n:func:`map(f, iterA, iterB, ...) <map>` returns an iterator over the sequence\n ``f(iterA[0], iterB[0]), f(iterA[1], iterB[1]), f(iterA[2], iterB[2]), ...``."
+    },
+    {
+      "id": "docker/manuals/engine/daemon/proxy.md::4",
+      "score": 0.0,
+      "text": "er.service.d\n   ```\n\n2. Create a file named `/etc/systemd/system/docker.service.d/http-proxy.conf`\n   that adds the `HTTP_PROXY` environment variable:\n\n   ```systemd\n   [Service]\n   Environment=\"HTTP_PROXY=http://proxy.example.com:3128\"\n   ```\n\n   To proxy HTTPS requests, set the `HTTPS_PROXY` environment\n   variable:\n\n   ```systemd\n   [Service]\n   Environment=\"HTTPS_PROXY=http://proxy.example.com:3128\"\n   ```\n\n   Multiple environment variables can be set; to set both an HTTP and an\n   HTTPS proxy;\n\n   ```systemd\n   [Service]\n   Environment=\"HTTP_PROXY=http://proxy.example.com:3128\"\n   Environment=\"HTTPS_PROXY=http://proxy.example.com:3128\"\n   ```\n\n   > [!NOTE]\n   >\n   > Special characters in the proxy value, such as `#?!()[]{}`, must be double\n   > escaped using `%%`. For example:\n   >\n   > ```systemd\n   > [Service]\n   > Environment=\"HTTP_PROXY=http://domain%%5Cuser:complex%%23pass@proxy.example.com:3128/\"\n   > ```"
+    },
+    {
+      "id": "kubernetes/concepts/cluster-administration/flow-control.md::1",
+      "score": 0.0,
+      "text": "otentially crashing the API server, but these flags are not enough to ensure\nthat the most important requests get through in a period of high traffic.\n\nThe API Priority and Fairness feature (APF) is an alternative that improves upon\naforementioned max-inflight limitations. APF classifies\nand isolates requests in a more fine-grained way. It also introduces\na limited amount of queuing, so that no requests are rejected in cases\nof very brief bursts. Requests are dispatched from queues using a\nfair queuing technique so that, for example, a poorly-behaved\n{{< glossary_tooltip text=\"controller\" term_id=\"controller\" >}} need not\nstarve others (even at the same priority level).\n\nThis feature is designed to work well with standard controllers, which\nuse informers and react to failures of API requests with exponential\nback-off, and other clients that also work this way."
+    },
+    {
+      "id": "kubernetes/concepts/resource-management/dynamic-resource-allocation/dra-observability.md::20",
+      "score": 0.0,
+      "text": "nd-line-tools-reference/feature-gates/#DRAPartitionableDevices)\nfeature gates to be enabled.\n\n### Shareable summary {#resource-pool-shareable-summary}\n\nFor pools that contain [shareable devices](/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#consumable-capacity)\n(devices that set `allowMultipleAllocations` and can be consumed by multiple\nclaims), `shareableSummary` reports aggregate capacity usage across the pool:\n\n- `fullyAvailableDevices`: shareable devices with no capacity consumed.\n- `partiallyAvailableDevices`: shareable devices with some, but not all, capacity\n  consumed.\n- `capacity`: per capacity name, the aggregate `total`, `consumed`, and\n  `available` (`total` minus `consumed`, never negative) amounts across the pool."
+    }
+  ],
+  "answer": "The information provided in the given context does not contain any details about FastAPI or making query parameters required. Therefore, I cannot answer the question using only the provided context.",
+  "prompt_sha256": "aad6d97ba682574e2e5904141dfa255d5e4610b41758de9642f40b173b287941",
+  "timings_s": {
+    "retrieve": 0.0,
+    "generate": 24.96
+  }
+}

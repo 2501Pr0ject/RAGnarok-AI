@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "docker_multi_001",
+  "question": "What is the difference between Docker volumes and bind mounts, and why are volumes the recommended option for persisting container data?",
+  "retrieved": [
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::16",
+      "score": 0.88867,
+      "text": "Docker. Volumes are a good choice for the following use cases:\n\n- Volumes are easier to back up or migrate than bind mounts."
+    },
+    {
+      "id": "docker/get-started/docker-concepts/running-containers/sharing-local-files.md::12",
+      "score": 0.85057,
+      "text": "es and bind mounts.\n\n### Volume versus bind mounts\n\nIf you want to ensure that data generated or modified inside the container p"
+    },
+    {
+      "id": "docker/manuals/engine/storage/_index.md::48",
+      "score": 0.84084,
+      "text": "## Next steps\n\nLearn more about container data persistence:\n\n- [Volumes](./volumes.md)\n- [Bind mounts](./bind-mounts.md)"
+    },
+    {
+      "id": "docker/manuals/engine/storage/_index.md::19",
+      "score": 0.83915,
+      "text": "### Volume mounts\n\nVolumes are persistent storage mechanisms managed by the Docker daemon. They"
+    },
+    {
+      "id": "docker/manuals/engine/storage/volumes.md::21",
+      "score": 0.83519,
+      "text": "the volume is completely managed by Docker. Use [bind mounts](bind-mounts.md)"
+    }
+  ],
+  "answer": "Volumes are persistent storage mechanisms managed by the Docker daemon, whereas bind mounts use a host's file or directory. Volumes are easier to back up or migrate than bind mounts, making them the recommended option for persisting container data.",
+  "prompt_sha256": "a6b460dd5d9ae2534b407eed20c3b1ce7ff006f026d39f4d24d61cf050b57f06",
+  "timings_s": {
+    "retrieve": 9.21,
+    "generate": 11.43
+  }
+}

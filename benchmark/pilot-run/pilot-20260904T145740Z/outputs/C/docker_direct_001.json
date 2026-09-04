@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "docker_direct_001",
+  "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::0",
+      "score": 0.78774,
+      "text": "---\ntitle: Compose Build Specification\ndescription: Learn about the Compose Build Specification\nkeywords: compose, compose specification, compose file reference, compose build specification\naliases: \n - /compose/compose-file/build/\n---\n\n{{< include \"compose/build.md\" >}}\n\nIn the former case, the whole path is used as a Docker context to execute a Docker build, looking for a canonical\n`Dockerfile` at the root of the directory. The path can be absolute or relative. If it is relative, it is resolved\nfrom the directory containing your Compose file. If it is absolute, the path prevents the Compose file from being portable so Compose displays a warning. \n\nIn the latter case, build arguments can be specified, including an alternate `Dockerfile` location. The path can be absolute or relative. If it is relative, it is resolved\nfrom the directory containing your Compose file. If it is absolute, the path prevents the Compose file from being portable so Compose displays a warning."
+    },
+    {
+      "id": "docker/reference/compose-file/build.md::0",
+      "score": 0.77339,
+      "text": "---\ntitle: Compose Build Specification\ndescription: Learn about the Compose Build Specification\nkeywords: compose, compose specification, compose file reference, compose build specification\naliases:\n  - /compose/compose-file/build/\nweight: 130\n---\n\n{{% include \"compose/build.md\" %}}\n\nWhen `build` is specified as a string, the whole path is used as a\nDocker context to execute a Docker build, looking for a canonical\n`Dockerfile` at the root of the directory.\n\nWhen `build` is specified as a detailed structure, build arguments can\nbe specified, including an alternate `Dockerfile` location.\n\nIn both cases, the path can be absolute or relative. If it is relative,\nit is resolved from the directory containing your Compose file. If it is\nabsolute, the path prevents the Compose file from being portable so\nCompose displays a warning.\n\n## Using `build` and `image`"
+    },
+    {
+      "id": "docker/reference/compose-file/build.md::3",
+      "score": 0.75802,
+      "text": "this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file.\n- A Docker image is built using the `custom` directory with the user's `$HOME` as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n\n- A relative path to the Compose file's folder. This path must be a directory and must contain a `Dockerfile`"
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::1",
+      "score": 0.74104,
+      "text": "of service names,\nand whose values are service definitions. A service definition contains the configuration that is applied to each\nservice container.\n\nEach service may also include a `build` section, which defines how to create the Docker image for the service.\nCompose supports building Docker images using this service definition. If not used, the `build` section is ignored and the Compose file is still considered valid. Build support is an optional aspect of the Compose Specification, and is\ndescribed in detail in the [Compose Build Specification](build.md) documentation."
+    },
+    {
+      "id": "docker/reference/compose-file/build.md::2",
+      "score": 0.73073,
+      "text": "ative example\n\nThe following example illustrates Compose Build Specification concepts with a concrete sample application. The sample is non-normative.\n\n```yaml\nservices:\n  frontend:\n    image: example/webapp\n    build: ./webapp\n\n  backend:\n    image: example/database\n    build:\n      context: backend\n      dockerfile: ../backend.Dockerfile\n\n  custom:\n    build: ~/custom\n```\n\nWhen used to build service images from source, the Compose file creates three Docker images:\n\n- `example/webapp`: A Docker image is built using `webapp` sub-directory, within the Compose file's folder, as the Docker build context. Lack of a `Dockerfile` within this folder returns an error.\n- `example/database`: A Docker image is built using `backend` sub-directory within the Compose file's folder. `backend.Dockerfile` file is used to define build steps, this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file."
+    }
+  ],
+  "answer": "The information provided does not specify what happens if no build context is set explicitly. Therefore, based on the given context, the information about the build context when not set explicitly is not present in the provided documentation.",
+  "prompt_sha256": "f4d1a1af8b7276f3cb1c8bd3449a6e5148e1eb7fe45e38abe92f7ce3d46e204a",
+  "timings_s": {
+    "retrieve": 0.27,
+    "generate": 23.73
+  }
+}

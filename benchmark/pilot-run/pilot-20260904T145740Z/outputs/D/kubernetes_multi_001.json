@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "kubernetes_multi_001",
+  "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+  "retrieved": [
+    {
+      "id": "kubernetes/concepts/workloads/controllers/_index.md::2",
+      "score": 0.75971,
+      "text": "if needed.\n(Deployments are a replacement for the legacy\n{{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}} API).\n\nA [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\nmanage one or more Pods \u2013 all running the same application code \u2013 where the Pods rely\non having a distinct identity. This is different from a Deployment where the Pods are\nexpected to be interchangeable.\nThe most common use for a StatefulSet is to be able to make a link between its Pods and\ntheir persistent storage. For example, you can run a StatefulSet that associates each Pod\nwith a [PersistentVolume](/docs/concepts/storage/persistent-volumes/). If one of the Pods\nin the StatefulSet fails, Kubernetes makes a replacement Pod that is connected to the\nsame PersistentVolume."
+    }
+  ],
+  "answer": "You should use a StatefulSet instead of a Deployment in Kubernetes when your application requires each Pod to have a distinct identity and persistent storage. This is because StatefulSets are designed to manage Pods that rely on having a unique identifier, whereas Deployments treat all Pods as interchangeable.",
+  "prompt_sha256": "1010d78cb35949c17e7939d477b806e81422e784ec408e69c8a57190f2099279",
+  "timings_s": {
+    "retrieve": 0.69,
+    "generate": 15.19
+  }
+}

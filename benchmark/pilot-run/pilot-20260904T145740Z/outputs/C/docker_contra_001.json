@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "C",
+  "config_name": "weak_embedding",
+  "case_id": "docker_contra_001",
+  "question": "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?",
+  "retrieved": [
+    {
+      "id": "docker/reference/compose-file/services.md::11",
+      "score": 0.67821,
+      "text": "the value is `[]` (empty list) or `''` (empty string), the default command declared by the image is ignored, or in other words overridden to be empty.\n\n> [!NOTE]\n>\n> Unlike the `CMD` instruction in a Dockerfile, the `command` field doesn't automatically run within the context of the [`SHELL`](/reference/dockerfile.md#shell-form) instruction defined in the image. If your `command` relies on shell-specific features, such as environment variable expansion, you need to explicitly run it within a shell. For example:\n>\n> ```yaml\n> command: /bin/sh -c 'echo \"hello $$HOSTNAME\"'\n> ```\n\nThe value can also be a list, similar to the [exec-form syntax](/reference/dockerfile.md#exec-form)\nused by the [Dockerfile](/reference/dockerfile.md#exec-form).\n\n### `configs`\n\n`configs` let services adapt their behaviour without the need to rebuild a Docker image.\nServices can only access configs when explicitly granted by the `configs` attribute. Two different syntax variants are supported."
+    },
+    {
+      "id": "docker/reference/compose-file/services.md::44",
+      "score": 0.6771,
+      "text": "s durations](extension.md#specifying-durations). Introduced in Docker Compose version [2.20.2](https://github.com/docker/compose/releases/tag/v2.20.2)\n\n`test` defines the command Compose runs to check container health. It can be\neither a string or a list. If it's a list, the first item must be either `NONE`, `CMD` or `CMD-SHELL`.\nIf it's a string, it's equivalent to specifying `CMD-SHELL` followed by that string.\n\n```yml\n# Hit the local web app\ntest: [\"CMD\", \"curl\", \"-f\", \"http://localhost\"]\n```\n\nUsing `CMD-SHELL` runs the command configured as a string using the container's default shell\n(`/bin/sh` for Linux). Both of the following forms are equivalent:\n\n```yml\ntest: [\"CMD-SHELL\", \"curl -f http://localhost || exit 1\"]\n```\n\n```yml\ntest: curl -f https://localhost || exit 1\n```"
+    },
+    {
+      "id": "docker/reference/compose-file/develop.md::3",
+      "score": 0.64263,
+      "text": "ding to the `target` attribute, and then executes a command inside the container. Available with Docker Compose version 2.32.0 and later.\n\n#### `exec`\n\n{{< summary-bar feature_name=\"Compose exec\" >}}\n\n`exec` is only relevant when `action` is set to `sync+exec`. Like [service hooks](services.md#post_start), `exec` is used to define the command to be run inside the container once it has started.\n\n- `command`: Specifies the command to run once the container starts. This attribute is required, and you can choose to use either the shell form or the exec form.\n- `user`: The user to run the command. If not set, the command is run with the same user as the main service command.\n- `privileged`: Lets the command run with privileged access.\n- `working_dir`: The working directory in which to run the command. If not set, it is run in the same working directory as the main service command."
+    },
+    {
+      "id": "docker/reference/compose-file/_index.md::2",
+      "score": 0.59948,
+      "text": "features and use cases of Docker Compose](/manuals/compose/intro/features-uses.md) or [try the quickstart guide](/manuals/compose/gettingstarted.md).\n\nThe Compose Specification is the latest and recommended version of the Compose file format. It helps you define a [Compose file](/manuals/compose/intro/compose-application-model.md) which is used to configure your Docker application\u2019s services, networks, volumes, and more.\n\nLegacy versions 2.x and 3.x of the Compose file format were merged into the Compose Specification. It is implemented in versions 1.27.0 and above (also known as Compose v2) of the Docker Compose CLI.\n\nThe Compose Specification on Docker Docs is the Docker Compose implementation. If you wish to implement your own version of the Compose Specification, see the [Compose Specification repository](https://github.com/compose-spec/compose-spec).\n\nUse the following links to navigate key sections of the Compose Specification."
+    },
+    {
+      "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::7",
+      "score": 0.59267,
+      "text": "directory and Git repository URLs, like [context](#context) does. Other context flavours\nmust be prefixed to avoid ambiguity with a `type://` prefix.\n\nCompose warns you if the image builder does not support additional contexts and may list\nthe unused contexts.\n\nIllustrative examples of how this is used in Buildx can be found\n[here](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-additional-build-contexts---build-context).\n\n### args\n\n`args` define build arguments, i.e. Dockerfile `ARG` values.\n\nUsing the following Dockerfile as an example:\n\n```Dockerfile\nARG GIT_COMMIT\nRUN echo \"Based on commit: $GIT_COMMIT\"\n```\n\n`args` can be set in the Compose file under the `build` key to define `GIT_COMMIT`. `args` can be set as a mapping or a list:\n\n```yml\nbuild:\n  context: .\n  args:\n    GIT_COMMIT: cdc3b19\n```\n\n```yml\nbuild:\n  context: .\n  args:\n    - GIT_COMMIT=cdc3b19\n```"
+    }
+  ],
+  "answer": "No, the `command` field in Docker Compose does not automatically run within the context of the `SHELL` instruction defined in the image. Therefore, it does not support shell features like environment variable expansion by default, unlike the `CMD` instruction in a Dockerfile when used with a shell form. To use shell-specific features, you need to explicitly run it within a shell as shown in the example provided in the context.",
+  "prompt_sha256": "0901e03222267b4f725281a1dfbbf5bf7ce7fe890a5e0dc22306fc860b39f1ef",
+  "timings_s": {
+    "retrieve": 0.4,
+    "generate": 37.91
+  }
+}

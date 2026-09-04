@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "fastapi_trap_001",
+  "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::30",
+      "score": 0.82846,
+      "text": "But when you want to make a query parameter required, you can just not declare any default value:"
+    },
+    {
+      "id": "fastapi/tutorial/path-params-numeric-validations.md::19",
+      "score": 0.813,
+      "text": "It doesn't matter for **FastAPI**. It will detect the parameters by their names, types and default declarations (`Query`, `Pat"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::56",
+      "score": 0.8003,
+      "text": "not what tells FastAPI that this parameter is not required.\n\nThen, we can pass more parameters to `Query`. In this case, the `ma"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::38",
+      "score": 0.78709,
+      "text": "## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</a"
+    },
+    {
+      "id": "fastapi/tutorial/query-params-str-validations.md::80",
+      "score": 0.78585,
+      "text": "So, when you need to declare a value as required while using `Query`, you can simply not declare a default value:"
+    }
+  ],
+  "answer": "The information provided in the context does not directly address why a query parameter stays required even after giving it a default value. According to the given text, FastAPI detects parameters based on their names, types, and default declarations. However, it specifically states that you can make a query parameter required by not declaring any default value. Therefore, the answer cannot be derived from the provided context alone.\n\nTo directly address the question: The context does not explicitly explain why a query parameter remains required even when given a default value. It suggests that default values are used to indicate parameters are optional, but it does not provide details on how or why this works for required parameters.",
+  "prompt_sha256": "dea8d5516bd9000edd72018cca11fa247b6f8612a0e0b7f833b903e073f13b8e",
+  "timings_s": {
+    "retrieve": 10.05,
+    "generate": 30.28
+  }
+}

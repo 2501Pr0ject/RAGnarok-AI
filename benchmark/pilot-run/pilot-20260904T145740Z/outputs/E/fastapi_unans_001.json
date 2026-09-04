@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "E",
+  "config_name": "noisy_context",
+  "case_id": "fastapi_unans_001",
+  "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/index.md::0",
+      "score": 0.612,
+      "text": "# Tutorial - User Guide { #tutorial-user-guide }\n\nThis tutorial shows you how to use **FastAPI** with most of its features, step by step.\n\nEach section gradually builds on the previous ones, but it's structured to separate topics, so that you can go directly to any specific one to solve your specific API needs.\n\nIt is also built to work as a future reference so you can come back and see exactly what you need.\n\n## Run the code { #run-the-code }\n\nAll the code blocks can be copied and used directly (they are actually tested Python files).\n\nTo run any of the examples, copy the code to a file `main.py`, and start `fastapi dev` with `uv run`:\n\n<div class=\"termy\">\n\n```console\n$ <font color=\"#4E9A06\">uv run fastapi</font> dev\n\n  <span style=\"background-color:#009485\"><font color=\"#D3D7CF\"> FastAPI </font></span>  Starting development server \ud83d\ude80"
+    },
+    {
+      "id": "fastapi/tutorial/index.md::7",
+      "score": 0.60919,
+      "text": "deploy to [FastAPI Cloud](https://fastapicloud.com).\n\nIf you don't want to have those optional dependencies, you can instead install `uv add fastapi`.\n\nIf you want to install the standard dependencies but without the `fastapi-cloud-cli`, you can install with `uv add \"fastapi[standard-no-fastapi-cloud-cli]\"`.\n\n///\n\n/// details | Using `pip` instead\n\nIf you prefer to manage a virtual environment and packages manually, create and activate a virtual environment and then install FastAPI with `pip install \"fastapi[standard]\"`.\n\nRead the [Virtual Environments guide](https://tiangolo.com/guides/virtual-environments/) for the detailed steps.\n\n///\n\n## AI Agent Skills { #ai-agent-skills }\n\nFastAPI includes an official skill for AI coding agents. It is bundled with the package, so its guidance stays aligned with the version of FastAPI installed in your project and updates when you update FastAPI."
+    },
+    {
+      "id": "fastapi/tutorial/sql-databases.md::9",
+      "score": 0.60463,
+      "text": "console\n$ uv run fastapi dev\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\n```\n\n</div>\n\nThen go to the `/docs` UI, you will see that **FastAPI** is using these **models** to **document** the API, and it will use them to **serialize** and **validate** the data too.\n\n<div class=\"screenshot\">\n<img src=\"/img/tutorial/sql-databases/image01.png\">\n</div>\n\n## Update the App with Multiple Models { #update-the-app-with-multiple-models }\n\nNow let's **refactor** this app a bit to increase **security** and **versatility**.\n\nIf you check the previous app, in the UI you can see that, up to now, it lets the client decide the `id` of the `Hero` to create. \ud83d\ude31\n\nWe shouldn't let that happen, they could overwrite an `id` we already have assigned in the DB. Deciding the `id` should be done by the **backend** or the **database**, **not by the client**."
+    },
+    {
+      "id": "kubernetes/concepts/containers/images.md::20",
+      "score": 0.0,
+      "text": "rom them.\nCredentials can be provided in several ways:\n\n- [Specifying `imagePullSecrets` when you define a Pod](#specifying-imagepullsecrets-on-a-pod)\n\n  Only Pods which provide their own keys can access the private registry.\n\n- [Configuring Nodes to Authenticate to a Private Registry](#configuring-nodes-to-authenticate-to-a-private-registry)\n  - All Pods can read any configured private registries.\n  - Requires node configuration by cluster administrator.\n- Using a _kubelet credential provider_ plugin to [dynamically fetch credentials for private registries](#kubelet-credential-provider)\n\n  The kubelet can be configured to use credential provider exec plugin for the\n  respective private registry.\n\n- [Pre-pulled Images](#pre-pulled-images)\n  - All Pods can use any images cached on a node.\n  - Requires root access to all nodes to set up.\n- Vendor-specific or local extensions"
+    },
+    {
+      "id": "kubernetes/concepts/configuration/manage-resources-containers.md::20",
+      "score": 0.0,
+      "text": "cannot be scheduled or is being killed due to resource limits,\nsee the [Troubleshooting](#troubleshooting) section.\n\n### Resizing container resources\n\nAfter creating a Pod, you may need to adjust its CPU or memory resources based on\nactual usage patterns. Kubernetes provides two approaches for resizing Pod resources:\n\n#### In-place resize {#pod-resize-inplace}\n{{< feature-state feature_gate_name=\"InPlacePodVerticalScaling\" >}}\n\nYou can modify the CPU and memory `requests` and `limits` of containers\nin a running Pod without recreating it. This is called _in-place Pod vertical scaling_\nor _in-place Pod resize_. To perform an in-place resize, update the container's resource\nspecifications using the Pod's `/resize` subresource. You can control whether a container\nrestart is required by setting the `resizePolicy` field in the container specification."
+    }
+  ],
+  "answer": "The provided context does not contain information about the number of Uvicorn workers recommended for production use. Therefore, the information is not present in the provided documentation.",
+  "prompt_sha256": "212eed54bbedbf312f1e91c2cfe3167d33484173fd95e07b61a3738cfb58284d",
+  "timings_s": {
+    "retrieve": 0.67,
+    "generate": 23.43
+  }
+}

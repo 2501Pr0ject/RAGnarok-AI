@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "python_trap_001",
+  "question": "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?",
+  "retrieved": [
+    {
+      "id": "python/tutorial/modules.rst::5",
+      "score": 0.81612,
+      "text": "r).  The imported module names, if placed at the top level of a module\n(outside any functions or classes), are added to the module's global namespace.\n\nThere is a variant of the :keyword:`import` statement that imports names from a\nmodule directly into the importing module's namespace.  For example::\n\n   >>> from fibo import fib, fib2\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis does not introduce the module name from which the imports are taken in the\nlocal namespace (so in the example, ``fibo`` is not defined).\n\nThere is even a variant to import all names that a module defines::\n\n   >>> from fibo import *\n   >>> fib(500)\n   0 1 1 2 3 5 8 13 21 34 55 89 144 233 377\n\nThis imports all names except those beginning with an underscore (``_``).\nIn most cases Python programmers do not use this facility since it introduces\nan unknown set of names into the interpreter, possibly hiding some things\nyou have already defined."
+    }
+  ],
+  "answer": "In most cases, when you run `from module import *`, names starting with an underscore (``_``) are not imported because they are excluded by default. However, the context provided explicitly states that this facility imports all names except those beginning with an underscore (``_``). Therefore, the information needed to directly answer the question is not present in the way it was phrased; typically, such imports exclude names starting with an underscore.",
+  "prompt_sha256": "b91ccaabdfddca7ec80c9e39a0b1f26e84380594658c96879f56709d23cef0eb",
+  "timings_s": {
+    "retrieve": 1.63,
+    "generate": 8.37
+  }
+}

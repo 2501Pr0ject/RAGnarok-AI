@@ -1,0 +1,20 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "D",
+  "config_name": "low_k",
+  "case_id": "fastapi_multi_001",
+  "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/query-params.md::3",
+      "score": 0.79445,
+      "text": "//127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```\n\nor any other case variation (uppercase, first letter in uppercase, etc), your function will see the parameter `short` with a `bool` value of `True`. Otherwise as `False`.\n\n\n## Multiple path and query parameters { #multiple-path-and-query-parameters }\n\nYou can declare multiple path parameters and query parameters at the same time, **FastAPI** knows which is which.\n\nAnd you don't have to declare them in any specific order.\n\nThey will be detected by name:\n\n{* ../../docs_src/query_params/tutorial004_py310.py hl[6,8] *}\n\n## Required query parameters { #required-query-parameters }\n\nWhen you declare a default value for non-path parameters (for now, we have only seen query parameters), then it is not required.\n\nIf you don't want to add a specific value but just make it optional, set the default as `None`."
+    }
+  ],
+  "answer": "In FastAPI, path parameters and query parameters differ in their declaration and requirement as follows:\n\n- **Path Parameters**: These are part of the route URL itself and must be provided when making a request to that specific endpoint. They are declared within the route definition using angle brackets `< >`. For example: `/items/{item_id}`.\n\n- **Query Parameters**: These are appended to the URL after a `?` and consist of key-value pairs. Query parameters are optional unless a default value other than `None` is provided in their declaration. They can be declared without any special syntax in the route definition, just by including them in the function signature. For example: `def read_item(item_id: int, q: Optional[str] = None):`.\n\nIn summary, path parameters are required to match a specific part of the URL and are defined within angle brackets in the route, while query parameters are optional and declared directly in the function parameters without special syntax.",
+  "prompt_sha256": "45837ce5bfff4af902d5e1e83b1776f0a400ac8b724524ca470d0e978e069980",
+  "timings_s": {
+    "retrieve": 0.67,
+    "generate": 44.68
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "config": "B",
+  "config_name": "bad_chunking",
+  "case_id": "fastapi_unans_001",
+  "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+  "retrieved": [
+    {
+      "id": "fastapi/tutorial/debugging.md::15",
+      "score": 0.68626,
+      "text": "Because you are running the Uvicorn server directly from your code, you can call your Python program (your FastAPI application"
+    },
+    {
+      "id": "fastapi/advanced/sub-applications.md::14",
+      "score": 0.6753,
+      "text": "```console\n$ uv run fastapi dev\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press"
+    },
+    {
+      "id": "fastapi/advanced/websockets.md::20",
+      "score": 0.6753,
+      "text": "```console\n$ uv run fastapi dev\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press"
+    },
+    {
+      "id": "fastapi/tutorial/bigger-applications.md::172",
+      "score": 0.6753,
+      "text": "```console\n$ uv run fastapi dev\n\n<span style=\"color: green;\">INFO</span>:     Uvicorn running on http://127.0.0.1:8000 (Press"
+    },
+    {
+      "id": "fastapi/tutorial/debugging.md::1",
+      "score": 0.66827,
+      "text": "## Call `uvicorn` { #call-uvicorn }\n\nIn your FastAPI application, import and run `uvicorn` directly:"
+    }
+  ],
+  "answer": "The information about the number of Uvicorn workers recommended by the FastAPI documentation for production is not present in the provided documentation.",
+  "prompt_sha256": "6cd109689b618e625364ce4f8e3cc2c7f8450dc0b38ef21d0a1b81178f9d71de",
+  "timings_s": {
+    "retrieve": 8.94,
+    "generate": 9.75
+  }
+}

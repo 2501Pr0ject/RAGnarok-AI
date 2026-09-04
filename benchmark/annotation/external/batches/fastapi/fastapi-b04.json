@@ -1,0 +1,358 @@
+{
+  "batch_id": "fastapi-b04",
+  "domain": "fastapi",
+  "smoke": false,
+  "study_version": "pilot-20260904T145740Z",
+  "items": [
+    {
+      "item_key": "a3e7cc6402",
+      "case_id": "fastapi_trap_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, why does a query parameter stay required even after I give it a default value?",
+      "reference_information": "It doesn't \u2014 the premise is false. Declaring a default value makes a query parameter not required; a query parameter is required only when no default value is declared.",
+      "reference_chunks": [
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::9",
+          "text": "tiple reasons. \ud83e\udd13\n\nThe **default** value of the **function parameter** is the **actual default** value, that's more intuitive with Python in general. \ud83d\ude0c\n\nYou could **call** that same function in **other places** without FastAPI, and it would **work as expected**. If there's a **required** parameter (without a default value), your **editor** will let you know with an error, **Python** will also complain if you run it without passing the required parameter.\n\nWhen you don't use `Annotated` and instead use the **(old) default value style**, if you call that function without FastAPI in **other place**, you have to **remember** to pass the arguments to the function for it to work correctly, otherwise the values will be different from what you expect (e.g. `QueryInfo` or something similar instead of `str`). And your editor won't complain, and Python won't complain running that function, only when the operations inside error out."
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations.md::4",
+          "text": "(so it will show up in the **automatic docs UI**)\n\n## Alternative (old): `Query` as the default value { #alternative-old-query-as-the-default-value }\n\nPrevious versions of FastAPI (before <dfn title=\"before 2023-03\">0.95.0</dfn>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n/// tip\n\nFor new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\n///\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n{* ../../docs_src/query_params_str_validations/tutorial002_py310.py hl[7] *}"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+          "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+        },
+        {
+          "id": "python/tutorial/controlflow.rst::7",
+          "text": "ntinue` Statements, and :keyword:`!else` Clauses on Loops\n============================================================================================\n\nThe :keyword:`break` statement breaks out of the innermost enclosing\n:keyword:`for` or :keyword:`while` loop.\n\nA :keyword:`!for` or :keyword:`!while` loop can include an :keyword:`!else` clause.\n\nIn a :keyword:`for` loop, the :keyword:`!else` clause is executed\nafter the loop reaches its final iteration.\n\nIn a :keyword:`while` loop, it's executed after the loop's condition becomes false.\n\nIn either kind of loop, the :keyword:`!else` clause is **not** executed\nif the loop was terminated by a :keyword:`break`.\n\nThis is exemplified in the following :keyword:`!for` loop,\nwhich searches for prime numbers::"
+        },
+        {
+          "id": "kubernetes/concepts/cluster-administration/swap-memory-management.md::4",
+          "text": "es nodes](/docs/tutorials/cluster-management/provision-swap-memory/) to learn about enabling swap for your cluster.\n\n### Container runtime integration\n\nThe kubelet uses the container runtime API, and directs the container runtime to\napply specific configuration (for example, in the cgroup v2 case, `memory.swap.max`) in a manner that will\nenable the desired swap configuration for a container. For runtimes that use control groups, or cgroups,\nthe container runtime is then responsible for writing these settings to the container-level cgroup.\n\n## Observability for swap use\n\n### Node and container level metric statistics"
+        }
+      ],
+      "answer": "In FastAPI, a query parameter stays required even after you give it a default value because if the default value is `None`, FastAPI will recognize that the parameter is not required. However, if your editor or development environment does not catch this, and you call the function without passing the parameter, the behavior can differ from what you expect. Specifically, the parameter might use the default value provided by `Annotated` instead of `None`. This can lead to unexpected results if you rely on `None` to indicate an optional parameter.\n\nTo ensure clarity and avoid such issues, it is recommended to use `Annotated` with a default value that clearly indicates whether the parameter is required or optional. For example:\n\n```python\nfrom fastapi import FastAPI, Query\n\napp = FastAPI()\n\n@app.get(\"/\")\nasync def read_items(q: str = Query(None)):\n    return {\"q\": q}\n```\n\nIn this case, `Query(None)` helps in making it clear that `q` is an optional parameter. If you want to make it required, you can do so by removing the default value or setting it to a non-nullable type:\n\n```python\n@app.get(\"/\")\nasync def read_items(q: str = Query(...)):\n    return {\"q\": q}\n```\n\nHere, `Query(...)` indicates that `q` is a required parameter."
+    },
+    {
+      "item_key": "721b8979cf",
+      "case_id": "fastapi_contra_001",
+      "domain": "fastapi",
+      "question": "What is the recommended way to add string validation to a query parameter in FastAPI \u2014 for example a max length on q?",
+      "reference_information": "The current docs recommend Annotated: q: Annotated[str | None, Query(max_length=50)] = None, and explicitly describe the older style (Query as the default value) as the pre-0.95 approach. The older corpus version teaches the default-value style. An ideal answer recommends Annotated and/or scopes the older style to old FastAPI versions.",
+      "reference_chunks": [
+        "tutorial/query-params-str-validations.md",
+        "tutorial/query-params-str-validations@0.100.0.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/query-params-str-validations.md::0",
+          "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+        }
+      ],
+      "answer": "To add string validation to a query parameter like `q` in FastAPI, you should use the `Query` and `Annotated` imports. Specifically, you can define the maximum length of the string by using these tools as shown in the provided context:\n\n```python\nfrom fastapi import Query, Annotated\n\n# Example usage:\nq: Annotated[str | None, Query(max_length=50)] = None\n```\n\nThis configuration tells FastAPI that `q` is an optional query parameter which, if provided, must be a string with a maximum length of 50 characters."
+    },
+    {
+      "item_key": "aaca05a862",
+      "case_id": "fastapi_direct_001",
+      "domain": "fastapi",
+      "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+      "reference_information": "The alternative documentation (ReDoc) is served at http://127.0.0.1:8000/redoc.",
+      "reference_chunks": [
+        "tutorial/first-steps.md#alternative-api-docs"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/path-params.md::27",
+          "text": "d) standard, there are many compatible tools.\n\nBecause of this, **FastAPI** itself provides an alternative API documentation (us"
+        },
+        {
+          "id": "fastapi/tutorial/dependencies/index.md::93",
+          "text": "**FastAPI** will take care of adding it all to the OpenAPI schema, so that it is shown in the interactive documentation system"
+        },
+        {
+          "id": "fastapi/tutorial/schema-extra-example.md::71",
+          "text": "of your API, and then it's used in the docs UI.\n\nIn versions of FastAPI before 0.99.0 (0.99.0 and above use the newer OpenAPI 3."
+        },
+        {
+          "id": "fastapi/tutorial/security/index.md::22",
+          "text": "**FastAPI** is based on **OpenAPI**.\n\nThat's what makes it possible to have multiple automatic interactive documentation inter"
+        },
+        {
+          "id": "fastapi/advanced/websockets.md::15",
+          "text": "**FastAPI** provides the same `WebSocket` directly just as a convenience for you, the developer. But it comes directly from St"
+        }
+      ],
+      "answer": "The provided context does not contain specific information about the URL where the alternative documentation UI is available when running FastAPI locally. Therefore, the information needed to answer the question is not present in the given documentation."
+    },
+    {
+      "item_key": "540b33e470",
+      "case_id": "fastapi_context_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, what makes a query parameter required rather than optional?",
+      "reference_information": "Not declaring any default value. A query parameter with a default value is not required; to make it required, simply omit the default.",
+      "reference_chunks": [
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/swarm/services.md::9",
+          "text": "a\"\n$ contents=\"{...}\"\n$ echo $contents > contents.json\n```\n\nMake sure that the nodes to which you are deploying are correctly configured for the gMSA.\n\n To use a config as a credential spec, create a Docker config in a credential spec file named `credpspec.json`. \n You can specify any name for the name of the `config`. \n\n```console\n$ docker config create --label com.docker.gmsa.name=mygmsa credspec credspec.json\n```\n\nNow you can create a service using this credential spec. Specify the `--credential-spec` flag with the config name:\n\n```console\n$ docker service create --credential-spec=\"config://credspec\" <your image>\n```\n\n Your service uses the gMSA credential spec when it starts, but unlike a typical Docker config (used by passing the --config flag), the credential spec is not mounted into the container.\n\n## Update a service"
+        },
+        {
+          "id": "python/howto/functional.rst::35",
+          "text": "need to run cleanup code when a :exc:`GeneratorExit` occurs, I suggest\n  using a ``try: ... finally:`` suite instead of catching :exc:`GeneratorExit`.\n\nThe cumulative effect of these changes is to turn generators from one-way\nproducers of information into both producers and consumers.\n\nGenerators also become **coroutines**, a more generalized form of subroutines.\nSubroutines are entered at one point and exited at another point (the top of the\nfunction, and a ``return`` statement), but coroutines can be entered, exited,\nand resumed at many different points (the ``yield`` statements).\n\n\nBuilt-in functions\n==================\n\nLet's look in more detail at built-in functions often used with iterators.\n\nTwo of Python's built-in functions, :func:`map` and :func:`filter` duplicate the\nfeatures of generator expressions:\n\n:func:`map(f, iterA, iterB, ...) <map>` returns an iterator over the sequence\n ``f(iterA[0], iterB[0]), f(iterA[1], iterB[1]), f(iterA[2], iterB[2]), ...``."
+        },
+        {
+          "id": "docker/manuals/engine/daemon/proxy.md::4",
+          "text": "er.service.d\n   ```\n\n2. Create a file named `/etc/systemd/system/docker.service.d/http-proxy.conf`\n   that adds the `HTTP_PROXY` environment variable:\n\n   ```systemd\n   [Service]\n   Environment=\"HTTP_PROXY=http://proxy.example.com:3128\"\n   ```\n\n   To proxy HTTPS requests, set the `HTTPS_PROXY` environment\n   variable:\n\n   ```systemd\n   [Service]\n   Environment=\"HTTPS_PROXY=http://proxy.example.com:3128\"\n   ```\n\n   Multiple environment variables can be set; to set both an HTTP and an\n   HTTPS proxy;\n\n   ```systemd\n   [Service]\n   Environment=\"HTTP_PROXY=http://proxy.example.com:3128\"\n   Environment=\"HTTPS_PROXY=http://proxy.example.com:3128\"\n   ```\n\n   > [!NOTE]\n   >\n   > Special characters in the proxy value, such as `#?!()[]{}`, must be double\n   > escaped using `%%`. For example:\n   >\n   > ```systemd\n   > [Service]\n   > Environment=\"HTTP_PROXY=http://domain%%5Cuser:complex%%23pass@proxy.example.com:3128/\"\n   > ```"
+        },
+        {
+          "id": "kubernetes/concepts/cluster-administration/flow-control.md::1",
+          "text": "otentially crashing the API server, but these flags are not enough to ensure\nthat the most important requests get through in a period of high traffic.\n\nThe API Priority and Fairness feature (APF) is an alternative that improves upon\naforementioned max-inflight limitations. APF classifies\nand isolates requests in a more fine-grained way. It also introduces\na limited amount of queuing, so that no requests are rejected in cases\nof very brief bursts. Requests are dispatched from queues using a\nfair queuing technique so that, for example, a poorly-behaved\n{{< glossary_tooltip text=\"controller\" term_id=\"controller\" >}} need not\nstarve others (even at the same priority level).\n\nThis feature is designed to work well with standard controllers, which\nuse informers and react to failures of API requests with exponential\nback-off, and other clients that also work this way."
+        },
+        {
+          "id": "kubernetes/concepts/resource-management/dynamic-resource-allocation/dra-observability.md::20",
+          "text": "nd-line-tools-reference/feature-gates/#DRAPartitionableDevices)\nfeature gates to be enabled.\n\n### Shareable summary {#resource-pool-shareable-summary}\n\nFor pools that contain [shareable devices](/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#consumable-capacity)\n(devices that set `allowMultipleAllocations` and can be consumed by multiple\nclaims), `shareableSummary` reports aggregate capacity usage across the pool:\n\n- `fullyAvailableDevices`: shareable devices with no capacity consumed.\n- `partiallyAvailableDevices`: shareable devices with some, but not all, capacity\n  consumed.\n- `capacity`: per capacity name, the aggregate `total`, `consumed`, and\n  `available` (`total` minus `consumed`, never negative) amounts across the pool."
+        }
+      ],
+      "answer": "The information provided in the given context does not contain any details about FastAPI or making query parameters required. Therefore, I cannot answer the question using only the provided context."
+    },
+    {
+      "item_key": "506b56011d",
+      "case_id": "fastapi_direct_001",
+      "domain": "fastapi",
+      "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+      "reference_information": "The alternative documentation (ReDoc) is served at http://127.0.0.1:8000/redoc.",
+      "reference_chunks": [
+        "tutorial/first-steps.md#alternative-api-docs"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/security/index.md::3",
+          "text": "PI (previously known as Swagger) is the open specification for building APIs (now part of the Linux Foundation).\n\n**FastAPI** is based on **OpenAPI**.\n\nThat's what makes it possible to have multiple automatic interactive documentation interfaces, code generation, etc.\n\nOpenAPI has a way to define multiple security \"schemes\".\n\nBy using them, you can take advantage of all these standard-based tools, including these interactive documentation systems.\n\nOpenAPI defines the following security schemes:"
+        },
+        {
+          "id": "fastapi/tutorial/schema-extra-example.md::9",
+          "text": "on with JSON Schema, for a while, Swagger UI, the tool that provides the automatic docs, didn't support OpenAPI 3.1.0 (it does since version 5.0.0 \ud83c\udf89).\n\nBecause of that, versions of FastAPI previous to 0.99.0 still used versions of OpenAPI lower than 3.1.0.\n\n///\n\n### Pydantic and FastAPI `examples` { #pydantic-and-fastapi-examples }\n\nWhen you add `examples` inside a Pydantic model, using `schema_extra` or `Field(examples=[\"something\"])` that example is added to the **JSON Schema** for that Pydantic model.\n\nAnd that **JSON Schema** of the Pydantic model is included in the **OpenAPI** of your API, and then it's used in the docs UI."
+        },
+        {
+          "id": "fastapi/advanced/behind-a-proxy.md::17",
+          "text": "ght as we wanted it. \u2714\ufe0f\n\nThis is because FastAPI uses this `root_path` to create the default `server` in OpenAPI with the URL provided by `root_path`.\n\n## Additional servers { #additional-servers }\n\n/// warning\n\nThis is a more advanced use case. Feel free to skip it.\n\n///\n\nBy default, **FastAPI** will create a `server` in the OpenAPI schema with the URL for the `root_path`.\n\nBut you can also provide other alternative `servers`, for example if you want *the same* docs UI to interact with both a staging and a production environment.\n\nIf you pass a custom list of `servers` and there's a `root_path` (because your API lives behind a proxy), **FastAPI** will insert a \"server\" with this `root_path` at the beginning of the list.\n\nFor example:\n\n{* ../../docs_src/behind_a_proxy/tutorial003_py310.py hl[4:7] *}\n\nWill generate an OpenAPI schema like:"
+        },
+        {
+          "id": "fastapi/advanced/sub-applications.md::3",
+          "text": "ve, FastAPI will take care of communicating the mount path for the sub-application using a mechanism from the ASGI specification called a `root_path`.\n\nThat way, the sub-application will know to use that path prefix for the docs UI.\n\nAnd the sub-application could also have its own mounted sub-applications and everything would work correctly, because FastAPI handles all these `root_path`s automatically.\n\nYou will learn more about the `root_path` and how to use it explicitly in the section about [Behind a Proxy](behind-a-proxy.md)."
+        },
+        {
+          "id": "fastapi/tutorial/first-steps.md::10",
+          "text": "n fastapi dev --entrypoint main:app\n```\n\nBut you would have to remember to pass the correct path\\entrypoint every time you call the `fastapi` command.\n\nAdditionally, other tools might not be able to find it, for example the [VS Code Extension](../editor-support.md) or [FastAPI Cloud](https://fastapicloud.com), so it is recommended to use the `entrypoint` in `pyproject.toml`.\n\n### Deploy your app (optional) { #deploy-your-app-optional }\n\nYou can optionally deploy your FastAPI app to [FastAPI Cloud](https://fastapicloud.com) with a single command. \ud83d\ude80\n\n<div class=\"termy\">\n\n```console\n$ uv run fastapi deploy\n\nDeploying to FastAPI Cloud...\n\n\u2705 Deployment successful!\n\n\ud83d\udc14 Ready the chicken! Your app is ready at https://myapp.fastapicloud.dev\n```\n\n</div>\n\nThe CLI will automatically detect your FastAPI application and deploy it to the cloud. If you are not logged in, your browser will open to complete the authentication process.\n\nThat's it! Now you can access your app at that URL. \u2728"
+        }
+      ],
+      "answer": "The provided context does not contain specific information about the URL where the alternative documentation UI is available when running FastAPI locally. Therefore, based on the given documentation, I cannot provide a specific URL for the alternative documentation UI."
+    },
+    {
+      "item_key": "1d0ab31450",
+      "case_id": "fastapi_contra_001",
+      "domain": "fastapi",
+      "question": "What is the recommended way to add string validation to a query parameter in FastAPI \u2014 for example a max length on q?",
+      "reference_information": "The current docs recommend Annotated: q: Annotated[str | None, Query(max_length=50)] = None, and explicitly describe the older style (Query as the default value) as the pre-0.95 approach. The older corpus version teaches the default-value style. An ideal answer recommends Annotated and/or scopes the older style to old FastAPI versions.",
+      "reference_chunks": [
+        "tutorial/query-params-str-validations.md",
+        "tutorial/query-params-str-validations@0.100.0.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/cluster-administration/node-autoscaling.md::17",
+          "text": "grations directly, which means that they're a part\n  of the Kubernetes project. For Karpenter, the Kubernetes project publishes Karpenter as a library\n  that cloud providers can integrate with to build a Node autoscaler.\n* Cluster Autoscaler provides integrations with numerous cloud providers, including smaller and less\n  popular providers. There are fewer cloud providers that integrate with Karpenter, including\n  [AWS](https://github.com/aws/karpenter-provider-aws), and\n  [Azure](https://github.com/Azure/karpenter-provider-azure).\n\n## Combine workload and Node autoscaling\n\n### Horizontal workload autoscaling {#horizontal-workload-autoscaling}\n\nNode autoscaling usually works in response to Pods&mdash;it provisions new Nodes to accommodate\nunschedulable Pods, and then consolidates the Nodes once they're no longer needed."
+        },
+        {
+          "id": "fastapi/advanced/settings@0.100.0.md::0",
+          "text": "# Settings and Environment Variables\n\nIn many cases your application could need some external settings or configurations, for example secret keys, database credentials, credentials for email services, etc.\n\nMost of these settings are variable (can change), like database URLs. And many could be sensitive, like secrets.\n\nFor this reason it's common to provide them in environment variables that are read by the application.\n\n## Environment Variables\n\n!!! tip\n    If you already know what \"environment variables\" are and how to use them, feel free to skip to the next section below.\n\nAn <a href=\"https://en.wikipedia.org/wiki/Environment_variable\" class=\"external-link\" target=\"_blank\">environment variable</a> (also known as \"env var\") is a variable that lives outside of the Python code, in the operating system, and could be read by your Python code (or by other programs as well).\n\nYou can create and use environment variables in the shell, without needing Python:"
+        },
+        {
+          "id": "kubernetes/concepts/cluster-administration/node-shutdown.md::21",
+          "text": "encounter data corruption.\n\nThe forced storage detach behaviour is optional; users might opt to use the \"Non-graceful\nnode shutdown\" feature instead.\n\nForce storage detach on timeout can be disabled by setting the `disable-force-detach-on-timeout`\nconfig field in `kube-controller-manager`. Disabling the force detach on timeout feature means\nthat a volume that is hosted on a node that is unhealthy for more than 6 minutes will not have\nits associated\n[VolumeAttachment](/docs/reference/kubernetes-api/config-and-storage-resources/volume-attachment-v1/)\ndeleted.\n\nAfter this setting has been applied, unhealthy pods still attached to volumes must be recovered\nvia the [Non-Graceful Node Shutdown](#non-graceful-node-shutdown) procedure mentioned above.\n\n{{< note >}}\n\n- Caution must be taken while using the [Non-Graceful Node Shutdown](#non-graceful-node-shutdown) procedure.\n- Deviation from the steps documented above can result in data corruption.\n\n{{< /note >}}"
+        },
+        {
+          "id": "kubernetes/concepts/extend-kubernetes/_index.md::13",
+          "text": "everal types of extensions.\n\n<!-- image source for flowchart: https://docs.google.com/drawings/d/1sdviU6lDz4BpnzJNHfNpQrqI9F19QZ07KnhnxVrp2yg/edit -->\n\n{{< figure src=\"/docs/concepts/extend-kubernetes/flowchart.svg\"\n    alt=\"Flowchart with questions about use cases and guidance for implementers. Green circles indicate yes; red circles indicate no.\"\n    class=\"diagram-large\" caption=\"Flowchart guide to select an extension approach\" >}}\n\n---\n\n## Client extensions\n\nPlugins for kubectl are separate binaries that add or replace the behavior of specific subcommands.\nThe `kubectl` tool can also integrate with [credential plugins](/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins)\nThese extensions only affect a individual user's local environment, and so cannot enforce site-wide policies.\n\nIf you want to extend the `kubectl` tool, read [Extend kubectl with plugins](/docs/tasks/extend-kubectl/kubectl-plugins/).\n\n## API extensions\n\n### Custom resource definitions"
+        },
+        {
+          "id": "kubernetes/concepts/overview/kubectl.md::4",
+          "text": "` to\nchange the active context.\n\n## What you can do with kubectl\n\nThe `kubectl` tool supports many operations, which fall into these broad categories:\n\n* **Manage resources** \u2013 Create, update, and delete objects such as Pods, Deployments, and Services.\n  Use `kubectl apply` for declarative management from configuration files.\n* **Inspect cluster state** \u2013 List and describe objects, view events, and check resource usage.\n* **Debug** \u2013 View logs from containers, execute commands inside a running container, or port-forward to a Pod.\n* **Cluster operations** \u2013 Drain nodes for maintenance, cordon nodes to prevent new workloads, and manage cluster configuration.\n* **Script and automate** \u2013 Format output as JSON, YAML, or custom columns using [JSONPath](/docs/reference/kubectl/jsonpath/) for use in scripts and pipelines.\n\nFor syntax, command reference, and examples, see the [kubectl reference documentation](/docs/reference/kubectl/).\n\n## Declarative vs imperative"
+        }
+      ],
+      "answer": "The information needed to answer the question about adding string validation to a query parameter in FastAPI is not present in the provided documentation."
+    },
+    {
+      "item_key": "f19ffb5b3d",
+      "case_id": "fastapi_direct_001",
+      "domain": "fastapi",
+      "question": "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?",
+      "reference_information": "The alternative documentation (ReDoc) is served at http://127.0.0.1:8000/redoc.",
+      "reference_chunks": [
+        "tutorial/first-steps.md#alternative-api-docs"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/security/index.md::3",
+          "text": "PI (previously known as Swagger) is the open specification for building APIs (now part of the Linux Foundation).\n\n**FastAPI** is based on **OpenAPI**.\n\nThat's what makes it possible to have multiple automatic interactive documentation interfaces, code generation, etc.\n\nOpenAPI has a way to define multiple security \"schemes\".\n\nBy using them, you can take advantage of all these standard-based tools, including these interactive documentation systems.\n\nOpenAPI defines the following security schemes:"
+        },
+        {
+          "id": "fastapi/tutorial/schema-extra-example.md::9",
+          "text": "on with JSON Schema, for a while, Swagger UI, the tool that provides the automatic docs, didn't support OpenAPI 3.1.0 (it does since version 5.0.0 \ud83c\udf89).\n\nBecause of that, versions of FastAPI previous to 0.99.0 still used versions of OpenAPI lower than 3.1.0.\n\n///\n\n### Pydantic and FastAPI `examples` { #pydantic-and-fastapi-examples }\n\nWhen you add `examples` inside a Pydantic model, using `schema_extra` or `Field(examples=[\"something\"])` that example is added to the **JSON Schema** for that Pydantic model.\n\nAnd that **JSON Schema** of the Pydantic model is included in the **OpenAPI** of your API, and then it's used in the docs UI."
+        },
+        {
+          "id": "fastapi/advanced/behind-a-proxy.md::17",
+          "text": "ght as we wanted it. \u2714\ufe0f\n\nThis is because FastAPI uses this `root_path` to create the default `server` in OpenAPI with the URL provided by `root_path`.\n\n## Additional servers { #additional-servers }\n\n/// warning\n\nThis is a more advanced use case. Feel free to skip it.\n\n///\n\nBy default, **FastAPI** will create a `server` in the OpenAPI schema with the URL for the `root_path`.\n\nBut you can also provide other alternative `servers`, for example if you want *the same* docs UI to interact with both a staging and a production environment.\n\nIf you pass a custom list of `servers` and there's a `root_path` (because your API lives behind a proxy), **FastAPI** will insert a \"server\" with this `root_path` at the beginning of the list.\n\nFor example:\n\n{* ../../docs_src/behind_a_proxy/tutorial003_py310.py hl[4:7] *}\n\nWill generate an OpenAPI schema like:"
+        },
+        {
+          "id": "fastapi/advanced/sub-applications.md::3",
+          "text": "ve, FastAPI will take care of communicating the mount path for the sub-application using a mechanism from the ASGI specification called a `root_path`.\n\nThat way, the sub-application will know to use that path prefix for the docs UI.\n\nAnd the sub-application could also have its own mounted sub-applications and everything would work correctly, because FastAPI handles all these `root_path`s automatically.\n\nYou will learn more about the `root_path` and how to use it explicitly in the section about [Behind a Proxy](behind-a-proxy.md)."
+        },
+        {
+          "id": "fastapi/tutorial/first-steps.md::10",
+          "text": "n fastapi dev --entrypoint main:app\n```\n\nBut you would have to remember to pass the correct path\\entrypoint every time you call the `fastapi` command.\n\nAdditionally, other tools might not be able to find it, for example the [VS Code Extension](../editor-support.md) or [FastAPI Cloud](https://fastapicloud.com), so it is recommended to use the `entrypoint` in `pyproject.toml`.\n\n### Deploy your app (optional) { #deploy-your-app-optional }\n\nYou can optionally deploy your FastAPI app to [FastAPI Cloud](https://fastapicloud.com) with a single command. \ud83d\ude80\n\n<div class=\"termy\">\n\n```console\n$ uv run fastapi deploy\n\nDeploying to FastAPI Cloud...\n\n\u2705 Deployment successful!\n\n\ud83d\udc14 Ready the chicken! Your app is ready at https://myapp.fastapicloud.dev\n```\n\n</div>\n\nThe CLI will automatically detect your FastAPI application and deploy it to the cloud. If you are not logged in, your browser will open to complete the authentication process.\n\nThat's it! Now you can access your app at that URL. \u2728"
+        }
+      ],
+      "answer": "When running a FastAPI application locally, the alternative documentation UI is typically accessible via the URL `http://127.0.0.1:8000/docs`. This URL provides interactive API documentation generated based on the OpenAPI schema defined in your FastAPI application.\n\nIf you have set a custom `root_path` for your FastAPI app, the documentation will be available at `<custom_root_path>/docs`. For example, if your root path is `/api`, then the docs UI would be accessible at `http://127.0.0.1:8000/api/docs`.\n\nThis alternative documentation UI offers features like trying out API endpoints directly from the browser, which can be very useful during development and testing."
+    },
+    {
+      "item_key": "6fb411fdd0",
+      "case_id": "fastapi_context_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, what makes a query parameter required rather than optional?",
+      "reference_information": "Not declaring any default value. A query parameter with a default value is not required; to make it required, simply omit the default.",
+      "reference_chunks": [
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/query-params.md::2",
+          "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+        }
+      ],
+      "answer": "The provided context does not contain information about making a query parameter required in FastAPI. It only explains how to declare optional query parameters by setting their default value to `None` and provides examples of declaring `bool` types for query parameters which are automatically converted. Therefore, the specific details on marking a query parameter as required are not present in the given documentation."
+    },
+    {
+      "item_key": "ae48435380",
+      "case_id": "fastapi_unans_001",
+      "domain": "fastapi",
+      "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+      "reference_information": "Deployment documentation is not part of the corpus (tutorial + advanced only); the ideal response states that this recommendation is not in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/index.md::0",
+          "text": "# Tutorial - User Guide { #tutorial-user-guide }\n\nThis tutorial shows you how to use **FastAPI** with most of its features, step by step.\n\nEach section gradually builds on the previous ones, but it's structured to separate topics, so that you can go directly to any specific one to solve your specific API needs.\n\nIt is also built to work as a future reference so you can come back and see exactly what you need.\n\n## Run the code { #run-the-code }\n\nAll the code blocks can be copied and used directly (they are actually tested Python files).\n\nTo run any of the examples, copy the code to a file `main.py`, and start `fastapi dev` with `uv run`:\n\n<div class=\"termy\">\n\n```console\n$ <font color=\"#4E9A06\">uv run fastapi</font> dev\n\n  <span style=\"background-color:#009485\"><font color=\"#D3D7CF\"> FastAPI </font></span>  Starting development server \ud83d\ude80"
+        }
+      ],
+      "answer": "The provided context does not contain information about the number of Uvicorn workers recommended for production use by the FastAPI documentation."
+    },
+    {
+      "item_key": "e7b8d3007a",
+      "case_id": "fastapi_multi_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+      "reference_information": "Path parameters are declared in the route path with braces (e.g. \"/items/{item_id}\") and are part of the path, so they must be provided. Query parameters are function parameters not present in the path; they are optional when declared with a default value and required when no default is declared.",
+      "reference_chunks": [
+        "tutorial/path-params.md",
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/query-params.md::25",
+          "text": "You can declare multiple path parameters and query parameters at the same time, **FastAPI** knows which is which."
+        },
+        {
+          "id": "fastapi/tutorial/body-multiple-params.md::18",
+          "text": "The same way there is a `Query` and `Path` to define extra data for query and path parameters, **FastAPI** provides an equival"
+        },
+        {
+          "id": "fastapi/tutorial/body-multiple-params.md::2",
+          "text": "First, of course, you can mix `Path`, `Query` and request body parameter declarations freely and **FastAPI** will know what to"
+        },
+        {
+          "id": "fastapi/tutorial/body.md::46",
+          "text": "**FastAPI** will recognize that the function parameters that match path parameters should be **taken from the path**, and that"
+        },
+        {
+          "id": "fastapi/advanced/websockets.md::28",
+          "text": "* `Query`\n\nThey work the same way as for other FastAPI endpoints/*path operations*:"
+        }
+      ],
+      "answer": "The provided context does not contain specific details on how path parameters and query parameters differ in declaration or requirement status. Therefore, the information needed to answer the question is not present in the given documentation."
+    },
+    {
+      "item_key": "c4f1f33bf4",
+      "case_id": "fastapi_multi_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?",
+      "reference_information": "Path parameters are declared in the route path with braces (e.g. \"/items/{item_id}\") and are part of the path, so they must be provided. Query parameters are function parameters not present in the path; they are optional when declared with a default value and required when no default is declared.",
+      "reference_chunks": [
+        "tutorial/path-params.md",
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/scheduling-eviction/topology-spread-constraints.md::20",
+          "text": "oneB\"\n        p3(Pod) --> n3(Node3)\n        n4(Node4)\n    end\n    subgraph \"zoneA\"\n        p1(Pod) --> n1(Node1)\n        p2(Pod) --> n2(Node2)\n    end\n\n    classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;\n    classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;\n    classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;\n    class n1,n2,n3,n4,p1,p2,p3 k8s;\n    class zoneA,zoneB cluster;\n{{< /mermaid >}}\n\nIf you want an incoming Pod to be evenly spread with existing Pods across zones, you\ncan use a manifest similar to:\n\n{{% code_sample file=\"pods/topology-spread-constraints/one-constraint.yaml\" %}}"
+        },
+        {
+          "id": "python/howto/logging-cookbook.rst::183",
+          "text": "g.DEBUG)\n        h = BufferingSMTPHandler(options.host, options.port, options.user,\n                                 options.password, options.sender,\n                                 options.to, options.subject, 10)\n        logger.addHandler(h)\n        for i in range(102):\n            logger.info(\"Info index = %d\", i)\n        h.flush()\n        h.close()\n\nIf you run this script and your SMTP server is correctly set up, you should find that\nit sends eleven emails to the addressee you specify. The first ten emails will each\nhave ten log messages, and the eleventh will have two messages. That makes up 102\nmessages as specified in the script.\n\n.. _utc-formatting:\n\nFormatting times using UTC (GMT) via configuration\n--------------------------------------------------\n\nSometimes you want to format times using UTC, which can be done using a class\nsuch as ``UTCFormatter``, shown below::\n\n    import logging\n    import time"
+        },
+        {
+          "id": "python/howto/enum.rst::15",
+          "text": "rations can have arbitrary values.\n\nEnumerations are Python classes, and can have methods and special methods as\nusual.  If we have this enumeration::\n\n    >>> class Mood(Enum):\n    ...     FUNKY = 1\n    ...     HAPPY = 3\n    ...\n    ...     def describe(self):\n    ...         # self is the member here\n    ...         return self.name, self.value\n    ...\n    ...     def __str__(self):\n    ...         return 'my custom str! {0}'.format(self.value)\n    ...\n    ...     @classmethod\n    ...     def favorite_mood(cls):\n    ...         # cls here is the enumeration\n    ...         return cls.HAPPY\n    ...\n\nThen::\n\n    >>> Mood.favorite_mood()\n    <Mood.HAPPY: 3>\n    >>> Mood.HAPPY.describe()\n    ('HAPPY', 3)\n    >>> str(Mood.FUNKY)\n    'my custom str! 1'"
+        },
+        {
+          "id": "kubernetes/concepts/policy/resource-quotas.md::25",
+          "text": "er, this does *not*\nautomatically give each namespace the ability to consume more resources.\n\nSometimes more complex policies may be desired, such as:\n\n- Proportionally divide total cluster resources among several teams.\n- Allow each tenant to grow resource usage as needed, but have a generous\n  limit to prevent accidental resource exhaustion.\n- Detect demand from one namespace, add nodes, and increase quota.\n\nSuch policies could be implemented using `ResourceQuotas` as building blocks, by\nwriting a \"controller\" that watches the quota usage and adjusts the quota\nhard limits of each namespace according to other signals.\n\nNote that resource quota divides up aggregate cluster resources, but it creates no\nrestrictions around nodes: pods from several namespaces may run on the same node.\n\n## Quota scopes\n\nEach quota can have an associated set of `scopes`. A quota will only measure usage for a resource if it matches\nthe intersection of enumerated scopes."
+        },
+        {
+          "id": "docker/get-started/docker-concepts/running-containers/sharing-local-files.md::5",
+          "text": "o start a container using a bind mount and map it to the container file location.\n\n```console\n$ docker run -v /HOST/PATH:/CONTAINER/PATH -it nginx\n```\n\nThe `--mount` flag offers more advanced features and granular control, making it suitable for complex mount scenarios or production deployments. By default, if you use `--mount` to bind-mount a file or directory that doesn't yet exist on the Docker host, the `docker run` command doesn't automatically create it for you but generates an error.\n\n```console\n$ docker run --mount type=bind,source=/HOST/PATH,target=/CONTAINER/PATH,readonly nginx\n```\n\n> [!NOTE]\n>\n> Docker recommends using the `--mount` syntax instead of `-v`. It provides better control over the mounting process and avoids potential issues with missing directories.\n\n### File permissions for Docker access to host files"
+        }
+      ],
+      "answer": "The provided context does not contain any information about FastAPI or the differences between path parameters and query parameters. Therefore, the necessary details to answer the question cannot be derived from the given documentation."
+    },
+    {
+      "item_key": "1ab2405788",
+      "case_id": "fastapi_context_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, what makes a query parameter required rather than optional?",
+      "reference_information": "Not declaring any default value. A query parameter with a default value is not required; to make it required, simply omit the default.",
+      "reference_chunks": [
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/query-params.md::2",
+          "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+          "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations.md::0",
+          "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::7",
+          "text": "t declares it explicitly as being a query parameter.\n\n!!! info\n    Have in mind that the most important part to make a parameter optional is the part:\n\n    ```Python\n    = None\n    ```\n\n    or the:\n\n    ```Python\n    = Query(default=None)\n    ```\n\n    as it will use that `None` as the default value, and that way make the parameter **not required**.\n\n    The `Union[str, None]` part allows your editor to provide better support, but it is not what tells FastAPI that this parameter is not required.\n\nThen, we can pass more parameters to `Query`. In this case, the `max_length` parameter that applies to strings:\n\n```Python\nq: Union[str, None] = Query(default=None, max_length=50)\n```\n\nThis will validate the data, show a clear error when the data is not valid, and document the parameter in the OpenAPI schema *path operation*.\n\n### `Query` as the default value or in `Annotated`\n\nHave in mind that when using `Query` inside of `Annotated` you cannot use the `default` parameter for `Query`."
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::5",
+          "text": "parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</abbr>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n!!! tip\n    For new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002.py!}\n    ```"
+        }
+      ],
+      "answer": "In FastAPI, a query parameter is considered **required** if it doesn't have a default value set to `None` or any falsy value. If the parameter has a default value of `None`, it means that the parameter is **optional** and can be omitted when making a request.\n\nHere are some key points that make a query parameter required:\n\n1. **No Default Value**: When no default value is provided, FastAPI assumes the parameter is required.\n2. **Non-Optional Types**: If you declare a parameter with an explicit type like `str` or `int` without providing a default value, it will be treated as required.\n\nFor example:\n```python\nfrom fastapi import Query\n\ndef read_item(q: str):  # No default value provided\n    if q:\n        print(f\"Query parameter is {q}\")\n    else:\n        print(\"No query parameter provided\")\n```\n\nIn the above code, `q` is a required parameter because it does not have a default value. The FastAPI framework will expect this parameter to be included in every request.\n\nOn the other hand, making a query parameter optional involves providing a default value like `None`. This allows you to explicitly state that the parameter can be omitted:\n\n```python\nfrom fastapi import Query\n\ndef read_item(q: str = None):  # Default value is provided as None\n    if q:\n        print(f\"Query parameter is {q}\")\n    else:\n        print(\"No query parameter provided\")\n```\n\nIn this case, `q` can be omitted from the request, and the function will use the default value of `None`.\n\nAdditionally, using tools like `Annotated` or `Union` as shown in your context helps editors provide better type checking support but do not affect whether a parameter is required or optional. The key factor remains the presence or absence of a default value for the parameter."
+    }
+  ]
+}
