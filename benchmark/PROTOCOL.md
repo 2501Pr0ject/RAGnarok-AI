@@ -228,4 +228,5 @@ same prominence as positive ones.
 
 | Date | Change | Rationale |
 |---|---|---|
-| — | — | — |
+| 2026-09-04 | Case schema: added required `experimental_target` field (analysis-only, never shown to RAG or judges). Pre-annotation. | Each pilot case declares what it is designed to test, separately from the question, to make pilot analysis explicit. |
+| 2026-09-04 | fastapi_pair_02 nature corrected (metadata only; corpus files untouched). Pre-annotation. | Verification against the actual files showed 0.100.0 already documented pydantic-settings; the recorded "v1→v2 flip" nature was wrong. The pair is kept but not used for contradiction cases. |

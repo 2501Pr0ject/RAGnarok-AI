@@ -33,8 +33,7 @@ contradiction_pairs:
   - advanced/settings.md
   - advanced/settings@0.100.0.md
   old_ref: 0.100.0
-  nature: 'Settings: old version documents pydantic v1 BaseSettings (imported from
-    pydantic); new version documents pydantic-settings v2 (separate package).'
+  nature: 'Documentation restructuring of the Settings guide (os.getenv explanation and env-var sections reworked). No semantic flip identified on verification: 0.100.0 already documented pydantic-settings. Not used for contradiction cases in the pilot.'
 files:
 - path: advanced/additional-responses.md
   sha256: e8bba061371422a47f7f379a2a24493a67582da88eadf55575426cf8c2c6b39b

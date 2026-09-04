@@ -102,7 +102,7 @@ corpora:
         path: docs/en/docs/advanced/settings.md
         old_ref: 0.100.0
         nature: >-
-          Settings: old version documents pydantic v1 BaseSettings (imported from pydantic); new version documents pydantic-settings v2 (separate package).
+          Documentation restructuring of the Settings guide (os.getenv explanation and env-var sections reworked). No semantic flip identified on verification: 0.100.0 already documented pydantic-settings. Not used for contradiction cases in the pilot.
 
   - name: kubernetes
     source_url: https://github.com/kubernetes/website
