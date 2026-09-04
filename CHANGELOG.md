@@ -5,6 +5,34 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Real test set evaluation in the CLI**
+  - `ragnarok evaluate --testset t.json --pipeline module:attribute` runs
+    a real evaluation against your own RAG pipeline (an object
+    implementing `RAGProtocol`, or a zero-argument factory) — previously
+    only `--demo` worked
+  - Streaming evaluation surfaced end to end: results appear as each
+    query completes, with running metric averages (built on the existing
+    `evaluate_stream` engine)
+  - Live terminal panel (rich): progress, running Precision/Recall/MRR/
+    NDCG, latest queries, pass/warn/fail counts; plain line-per-query
+    fallback in CI logs; `--live/--no-live` toggle
+  - `--k` option; per-query rows included in `--output` JSON
+  - Readable errors for bad pipeline specs, missing files, and failures
+- **Interactive results viewer (TUI)**
+  - `ragnarok view results.json`: browse per-query results in a Textual
+    app — sortable table with PASS/WARN/FAIL status, detail panel for
+    the selected query, `f`/`a` to filter failing queries
+  - New optional extra: `pip install ragnarok-ai[tui]` (textual);
+    graceful message when not installed
+
+### Changed
+- README repositioned: leads with what ragnarok-ai guarantees (local-first,
+  private, resumable, measured trust) instead of comparisons against other
+  tools; competitor-specific claims removed
+
 ## [1.10.0] - 2026-09-04
 
 ### Added

@@ -34,20 +34,16 @@
 
 Building RAG systems is easy. **Knowing if they actually work is hard.**
 
-Current evaluation tools are either:
+A pipeline can have a good retriever but a bad generator, great faithfulness but poor relevance, or a beautiful score that quietly degrades in production. And when the answer matters — medical, legal, internal data — you often **can't send your documents to an external API just to evaluate them**.
 
-| Tool | Issue |
-|------|-------|
-| **Giskard** | Heavy, slow (45-60 min scans), loses progress on crash, enterprise-focused |
-| **RAGAS** | Requires OpenAI API keys, no local-first option |
-| **Manual testing** | Doesn't scale, not reproducible |
+**ragnarok-ai is designed from the ground up for local, private, reproducible RAG evaluation:**
 
-**You need a tool that:**
-- Runs 100% locally (Ollama, local models)
-- Evaluates fast with checkpointing (no lost progress)
-- Integrates with your existing stack (LangChain, LangGraph)
-- Fits in CI/CD pipelines
-- Doesn't require a PhD to use
+- Runs 100% locally (Ollama, local models) — your data never leaves your machine
+- Evaluates with checkpointing — crash mid-run, resume exactly where you left off
+- Tells you *why* quality is low (root-cause diagnosis), not just *that* it is
+- Lets you calibrate the judge against your own labels — trust the scores, or know you can't
+- Gates your CI, monitors production, detects drift, A/B tests configurations
+- Integrates with your existing stack (LangChain, LangGraph, LlamaIndex...)
 
 ---
 
@@ -117,17 +113,18 @@ results.export("report.html")
 
 ---
 
-## Comparison
+## Design Principles
 
-| Feature | ragnarok-ai | Giskard | RAGAS |
-|---------|-------------|---------|-------|
-| 100% Local | Yes | Partial | No |
-| Checkpointing | Yes | No | No |
-| Fast evaluation | Yes | No (45-60 min) | Yes |
-| CLI support | Yes | No | No |
-| LangChain integration | Yes | Yes | Yes |
-| Minimal deps | Yes | No | Partial |
-| Free & OSS | AGPL-3.0 | Open-core | Apache-2.0 |
+Excellent evaluation frameworks exist (RAGAS, DeepEval, TruLens...). ragnarok-ai doesn't try to have more metrics than them — it makes a different set of guarantees:
+
+| Principle | What it means in practice |
+|-----------|---------------------------|
+| **Local-first, always** | Every feature works with local models (Ollama). No API key is ever required. Air-gapped deployment is a first-class target. |
+| **Your data stays yours** | Nothing leaves your machine. Production traces hash queries by default; capturing text is opt-in and PII-scrubbed client-side. |
+| **Resumable by design** | Long local evaluations crash. Checkpointing means you never lose progress. |
+| **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. |
+| **Engineering tool, not a notebook** | CLI-first, JSON output, exit codes, `--fail-under` CI gates, regression detection, Prometheus export, Helm chart. |
+| **Lightweight core** | No torch/transformers in the core. Statistics are hand-rolled over the standard library. |
 
 ---
 
@@ -670,8 +667,9 @@ display_comparison([
 ### Planned
 
 #### v1.11.0 — Developer Experience
-- [ ] Interactive TUI (textual)
-- [ ] Streaming evaluation
+- [x] Interactive TUI (textual)
+- [x] Streaming evaluation
+- [x] Real test set evaluation in the CLI (`--pipeline module:attr`)
 - [ ] Discord & email alert adapters
 
 #### v2.0.0 — Visualization
