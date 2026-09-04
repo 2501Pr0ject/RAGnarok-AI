@@ -1,0 +1,134 @@
+# Corpus assembly configuration for the RAGnarok evaluation study.
+#
+# This file expresses INTENT (sources, refs, selection globs, pairs).
+# assemble.py turns it into REALITY: pinned file copies + MANIFEST.yaml
+# with per-file hashes. After assembly and audit, the corpus copies are
+# immutable experimental data (PROTOCOL.md §2); any change requires an
+# amendment and full re-assembly.
+
+corpora:
+  - name: docker
+    source_url: https://github.com/docker/docs
+    pinned_commit: 4adee40aa75f2ddc775b76e60d4bdd1f4ec2360b
+    format: markdown
+    license:
+      spdx: Apache-2.0
+      path_in_repo: LICENSE
+      url: https://github.com/docker/docs/blob/main/LICENSE
+      attribution: "Docker documentation © Docker, Inc. Licensed under Apache-2.0."
+    subset_rationale: >
+      Getting-started concepts, the Engine manual (networking, storage,
+      security - rich in conditions and cross-references), and the Compose
+      file reference (structured, verifiable option semantics). Coherent
+      "Docker fundamentals" scope, re-indexable in minutes.
+    include:
+      - "content/get-started/**/*.md"
+      - "content/manuals/engine/**/*.md"
+      - "content/reference/compose-file/**/*.md"
+    exclude:
+      - glob: "content/manuals/engine/release-notes/**"
+        reason: >-
+          Changelogs: weak question material, and their dated version claims
+          could create unintentional contradictions that would pollute the
+          deliberate contradiction-pair design (audit finding, 2026-09-04).
+    strip_prefix: "content/"
+    pairs:
+      - id: docker_pair_01
+        path: content/reference/compose-file/services.md
+        old_ref: 916f044b7cbcae6d02c992acd5b7dfe8bf583822  # 2024-08-31
+        nature: >-
+          Compose 'command' semantics: empty value behavior clarified; explicit note that it does not run in SHELL context (unlike Dockerfile CMD); feature availability bars added.
+      - id: docker_pair_02
+        path: content/reference/compose-file/build.md
+        old_ref: 916f044b7cbcae6d02c992acd5b7dfe8bf583822
+        nature: >-
+          Compose 'build' options: defaults and feature availability (additional contexts, inline dockerfile, entitlements) documented differently between versions.
+
+  - name: python
+    source_url: https://github.com/python/cpython
+    ref: v3.12.6
+    pinned_commit: a4a2d2b0d85273f746c3834ce2753e19c898949d
+    format: restructuredtext
+    license:
+      spdx: PSF-2.0
+      path_in_repo: LICENSE
+      url: https://docs.python.org/3/license.html
+      attribution: "Python documentation © Python Software Foundation. PSF License."
+    subset_rationale: >
+      The tutorial (progressive, self-contained concepts) and the HOWTOs
+      (deep single-topic documents ideal for contextual and multi-chunk
+      questions). Reference manual excluded: too large and too terse for
+      human-verifiable references.
+    include:
+      - "Doc/tutorial/**/*.rst"
+      - "Doc/howto/**/*.rst"
+    strip_prefix: "Doc/"
+    pairs:
+      - id: python_pair_01
+        path: Doc/tutorial/venv.rst
+        old_ref: v3.10.14
+        nature: >-
+          venv: Windows activation script renamed (activate.bat -> activate); which Python version venv installs is described differently; pip invocations changed to 'python -m pip'.
+      - id: python_pair_02
+        path: Doc/howto/logging.rst
+        old_ref: v3.10.14
+        nature: >-
+          logging HOWTO: pre-3.2 basicConfig behavior notes removed; level/default documentation reworked between 3.10 and 3.12.
+
+  - name: fastapi
+    source_url: https://github.com/fastapi/fastapi
+    pinned_commit: 50113da16fec53b66b80d75e80a89296de4fa5a5
+    format: markdown
+    license:
+      spdx: MIT
+      path_in_repo: LICENSE
+      url: https://github.com/fastapi/fastapi/blob/master/LICENSE
+      attribution: "FastAPI documentation © Sebastián Ramírez and contributors. MIT License."
+    subset_rationale: >
+      The tutorial and advanced guides: task-oriented, densely
+      cross-linked (dependencies, security, settings), with clear
+      verifiable behavior statements. Reference/API pages excluded.
+    include:
+      - "docs/en/docs/tutorial/**/*.md"
+      - "docs/en/docs/advanced/**/*.md"
+    strip_prefix: "docs/en/docs/"
+    pairs:
+      - id: fastapi_pair_01
+        path: docs/en/docs/tutorial/query-params-str-validations.md
+        old_ref: 0.100.0
+        nature: >-
+          Query validation style: old version teaches Query as a default value; new version teaches Annotated[str | None, Query()] as the recommended approach.
+      - id: fastapi_pair_02
+        path: docs/en/docs/advanced/settings.md
+        old_ref: 0.100.0
+        nature: >-
+          Settings: old version documents pydantic v1 BaseSettings (imported from pydantic); new version documents pydantic-settings v2 (separate package).
+
+  - name: kubernetes
+    source_url: https://github.com/kubernetes/website
+    pinned_commit: 0c2c87a15880688fae9331714e73c6817863b163
+    format: markdown
+    license:
+      spdx: CC-BY-4.0
+      path_in_repo: LICENSE
+      url: https://github.com/kubernetes/website/blob/main/LICENSE
+      attribution: "© The Kubernetes Authors. Documentation distributed under CC BY 4.0."
+    subset_rationale: >
+      The Concepts section: the conceptual core of the documentation
+      (workloads, services/networking, storage, configuration), rich in
+      conditions, defaults and cross-concept comparisons. Task and
+      reference sections excluded to bound size.
+    include:
+      - "content/en/docs/concepts/**/*.md"
+    strip_prefix: "content/en/docs/"
+    pairs:
+      - id: kubernetes_pair_01
+        path: content/en/docs/concepts/workloads/controllers/deployment.md
+        old_ref: release-1.28
+        nature: >-
+          Deployment: label-selector immutability and update guidance reworded/restructured between 1.28 and current.
+      - id: kubernetes_pair_02
+        path: content/en/docs/concepts/services-networking/service.md
+        old_ref: release-1.28
+        nature: >-
+          Service: the Endpoints API is marked deprecated (v1.33) in the current version only; EndpointSlices presented as the replacement.

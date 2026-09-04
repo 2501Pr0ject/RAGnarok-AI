@@ -1,0 +1,129 @@
+---
+title: Read the daemon logs
+description: How to read Docker daemon logs and force a stack trace using SIGUSR1 for debugging
+keywords: docker, daemon, configuration, troubleshooting, logging, debug, stack trace, SIGUSR1, signal, goroutine dump, crash diagnostics
+aliases:
+  - /config/daemon/logs/
+---
+
+The daemon logs may help you diagnose problems. The logs may be saved in one of
+a few locations, depending on the operating system configuration and the logging
+subsystem used:
+
+| Operating system             | Location                                                                                                                                 |
+| :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| Linux                        | Use the command `journalctl -xu docker.service` (or read `/var/log/syslog` or `/var/log/messages`, depending on your Linux Distribution) |
+| macOS (Docker Desktop)       | `~/Library/Containers/com.docker.docker/Data/log/vm/init.log`                                                                            |
+| Windows (WSL2)               | `%LOCALAPPDATA%\Docker\log\vm\init.log`                                                                                                  |
+| Windows (Windows containers) | Logs are in the Windows Event Log                                                                                                        |
+
+On macOS and Windows (WSL2), Docker Desktop writes daemon logs (`dockerd`,
+`containerd`, and other VM services) to a single multiplexed `init.log` file
+in JSON format. Each line contains a `"component"` field identifying the
+service. To follow the logs, open a terminal and use the `tail` command with
+the `-f` flag. Logs print until you terminate the command using `CTRL+c`:
+
+```console
+$ tail -f ~/Library/Containers/com.docker.docker/Data/log/vm/init.log
+{"component":"dockerd","level":"debug","msg":"attach: stdout: begin","time":"2021-07-28T10:21:21.497642089Z"}
+{"component":"dockerd","level":"debug","msg":"attach: stderr: begin","time":"2021-07-28T10:21:21.497714291Z"}
+...
+^C
+```
+
+To filter for `dockerd` output only:
+
+```console
+$ grep '"component":"dockerd"' ~/Library/Containers/com.docker.docker/Data/log/vm/init.log
+```
+
+## Enable debugging
+
+There are two ways to enable debugging. The recommended approach is to set the
+`debug` key to `true` in the `daemon.json` file. This method works for every
+Docker platform.
+
+1.  Edit the `daemon.json` file, which is usually located in `/etc/docker/`. You
+    may need to create this file, if it doesn't yet exist. On macOS or Windows,
+    don't edit the file directly. Instead, edit the file through the Docker Desktop settings.
+
+2.  If the file is empty, add the following:
+
+    ```json
+    {
+      "debug": true
+    }
+    ```
+
+    If the file already contains JSON, just add the key `"debug": true`, being
+    careful to add a comma to the end of the line if it's not the last line
+    before the closing bracket. Also verify that if the `log-level` key is set,
+    it's set to either `info` or `debug`. `info` is the default, and possible
+    values are `debug`, `info`, `warn`, `error`, `fatal`.
+
+3.  Send a `HUP` signal to the daemon to cause it to reload its configuration.
+    On Linux hosts, use the following command.
+
+    ```console
+    $ sudo kill -SIGHUP $(pidof dockerd)
+    ```
+
+    On Windows hosts, restart Docker.
+
+Instead of following this procedure, you can also stop the Docker daemon and
+restart it manually with the debug flag `-D`. However, this may result in Docker
+restarting with a different environment than the one the hosts' startup scripts
+create, and this may make debugging more difficult.
+
+## Force a stack trace to be logged
+
+If the daemon is unresponsive, you can force a full stack trace to be logged by
+sending a `SIGUSR1` signal to the daemon.
+
+- **Linux**:
+
+  ```console
+  $ sudo kill -SIGUSR1 $(pidof dockerd)
+  ```
+
+- **Windows Server**:
+
+  Download [docker-signal](https://github.com/moby/docker-signal).
+
+  Get the process ID of dockerd `Get-Process dockerd`.
+
+  Run the executable with the flag `--pid=<PID of daemon>`.
+
+This forces a stack trace to be logged but doesn't stop the daemon. Daemon logs
+show the stack trace or the path to a file containing the stack trace if it was
+logged to a file.
+
+The daemon continues operating after handling the `SIGUSR1` signal and dumping
+the stack traces to the log. The stack traces can be used to determine the state
+of all goroutines and threads within the daemon.
+
+## View stack traces
+
+The Docker daemon log can be viewed by using one of the following methods:
+
+- By running `journalctl -u docker.service` on Linux systems using `systemctl`
+- `/var/log/messages`, `/var/log/daemon.log`, or `/var/log/docker.log` on older
+  Linux systems
+
+> [!NOTE]
+>
+> It isn't possible to manually generate a stack trace on Docker Desktop for
+> Mac or Docker Desktop for Windows. However, you can click the Docker taskbar
+> icon and choose **Troubleshoot** to send information to Docker if you run into
+> issues.
+
+Look in the Docker logs for a message like the following:
+
+```text
+...goroutine stacks written to /var/run/docker/goroutine-stacks-2017-06-02T193336z.log
+```
+
+The locations where Docker saves these stack traces and dumps depends on your
+operating system and configuration. You can sometimes get useful diagnostic
+information straight from the stack traces and dumps. Otherwise, you can provide
+this information to Docker for help diagnosing the problem.
