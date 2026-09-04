@@ -80,6 +80,7 @@ class EvaluateConfig:
     testset: str | None = None
     output: str | None = None
     fail_under: float | None = None
+    pipeline: str | None = None
     metrics: list[str] = field(default_factory=lambda: ["precision", "recall", "mrr", "ndcg"])
     criteria: list[str] = field(default_factory=lambda: ["faithfulness", "relevance", "hallucination", "completeness"])
     ollama_url: str = "http://localhost:11434"
@@ -247,16 +248,38 @@ def evaluate(
             help="Random seed for reproducible demo results.",
         ),
     ] = 42,
+    pipeline: Annotated[
+        str | None,
+        typer.Option(
+            "--pipeline",
+            "-p",
+            help="Your RAG pipeline as an import path 'module:attribute' "
+            "(an object implementing RAGProtocol, or a zero-argument factory returning one).",
+        ),
+    ] = None,
+    k: Annotated[
+        int,
+        typer.Option(
+            "--k",
+            help="K for @K retrieval metrics.",
+        ),
+    ] = 10,
+    live: Annotated[
+        bool,
+        typer.Option(
+            "--live/--no-live",
+            help="Show the live evaluation panel (auto-disabled when output is not a terminal).",
+        ),
+    ] = True,
 ) -> None:
     """Evaluate a RAG pipeline against a test set.
 
     Examples:
         ragnarok evaluate --demo
+        ragnarok evaluate --testset testset.json --pipeline myapp.rag:pipeline
+        ragnarok evaluate --testset testset.json --pipeline myapp.rag:build_rag --fail-under 0.7
         ragnarok evaluate --config ragnarok.yaml
-        ragnarok evaluate --demo --limit 5
         ragnarok evaluate --demo --output results.json
-        ragnarok evaluate --demo --fail-under 0.7
-        ragnarok evaluate --config ragnarok.yaml --fail-under 0.9
     """
     # Load config file if provided
     cfg = load_config(config) if config else EvaluateConfig()
@@ -265,6 +288,7 @@ def evaluate(
     effective_testset = testset if testset is not None else cfg.testset
     effective_output = output if output is not None else cfg.output
     effective_fail_under = fail_under if fail_under is not None else cfg.fail_under
+    effective_pipeline = pipeline if pipeline is not None else cfg.pipeline
 
     if not demo and not effective_testset:
         if state["json"]:
@@ -281,19 +305,195 @@ def evaluate(
     if demo:
         _run_demo_evaluation(output=effective_output, fail_under=effective_fail_under, limit=limit, seed=seed)
     else:
-        if state["json"]:
-            typer.echo(
-                json_response(
-                    "evaluate",
-                    "error",
-                    errors=["Custom testset evaluation coming in next release. Use --demo for now."],
+        if not effective_pipeline:
+            if state["json"]:
+                typer.echo(
+                    json_response(
+                        "evaluate",
+                        "error",
+                        errors=["--pipeline is required with --testset (import path 'module:attribute')."],
+                    )
                 )
-            )
-        else:
-            typer.echo(f"Evaluating with testset: {effective_testset}")
-            typer.echo("Custom testset evaluation coming in next release.")
-            typer.echo("For now, use --demo to see the evaluation flow.")
+            else:
+                typer.echo("Error: --pipeline is required with --testset.", err=True)
+                typer.echo("Point it at your RAG object: --pipeline myapp.rag:pipeline", err=True)
+                typer.echo(
+                    "(an object with 'async def query(question) -> RAGResponse', or a factory returning one)", err=True
+                )
+            raise typer.Exit(EXIT_BAD_INPUT)
+        assert effective_testset is not None  # guarded above
+        _run_testset_evaluation(
+            testset_path=effective_testset,
+            pipeline_spec=effective_pipeline,
+            output=effective_output,
+            fail_under=effective_fail_under,
+            limit=limit,
+            k=k,
+            live=live,
+        )
+
+
+def _load_pipeline(spec: str) -> Any:
+    """Load a RAG pipeline from an import path 'module:attribute'.
+
+    The attribute must implement RAGProtocol, or be a zero-argument
+    callable (factory) returning such an object.
+    """
+    import importlib
+
+    module_name, sep, attr_name = spec.partition(":")
+    if not sep or not module_name or not attr_name:
+        msg = f"Invalid pipeline spec {spec!r}: expected 'module:attribute' (e.g. myapp.rag:pipeline)"
+        raise ValueError(msg)
+
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError as e:
+        msg = f"Cannot import module {module_name!r}: {e}"
+        raise ValueError(msg) from e
+
+    try:
+        obj = getattr(module, attr_name)
+    except AttributeError:
+        msg = f"Module {module_name!r} has no attribute {attr_name!r}"
+        raise ValueError(msg) from None
+
+    # A factory (function/class) rather than a ready pipeline: call it
+    if not hasattr(obj, "query") and callable(obj):
+        obj = obj()
+    if not hasattr(obj, "query"):
+        msg = f"{spec!r} does not provide a 'query' method (RAGProtocol) and is not a factory returning one"
+        raise ValueError(msg)
+    return obj
+
+
+def _run_testset_evaluation(
+    testset_path: str,
+    pipeline_spec: str,
+    *,
+    output: str | None,
+    fail_under: float | None,
+    limit: int | None,
+    k: int,
+    live: bool,
+) -> None:
+    """Evaluate a user pipeline against a testset file, streaming results."""
+    from ragnarok_ai.cli.live import LiveEvaluationDisplay
+    from ragnarok_ai.core.evaluate import evaluate_stream
+    from ragnarok_ai.dataset.io import load_testset
+
+    # Load inputs with readable errors
+    try:
+        testset = load_testset(testset_path)
+    except FileNotFoundError:
+        _evaluate_error(f"Testset file not found: {testset_path}")
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+    except Exception as e:
+        _evaluate_error(f"Cannot load testset {testset_path!r}: {e}")
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    try:
+        rag = _load_pipeline(pipeline_spec)
+    except ValueError as e:
+        _evaluate_error(str(e))
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    if limit and limit < len(testset.queries):
+        testset.queries = testset.queries[:limit]
+
+    title = testset.name or Path(testset_path).stem
+    query_rows: list[dict[str, Any]] = []
+
+    async def run() -> LiveEvaluationDisplay:
+        display = LiveEvaluationDisplay(title=title, total=len(testset.queries))
+        if state["json"] or not live:
+            display.interactive = False
+        with display:
+            async for query, metrics, answer in evaluate_stream(rag, testset, k=k, fail_fast=False):
+                if not state["json"]:
+                    display.record(query.text, metrics.precision, metrics.recall, metrics.mrr, metrics.ndcg)
+                else:
+                    display.stats.add(metrics.precision, metrics.recall, metrics.mrr, metrics.ndcg)
+                query_rows.append(
+                    {
+                        "query": query.text,
+                        "precision": round(metrics.precision, 4),
+                        "recall": round(metrics.recall, 4),
+                        "mrr": round(metrics.mrr, 4),
+                        "ndcg": round(metrics.ndcg, 4),
+                        "answer": answer,
+                    }
+                )
+        return display
+
+    try:
+        display = asyncio.run(run())
+    except Exception as e:
+        _evaluate_error(f"Evaluation failed: {type(e).__name__}: {e}")
+        raise typer.Exit(1) from None
+
+    stats = display.stats
+    if stats.count == 0:
+        _evaluate_error("No queries were evaluated.")
         raise typer.Exit(1)
+
+    data: dict[str, Any] = {
+        "testset": title,
+        "testset_path": testset_path,
+        "pipeline": pipeline_spec,
+        "queries_evaluated": stats.count,
+        "k": k,
+        "metrics": {
+            f"precision@{k}": round(stats.precision, 4),
+            f"recall@{k}": round(stats.recall, 4),
+            "mrr": round(stats.mrr, 4),
+            f"ndcg@{k}": round(stats.ndcg, 4),
+            "average": round(stats.average, 4),
+        },
+        "queries": query_rows,
+    }
+
+    exit_code = 0
+    status = "pass"
+    if fail_under is not None and stats.average < fail_under:
+        status = "fail"
+        data["fail_reason"] = f"Average score {stats.average:.4f} < threshold {fail_under}"
+        exit_code = 1
+
+    if state["json"]:
+        typer.echo(json_response("evaluate", status, data=data))
+    else:
+        typer.echo()
+        typer.echo("  " + "-" * 40)
+        typer.echo("  Results Summary")
+        typer.echo("  " + "-" * 40)
+        typer.echo(f"    Precision@{k}:  {stats.precision:.4f}")
+        typer.echo(f"    Recall@{k}:     {stats.recall:.4f}")
+        typer.echo(f"    MRR:           {stats.mrr:.4f}")
+        typer.echo(f"    NDCG@{k}:      {stats.ndcg:.4f}")
+        typer.echo("  " + "-" * 40)
+        typer.echo(f"    Average:       {stats.average:.4f}")
+        if fail_under is not None:
+            verdict = "PASS ✓" if exit_code == 0 else "FAIL ✗"
+            typer.echo(f"    Threshold:     {fail_under} → {verdict}")
+        typer.echo()
+
+    if output:
+        Path(output).write_text(json.dumps({"status": status, **data}, indent=2))
+        if not state["json"]:
+            typer.echo(f"  Results saved to: {output}")
+            typer.echo(f"  Browse them with: ragnarok view {output}")
+            typer.echo()
+
+    sys.exit(exit_code)
+
+
+def _evaluate_error(message: str) -> None:
+    """Emit an evaluate error in the active output mode."""
+    if state["json"]:
+        typer.echo(json_response("evaluate", "error", errors=[message]))
+    else:
+        typer.echo(f"Error: {message}", err=True)
 
 
 def _run_demo_evaluation(
@@ -477,6 +677,38 @@ def _run_demo_evaluation(
             typer.echo()
 
     sys.exit(exit_code)
+
+
+@app.command()
+def view(
+    results: Annotated[
+        str,
+        typer.Argument(help="Path to a results JSON file from 'ragnarok evaluate --output'."),
+    ],
+) -> None:
+    """Browse evaluation results in an interactive terminal UI.
+
+    Keyboard: arrows to navigate, 'f' to show only failing queries,
+    'a' to show all, 'q' to quit.
+
+    Examples:
+        ragnarok evaluate --testset t.json --pipeline app:rag --output results.json
+        ragnarok view results.json
+    """
+    try:
+        from ragnarok_ai.cli.tui import load_results, run_viewer
+    except ImportError:
+        typer.echo("Error: the interactive viewer needs the 'tui' extra.", err=True)
+        typer.echo("Install it with: pip install ragnarok-ai[tui]", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    try:
+        load_results(results)  # validate before opening the app
+    except ValueError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT) from None
+
+    run_viewer(results)
 
 
 @app.command()

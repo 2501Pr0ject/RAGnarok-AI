@@ -45,11 +45,16 @@ ragnarok evaluate [OPTIONS]
 |--------|-------------|
 | `--demo` | Run demo with NovaTech dataset |
 | `--config`, `-c` | Path to ragnarok.yaml config file |
-| `--testset`, `-t` | Path to testset JSON file |
-| `--output`, `-o` | Output file path for results |
+| `--testset`, `-t` | Path to testset JSON/JSONL file |
+| `--pipeline`, `-p` | Your RAG pipeline as `module:attribute` (a `RAGProtocol` object, or a zero-argument factory returning one) |
+| `--k` | K for @K retrieval metrics (default 10) |
+| `--live/--no-live` | Live evaluation panel (auto-disabled when not a terminal) |
+| `--output`, `-o` | Output file path for results (includes per-query rows) |
 | `--fail-under` | Fail if average score below threshold (0.0-1.0) |
 | `--limit`, `-n` | Limit number of queries |
-| `--seed` | Random seed for reproducibility |
+| `--seed` | Random seed for reproducibility (demo) |
+
+Evaluating a real test set streams results as they complete: an interactive terminal shows a live panel (progress, running metric averages, latest queries); CI logs get one line per query.
 
 **Examples:**
 
@@ -57,21 +62,39 @@ ragnarok evaluate [OPTIONS]
 # Demo evaluation
 ragnarok evaluate --demo
 
-# With config file
-ragnarok evaluate --config ragnarok.yaml
+# Evaluate YOUR pipeline against YOUR test set
+ragnarok evaluate --testset testset.json --pipeline myapp.rag:pipeline
 
-# With threshold
-ragnarok evaluate --demo --fail-under 0.7
+# The pipeline spec also accepts a factory function
+ragnarok evaluate --testset testset.json --pipeline myapp.rag:build_rag
 
-# Limited queries
-ragnarok evaluate --demo --limit 5
-
-# Save results
-ragnarok evaluate --demo --output results.json
+# CI quality gate with saved per-query results
+ragnarok evaluate -t testset.json -p myapp.rag:pipeline --fail-under 0.7 -o results.json
 
 # JSON output for CI
 ragnarok evaluate --demo --json
 ```
+
+The `pipeline:` key is also supported in `ragnarok.yaml`.
+
+---
+
+### view
+
+Browse evaluation results in an interactive terminal UI (requires the `tui` extra: `pip install ragnarok-ai[tui]`).
+
+```bash
+ragnarok view results.json
+```
+
+| Key | Action |
+|-----|--------|
+| Arrows | Navigate queries (detail panel follows) |
+| `f` | Show only failing queries |
+| `a` | Show all queries |
+| `q` | Quit |
+
+The file is the `--output` of `ragnarok evaluate` — the summary header shows aggregate metrics, the table lists per-query precision/recall/MRR/NDCG with PASS/WARN/FAIL status, and the detail panel shows the full query, answer, and metrics for the selected row.
 
 ---
 
