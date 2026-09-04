@@ -4,19 +4,46 @@
   "title": "Human annotation",
   "description": "One human annotation of one (case x RAG config) output (see ANNOTATION.md). Binary labels project directly into ragnarok_ai.calibration.CalibrationSample.",
   "type": "object",
-  "required": ["case_id", "rag_config", "annotator", "annotated_at", "round"],
+  "required": [
+    "case_id",
+    "rag_config",
+    "annotator",
+    "annotated_at",
+    "round"
+  ],
   "additionalProperties": false,
   "properties": {
-    "case_id": {"type": "string"},
+    "case_id": {
+      "type": "string"
+    },
     "rag_config": {
       "type": "string",
-      "enum": ["baseline", "bad_chunking", "weak_embedding", "low_k", "noisy_context", "broken_retrieval", "hallucination_prone"]
+      "enum": [
+        "baseline",
+        "bad_chunking",
+        "weak_embedding",
+        "low_k",
+        "noisy_context",
+        "broken_retrieval",
+        "hallucination_prone"
+      ]
     },
-    "annotator": {"type": "string", "minLength": 1},
-    "annotated_at": {"type": "string", "format": "date-time"},
+    "annotator": {
+      "type": "string",
+      "minLength": 1
+    },
+    "annotated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "round": {
       "type": "string",
-      "enum": ["primary", "reannotation", "second_annotator"],
+      "enum": [
+        "primary",
+        "reannotation",
+        "second_annotator",
+        "external"
+      ],
       "description": "Which agreement pass this label belongs to (PROTOCOL.md 6.2)."
     },
     "invalid": {
@@ -27,23 +54,137 @@
     "labels": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["retrieval_relevance", "faithfulness", "answer_relevance", "completeness"],
+      "required": [
+        "retrieval_relevance",
+        "faithfulness",
+        "answer_relevance",
+        "completeness"
+      ],
       "properties": {
-        "retrieval_relevance": {"type": "integer", "enum": [0, 1]},
-        "faithfulness": {"type": "integer", "enum": [0, 1]},
-        "answer_relevance": {"type": "integer", "enum": [0, 1]},
-        "completeness": {"type": "integer", "enum": [0, 1]}
+        "retrieval_relevance": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "faithfulness": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "answer_relevance": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "completeness": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        }
       }
     },
-    "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
-    "note": {"type": "string"},
-    "duration_seconds": {"type": "number", "minimum": 0}
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "note": {
+      "type": "string"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "reddit",
+        "discord",
+        "direct",
+        "other"
+      ],
+      "description": "Recruitment channel for external annotators; 'internal' for maintainer rounds."
+    },
+    "batch_id": {
+      "type": "string",
+      "description": "External annotation batch identifier."
+    },
+    "study_version": {
+      "type": "string",
+      "description": "Study artifact version (e.g. run_id) the annotation refers to."
+    },
+    "ambiguity_flag": {
+      "type": "boolean",
+      "description": "Annotator flagged this case as ambiguous (see the ambiguity registry)."
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "domain_level": {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced",
+            "expert",
+            "undisclosed"
+          ]
+        },
+        "years_experience": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "description": "Self-reported, optional annotator qualification. No PII."
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
   },
   "allOf": [
     {
-      "if": {"properties": {"invalid": {"const": true}}, "required": ["invalid"]},
-      "then": {"required": ["note"]},
-      "else": {"required": ["labels", "confidence"]}
+      "if": {
+        "properties": {
+          "invalid": {
+            "const": true
+          }
+        },
+        "required": [
+          "invalid"
+        ]
+      },
+      "then": {
+        "required": [
+          "note"
+        ]
+      },
+      "else": {
+        "required": [
+          "labels",
+          "confidence"
+        ]
+      }
     }
   ]
 }

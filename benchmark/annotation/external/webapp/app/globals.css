@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #f6f7f9; color: #1a1d21; line-height: 1.55; }
+main { max-width: 860px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+h1 { font-size: 1.5rem; } h2 { font-size: 1.1rem; margin-top: 1.6rem; }
+.card { background: #fff; border: 1px solid #e2e5e9; border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1rem 0; }
+.context { background: #f2f4f7; border-radius: 8px; padding: 0.8rem 1rem; margin: 0.5rem 0; font-size: 0.92rem; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+.muted { color: #5b6470; font-size: 0.9rem; }
+.crit { display: flex; align-items: baseline; gap: 1rem; padding: 0.55rem 0; border-top: 1px solid #eef0f3; }
+.crit p { margin: 0; flex: 1; }
+button { background: #2456d6; color: #fff; border: 0; border-radius: 8px; padding: 0.6rem 1.3rem; font-size: 1rem; cursor: pointer; }
+button.secondary { background: #e8ebf0; color: #1a1d21; }
+button:disabled { opacity: 0.45; cursor: default; }
+label { margin-right: 0.9rem; }
+select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #cfd4db; border-radius: 8px; font: inherit; }
+.progress { height: 6px; background: #e2e5e9; border-radius: 3px; overflow: hidden; margin: 0.8rem 0; }
+.progress > div { height: 100%; background: #2456d6; }
+.pill { display: inline-block; background: #eef2ff; color: #2456d6; border-radius: 999px; padding: 0.1rem 0.7rem; font-size: 0.85rem; }

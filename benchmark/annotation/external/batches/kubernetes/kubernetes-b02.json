@@ -1,0 +1,428 @@
+{
+  "batch_id": "kubernetes-b02",
+  "domain": "kubernetes",
+  "smoke": false,
+  "study_version": "pilot-20260904T145740Z",
+  "items": [
+    {
+      "item_key": "2a2d57df04",
+      "case_id": "kubernetes_trap_001",
+      "domain": "kubernetes",
+      "question": "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?",
+      "reference_information": "None \u2014 the premise is false. A Deployment's label selector is immutable after creation; it cannot be updated via kubectl patch, edit, apply, or tools like helm upgrade. Changing it requires deleting and recreating the Deployment.",
+      "reference_chunks": [
+        "concepts/workloads/controllers/deployment.md#label-selector"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/extend-kubernetes/_index.md::24",
+          "text": "edulers/)\ncan run at the same time.\n\nThis is a significant undertaking, and almost all Kubernetes users find they\ndo not need to modify the scheduler.\n\nYou can control which [scheduling plugins](/docs/reference/scheduling/config/#scheduling-plugins)\nare active, or associate sets of plugins with different named [scheduler profiles](/docs/reference/scheduling/config/#multiple-profiles).\nYou can also write your own plugin that integrates with one or more of the kube-scheduler's\n[extension points](/docs/concepts/scheduling-eviction/scheduling-framework/#extension-points).\n\nFinally, the built in `kube-scheduler` component supports a\n[webhook](https://git.k8s.io/design-proposals-archive/scheduling/scheduler_extender.md)\nthat permits a remote HTTP backend (scheduler extension) to filter and / or prioritize\nthe nodes that the kube-scheduler chooses for a pod."
+        },
+        {
+          "id": "docker/manuals/engine/install/_index.md::1",
+          "text": "lation/linux/cruxlinux/\n- /engine/installation/linux/docker-ce/\n- /engine/installation/linux/docker-ee/\n- /engine/installation/linux/docker-ee/oracle/\n- /engine/installation/linux/frugalware/\n- /engine/installation/linux/gentoolinux/\n- /engine/installation/linux/oracle/\n- /engine/installation/linux/other/\n- /engine/installation/oracle/\n- /enterprise/supported-platforms/\n- /install/linux/docker-ee/oracle/\n- /ee/docker-ee/sles/\n- /ee/docker-ee/suse/\n- /engine/installation/linux/docker-ce/sles/\n- /engine/installation/linux/docker-ee/sles/\n- /engine/installation/linux/docker-ee/suse/\n- /engine/installation/linux/sles/\n- /engine/installation/linux/SUSE/\n- /engine/installation/linux/suse/\n- /engine/installation/sles/\n- /engine/installation/SUSE/\n- /install/linux/docker-ce/sles/\n- /install/linux/docker-ee/sles/\n- /install/linux/docker-ee/suse/\n- /install/linux/sles/\n- /installation/sles/\n---"
+        },
+        {
+          "id": "python/howto/logging@v3.10.14.rst::70",
+          "text": "ging._srcfile`` to ``None``.             |\n|                                                     | This avoids calling :func:`sys._getframe`, which  |\n|                                                     | may help to speed up your code in environments    |\n|                                                     | like PyPy (which can't speed up code that uses    |\n|                                                     | :func:`sys._getframe`).                           |\n+-----------------------------------------------------+---------------------------------------------------+\n| Threading information.                              | Set ``logging.logThreads`` to ``False``.          |\n+-----------------------------------------------------+---------------------------------------------------+\n| Current process ID (:func:`os.getpid`)              | Set ``logging.logProcesses`` to ``False``.        |"
+        },
+        {
+          "id": "kubernetes/concepts/resource-management/dynamic-resource-allocation/dra-api.md::6",
+          "text": "red by their Pods. Kubernetes generates one ResourceClaim for the PodGroup\n  from the specification in the ResourceClaimTemplate. The lifetime of each\n  generated ResourceClaim is bound to the lifetime of the corresponding\n  PodGroup. This requires the\n  [`DRAWorkloadResourceClaims`](/docs/reference/command-line-tools-reference/feature-gates/#DRAWorkloadResourceClaims)\n  feature to be enabled.\n\nWhen you define a workload, you can use\n{{< glossary_tooltip term_id=\"cel\" text=\"Common Expression Language (CEL)\" >}}\nto filter for specific device attributes or capacity. The available parameters\nfor filtering depend on the device and the drivers.\n\nIf you directly reference a specific ResourceClaim in a Pod, that ResourceClaim\nmust already exist in the same namespace as the Pod. If the ResourceClaim\ndoesn't exist in the namespace, the Pod won't schedule. This behavior is similar\nto how a PersistentVolumeClaim must exist in the same namespace as a Pod that\nreferences it."
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/replicationcontroller.md::17",
+          "text": "you can mess with the ReplicationControllers separately to test things out, monitor the results, etc.\n\n### Using ReplicationControllers with Services\n\nMultiple ReplicationControllers can sit behind a single service, so that, for example, some traffic\ngoes to the old version, and some goes to the new version.\n\nA ReplicationController will never terminate on its own, but it isn't expected to be as long-lived as services. Services may be composed of pods controlled by multiple ReplicationControllers, and it is expected that many ReplicationControllers may be created and destroyed over the lifetime of a service (for instance, to perform an update of pods that run the service). Both services themselves and their clients should remain oblivious to the ReplicationControllers that maintain the pods of the services.\n\n## Writing programs for Replication"
+        }
+      ],
+      "answer": "The provided context does not contain information about updating the label selector of an existing Kubernetes Deployment using a `kubectl` command. Therefore, I cannot answer this question based on the given documentation."
+    },
+    {
+      "item_key": "7287222b3f",
+      "case_id": "kubernetes_contra_001",
+      "domain": "kubernetes",
+      "question": "Is the Kubernetes Endpoints API deprecated?",
+      "reference_information": "Per the current corpus version: yes \u2014 Endpoints is marked deprecated as of v1.33, with EndpointSlices as its replacement. The older (1.28) corpus version describes Endpoints without any deprecation. An ideal answer says it is deprecated (current) and ideally scopes by version.",
+      "reference_chunks": [
+        "concepts/services-networking/service.md#endpoints",
+        "concepts/services-networking/service@release-1.28.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/services-networking/service.md::19",
+          "text": "ices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}\n\nThe EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:\n\n  - It does not support dual-stack clusters.\n  - It does not contain information needed to support newer features, such as\n    [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution).\n  - It will truncate the list of endpoints if it is too long to fit in a single object.\n\nBecause of this, it is recommended that all clients use the\nEndpointSlice API rather than Endpoints.\n\n#### Over-capacity endpoints"
+        },
+        {
+          "id": "kubernetes/concepts/security/pod-security-policy.md::1",
+          "text": "of this API,\nsee [PodSecurityPolicy Deprecation: Past, Present, and Future](/blog/2021/04/06/podsecuritypolicy-deprecation-past-present-and-future/).\n\nIf you are not running Kubernetes v{{< skew currentVersion >}}, check the documentation for\nyour version of Kubernetes."
+        },
+        {
+          "id": "kubernetes/concepts/overview/kubernetes-api.md::19",
+          "text": "ten and frequently.\nElimination of resources or fields requires following the\n[API deprecation policy](/docs/reference/using-api/deprecation-policy/).\n\nKubernetes makes a strong commitment to maintain compatibility for official Kubernetes APIs\nonce they reach general availability (GA), typically at API version `v1`. Additionally,\nKubernetes maintains compatibility with data persisted via _beta_ API versions of official Kubernetes APIs,\nand ensures that data can be converted and accessed via GA API versions when the feature goes stable.\n\nIf you adopt a beta API version, you will need to transition to a subsequent beta or stable API version\nonce the API graduates. The best time to do this is while the beta API is in its deprecation period,\nsince objects are simultaneously accessible via both API versions. Once the beta API completes its\ndeprecation period and is no longer served, the replacement API version must be used."
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/endpoint-slices.md::0",
+          "text": "---\nreviewers:\n- freehan\ntitle: EndpointSlices\napi_metadata:\n- apiVersion: \"discovery.k8s.io/v1\"\n  kind: \"EndpointSlice\"\ncontent_type: concept\nweight: 60\ndescription: >-\n  The EndpointSlice API is the mechanism that Kubernetes uses to let your Service\n  scale to handle large numbers of backends, and allows the cluster to update its\n  list of healthy backends efficiently.\n---\n\n\n<!-- overview -->\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\n{{< glossary_definition term_id=\"endpoint-slice\" length=\"short\" >}}\n\n<!-- body -->\n\n## EndpointSlice API {#endpointslice-resource}"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service@release-1.28.md::19",
+          "text": "(the resource kind is plural) defines a list of network endpoints, typically\nreferenced by a Service to define which Pods the traffic can be sent to.\n\nThe EndpointSlice API is the recommended replacement for Endpoints.\n\n#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints\nobject. When there are over 1000 backing endpoints for a Service, Kubernetes\ntruncates the data in the Endpoints object. Because a Service can be linked\nwith more than one EndpointSlice, the 1000 backing endpoint limit only\naffects the legacy Endpoints API."
+        }
+      ],
+      "answer": "Yes, the Kubernetes Endpoints API is deprecated. The context states that the EndpointSlice API is recommended over the Endpoints API due to several limitations of the latter."
+    },
+    {
+      "item_key": "db0f29541f",
+      "case_id": "kubernetes_contra_001",
+      "domain": "kubernetes",
+      "question": "Is the Kubernetes Endpoints API deprecated?",
+      "reference_information": "Per the current corpus version: yes \u2014 Endpoints is marked deprecated as of v1.33, with EndpointSlices as its replacement. The older (1.28) corpus version describes Endpoints without any deprecation. An ideal answer says it is deprecated (current) and ideally scopes by version.",
+      "reference_chunks": [
+        "concepts/services-networking/service.md#endpoints",
+        "concepts/services-networking/service@release-1.28.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/services-networking/service@release-1.28.md::135",
+          "text": "### Endpoints\n\nIn the Kubernetes API, an\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service.md::134",
+          "text": "The EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service.md::135",
+          "text": ")\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service.md::131",
+          "text": "all contain at least 100 endpoints. Kubernetes does not make the new EndpointSlice\nuntil an extra endpoint needs to be added."
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service@release-1.28.md::133",
+          "text": "all contain at least 100 endpoints. Kubernetes does not make the new EndpointSlice\nuntil an extra endpoint needs to be added."
+        }
+      ],
+      "answer": "Yes, the Kubernetes Endpoints API is deprecated according to the provided context."
+    },
+    {
+      "item_key": "d8f72fe053",
+      "case_id": "kubernetes_contra_001",
+      "domain": "kubernetes",
+      "question": "Is the Kubernetes Endpoints API deprecated?",
+      "reference_information": "Per the current corpus version: yes \u2014 Endpoints is marked deprecated as of v1.33, with EndpointSlices as its replacement. The older (1.28) corpus version describes Endpoints without any deprecation. An ideal answer says it is deprecated (current) and ideally scopes by version.",
+      "reference_chunks": [
+        "concepts/services-networking/service.md#endpoints",
+        "concepts/services-networking/service@release-1.28.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/services-networking/service.md::19",
+          "text": "ices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}\n\nThe EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:\n\n  - It does not support dual-stack clusters.\n  - It does not contain information needed to support newer features, such as\n    [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution).\n  - It will truncate the list of endpoints if it is too long to fit in a single object.\n\nBecause of this, it is recommended that all clients use the\nEndpointSlice API rather than Endpoints.\n\n#### Over-capacity endpoints"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service@release-1.28.md::19",
+          "text": "(the resource kind is plural) defines a list of network endpoints, typically\nreferenced by a Service to define which Pods the traffic can be sent to.\n\nThe EndpointSlice API is the recommended replacement for Endpoints.\n\n#### Over-capacity endpoints\n\nKubernetes limits the number of endpoints that can fit in a single Endpoints\nobject. When there are over 1000 backing endpoints for a Service, Kubernetes\ntruncates the data in the Endpoints object. Because a Service can be linked\nwith more than one EndpointSlice, the 1000 backing endpoint limit only\naffects the legacy Endpoints API."
+        },
+        {
+          "id": "kubernetes/concepts/overview/kubernetes-api.md::18",
+          "text": "he `v1beta1` version is deprecated and removed.\nAt that point you can continue accessing and modifying the object using the `v1` API.\n\n### API changes\n\nAny system that is successful needs to grow and change as new use cases emerge or existing ones change.\nTherefore, Kubernetes has designed the Kubernetes API to continuously change and grow.\nThe Kubernetes project aims to _not_ break compatibility with existing clients, and to maintain that\ncompatibility for a length of time so that other projects have an opportunity to adapt.\n\nIn general, new API resources and new resource fields can be added often and frequently.\nElimination of resources or fields requires following the\n[API deprecation policy](/docs/reference/using-api/deprecation-policy/)."
+        },
+        {
+          "id": "docker/manuals/engine/swarm/secrets.md::46",
+          "text": ".  Do not clean up any services or secrets if you intend to proceed to the next\n    example, which demonstrates how to rotate the MySQL root password.\n\n### Example: Rotate a secret\n\nThis example builds upon the previous one. In this scenario, you create a new\nsecret with a new MySQL password, update the `mysql` and `wordpress` services to\nuse it, then remove the old secret.\n\n> [!NOTE]\n>\n> Changing the password on a MySQL database involves running extra\n> queries or commands, as opposed to just changing a single environment variable\n> or a file, since the image only sets the MySQL password if the database doesn\u2019t\n> already exist, and MySQL stores the password within a MySQL database by default.\n> Rotating passwords or other secrets may involve additional steps outside of\n> Docker.\n\n1.  Create the new password and store it as a secret named `mysql_password_v2`.\n\n    ```console\n    $ openssl rand -base64 20 | docker secret create mysql_password_v2 -\n    ```"
+        },
+        {
+          "id": "python/howto/argparse.rst::18",
+          "text": "prog.py: error: argument -v/--verbosity: invalid choice: 3 (choose from 0, 1, 2)\n   $ python prog.py 4 -h\n   usage: prog.py [-h] [-v {0,1,2}] square\n\n   positional arguments:\n     square                display a square of a given number\n\n   options:\n     -h, --help            show this help message and exit\n     -v {0,1,2}, --verbosity {0,1,2}\n                           increase output verbosity\n\nNote that the change also reflects both in the error message as well as the\nhelp string.\n\nNow, let's use a different approach of playing with verbosity, which is pretty\ncommon. It also matches the way the CPython executable handles its own\nverbosity argument (check the output of ``python --help``)::"
+        }
+      ],
+      "answer": "Yes, the Kubernetes Endpoints API is deprecated. The context states that the EndpointSlice API is recommended as a replacement and that the deprecated Endpoints API has several problems relative to EndpointSlice."
+    },
+    {
+      "item_key": "802c73d01e",
+      "case_id": "kubernetes_multi_002",
+      "domain": "kubernetes",
+      "question": "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?",
+      "reference_information": "In a Secret. ConfigMaps do not provide secrecy or encryption and the documentation explicitly says to use a Secret (or third-party tools) for confidential data. Secrets are similar to ConfigMaps but are specifically intended to hold confidential data.",
+      "reference_chunks": [
+        "concepts/configuration/configmap.md",
+        "concepts/configuration/secret.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::99",
+          "text": "A `kubernetes.io/service-account-token` type of Secret is used to store a\ntoken credential that identifies a"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::125",
+          "text": "After creating the Secret, wait for Kubernetes to populate the `token` key in the `data` field."
+        },
+        {
+          "id": "kubernetes/concepts/storage/volumes.md::322",
+          "text": "Pods. You can store secrets in the Kubernetes API and mount them as files for"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::13",
+          "text": "Kubernetes Secrets are, by default, stored unencrypted in the API server's underlying data store"
+        },
+        {
+          "id": "kubernetes/concepts/security/_index.md::9",
+          "text": "A key security mechanism for any Kubernetes cluster is to\n[control access to the Kubernetes API](/docs/concepts/security/contr"
+        }
+      ],
+      "answer": "For storing an API token that needs to be accessed by your Kubernetes application, you should use a Secret rather than a ConfigMap. This is because Secrets are designed to hold sensitive information such as tokens, passwords, and keys, which require encryption at rest. While the context mentions that Secrets are stored unencrypted by default in the API server's underlying data store, this can be mitigated using Kubernetes features like `k8s.io/client-go/tools/clientcmd/api` for encrypting secrets or leveraging a secret management solution.\n\nConfigMaps are generally used for non-sensitive data such as configuration settings. Therefore, to securely manage and access an API token in your Kubernetes application, a Secret is the appropriate choice."
+    },
+    {
+      "item_key": "31e498a9ef",
+      "case_id": "kubernetes_context_002",
+      "domain": "kubernetes",
+      "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+      "reference_information": "Two benefits: it protects from accidental or unwanted updates that could cause application outages, and it improves cluster performance by significantly reducing the load on kube-apiserver (watches for immutable ConfigMaps are closed).",
+      "reference_chunks": [
+        "concepts/configuration/configmap.md#configmap-immutable"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::311",
+          "text": "Kubernetes lets you mark specific Secrets (and ConfigMaps) as _immutable_."
+        },
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::125",
+          "text": "Once a ConfigMap is marked as immutable, it is _not_ possible to revert this change"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::123",
+          "text": "closing watches for ConfigMaps marked as immutable.\n\nYou can create an immutable ConfigMap by setting the `immutable` field t"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::25",
+          "text": "definition to create an [immutable ConfigMap](#configmap-immutable).\n\n## ConfigMaps and Pods"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::24",
+          "text": "Starting from v1.19, you can add an `immutable` field to a ConfigMap"
+        }
+      ],
+      "answer": "By marking a Kubernetes ConfigMap as immutable, you ensure that the ConfigMap cannot be modified once it has been created. This provides a level of data integrity and security, preventing accidental or unauthorized changes to the configuration data."
+    },
+    {
+      "item_key": "13a0aa409a",
+      "case_id": "kubernetes_context_001",
+      "domain": "kubernetes",
+      "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+      "reference_information": "No. A rollout is triggered if and only if the Deployment's Pod template (.spec.template) changes \u2014 for example labels or container images. Scaling does not modify the template and does not trigger a rollout.",
+      "reference_chunks": [
+        "concepts/workloads/controllers/deployment.md#updating-a-deployment"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::42",
+          "text": "oyment --min=10 --max=15 --cpu-percent=80\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::43",
+          "text": "yment --min=10 --max=15 --cpu-percent=80%\n```\nThe output is similar to this:\n```\ndeployment.apps/nginx-deployment scaled\n```\n\n### Proportional scaling\n\nRollingUpdate Deployments support running multiple versions of an application at the same time. When you\nor an autoscaler scales a RollingUpdate Deployment that is in the middle of a rollout (either in progress\nor paused), the Deployment controller balances the additional replicas in the existing active\nReplicaSets (ReplicaSets with Pods) in order to mitigate risk. This is called *proportional scaling*.\n\nFor example, you are running a Deployment with 10 replicas, [maxSurge](#max-surge)=3, and [maxUnavailable](#max-unavailable)=2.\n\n* Ensure that the 10 replicas in your Deployment are running.\n  ```shell\n  kubectl get deploy\n  ```\n  The output is similar to this:\n\n  ```\n  NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE\n  nginx-deployment     10        10        10           10          50s\n  ```"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::53",
+          "text": "ogress](#failed-deployment).\n\n### Progressing Deployment\n\nKubernetes marks a Deployment as _progressing_ when one of the following tasks is performed:\n\n* The Deployment creates a new ReplicaSet.\n* The Deployment is scaling up its newest ReplicaSet.\n* The Deployment is scaling down its older ReplicaSet(s).\n* New Pods become ready or available (ready for at least [MinReadySeconds](#min-ready-seconds)).\n\nWhen the rollout becomes \u201cprogressing\u201d, the Deployment controller adds a condition with the following\nattributes to the Deployment's `.status.conditions`:\n\n* `type: Progressing`\n* `status: \"True\"`\n* `reason: NewReplicaSetCreated` | `reason: FoundNewReplicaSet` | `reason: ReplicaSetUpdated`\n\nYou can monitor the progress for a Deployment by using `kubectl rollout status`.\n\n### Complete Deployment\n\nKubernetes marks a Deployment as _complete_ when it has the following characteristics:"
+        },
+        {
+          "id": "python/howto/enum.rst::21",
+          "text": "unnamed aliases will\n    not unpickle.\n\n\nFunctional API\n--------------\n\nThe :class:`Enum` class is callable, providing the following functional API::\n\n    >>> Animal = Enum('Animal', 'ANT BEE CAT DOG')\n    >>> Animal\n    <enum 'Animal'>\n    >>> Animal.ANT\n    <Animal.ANT: 1>\n    >>> list(Animal)\n    [<Animal.ANT: 1>, <Animal.BEE: 2>, <Animal.CAT: 3>, <Animal.DOG: 4>]\n\nThe semantics of this API resemble :class:`~collections.namedtuple`. The first\nargument of the call to :class:`Enum` is the name of the enumeration."
+        },
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::17",
+          "text": "l\" file=\"secret/serviceaccount-token-secret.yaml\" %}}\n\nAfter creating the Secret, wait for Kubernetes to populate the `token` key in the `data` field.\n\nSee the [ServiceAccount](/docs/concepts/security/service-accounts/)\ndocumentation for more information on how ServiceAccounts work.\nYou can also check the `automountServiceAccountToken` field and the\n`serviceAccountName` field of the\n[`Pod`](/docs/reference/generated/kubernetes-api/{{< param \"version\" >}}/#pod-v1-core)\nfor information on referencing ServiceAccount credentials from within Pods.\n\n### Docker config Secrets\n\nIf you are creating a Secret to store credentials for accessing a container image registry,\nyou must use one of the following `type` values for that Secret:"
+        }
+      ],
+      "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. The context discusses proportional scaling and progressing/deploying replicas but does not directly address if scaling itself initiates a rollout process. Therefore, the information needed to answer this specific question is not present in the given documentation."
+    },
+    {
+      "item_key": "d8a124056d",
+      "case_id": "kubernetes_multi_001",
+      "domain": "kubernetes",
+      "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+      "reference_information": "Use a StatefulSet when the application needs one or more of: stable, unique network identifiers; stable, persistent storage; ordered, graceful deployment and scaling; ordered, automated rolling updates. For applications without these requirements, a Deployment (which manages interchangeable replicas through ReplicaSets) is the standard choice.",
+      "reference_chunks": [
+        "concepts/workloads/controllers/statefulset.md#using-statefulsets",
+        "concepts/workloads/controllers/deployment.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/policy/limit-range.md::6",
+          "text": "e/example-no-conflict-with-limitrange-cpu.yaml\" %}}\n\n## Example resource constraints\n\nExamples of policies that could be created using LimitRange are:\n\n- In a 2 node cluster with a capacity of 8 GiB RAM and 16 cores, constrain Pods in a\n  namespace to request 100m of CPU with a max limit of 500m for CPU and request 200Mi\n  for Memory with a max limit of 600Mi for Memory.\n- Define default CPU limit and request to 150m and memory default request to 300Mi for\n  Containers started with no cpu and memory requests in their specs.\n\nIn the case where the total limits of the namespace is less than the sum of the limits\nof the Pods/Containers, there may be contention for resources. In this case, the\nContainers or Pods will not be created.\n\nNeither contention nor changes to a LimitRange will affect already created resources.\n\n## {{% heading \"whatsnext\" %}}\n\nFor examples on using limits, see:"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/pods/pod-lifecycle.md::1",
+          "text": "es the Pod's spec\nfor the container runtime. The kubelet also manages executing\n[probes](#container-probes) that track the health of your application.\n\nLike individual application containers, Pods are considered to be relatively\nephemeral (rather than durable) entities. Pods are created, assigned a unique\nID ([UID](/docs/concepts/overview/working-with-objects/names/#uids)), and scheduled\nto run on nodes where they remain until termination (according to restart policy) or\ndeletion.\nIf a {{< glossary_tooltip term_id=\"node\" >}} dies, the Pods running on (or scheduled\nto run on) that node are [marked for deletion](#pod-garbage-collection). The control\nplane marks the Pods for removal after a timeout period.\n\n<!-- body -->\n\n## Pod lifetime"
+        },
+        {
+          "id": "fastapi/tutorial/schema-extra-example.md::0",
+          "text": "# Declare Request Example Data { #declare-request-example-data }\n\nYou can declare examples of the data your app can receive.\n\nHere are several ways to do it.\n\n## Extra JSON Schema data in Pydantic models { #extra-json-schema-data-in-pydantic-models }\n\nYou can declare `examples` for a Pydantic model that will be added to the generated JSON Schema.\n\n{* ../../docs_src/schema_extra_example/tutorial001_py310.py hl[13:24] *}\n\nThat extra info will be added as-is to the output **JSON Schema** for that model, and it will be used in the API docs.\n\nYou can use the attribute `model_config` that takes a `dict` as described in [Pydantic's docs: Configuration](https://pydantic.dev/docs/validation/latest/api/pydantic/config/).\n\nYou can set `\"json_schema_extra\"` with a `dict` containing any additional data you would like to show up in the generated JSON Schema, including `examples`.\n\n/// tip\n\nYou could use the same technique to extend the JSON Schema and add your own custom extra info."
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::87",
+          "text": "unts it as read-only to `/run/secrets/<secret_name>`\nwithin the container. The source name and destination mountpoint are both set\nto the secret name.\n\nThe following example uses the short syntax to grant the `frontend` service\naccess to the `server-certificate` secret. The value of `server-certificate` is set\nto the contents of the file `./server.cert`.\n\n```yml\nservices:\n  frontend:\n    image: example/webapp\n    secrets:\n      - server-certificate\nsecrets:\n  server-certificate:\n    file: ./server.cert\n```\n\n#### Long syntax\n\nThe long syntax provides more granularity in how the secret is created within\nthe service's containers."
+        },
+        {
+          "id": "kubernetes/concepts/scheduling-eviction/scheduling-framework.md::15",
+          "text": "ether or not to handle the given\nPod. If a bind plugin chooses to handle a Pod, **the remaining bind plugins are\nskipped**.\n\n### PostBind {#post-bind}\n\nThis is an informational interface. Post-bind plugins are called after a\nPod is successfully bound. This is the end of a binding cycle, and can be used\nto clean up associated resources.\n\n## Plugin API\n\nThere are two steps to the plugin API. First, plugins must register and get\nconfigured, then they use the extension point interfaces. Extension point\ninterfaces have the following form.\n\n```go\ntype Plugin interface {\n    Name() string\n}\n\ntype QueueSortPlugin interface {\n    Plugin\n    Less(*v1.pod, *v1.pod) bool\n}\n\ntype PreFilterPlugin interface {\n    Plugin\n    PreFilter(context.Context, *framework.CycleState, *v1.pod) error\n}\n\n// ...\n```\n\n## Plugin configuration"
+        }
+      ],
+      "answer": "The information needed to answer the question \"When should I use a StatefulSet instead of a Deployment in Kubernetes?\" is not present in the provided documentation."
+    },
+    {
+      "item_key": "87aad5f4c9",
+      "case_id": "kubernetes_context_002",
+      "domain": "kubernetes",
+      "question": "What do you gain by marking a Kubernetes ConfigMap as immutable?",
+      "reference_information": "Two benefits: it protects from accidental or unwanted updates that could cause application outages, and it improves cluster performance by significantly reducing the load on kube-apiserver (watches for immutable ConfigMaps are closed).",
+      "reference_chunks": [
+        "concepts/configuration/configmap.md#configmap-immutable"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::16",
+          "text": "ner, though\nthe Pod is allowed to start.\n\n## Immutable ConfigMaps {#configmap-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nThe Kubernetes feature _Immutable Secrets and ConfigMaps_ provides an option to set\nindividual Secrets and ConfigMaps as immutable. For clusters that extensively use ConfigMaps\n(at least tens of thousands of unique ConfigMap to Pod mounts), preventing changes to their\ndata has the following advantages:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- improves performance of your cluster by significantly reducing load on kube-apiserver, by\n  closing watches for ConfigMaps marked as immutable.\n\nYou can create an immutable ConfigMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::17",
+          "text": "igMap by setting the `immutable` field to `true`.\nFor example:\n\n```yaml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  ...\ndata:\n  ...\nimmutable: true\n```\n\nOnce a ConfigMap is marked as immutable, it is _not_ possible to revert this change\nnor to mutate the contents of the `data` or the `binaryData` field. You can\nonly delete and recreate the ConfigMap. Because existing Pods maintain a mount point\nto the deleted ConfigMap, it is recommended to recreate these pods.\n\n## {{% heading \"whatsnext\" %}}\n\n* Read about [Secrets](/docs/concepts/configuration/secret/).\n* Read [Configure a Pod to Use a ConfigMap](/docs/tasks/configure-pod-container/configure-pod-configmap/).\n* Read about [changing a ConfigMap (or any other Kubernetes object)](/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/)\n* Read [The Twelve-Factor App](https://12factor.net/) to understand the motivation for\n  separating code from configuration."
+        },
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::41",
+          "text": "p text=\"static Pods\" term_id=\"static-pod\" >}}.\n\n## Immutable Secrets {#secret-immutable}\n\n{{< feature-state for_k8s_version=\"v1.21\" state=\"stable\" >}}\n\nKubernetes lets you mark specific Secrets (and ConfigMaps) as _immutable_.\nPreventing changes to the data of an existing Secret has the following benefits:\n\n- protects you from accidental (or unwanted) updates that could cause applications outages\n- (for clusters that extensively use Secrets - at least tens of thousands of unique Secret\n  to Pod mounts), switching to immutable Secrets improves the performance of your cluster\n  by significantly reducing load on kube-apiserver. The kubelet does not need to maintain\n  a [watch] on any Secrets that are marked as immutable.\n\n### Marking a Secret as immutable {#secret-immutable-create}\n\nYou can create an immutable Secret by setting the `immutable` field to `true`. For example,\n\n```yaml\napiVersion: v1\nkind: Secret\nmetadata: ...\ndata: ...\nimmutable: true\n```"
+        },
+        {
+          "id": "kubernetes/concepts/configuration/configmap.md::3",
+          "text": "a` field must consist of\nalphanumeric characters, `-`, `_` or `.`. The keys stored in `data` must not\noverlap with the keys in the `binaryData` field.\n\nStarting from v1.19, you can add an `immutable` field to a ConfigMap\ndefinition to create an [immutable ConfigMap](#configmap-immutable).\n\n## ConfigMaps and Pods\n\nYou can write a Pod `spec` that refers to a ConfigMap and configures the container(s)\nin that Pod based on the data in the ConfigMap. The Pod and the ConfigMap must be in\nthe same {{< glossary_tooltip text=\"namespace\" term_id=\"namespace\" >}}.\n\n{{< note >}}\nThe `spec` of a {{< glossary_tooltip text=\"static Pod\" term_id=\"static-pod\" >}} cannot refer to a ConfigMap\nor any other API objects.\n{{< /note >}}\n\nHere's an example ConfigMap that has some keys with single values,\nand other keys where the value looks like a fragment of a configuration\nformat."
+        },
+        {
+          "id": "kubernetes/concepts/configuration/secret.md::42",
+          "text": "table Secret by setting the `immutable` field to `true`. For example,\n\n```yaml\napiVersion: v1\nkind: Secret\nmetadata: ...\ndata: ...\nimmutable: true\n```\n\nYou can also update any existing mutable Secret to make it immutable.\n\n{{< note >}}\nOnce a Secret or ConfigMap is marked as immutable, it is _not_ possible to revert this change\nnor to mutate the contents of the `data` field. You can only delete and recreate the Secret.\nExisting Pods maintain a mount point to the deleted Secret - it is recommended to recreate\nthese pods.\n{{< /note >}}\n\n## Information security for Secrets\n\nAlthough ConfigMap and Secret work similarly, Kubernetes applies some additional\nprotection for Secret objects."
+        }
+      ],
+      "answer": "By marking a Kubernetes ConfigMap as immutable, you gain the following benefits:\n\n- **Protection from Accidental Updates**: You prevent accidental or unauthorized changes that could potentially disrupt applications.\n- **Performance Improvement**: For clusters with a large number of unique ConfigMaps used by Pods, setting ConfigMaps as immutable can reduce load on the kube-apiserver. This is achieved by closing watches for immutable ConfigMaps, thereby improving overall cluster performance.\n\nThese benefits are particularly relevant in environments where ConfigMaps are heavily utilized and changes to their data need to be tightly controlled or minimized."
+    },
+    {
+      "item_key": "5949509fdc",
+      "case_id": "kubernetes_contra_001",
+      "domain": "kubernetes",
+      "question": "Is the Kubernetes Endpoints API deprecated?",
+      "reference_information": "Per the current corpus version: yes \u2014 Endpoints is marked deprecated as of v1.33, with EndpointSlices as its replacement. The older (1.28) corpus version describes Endpoints without any deprecation. An ideal answer says it is deprecated (current) and ideally scopes by version.",
+      "reference_chunks": [
+        "concepts/services-networking/service.md#endpoints",
+        "concepts/services-networking/service@release-1.28.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "python/howto/logging.rst::2",
+          "text": "g, and to see\nwhich logger methods to use when, see the table below. It states, for each of a\nset of common tasks, the best tool to use for that task.\n\n+-------------------------------------+--------------------------------------+\n| Task you want to perform            | The best tool for the task           |\n+=====================================+======================================+\n| Display console output for ordinary | :func:`print`                        |\n| usage of a command line script or   |                                      |\n| program                             |                                      |\n+-------------------------------------+--------------------------------------+\n| Report events that occur during     | A logger's :meth:`~Logger.info` (or  |\n| normal operation of a program (e.g. | :meth:`~Logger.debug` method for very|\n| for status monitoring or fault      | detailed output for diagnostic       |"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/ingress-controllers.md::0",
+          "text": "---\ntitle: Ingress Controllers\ndescription: >-\n  In order for an [Ingress](/docs/concepts/services-networking/ingress/) to work in your cluster,\n  there must be an _ingress controller_ running.\n  You need to select at least one ingress controller and make sure it is set up in your cluster.  \n  This page lists common ingress controllers that you can deploy.\ncontent_type: concept\nweight: 50\n---\n\n{{< note >}}\nThe Kubernetes project recommends using [Gateway](https://gateway-api.sigs.k8s.io/) instead of\n[Ingress](/docs/concepts/services-networking/ingress/).\nThe Ingress API has been frozen.\n\nThis means that:\n* The Ingress API is generally available, and is subject to the [stability guarantees](/docs/reference/using-api/deprecation-policy/#deprecating-parts-of-the-api) for generally available APIs.\n  The Kubernetes project has no plans to remove Ingress from Kubernetes.\n* The Ingress API is no longer being developed, and will have no further changes\n  or updates made to it.\n{{< /note >}}"
+        },
+        {
+          "id": "docker/manuals/engine/storage/drivers/zfs-driver.md::10",
+          "text": "nly layers.\n  - If you create and then delete a file or directory within the container's\n    writable layer, the blocks are reclaimed by the `zpool`.\n\n\n## ZFS and Docker performance\n\nThere are several factors that influence the performance of Docker using the\n`zfs` storage driver.\n\n- **Memory**: Memory has a major impact on ZFS performance. ZFS was originally\n  designed for large enterprise-grade servers with a large amount of memory.\n\n- **ZFS Features**: ZFS includes a de-duplication feature. Using this feature\n  may save disk space, but uses a large amount of memory. It is recommended that\n  you disable this feature for the `zpool` you are using with Docker, unless you\n  are using SAN, NAS, or other hardware RAID technologies."
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/ingress.md::12",
+          "text": "aml\" %}}\n\nAfter creating the Ingress above, you can view it with the following command:\n\n```bash\nkubectl describe ingress ingress-resource-backend\n```\n\n```\nName:             ingress-resource-backend\nNamespace:        default\nAddress:\nDefault backend:  APIGroup: k8s.example.com, Kind: StorageBucket, Name: static-assets\nRules:\n  Host        Path  Backends\n  ----        ----  --------\n  *\n              /icons   APIGroup: k8s.example.com, Kind: StorageBucket, Name: icon-assets\nAnnotations:  <none>\nEvents:       <none>\n```\n\n### Path types\n\nEach path in an Ingress is required to have a corresponding path type. Paths\nthat do not include an explicit `pathType` will fail validation. There are three\nsupported path types:\n\n* `ImplementationSpecific`: With this path type, matching is up to the\n  IngressClass. Implementations can treat this as a separate `pathType` or treat\n  it identically to `Prefix` or `Exact` path types.\n\n* `Exact`: Matches the URL path exactly and with case sensitivity."
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::60",
+          "text": "for the service to be\nconnected to the `default` network:\n\n```yml\nservices:\n  some-service:\n    image: foo\n```\nThis example is actually equivalent to:\n\n```yml\nservices:\n  some-service:\n    image: foo\n    networks:\n      default: {}\n```\n\nIf you want the service to not be connected a network, you must set [`network_mode: none`](#network_mode).\n\n#### `aliases`\n\n`aliases` declares alternative hostnames for the service on the network. Other containers on the same\nnetwork can use either the service name or an alias to connect to one of the service's containers.\n\nSince `aliases` are network-scoped, the same service can have different aliases on different networks.\n\n> [!NOTE]\n> A network-wide alias can be shared by multiple containers, and even by multiple services.\n> If it is, then exactly which container the name resolves to is not guaranteed."
+        }
+      ],
+      "answer": "The information provided in the given context does not mention whether the Kubernetes Endpoints API is deprecated or not. Therefore, based on the provided documentation, I cannot answer this question."
+    },
+    {
+      "item_key": "54a11ad33f",
+      "case_id": "kubernetes_contra_001",
+      "domain": "kubernetes",
+      "question": "Is the Kubernetes Endpoints API deprecated?",
+      "reference_information": "Per the current corpus version: yes \u2014 Endpoints is marked deprecated as of v1.33, with EndpointSlices as its replacement. The older (1.28) corpus version describes Endpoints without any deprecation. An ideal answer says it is deprecated (current) and ideally scopes by version.",
+      "reference_chunks": [
+        "concepts/services-networking/service.md#endpoints",
+        "concepts/services-networking/service@release-1.28.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/services-networking/service.md::19",
+          "text": "ices/) for more\ninformation about this API.\n\n### Endpoints (deprecated) {#endpoints}\n\n{{< feature-state for_k8s_version=\"v1.33\" state=\"deprecated\" >}}\n\nThe EndpointSlice API is the evolution of the older\n[Endpoints](/docs/reference/kubernetes-api/service-resources/endpoints-v1/)\nAPI. The deprecated Endpoints API has several problems relative to\nEndpointSlice:\n\n  - It does not support dual-stack clusters.\n  - It does not contain information needed to support newer features, such as\n    [trafficDistribution](/docs/concepts/services-networking/service/#traffic-distribution).\n  - It will truncate the list of endpoints if it is too long to fit in a single object.\n\nBecause of this, it is recommended that all clients use the\nEndpointSlice API rather than Endpoints.\n\n#### Over-capacity endpoints"
+        }
+      ],
+      "answer": "Yes, the Kubernetes Endpoints API is deprecated."
+    },
+    {
+      "item_key": "e5a1a9d415",
+      "case_id": "kubernetes_context_001",
+      "domain": "kubernetes",
+      "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+      "reference_information": "No. A rollout is triggered if and only if the Deployment's Pod template (.spec.template) changes \u2014 for example labels or container images. Scaling does not modify the template and does not trigger a rollout.",
+      "reference_chunks": [
+        "concepts/workloads/controllers/deployment.md#updating-a-deployment"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::477",
+          "text": "Should you manually scale a Deployment, example via `kubectl scale deployment"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::462",
+          "text": "Should you manually scale a Deployment, example via `kubectl scale deployment"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::19",
+          "text": ". Each rollback updates the revision of the Deployment.\n* [Scale up the Deployment to facilitate more load](#scaling-a-deploymen"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::19",
+          "text": "* [Scale up the Deployment to facilitate more load](#scaling-a-deployment)."
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::101",
+          "text": "* After the rollout succeeds, you can view the Deployment by running `kubectl get deployments`."
+        }
+      ],
+      "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. Therefore, based on the given information, I cannot provide an answer to this question."
+    },
+    {
+      "item_key": "012c53941d",
+      "case_id": "kubernetes_direct_001",
+      "domain": "kubernetes",
+      "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+      "reference_information": "Four initial namespaces: default, kube-node-lease, kube-public, and kube-system.",
+      "reference_chunks": [
+        "concepts/overview/working-with-objects/namespaces.md#initial-namespaces"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/cluster-administration/node-autoscaling.md::1",
+          "text": "o provide needed\ncapacity while optimizing cost. Autoscaling is performed by Node [_autoscalers_](#autoscalers).\n\n## Node provisioning {#provisioning}\n\nIf there are Pods in a cluster that can't be scheduled on existing Nodes, new Nodes can be\nautomatically added to the cluster&mdash;_provisioned_&mdash;to accommodate the Pods. This is\nespecially useful if the number of Pods changes over time, for example as a result of\n[combining horizontal workload with Node autoscaling](#horizontal-workload-autoscaling).\n\nAutoscalers provision the Nodes by creating and deleting cloud provider resources backing them. Most\ncommonly, the resources backing the Nodes are Virtual Machines."
+        },
+        {
+          "id": "docker/get-started/docker-concepts/building-images/multi-stage-builds.md::14",
+          "text": "lication\n\n1. Now that you have an image built, it's time to run the container.\n\n    ```console\n    $ docker run -p 8080:8080 spring-helloworld\n    ```\n\n    You'll then see output similar to the following in the container log:\n\n    ```plaintext\n    [INFO] --- spring-boot:3.3.4:run (default-cli) @ spring-boot-docker ---\n    [INFO] Attaching agents: []\n    \n         .   ____          _            __ _ _\n        /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n       ( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n        \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n         '  |____| .__|_| |_|_| |_\\__, | / / / /\n        =========|_|==============|___/=/_/_/_/\n    \n        :: Spring Boot ::                (v3.3.4)\n    \n    2024-09-29T23:54:07.157Z  INFO 159 --- [spring-boot-docker] [           main]\n    c.e.s.SpringBootDockerApplication        : Starting SpringBootDockerApplication using Java\n    21.0.2 with PID 159 (/app/target/classes started by root in /app)\n     \u2026.\n     ```"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/compositepodgroup-api/_index.md::2",
+          "text": "`. When a workload controller creates a\n`CompositePodGroup`, this policy is copied from the `Workload`'s `CompositePodGroupTemplate`\nat creation time.\n\nFor a `gang` policy on a `CompositePodGroup`, the `minGroupCount` field specifies the\nminimum number of child groups that must be schedulable simultaneously:\n\n```yaml\nspec:\n  schedulingPolicy:\n    gang:\n      minGroupCount: 2\n```\n\n### Parent group reference\n\nNon-root `CompositePodGroup` resources specify their parent group using\n`spec.parentCompositePodGroupName`. Root `CompositePodGroup` objects leave this field unset.\n\n```yaml\nspec:\n  parentCompositePodGroupName: root-group-0\n```\n\n### Workload reference\n\nThe `spec.workloadRef` field links the `CompositePodGroup` back to the\n`CompositePodGroupTemplate` in the `Workload` object it was derived from.\n\n```yaml\nspec:\n  workloadRef:\n    workloadName: hierarchical-workload\n    templateName: replica-group\n```\n\n### Status"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/ingress.md::1",
+          "text": "using [Gateway](https://gateway-api.sigs.k8s.io/) instead of\n[Ingress](/docs/concepts/services-networking/ingress/).\nThe Ingress API has been frozen.\n\nThis means that:\n* The Ingress API is generally available, and is subject to the [stability guarantees](/docs/reference/using-api/deprecation-policy/#deprecating-parts-of-the-api) for generally available APIs.\n  The Kubernetes project has no plans to remove Ingress from Kubernetes.\n* The Ingress API is no longer being developed, and will have no further changes\n  or updates made to it.\n{{< /note >}}\n\n<!-- body -->\n\n\n## Terminology\n\nFor clarity, this guide defines the following terms:"
+        },
+        {
+          "id": "docker/manuals/engine/network/firewall-nftables.md::5",
+          "text": "et to `DROP` by Docker with iptables, or as part of your host's\nfirewall configuration. See [FORWARD policy in iptables](#forward-policy-in-iptables).\n\n### IP forwarding\n\nIP forwarding on the Docker host enables Docker functionality including port\npublishing, communication between bridge networks, and direct routing from\noutside the host to containers in bridge networks.\n\nWhen running with iptables, depending on network and daemon configuration,\nDocker may enable IPv4 and IPv6 forwarding on the host.\n\nWith its nftables firewall backend enabled, Docker will not enable IP forwarding\nitself. It will report an error if forwarding is needed, but not already enabled.\nTo disable Docker's check for IP forwarding, letting it start and create networks\nwhen it determines that forwarding is disabled, use Daemon option `--ip-forward=false`,\nor `\"ip-forward\": false` in its configuration file."
+        }
+      ],
+      "answer": "The provided context does not contain information about the namespaces that a fresh Kubernetes cluster starts with. Therefore, the information is not present in the given documentation."
+    }
+  ]
+}

@@ -1,0 +1,272 @@
+{
+  "batch_id": "smoke-b01",
+  "domain": "mixed",
+  "smoke": true,
+  "study_version": "pilot-20260904T145740Z",
+  "items": [
+    {
+      "item_key": "012c53941d",
+      "case_id": "kubernetes_direct_001",
+      "domain": "kubernetes",
+      "question": "Which namespaces does a fresh Kubernetes cluster start with?",
+      "reference_information": "Four initial namespaces: default, kube-node-lease, kube-public, and kube-system.",
+      "reference_chunks": [
+        "concepts/overview/working-with-objects/namespaces.md#initial-namespaces"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/cluster-administration/node-autoscaling.md::1",
+          "text": "o provide needed\ncapacity while optimizing cost. Autoscaling is performed by Node [_autoscalers_](#autoscalers).\n\n## Node provisioning {#provisioning}\n\nIf there are Pods in a cluster that can't be scheduled on existing Nodes, new Nodes can be\nautomatically added to the cluster&mdash;_provisioned_&mdash;to accommodate the Pods. This is\nespecially useful if the number of Pods changes over time, for example as a result of\n[combining horizontal workload with Node autoscaling](#horizontal-workload-autoscaling).\n\nAutoscalers provision the Nodes by creating and deleting cloud provider resources backing them. Most\ncommonly, the resources backing the Nodes are Virtual Machines."
+        },
+        {
+          "id": "docker/get-started/docker-concepts/building-images/multi-stage-builds.md::14",
+          "text": "lication\n\n1. Now that you have an image built, it's time to run the container.\n\n    ```console\n    $ docker run -p 8080:8080 spring-helloworld\n    ```\n\n    You'll then see output similar to the following in the container log:\n\n    ```plaintext\n    [INFO] --- spring-boot:3.3.4:run (default-cli) @ spring-boot-docker ---\n    [INFO] Attaching agents: []\n    \n         .   ____          _            __ _ _\n        /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n       ( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n        \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n         '  |____| .__|_| |_|_| |_\\__, | / / / /\n        =========|_|==============|___/=/_/_/_/\n    \n        :: Spring Boot ::                (v3.3.4)\n    \n    2024-09-29T23:54:07.157Z  INFO 159 --- [spring-boot-docker] [           main]\n    c.e.s.SpringBootDockerApplication        : Starting SpringBootDockerApplication using Java\n    21.0.2 with PID 159 (/app/target/classes started by root in /app)\n     \u2026.\n     ```"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/compositepodgroup-api/_index.md::2",
+          "text": "`. When a workload controller creates a\n`CompositePodGroup`, this policy is copied from the `Workload`'s `CompositePodGroupTemplate`\nat creation time.\n\nFor a `gang` policy on a `CompositePodGroup`, the `minGroupCount` field specifies the\nminimum number of child groups that must be schedulable simultaneously:\n\n```yaml\nspec:\n  schedulingPolicy:\n    gang:\n      minGroupCount: 2\n```\n\n### Parent group reference\n\nNon-root `CompositePodGroup` resources specify their parent group using\n`spec.parentCompositePodGroupName`. Root `CompositePodGroup` objects leave this field unset.\n\n```yaml\nspec:\n  parentCompositePodGroupName: root-group-0\n```\n\n### Workload reference\n\nThe `spec.workloadRef` field links the `CompositePodGroup` back to the\n`CompositePodGroupTemplate` in the `Workload` object it was derived from.\n\n```yaml\nspec:\n  workloadRef:\n    workloadName: hierarchical-workload\n    templateName: replica-group\n```\n\n### Status"
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/ingress.md::1",
+          "text": "using [Gateway](https://gateway-api.sigs.k8s.io/) instead of\n[Ingress](/docs/concepts/services-networking/ingress/).\nThe Ingress API has been frozen.\n\nThis means that:\n* The Ingress API is generally available, and is subject to the [stability guarantees](/docs/reference/using-api/deprecation-policy/#deprecating-parts-of-the-api) for generally available APIs.\n  The Kubernetes project has no plans to remove Ingress from Kubernetes.\n* The Ingress API is no longer being developed, and will have no further changes\n  or updates made to it.\n{{< /note >}}\n\n<!-- body -->\n\n\n## Terminology\n\nFor clarity, this guide defines the following terms:"
+        },
+        {
+          "id": "docker/manuals/engine/network/firewall-nftables.md::5",
+          "text": "et to `DROP` by Docker with iptables, or as part of your host's\nfirewall configuration. See [FORWARD policy in iptables](#forward-policy-in-iptables).\n\n### IP forwarding\n\nIP forwarding on the Docker host enables Docker functionality including port\npublishing, communication between bridge networks, and direct routing from\noutside the host to containers in bridge networks.\n\nWhen running with iptables, depending on network and daemon configuration,\nDocker may enable IPv4 and IPv6 forwarding on the host.\n\nWith its nftables firewall backend enabled, Docker will not enable IP forwarding\nitself. It will report an error if forwarding is needed, but not already enabled.\nTo disable Docker's check for IP forwarding, letting it start and create networks\nwhen it determines that forwarding is disabled, use Daemon option `--ip-forward=false`,\nor `\"ip-forward\": false` in its configuration file."
+        }
+      ],
+      "answer": "The provided context does not contain information about the namespaces that a fresh Kubernetes cluster starts with. Therefore, the information is not present in the given documentation."
+    },
+    {
+      "item_key": "ae48435380",
+      "case_id": "fastapi_unans_001",
+      "domain": "fastapi",
+      "question": "How many Uvicorn workers does the FastAPI documentation recommend running in production?",
+      "reference_information": "Deployment documentation is not part of the corpus (tutorial + advanced only); the ideal response states that this recommendation is not in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/index.md::0",
+          "text": "# Tutorial - User Guide { #tutorial-user-guide }\n\nThis tutorial shows you how to use **FastAPI** with most of its features, step by step.\n\nEach section gradually builds on the previous ones, but it's structured to separate topics, so that you can go directly to any specific one to solve your specific API needs.\n\nIt is also built to work as a future reference so you can come back and see exactly what you need.\n\n## Run the code { #run-the-code }\n\nAll the code blocks can be copied and used directly (they are actually tested Python files).\n\nTo run any of the examples, copy the code to a file `main.py`, and start `fastapi dev` with `uv run`:\n\n<div class=\"termy\">\n\n```console\n$ <font color=\"#4E9A06\">uv run fastapi</font> dev\n\n  <span style=\"background-color:#009485\"><font color=\"#D3D7CF\"> FastAPI </font></span>  Starting development server \ud83d\ude80"
+        }
+      ],
+      "answer": "The provided context does not contain information about the number of Uvicorn workers recommended for production use by the FastAPI documentation."
+    },
+    {
+      "item_key": "41a757e1a6",
+      "case_id": "docker_trap_001",
+      "domain": "docker",
+      "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+      "reference_information": "The premise is false: anonymous volumes persist even if the container that uses them is removed. The exception is creating the container with the --rm flag, in which case the associated anonymous volume is destroyed with it.",
+      "reference_chunks": [
+        "manuals/engine/storage/volumes.md#named-and-anonymous-volumes"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::37",
+          "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+        }
+      ],
+      "answer": "To keep the data in an anonymous volume when its container is removed, you would need to mount that volume to a host directory or convert it into a named volume. Here are two common methods:\n\n1. **Mounting to a Host Directory:**\n   You can create a directory on your host machine and mount this directory as a volume inside the container. This way, any data written to the volume will be stored in the host directory.\n\n   ```console\n   $ docker run --rm -v /path/on/host:/foo busybox top\n   ```\n\n2. **Converting Anonymous Volume to Named Volume:**\n   After using the `--rm` option to clean up anonymous volumes, you can recreate them as named volumes and then mount these named volumes.\n\n   ```console\n   $ docker run --name my_container -v /foo -v awesome:/bar busybox top\n   ```\n\nBy doing this, any data written to `/foo` will be stored in a named volume that persists even after the container is removed."
+    },
+    {
+      "item_key": "7b587e3922",
+      "case_id": "kubernetes_multi_001",
+      "domain": "kubernetes",
+      "question": "When should I use a StatefulSet instead of a Deployment in Kubernetes?",
+      "reference_information": "Use a StatefulSet when the application needs one or more of: stable, unique network identifiers; stable, persistent storage; ordered, graceful deployment and scaling; ordered, automated rolling updates. For applications without these requirements, a Deployment (which manages interchangeable replicas through ReplicaSets) is the standard choice.",
+      "reference_chunks": [
+        "concepts/workloads/controllers/statefulset.md#using-statefulsets",
+        "concepts/workloads/controllers/deployment.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/workloads/controllers/_index.md::2",
+          "text": "if needed.\n(Deployments are a replacement for the legacy\n{{< glossary_tooltip text=\"ReplicationController\" term_id=\"replication-controller\" >}} API).\n\nA [StatefulSet](/docs/concepts/workloads/controllers/statefulset/) lets you\nmanage one or more Pods \u2013 all running the same application code \u2013 where the Pods rely\non having a distinct identity. This is different from a Deployment where the Pods are\nexpected to be interchangeable.\nThe most common use for a StatefulSet is to be able to make a link between its Pods and\ntheir persistent storage. For example, you can run a StatefulSet that associates each Pod\nwith a [PersistentVolume](/docs/concepts/storage/persistent-volumes/). If one of the Pods\nin the StatefulSet fails, Kubernetes makes a replacement Pod that is connected to the\nsame PersistentVolume."
+        }
+      ],
+      "answer": "You should use a StatefulSet instead of a Deployment in Kubernetes when your application requires each Pod to have a distinct identity and persistent storage. This is because StatefulSets are designed to manage Pods that rely on having a unique identifier, whereas Deployments treat all Pods as interchangeable."
+    },
+    {
+      "item_key": "49b4513c60",
+      "case_id": "docker_direct_001",
+      "domain": "docker",
+      "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+      "reference_information": "The build context defaults to the project directory (`.`).",
+      "reference_chunks": [
+        "reference/compose-file/build.md#context"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/reference/compose-file/build.md::3",
+          "text": "this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file.\n- A Docker image is built using the `custom` directory with the user's `$HOME` as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n\n- A relative path to the Compose file's folder. This path must be a directory and must contain a `Dockerfile`"
+        }
+      ],
+      "answer": "If you do not set the `build` attribute explicitly in a Docker Compose file, there is no specified build context provided. Therefore, the information is not present in the provided documentation regarding an implicit default build context when none is set."
+    },
+    {
+      "item_key": "e5a1a9d415",
+      "case_id": "kubernetes_context_001",
+      "domain": "kubernetes",
+      "question": "Does scaling a Kubernetes Deployment trigger a rollout?",
+      "reference_information": "No. A rollout is triggered if and only if the Deployment's Pod template (.spec.template) changes \u2014 for example labels or container images. Scaling does not modify the template and does not trigger a rollout.",
+      "reference_chunks": [
+        "concepts/workloads/controllers/deployment.md#updating-a-deployment"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::477",
+          "text": "Should you manually scale a Deployment, example via `kubectl scale deployment"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::462",
+          "text": "Should you manually scale a Deployment, example via `kubectl scale deployment"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::19",
+          "text": ". Each rollback updates the revision of the Deployment.\n* [Scale up the Deployment to facilitate more load](#scaling-a-deploymen"
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment@release-1.28.md::19",
+          "text": "* [Scale up the Deployment to facilitate more load](#scaling-a-deployment)."
+        },
+        {
+          "id": "kubernetes/concepts/workloads/controllers/deployment.md::101",
+          "text": "* After the rollout succeeds, you can view the Deployment by running `kubectl get deployments`."
+        }
+      ],
+      "answer": "The provided context does not explicitly state whether scaling a Kubernetes Deployment triggers a rollout. Therefore, based on the given information, I cannot provide an answer to this question."
+    },
+    {
+      "item_key": "da5e97bcf0",
+      "case_id": "docker_contra_001",
+      "domain": "docker",
+      "question": "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?",
+      "reference_information": "No. The current docs state explicitly that unlike Dockerfile CMD, the Compose command field does not automatically run within the image's SHELL context; shell features require explicitly wrapping the command in a shell. The older corpus version is silent on this point. An ideal answer states the current explicit behavior.",
+      "reference_chunks": [
+        "reference/compose-file/services.md#command",
+        "reference/compose-file/services@916f044b7cbcae6d02c992ac.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/reference/compose-file/services.md::11",
+          "text": "the value is `[]` (empty list) or `''` (empty string), the default command declared by the image is ignored, or in other words overridden to be empty.\n\n> [!NOTE]\n>\n> Unlike the `CMD` instruction in a Dockerfile, the `command` field doesn't automatically run within the context of the [`SHELL`](/reference/dockerfile.md#shell-form) instruction defined in the image. If your `command` relies on shell-specific features, such as environment variable expansion, you need to explicitly run it within a shell. For example:\n>\n> ```yaml\n> command: /bin/sh -c 'echo \"hello $$HOSTNAME\"'\n> ```\n\nThe value can also be a list, similar to the [exec-form syntax](/reference/dockerfile.md#exec-form)\nused by the [Dockerfile](/reference/dockerfile.md#exec-form).\n\n### `configs`\n\n`configs` let services adapt their behaviour without the need to rebuild a Docker image.\nServices can only access configs when explicitly granted by the `configs` attribute. Two different syntax variants are supported."
+        },
+        {
+          "id": "docker/manuals/engine/swarm/configs.md::9",
+          "text": "s for\n> simplicity. The examples use Linux containers, but Windows containers also\n> support configs.\n\n### Defining and using configs in compose files\n\nThe `docker stack` command supports defining configs in a Compose file.\nHowever, the `configs` key is not supported for `docker compose`. See\n[the Compose file reference](/reference/compose-file/configs.md) for details.\n\n### Simple example: Get started with configs\n\nThis simple example shows how configs work in just a few commands. For a\nreal-world example, continue to\n[Advanced example: Use configs with a Nginx service](#advanced-example-use-configs-with-a-nginx-service).\n\n1.  Add a config to Docker. The `docker config create` command reads standard\n    input because the last argument, which represents the file to read the\n    config from, is set to `-`.\n\n    ```console\n    $ echo \"This is a config\" | docker config create my-config -\n    ```"
+        },
+        {
+          "id": "docker/reference/compose-file/_index.md::2",
+          "text": "features and use cases of Docker Compose](/manuals/compose/intro/features-uses.md) or [try the quickstart guide](/manuals/compose/gettingstarted.md).\n\nThe Compose Specification is the latest and recommended version of the Compose file format. It helps you define a [Compose file](/manuals/compose/intro/compose-application-model.md) which is used to configure your Docker application\u2019s services, networks, volumes, and more.\n\nLegacy versions 2.x and 3.x of the Compose file format were merged into the Compose Specification. It is implemented in versions 1.27.0 and above (also known as Compose v2) of the Docker Compose CLI.\n\nThe Compose Specification on Docker Docs is the Docker Compose implementation. If you wish to implement your own version of the Compose Specification, see the [Compose Specification repository](https://github.com/compose-spec/compose-spec).\n\nUse the following links to navigate key sections of the Compose Specification."
+        },
+        {
+          "id": "docker/reference/compose-file/configs.md::1",
+          "text": "tion data that is granted to services in your Compose application. The source of the config is either `file`, `environment`, `content`, or `external`.\n\n- `file`: The config is created with the contents of the file at the specified path.\n- `environment`: The config content is created with the value of an environment variable. Introduced in Docker Compose version [2.23.1](https://github.com/docker/compose/releases/tag/v2.23.1).\n- `content`: The content is created with the inlined value. Introduced in Docker Compose version [2.23.1](https://github.com/docker/compose/releases/tag/v2.23.1).\n- `external`: If set to true, `external` specifies that this config has already been created. Compose does not\n  attempt to create it, and if it does not exist, an error occurs.\n- `name`: The name of the config object in the container engine to look up. This field can be used to\n  reference configs that contain special characters. The name is used as is"
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::44",
+          "text": "s durations](extension.md#specifying-durations). Introduced in Docker Compose version [2.20.2](https://github.com/docker/compose/releases/tag/v2.20.2)\n\n`test` defines the command Compose runs to check container health. It can be\neither a string or a list. If it's a list, the first item must be either `NONE`, `CMD` or `CMD-SHELL`.\nIf it's a string, it's equivalent to specifying `CMD-SHELL` followed by that string.\n\n```yml\n# Hit the local web app\ntest: [\"CMD\", \"curl\", \"-f\", \"http://localhost\"]\n```\n\nUsing `CMD-SHELL` runs the command configured as a string using the container's default shell\n(`/bin/sh` for Linux). Both of the following forms are equivalent:\n\n```yml\ntest: [\"CMD-SHELL\", \"curl -f http://localhost || exit 1\"]\n```\n\n```yml\ntest: curl -f https://localhost || exit 1\n```"
+        }
+      ],
+      "answer": "No, the `command` field in Docker Compose does not automatically run within the context of the `SHELL` instruction defined in the image. If your command relies on shell-specific features such as environment variable expansion, you need to explicitly run it within a shell, similar to how it would be done in a Dockerfile with the `CMD-SHELL` form."
+    },
+    {
+      "item_key": "859b70d2f3",
+      "case_id": "python_unans_001",
+      "domain": "python",
+      "question": "What are the parameters of str.split() and what are their default values?",
+      "reference_information": "The corpus (tutorial + HOWTOs) does not include the library reference; the ideal response states that the signature details are not in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "python/howto/regex.rst::70",
+          "text": ",  but     |\n|                  | returns the new string and the number of      |\n|                  | replacements                                  |\n+------------------+-----------------------------------------------+\n\n\nSplitting Strings\n-----------------\n\nThe :meth:`~re.Pattern.split` method of a pattern splits a string apart\nwherever the RE matches, returning a list of the pieces. It's similar to the\n:meth:`~str.split` method of strings but provides much more generality in the\ndelimiters that you can split by; string :meth:`!split` only supports splitting by\nwhitespace or by a fixed string.  As you'd expect, there's a module-level\n:func:`re.split` function, too.\n\n\n.. method:: .split(string [, maxsplit=0])\n   :noindex:\n\n   Split *string* by the matches of the regular expression.  If capturing\n   parentheses are used in the RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed."
+        },
+        {
+          "id": "python/howto/regex.rst::71",
+          "text": "RE, then their contents will also be returned as\n   part of the resulting list.  If *maxsplit* is nonzero, at most *maxsplit* splits\n   are performed.\n\nYou can limit the number of splits made, by passing a value for *maxsplit*.\nWhen *maxsplit* is nonzero, at most *maxsplit* splits will be made, and the\nremainder of the string is returned as the final element of the list.  In the\nfollowing example, the delimiter is any sequence of non-alphanumeric characters.\n::\n\n   >>> p = re.compile(r'\\W+')\n   >>> p.split('This is a test, short and sweet, of split().')\n   ['This', 'is', 'a', 'test', 'short', 'and', 'sweet', 'of', 'split', '']\n   >>> p.split('This is a test, short and sweet, of split().', 3)\n   ['This', 'is', 'a', 'test, short and sweet, of split().']"
+        },
+        {
+          "id": "python/tutorial/inputoutput.rst::22",
+          "text": "binary mode) -- before writing them::\n\n   >>> value = ('the answer', 42)\n   >>> s = str(value)  # convert the tuple to string\n   >>> f.write(s)\n   18\n\n``f.tell()`` returns an integer giving the file object's current position in the file\nrepresented as number of bytes from the beginning of the file when in binary mode and\nan opaque number when in text mode.\n\nTo change the file object's position, use ``f.seek(offset, whence)``.  The position is computed\nfrom adding *offset* to a reference point; the reference point is selected by\nthe *whence* argument.  A *whence* value of 0 measures from the beginning\nof the file, 1 uses the current file position, and 2 uses the end of the file as\nthe reference point.  *whence* can be omitted and defaults to 0, using the\nbeginning of the file as the reference point. ::"
+        },
+        {
+          "id": "python/howto/regex.rst::72",
+          "text": "et', 'of', 'split', '']\n   >>> p.split('This is a test, short and sweet, of split().', 3)\n   ['This', 'is', 'a', 'test, short and sweet, of split().']\n\nSometimes you're not only interested in what the text between delimiters is, but\nalso need to know what the delimiter was.  If capturing parentheses are used in\nthe RE, then their values are also returned as part of the list.  Compare the\nfollowing calls::\n\n   >>> p = re.compile(r'\\W+')\n   >>> p2 = re.compile(r'(\\W+)')\n   >>> p.split('This... is a test.')\n   ['This', 'is', 'a', 'test', '']\n   >>> p2.split('This... is a test.')\n   ['This', '... ', 'is', ' ', 'a', ' ', 'test', '.', '']\n\nThe module-level function :func:`re.split` adds the RE to be used as the first\nargument, but is otherwise the same.   ::"
+        },
+        {
+          "id": "python/tutorial/inputoutput.rst::20",
+          "text": "s twice as large as your machine's memory. Otherwise, at most *size*\ncharacters (in text mode) or *size* bytes (in binary mode) are read and returned.\nIf the end of the file has been reached, ``f.read()`` will return an empty\nstring (``''``).  ::\n\n   >>> f.read()\n   'This is the entire file.\\n'\n   >>> f.read()\n   ''\n\n``f.readline()`` reads a single line from the file; a newline character (``\\n``)\nis left at the end of the string, and is only omitted on the last line of the\nfile if the file doesn't end in a newline.  This makes the return value\nunambiguous; if ``f.readline()`` returns an empty string, the end of the file\nhas been reached, while a blank line is represented by ``'\\n'``, a string\ncontaining only a single newline.  ::\n\n   >>> f.readline()\n   'This is the first line of the file.\\n'\n   >>> f.readline()\n   'Second line of the file\\n'\n   >>> f.readline()\n   ''"
+        }
+      ],
+      "answer": "The method `str.split()` has one parameter:\n\n- `string`: The string to be split.\n\nIt also has an optional parameter:\n\n- `maxsplit`: The maximum number of splits to perform. If not provided, it defaults to 0, meaning no limit on the number of splits."
+    },
+    {
+      "item_key": "fece4a6e58",
+      "case_id": "docker_context_001",
+      "domain": "docker",
+      "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+      "reference_information": "It is restarted. With `always`, a manually stopped container is restarted when the Docker daemon restarts (or when the container is manually restarted) \u2014 this is precisely what distinguishes `always` from `unless-stopped`.",
+      "reference_chunks": [
+        "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::3",
+          "text": "|\n| `on-failure[:max-retries]` | Restart the container if it exits due to an error, which manifests as a non-zero exit code. Optionally, limit the number of times the Docker daemon attempts to restart the container using the `:max-retries` option. The `on-failure` policy only prompts a restart if the container exits with a failure. It doesn't restart the container if the daemon restarts. |\n| `always`                   | Always restart the container if it stops. If it's manually stopped, it's restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in [restart policy details](#restart-policy-details))                                                                                                                |"
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::84",
+          "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+        },
+        {
+          "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::64",
+          "text": "ts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run.md#restart)\nsection of the Docker run reference page.\n\n### runtime\n\n`runtime` specifies which runtime to use for the service\u2019s containers.\n\nFor example, `runtime` can be the name of [an implementation of OCI Runtime Spec](https://github.com/opencontainers/runtime-spec/blob/master/implementations.md), such as \"runc\".\n\n```yml\nweb:\n  image: busybox:latest\n  command: true\n  runtime: runc\n```\n\nThe default is `runc`. To use a different runtime, see [Alternative runtimes](/engine/daemon/alternative-runtimes.md).\n\n### scale"
+        },
+        {
+          "id": "docker/reference/compose-file/deploy.md::10",
+          "text": "and how to restart containers when they exit. If `restart_policy` is not set, Compose considers the `restart` field set by the service configuration.\n\n- `condition`. When set to:\n  - `none`, containers are not automatically restarted regardless of the exit status.\n  - `on-failure`, the container is restarted if it exits due to an error, which manifests as a non-zero exit code.\n  - `any` (default), containers are restarted regardless of the exit status. \n- `delay`: How long to wait between restart attempts, specified as a [duration](extension.md#specifying-durations). The default is 0, meaning restart attempts can occur immediately.\n- `max_attempts`: The maximum number of failed restart attempts allowed before giving up. (Default: unlimited retries.)\nA failed attempt only counts toward `max_attempts` if the container does not successfully restart within the time defined by `window`."
+        },
+        {
+          "id": "kubernetes/concepts/workloads/pods/pod-lifecycle.md::22",
+          "text": "re`: Only restarts the container if it exits with an error (non-zero exit status).\n* `Never`: Does not automatically restart the terminated container.\n\n##### Restart behavior comparison\n\nThe following table shows how containers behave under different restart policies and exit codes:\n\n| Exit Code | `restartPolicy: Always` | `restartPolicy: OnFailure` | `restartPolicy: Never` | Sidecar Containers |\n|-----------|-------------------------|---------------------------|------------------------|-------------------|\n| 0 (Success) | Restarts | Does not restart | Does not restart | Always restarts |\n| Non-zero (Failure) | Restarts | Restarts | Does not restart | Always restarts |"
+        }
+      ],
+      "answer": "According to the provided context, if a container has the `always` restart policy and is manually stopped, it will only be restarted when:\n\n- The Docker daemon restarts.\n- The container itself is manually restarted.\n\nSince the question specifically asks about what happens when the Docker daemon restarts, the answer is that the container will be restarted when the Docker daemon restarts."
+    },
+    {
+      "item_key": "1ab2405788",
+      "case_id": "fastapi_context_001",
+      "domain": "fastapi",
+      "question": "In FastAPI, what makes a query parameter required rather than optional?",
+      "reference_information": "Not declaring any default value. A query parameter with a default value is not required; to make it required, simply omit the default.",
+      "reference_chunks": [
+        "tutorial/query-params.md#required-query-parameters"
+      ],
+      "retrieved_context": [
+        {
+          "id": "fastapi/tutorial/query-params.md::2",
+          "text": "same way, you can declare optional query parameters, by setting their default to `None`:\n\n{* ../../docs_src/query_params/tutorial002_py310.py hl[7] *}\n\nIn this case, the function parameter `q` will be optional, and will be `None` by default.\n\n/// tip\n\nAlso notice that **FastAPI** is smart enough to notice that the path parameter `item_id` is a path parameter and `q` is not, so, it's a query parameter.\n\n///\n\n## Query parameter type conversion { #query-parameter-type-conversion }\n\nYou can also declare `bool` types, and they will be converted:\n\n{* ../../docs_src/query_params/tutorial003_py310.py hl[7] *}\n\nIn this case, if you go to:\n\n```\nhttp://127.0.0.1:8000/items/foo?short=1\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=True\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=true\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=on\n```\n\nor\n\n```\nhttp://127.0.0.1:8000/items/foo?short=yes\n```"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::0",
+          "text": "# Query Parameters and String Validations\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial001.py!}\n    ```\n\nThe query parameter `q` is of type `Union[str, None]` (or `str | None` in Python 3.10), that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n!!! note\n    FastAPI will know that the value of `q` is not required because of the default value `= None`.\n\n    The `Union` in `Union[str, None]` will allow your editor to give you better support and detect errors.\n\n## Additional validation"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations.md::0",
+          "text": "# Query Parameters and String Validations { #query-parameters-and-string-validations }\n\n**FastAPI** allows you to declare additional information and validation for your parameters.\n\nLet's take this application as example:\n\n{* ../../docs_src/query_params_str_validations/tutorial001_py310.py hl[7] *}\n\nThe query parameter `q` is of type `str | None`, that means that it's of type `str` but could also be `None`, and indeed, the default value is `None`, so FastAPI will know it's not required.\n\n/// note\n\nFastAPI will know that the value of `q` is not required because of the default value `= None`.\n\nHaving `str | None` will allow your editor to give you better support and detect errors.\n\n///\n\n## Additional validation { #additional-validation }\n\nWe are going to enforce that even though `q` is optional, whenever it is provided, **its length doesn't exceed 50 characters**.\n\n### Import `Query` and `Annotated` { #import-query-and-annotated }\n\nTo achieve that, first import:"
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::7",
+          "text": "t declares it explicitly as being a query parameter.\n\n!!! info\n    Have in mind that the most important part to make a parameter optional is the part:\n\n    ```Python\n    = None\n    ```\n\n    or the:\n\n    ```Python\n    = Query(default=None)\n    ```\n\n    as it will use that `None` as the default value, and that way make the parameter **not required**.\n\n    The `Union[str, None]` part allows your editor to provide better support, but it is not what tells FastAPI that this parameter is not required.\n\nThen, we can pass more parameters to `Query`. In this case, the `max_length` parameter that applies to strings:\n\n```Python\nq: Union[str, None] = Query(default=None, max_length=50)\n```\n\nThis will validate the data, show a clear error when the data is not valid, and document the parameter in the OpenAPI schema *path operation*.\n\n### `Query` as the default value or in `Annotated`\n\nHave in mind that when using `Query` inside of `Annotated` you cannot use the `default` parameter for `Query`."
+        },
+        {
+          "id": "fastapi/tutorial/query-params-str-validations@0.100.0.md::5",
+          "text": "parameter in the OpenAPI schema *path operation* (so it will show up in the **automatic docs UI**)\n\n## Alternative (old) `Query` as the default value\n\nPrevious versions of FastAPI (before <abbr title=\"before 2023-03\">0.95.0</abbr>) required you to use `Query` as the default value of your parameter, instead of putting it in `Annotated`, there's a high chance that you will see code using it around, so I'll explain it to you.\n\n!!! tip\n    For new code and whenever possible, use `Annotated` as explained above. There are multiple advantages (explained below) and no disadvantages. \ud83c\udf70\n\nThis is how you would use `Query()` as the default value of your function parameter, setting the parameter `max_length` to 50:\n\n=== \"Python 3.10+\"\n\n    ```Python hl_lines=\"7\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002_py310.py!}\n    ```\n\n=== \"Python 3.6+\"\n\n    ```Python hl_lines=\"9\"\n    {!> ../../../docs_src/query_params_str_validations/tutorial002.py!}\n    ```"
+        }
+      ],
+      "answer": "In FastAPI, a query parameter is considered **required** if it doesn't have a default value set to `None` or any falsy value. If the parameter has a default value of `None`, it means that the parameter is **optional** and can be omitted when making a request.\n\nHere are some key points that make a query parameter required:\n\n1. **No Default Value**: When no default value is provided, FastAPI assumes the parameter is required.\n2. **Non-Optional Types**: If you declare a parameter with an explicit type like `str` or `int` without providing a default value, it will be treated as required.\n\nFor example:\n```python\nfrom fastapi import Query\n\ndef read_item(q: str):  # No default value provided\n    if q:\n        print(f\"Query parameter is {q}\")\n    else:\n        print(\"No query parameter provided\")\n```\n\nIn the above code, `q` is a required parameter because it does not have a default value. The FastAPI framework will expect this parameter to be included in every request.\n\nOn the other hand, making a query parameter optional involves providing a default value like `None`. This allows you to explicitly state that the parameter can be omitted:\n\n```python\nfrom fastapi import Query\n\ndef read_item(q: str = None):  # Default value is provided as None\n    if q:\n        print(f\"Query parameter is {q}\")\n    else:\n        print(\"No query parameter provided\")\n```\n\nIn this case, `q` can be omitted from the request, and the function will use the default value of `None`.\n\nAdditionally, using tools like `Annotated` or `Union` as shown in your context helps editors provide better type checking support but do not affect whether a parameter is required or optional. The key factor remains the presence or absence of a default value for the parameter."
+    }
+  ]
+}

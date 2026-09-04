@@ -1,0 +1,27 @@
+{
+  "run_id": "pilot-20260904T145740Z",
+  "seed": 42,
+  "copies": 3,
+  "batch_size": 15,
+  "batches": {
+    "docker-b01": 14,
+    "docker-b02": 14,
+    "docker-b03": 13,
+    "docker-b04": 13,
+    "fastapi-b01": 13,
+    "fastapi-b02": 13,
+    "fastapi-b03": 13,
+    "fastapi-b04": 12,
+    "kubernetes-b01": 13,
+    "kubernetes-b02": 13,
+    "kubernetes-b03": 13,
+    "kubernetes-b04": 12,
+    "python-b01": 14,
+    "python-b02": 14,
+    "python-b03": 13,
+    "python-b04": 13,
+    "smoke-b01": 10,
+    "smoke-b02": 10,
+    "smoke-b03": 10
+  }
+}

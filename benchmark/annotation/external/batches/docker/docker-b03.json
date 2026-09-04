@@ -1,0 +1,414 @@
+{
+  "batch_id": "docker-b03",
+  "domain": "docker",
+  "smoke": false,
+  "study_version": "pilot-20260904T145740Z",
+  "items": [
+    {
+      "item_key": "fece4a6e58",
+      "case_id": "docker_context_001",
+      "domain": "docker",
+      "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+      "reference_information": "It is restarted. With `always`, a manually stopped container is restarted when the Docker daemon restarts (or when the container is manually restarted) \u2014 this is precisely what distinguishes `always` from `unless-stopped`.",
+      "reference_chunks": [
+        "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::3",
+          "text": "|\n| `on-failure[:max-retries]` | Restart the container if it exits due to an error, which manifests as a non-zero exit code. Optionally, limit the number of times the Docker daemon attempts to restart the container using the `:max-retries` option. The `on-failure` policy only prompts a restart if the container exits with a failure. It doesn't restart the container if the daemon restarts. |\n| `always`                   | Always restart the container if it stops. If it's manually stopped, it's restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in [restart policy details](#restart-policy-details))                                                                                                                |"
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::84",
+          "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+        },
+        {
+          "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::64",
+          "text": "ts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run.md#restart)\nsection of the Docker run reference page.\n\n### runtime\n\n`runtime` specifies which runtime to use for the service\u2019s containers.\n\nFor example, `runtime` can be the name of [an implementation of OCI Runtime Spec](https://github.com/opencontainers/runtime-spec/blob/master/implementations.md), such as \"runc\".\n\n```yml\nweb:\n  image: busybox:latest\n  command: true\n  runtime: runc\n```\n\nThe default is `runc`. To use a different runtime, see [Alternative runtimes](/engine/daemon/alternative-runtimes.md).\n\n### scale"
+        },
+        {
+          "id": "docker/reference/compose-file/deploy.md::10",
+          "text": "and how to restart containers when they exit. If `restart_policy` is not set, Compose considers the `restart` field set by the service configuration.\n\n- `condition`. When set to:\n  - `none`, containers are not automatically restarted regardless of the exit status.\n  - `on-failure`, the container is restarted if it exits due to an error, which manifests as a non-zero exit code.\n  - `any` (default), containers are restarted regardless of the exit status. \n- `delay`: How long to wait between restart attempts, specified as a [duration](extension.md#specifying-durations). The default is 0, meaning restart attempts can occur immediately.\n- `max_attempts`: The maximum number of failed restart attempts allowed before giving up. (Default: unlimited retries.)\nA failed attempt only counts toward `max_attempts` if the container does not successfully restart within the time defined by `window`."
+        },
+        {
+          "id": "kubernetes/concepts/workloads/pods/pod-lifecycle.md::22",
+          "text": "re`: Only restarts the container if it exits with an error (non-zero exit status).\n* `Never`: Does not automatically restart the terminated container.\n\n##### Restart behavior comparison\n\nThe following table shows how containers behave under different restart policies and exit codes:\n\n| Exit Code | `restartPolicy: Always` | `restartPolicy: OnFailure` | `restartPolicy: Never` | Sidecar Containers |\n|-----------|-------------------------|---------------------------|------------------------|-------------------|\n| 0 (Success) | Restarts | Does not restart | Does not restart | Always restarts |\n| Non-zero (Failure) | Restarts | Restarts | Does not restart | Always restarts |"
+        }
+      ],
+      "answer": "According to the provided context, if a container has the `always` restart policy and is manually stopped, it will only be restarted when:\n\n- The Docker daemon restarts.\n- The container itself is manually restarted.\n\nSince the question specifically asks about what happens when the Docker daemon restarts, the answer is that the container will be restarted when the Docker daemon restarts."
+    },
+    {
+      "item_key": "26b0062e97",
+      "case_id": "docker_trap_002",
+      "domain": "docker",
+      "question": "Why does a container with the `unless-stopped` restart policy start again after a daemon restart even when I had manually stopped it?",
+      "reference_information": "It doesn't \u2014 the premise is false. With `unless-stopped`, a manually stopped container is not restarted, even after the daemon restarts. The behavior described in the question belongs to the `always` policy.",
+      "reference_chunks": [
+        "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::4",
+          "text": "cy details](#restart-policy-details))                                                                                                                |\n| `unless-stopped`           | Similar to `always`, except that when the container is stopped (manually or otherwise), it isn't restarted even after Docker daemon restarts.                                                                                                                                                                                                                         |\n\nThe following command starts a Redis container with the `unless-stopped`\nrestart policy. Docker restarts the container if it exits or if the daemon\nrestarts, but not if you stopped the container yourself.\n\n```console\n$ docker run -d --name redis --restart unless-stopped redis\n```\n\nThe following command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```"
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::84",
+          "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+        },
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::6",
+          "text": "a container, the restart policy is ignored until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop.\n\n- Restart policies only apply to containers. To configure restart policies for\n  Swarm services, see\n  [flags related to service restart](/reference/cli/docker/service/create/).\n\n### Restarting foreground containers\n\nWhen you run a container in the foreground, stopping a container causes the\nattached CLI to exit as well, regardless of the restart policy of the\ncontainer. This behavior is illustrated in the following example.\n\n1. Create a Dockerfile that prints the numbers 1 to 5 and then exits.\n\n   ```dockerfile\n   FROM busybox:latest\n   COPY --chmod=755 <<\"EOF\" /start.sh\n   echo \"Starting...\"\n   for i in $(seq 1 5); do\n     echo \"$i\"\n     sleep 1\n   done\n   echo \"Exiting...\"\n   exit 1\n   EOF\n   ENTRYPOINT /start.sh\n   ```\n\n2. Build an image from the Dockerfile.\n\n   ```console\n   $ docker build -t startstop .\n   ```"
+        },
+        {
+          "id": "docker/reference/compose-file/services@916f044b7cbcae6d02c992ac.md::64",
+          "text": "ts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run.md#restart)\nsection of the Docker run reference page.\n\n### runtime\n\n`runtime` specifies which runtime to use for the service\u2019s containers.\n\nFor example, `runtime` can be the name of [an implementation of OCI Runtime Spec](https://github.com/opencontainers/runtime-spec/blob/master/implementations.md), such as \"runc\".\n\n```yml\nweb:\n  image: busybox:latest\n  command: true\n  runtime: runc\n```\n\nThe default is `runc`. To use a different runtime, see [Alternative runtimes](/engine/daemon/alternative-runtimes.md).\n\n### scale"
+        },
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::5",
+          "text": "wing command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```\n\nThe following command ensures all running containers restart.\n\n```console\n$ docker update --restart unless-stopped $(docker ps -q)\n```\n\n### Restart policy details\n\nKeep the following in mind when using restart policies:\n\n- A restart policy only takes effect after a container starts successfully. In\n  this case, starting successfully means that the container is up for at least\n  10 seconds and Docker has started monitoring it. This prevents a container\n  which doesn't start at all from going into a restart loop.\n\n- If you manually stop a container, the restart policy is ignored until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop."
+        }
+      ],
+      "answer": "A container with the `unless-stopped` restart policy starts again after a daemon restart because this policy tells Docker to restart the container if it exits or if the Docker daemon is restarted, but not if you have stopped the container yourself. When the Docker daemon restarts, it considers the container as stopped due to the daemon's restart, and thus\u91cd\u542f\u7b56\u7565\u4f1a\u4f7f\u5bb9\u5668\u5728\u5b88\u62a4\u8fdb\u7a0b\u91cd\u542f\u540e\u91cd\u65b0\u542f\u52a8\uff0c\u5373\u4f7f\u60a8\u5df2\u624b\u52a8\u505c\u6b62\u4e86\u5b83\u3002\u5f53Docker\u5b88\u62a4\u8fdb\u7a0b\u91cd\u542f\u65f6\uff0c\u5b83\u4f1a\u5c06\u5bb9\u5668\u89c6\u4e3a\u7531\u4e8e\u5b88\u62a4\u8fdb\u7a0b\u7684\u91cd\u542f\u800c\u505c\u6b62\uff0c\u5e76\u56e0\u6b64\u6839\u636e`unless-stopped`\u7b56\u7565\u91cd\u65b0\u542f\u52a8\u8be5\u5bb9\u5668\u3002\nThe container will be restarted because the `unless-stopped` policy indicates that Docker should restart the container if it exits or if the Docker daemon is restarted, but not if you have stopped the container yourself. When the Docker daemon restarts, it considers the container as stopped due to the daemon's restart, and thus triggers the restart according to the `unless-stopped` policy."
+    },
+    {
+      "item_key": "8bf284fb0e",
+      "case_id": "docker_unans_001",
+      "domain": "docker",
+      "question": "What are the main changes introduced in Docker Engine version 28?",
+      "reference_information": "The corpus does not contain release notes; the ideal response states that this information is not present in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/_index.md::0",
+          "text": "---\ntitle: Docker Engine\nweight: 10\ndescription: Find a comprehensive overview of Docker Engine, including how to install, storage details, networking, and more\nkeywords: Engine\nparams:\n  sidebar:\n    group: Application development\ngrid:\n- title: Install Docker Engine\n  description: Learn how to install the open source Docker Engine for your distribution.\n  icon: arrow-down-tray\n  link: /engine/install\n- title: Storage\n  description: Use persistent data with Docker containers.\n  icon: circle-stack\n  link: /storage\n- title: Networking\n  description: Manage network connections between containers.\n  icon: server-stack\n  link: /network\n- title: Container logs\n  description: Learn how to view and read container logs.\n  icon: document-text\n  link: /config/containers/logging/\n- title: Prune\n  description: Tidy up unused resources.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon."
+        },
+        {
+          "id": "docker/reference/compose-file/_index.md::2",
+          "text": "features and use cases of Docker Compose](/manuals/compose/intro/features-uses.md) or [try the quickstart guide](/manuals/compose/gettingstarted.md).\n\nThe Compose Specification is the latest and recommended version of the Compose file format. It helps you define a [Compose file](/manuals/compose/intro/compose-application-model.md) which is used to configure your Docker application\u2019s services, networks, volumes, and more.\n\nLegacy versions 2.x and 3.x of the Compose file format were merged into the Compose Specification. It is implemented in versions 1.27.0 and above (also known as Compose v2) of the Docker Compose CLI.\n\nThe Compose Specification on Docker Docs is the Docker Compose implementation. If you wish to implement your own version of the Compose Specification, see the [Compose Specification repository](https://github.com/compose-spec/compose-spec).\n\nUse the following links to navigate key sections of the Compose Specification."
+        },
+        {
+          "id": "docker/manuals/engine/_index.md::1",
+          "text": "rces.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon.\n  icon: adjustments-horizontal\n  link: /config/daemon\n- title: Rootless mode\n  description: Run Docker without root privileges.\n  icon: shield-check\n  link: /engine/security/rootless\n- title: Deprecated features\n  description: Find out what features of Docker Engine you should stop using.\n  icon: folder-minus\n  link: /engine/deprecated/\n- title: Release notes\n  description: Read the release notes for the latest version.\n  icon: document-plus\n  link: /engine/release-notes\naliases:\n- /edge/\n- /engine/ce-ee-node-activate/\n- /engine/migration/\n- /engine/misc/\n- /linux/\n---\n\nDocker Engine is an open source containerization technology for building and\ncontainerizing your applications. Docker Engine acts as a client-server\napplication with:"
+        },
+        {
+          "id": "docker/manuals/engine/install/_index.md::6",
+          "text": "n to find which Ubuntu release\n  corresponds with your derivative version.\n- Some Linux distributions provide a package of Docker Engine through their\n  package repositories. These packages are built and maintained by the Linux\n  distribution's package maintainers and may have differences in configuration\n  or are built from modified source code. Docker isn't involved in releasing these\n  packages and you should report any bugs or issues involving these packages to\n  your Linux distribution's issue tracker.\n\nDocker provides [binaries](binaries.md) for manual installation of Docker Engine.\nThese binaries are statically linked and you can use them on any Linux distribution.\n\n## Release channels\n\nDocker Engine has two types of update channels, **stable** and **test**:\n\n* The **stable** channel gives you the latest versions released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability."
+        },
+        {
+          "id": "docker/get-started/docker-overview.md::1",
+          "text": "roduction/understanding-docker/\n - /engine/understanding-docker/\n - /engine/docker-overview/\n - /get-started/overview/\n - /guides/docker-overview/\n---\n\nDocker is an open platform for developing, shipping, and running applications.\nDocker enables you to separate your applications from your infrastructure so\nyou can deliver software quickly. With Docker, you can manage your infrastructure\nin the same ways you manage your applications. By taking advantage of Docker's\nmethodologies for shipping, testing, and deploying code, you can\nsignificantly reduce the delay between writing code and running it in production.\n\n## The Docker platform"
+        }
+      ],
+      "answer": "The information provided does not contain details about specific changes introduced in Docker Engine version 28. There is no mention of version 28 or any detailed changelog within the given context."
+    },
+    {
+      "item_key": "88a05bd25b",
+      "case_id": "docker_context_001",
+      "domain": "docker",
+      "question": "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?",
+      "reference_information": "It is restarted. With `always`, a manually stopped container is restarted when the Docker daemon restarts (or when the container is manually restarted) \u2014 this is precisely what distinguishes `always` from `unless-stopped`.",
+      "reference_chunks": [
+        "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+      ],
+      "retrieved_context": [
+        {
+          "id": "kubernetes/concepts/scheduling-eviction/assign-pod-node.md::2",
+          "text": "-affinity)\n- [nodeName](#nodename) field\n- [Pod topology spread constraints](#pod-topology-spread-constraints)\n\n## Node labels {#built-in-node-labels}\n\nLike many other Kubernetes objects, nodes have\n[labels](/docs/concepts/overview/working-with-objects/labels/). You can\n[attach labels manually](/docs/tasks/configure-pod-container/assign-pods-nodes/#add-a-label-to-a-node).\nKubernetes also populates a [standard set of labels](/docs/reference/node/node-labels/)\non all nodes in a cluster.\n\n{{<note>}}\nThe value of these labels is cloud provider specific and is not guaranteed to be reliable.\nFor example, the value of `kubernetes.io/hostname` may be the same as the node name in some environments\nand a different value in other environments.\n{{</note>}}\n\n### Node isolation/restriction"
+        },
+        {
+          "id": "kubernetes/concepts/cluster-administration/logging.md::2",
+          "text": "e following command:\n\n```shell\nkubectl apply -f https://k8s.io/examples/debug/counter-pod.yaml\n```\n\nThe output is:\n\n```console\npod/counter created\n```\n\nTo fetch the logs, use the `kubectl logs` command, as follows:\n\n```shell\nkubectl logs counter\n```\n\nThe output is similar to:\n\n```console\n0: Fri Apr  1 11:42:23 UTC 2022\n1: Fri Apr  1 11:42:24 UTC 2022\n2: Fri Apr  1 11:42:25 UTC 2022\n```\n\nYou can use `kubectl logs --previous` to retrieve logs from a previous instantiation of a container.\nIf your pod has multiple containers, specify which container's logs you want to access by\nappending a container name to the command, with a `-c` flag, like so:\n\n```shell\nkubectl logs counter -c count\n```\n\n\n### Container log streams\n\n{{< feature-state feature_gate_name=\"PodLogsQuerySplitStreams\" >}}"
+        },
+        {
+          "id": "kubernetes/concepts/scheduling-eviction/scheduler-perf-tuning.md::2",
+          "text": "e-scheduler\nshould use its compiled-in default.\nIf you set `percentageOfNodesToScore` above 100, kube-scheduler acts as if you\nhad set a value of 100.\n\nTo change the value, edit the\n[kube-scheduler configuration file](/docs/reference/config-api/kube-scheduler-config.v1/)\nand then restart the scheduler.\nIn many cases, the configuration file can be found at `/etc/kubernetes/config/kube-scheduler.yaml`.\n\nAfter you have made this change, you can run\n\n```bash\nkubectl get pods -n kube-system | grep kube-scheduler\n```\n\nto verify that the kube-scheduler component is healthy.\n\n## Node scoring threshold {#percentage-of-nodes-to-score}\n\nTo improve scheduling performance, the kube-scheduler can stop looking for\nfeasible nodes once it has found enough of them. In large clusters, this saves\ntime compared to a naive approach that would consider every node."
+        },
+        {
+          "id": "docker/manuals/engine/security/apparmor.md::8",
+          "text": "lude <abstractions/base>\n\n  network inet tcp,\n  network inet udp,\n  network inet icmp,\n\n  deny network raw,\n\n  deny network packet,\n\n  file,\n  umount,\n\n  deny /bin/** wl,\n  deny /boot/** wl,\n  deny /dev/** wl,\n  deny /etc/** wl,\n  deny /home/** wl,\n  deny /lib/** wl,\n  deny /lib64/** wl,\n  deny /media/** wl,\n  deny /mnt/** wl,\n  deny /opt/** wl,\n  deny /proc/** wl,\n  deny /root/** wl,\n  deny /sbin/** wl,\n  deny /srv/** wl,\n  deny /tmp/** wl,\n  deny /sys/** wl,\n  deny /usr/** wl,\n\n  audit /** w,\n\n  /var/run/nginx.pid w,\n\n  /usr/sbin/nginx ix,\n\n  deny /bin/dash mrwklx,\n  deny /bin/sh mrwklx,\n  deny /usr/bin/top mrwklx,\n\n\n  capability chown,\n  capability dac_override,\n  capability setuid,\n  capability setgid,\n  capability net_bind_service,"
+        },
+        {
+          "id": "docker/manuals/engine/storage/drivers/vfs-driver.md::1",
+          "text": "yet exist, create it. Assuming\n    that the file was empty, add the following contents.\n\n    ```json\n    {\n      \"storage-driver\": \"vfs\"\n    }\n    ```\n\n    If you want to set a quota to control the maximum size the VFS storage\n    driver can use, set the `size` option on the `storage-opts` key.\n\n    ```json\n    {\n      \"storage-driver\": \"vfs\",\n      \"storage-opts\": [\"size=256M\"]\n    }\n    ```\n\n    Docker doesn't start if the `daemon.json` file contains invalid JSON.\n\n3.  Start Docker.\n\n    ```console\n    $ sudo systemctl start docker\n    ```\n\n4.  Verify that the daemon is using the `vfs` storage driver.\n    Use the `docker info` command and look for `Storage Driver`.\n\n    ```console\n    $ docker info\n\n    Storage Driver: vfs\n    ...\n    ```\n\nDocker is now using the `vfs` storage driver. Docker has automatically\ncreated the `/var/lib/docker/vfs/` directory, which contains all the layers\nused by running containers.\n\n## How the `vfs` storage driver works"
+        }
+      ],
+      "answer": "The provided context does not contain information about what happens to a container with a restart policy of `always` when the Docker daemon restarts after being stopped. Therefore, the information needed to answer this specific question is not present in the given documentation."
+    },
+    {
+      "item_key": "098e406091",
+      "case_id": "docker_trap_001",
+      "domain": "docker",
+      "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+      "reference_information": "The premise is false: anonymous volumes persist even if the container that uses them is removed. The exception is creating the container with the --rm flag, in which case the associated anonymous volume is destroyed with it.",
+      "reference_chunks": [
+        "manuals/engine/storage/volumes.md#named-and-anonymous-volumes"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::37",
+          "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+        },
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::7",
+          "text": "-existing files into an empty\nvolume, use the `volume-nocopy` option, see [Options for --mount](#options-for---mount).\n\n## Named and anonymous volumes\n\nA volume may be named or anonymous. Anonymous volumes are given a random name\nthat's guaranteed to be unique within a given Docker host. Just like named\nvolumes, anonymous volumes persist even if you remove the container that uses\nthem, except if you use the `--rm` flag when creating the container, in which\ncase the anonymous volume associated with the container is destroyed. See\n[Remove anonymous volumes](volumes.md#remove-anonymous-volumes).\n\nIf you create multiple containers consecutively that each use anonymous\nvolumes, each container creates its own volume. Anonymous volumes aren't reused\nor shared between containers automatically. To share an anonymous volume\nbetween two or more containers, you must mount the anonymous volume using the\nrandom volume ID.\n\n## Syntax"
+        },
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::38",
+          "text": "`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```\n\n> [!NOTE]\n>\n> If another container binds the volumes with\n> `--volumes-from`, the volume definitions are _copied_ and the\n> anonymous volume also stays after the first container is removed.\n\n### Remove all volumes\n\nTo remove all unused volumes and free up space:\n\n```console\n$ docker volume prune\n```\n\n## Next steps\n\n- Learn about [bind mounts](bind-mounts.md).\n- Learn about [tmpfs mounts](tmpfs.md).\n- Learn about [image mounts](image-mounts.md).\n- Learn about [storage drivers](/engine/storage/drivers/).\n- Learn about [third-party volume driver plugins](/engine/extend/legacy_plugins/)."
+        },
+        {
+          "id": "docker/manuals/engine/manage-resources/pruning.md::4",
+          "text": "and take up space on the Docker\nhost. Volumes are never removed automatically, because to do so could destroy\ndata.\n\n```console\n$ docker volume prune\n\nWARNING! This will remove anonymous local volumes not used by at least one container.\nAre you sure you want to continue? [y/N] y\n```\n\nBy default, you are prompted to continue. To bypass the prompt, use the `-f` or\n`--force` flag.\n\nBy default, only **anonymous** unused volumes are removed. Named volumes that\naren't attached to a container are left alone unless you pass `--all` / `-a`.\nYou can also limit the scope with the `--filter` flag. For instance, the\nfollowing command only removes volumes which aren't labelled with the `keep`\nlabel:\n\n```console\n$ docker volume prune --filter \"label!=keep\"\n```\n\nOther filtering expressions are available. See the\n[`docker volume prune` reference](/reference/cli/docker/volume/prune/)\nfor more examples.\n\n## Prune networks"
+        },
+        {
+          "id": "docker/get-started/docker-concepts/running-containers/persisting-container-data.md::8",
+          "text": "revious container, do so with the following command (the `-f` will stop the container first and then remove it):\n\n```console\n$ docker rm -f new-db\n```\n\nThere are a few methods to remove volumes, including the following:\n\n- Select the **Delete Volume** option on a volume in the Docker Desktop Dashboard.\n- Use the `docker volume rm` command:\n\n    ```console\n    $ docker volume rm postgres_data\n    ```\n- Use the `docker volume prune` command to remove all unused volumes:\n\n    ```console\n    $ docker volume prune\n    ```\n\n\n## Additional resources\n\nThe following resources will help you learn more about volumes:\n\n- [Manage data in Docker](/engine/storage)\n- [Volumes](/engine/storage/volumes)\n- [Volume mounts](/engine/containers/run/#volume-mounts)\n\n\n## Next steps\n\nNow that you have learned about persisting container data, it\u2019s time to learn about sharing local files with containers.\n\n{{< button text=\"Sharing local files with containers\" url=\"sharing-local-files\" >}}"
+        }
+      ],
+      "answer": "To keep the data contained in anonymous volumes after their associated container is removed, you need to mount these anonymous volumes as named volumes or bind mounts. This way, the data will persist even if the original container is deleted without the `--rm` flag.\n\nHere\u2019s how you can do it:\n\n1. **Mount as a Named Volume:**\n   You can explicitly name the volume when creating the container and then use that named volume in subsequent containers where you need to share the data.\n\n    ```console\n    $ docker run -v my_named_volume:/path/to/mount busybox top\n    ```\n\n2. **Use `docker volume create`:**\n   Create a named volume first, and then mount it in your container.\n\n    ```console\n    $ docker volume create my_named_volume\n    $ docker run -v my_named_volume:/path/to/mount busybox top\n    ```\n\nBy using named volumes instead of anonymous ones, you ensure that the data persists beyond the lifecycle of a single container."
+    },
+    {
+      "item_key": "da5e97bcf0",
+      "case_id": "docker_contra_001",
+      "domain": "docker",
+      "question": "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?",
+      "reference_information": "No. The current docs state explicitly that unlike Dockerfile CMD, the Compose command field does not automatically run within the image's SHELL context; shell features require explicitly wrapping the command in a shell. The older corpus version is silent on this point. An ideal answer states the current explicit behavior.",
+      "reference_chunks": [
+        "reference/compose-file/services.md#command",
+        "reference/compose-file/services@916f044b7cbcae6d02c992ac.md"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/reference/compose-file/services.md::11",
+          "text": "the value is `[]` (empty list) or `''` (empty string), the default command declared by the image is ignored, or in other words overridden to be empty.\n\n> [!NOTE]\n>\n> Unlike the `CMD` instruction in a Dockerfile, the `command` field doesn't automatically run within the context of the [`SHELL`](/reference/dockerfile.md#shell-form) instruction defined in the image. If your `command` relies on shell-specific features, such as environment variable expansion, you need to explicitly run it within a shell. For example:\n>\n> ```yaml\n> command: /bin/sh -c 'echo \"hello $$HOSTNAME\"'\n> ```\n\nThe value can also be a list, similar to the [exec-form syntax](/reference/dockerfile.md#exec-form)\nused by the [Dockerfile](/reference/dockerfile.md#exec-form).\n\n### `configs`\n\n`configs` let services adapt their behaviour without the need to rebuild a Docker image.\nServices can only access configs when explicitly granted by the `configs` attribute. Two different syntax variants are supported."
+        },
+        {
+          "id": "docker/manuals/engine/swarm/configs.md::9",
+          "text": "s for\n> simplicity. The examples use Linux containers, but Windows containers also\n> support configs.\n\n### Defining and using configs in compose files\n\nThe `docker stack` command supports defining configs in a Compose file.\nHowever, the `configs` key is not supported for `docker compose`. See\n[the Compose file reference](/reference/compose-file/configs.md) for details.\n\n### Simple example: Get started with configs\n\nThis simple example shows how configs work in just a few commands. For a\nreal-world example, continue to\n[Advanced example: Use configs with a Nginx service](#advanced-example-use-configs-with-a-nginx-service).\n\n1.  Add a config to Docker. The `docker config create` command reads standard\n    input because the last argument, which represents the file to read the\n    config from, is set to `-`.\n\n    ```console\n    $ echo \"This is a config\" | docker config create my-config -\n    ```"
+        },
+        {
+          "id": "docker/reference/compose-file/_index.md::2",
+          "text": "features and use cases of Docker Compose](/manuals/compose/intro/features-uses.md) or [try the quickstart guide](/manuals/compose/gettingstarted.md).\n\nThe Compose Specification is the latest and recommended version of the Compose file format. It helps you define a [Compose file](/manuals/compose/intro/compose-application-model.md) which is used to configure your Docker application\u2019s services, networks, volumes, and more.\n\nLegacy versions 2.x and 3.x of the Compose file format were merged into the Compose Specification. It is implemented in versions 1.27.0 and above (also known as Compose v2) of the Docker Compose CLI.\n\nThe Compose Specification on Docker Docs is the Docker Compose implementation. If you wish to implement your own version of the Compose Specification, see the [Compose Specification repository](https://github.com/compose-spec/compose-spec).\n\nUse the following links to navigate key sections of the Compose Specification."
+        },
+        {
+          "id": "docker/reference/compose-file/configs.md::1",
+          "text": "tion data that is granted to services in your Compose application. The source of the config is either `file`, `environment`, `content`, or `external`.\n\n- `file`: The config is created with the contents of the file at the specified path.\n- `environment`: The config content is created with the value of an environment variable. Introduced in Docker Compose version [2.23.1](https://github.com/docker/compose/releases/tag/v2.23.1).\n- `content`: The content is created with the inlined value. Introduced in Docker Compose version [2.23.1](https://github.com/docker/compose/releases/tag/v2.23.1).\n- `external`: If set to true, `external` specifies that this config has already been created. Compose does not\n  attempt to create it, and if it does not exist, an error occurs.\n- `name`: The name of the config object in the container engine to look up. This field can be used to\n  reference configs that contain special characters. The name is used as is"
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::44",
+          "text": "s durations](extension.md#specifying-durations). Introduced in Docker Compose version [2.20.2](https://github.com/docker/compose/releases/tag/v2.20.2)\n\n`test` defines the command Compose runs to check container health. It can be\neither a string or a list. If it's a list, the first item must be either `NONE`, `CMD` or `CMD-SHELL`.\nIf it's a string, it's equivalent to specifying `CMD-SHELL` followed by that string.\n\n```yml\n# Hit the local web app\ntest: [\"CMD\", \"curl\", \"-f\", \"http://localhost\"]\n```\n\nUsing `CMD-SHELL` runs the command configured as a string using the container's default shell\n(`/bin/sh` for Linux). Both of the following forms are equivalent:\n\n```yml\ntest: [\"CMD-SHELL\", \"curl -f http://localhost || exit 1\"]\n```\n\n```yml\ntest: curl -f https://localhost || exit 1\n```"
+        }
+      ],
+      "answer": "No, the `command` field in Docker Compose does not automatically run within the context of the `SHELL` instruction defined in the image. If your command relies on shell-specific features such as environment variable expansion, you need to explicitly run it within a shell, similar to how it would be done in a Dockerfile with the `CMD-SHELL` form."
+    },
+    {
+      "item_key": "b41536d0aa",
+      "case_id": "docker_unans_001",
+      "domain": "docker",
+      "question": "What are the main changes introduced in Docker Engine version 28?",
+      "reference_information": "The corpus does not contain release notes; the ideal response states that this information is not present in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/security/rootless/troubleshoot.md::26",
+          "text": "debugging\n\n**Entering into `dockerd` namespaces**\n\nThe `dockerd-rootless.sh` script executes `dockerd` in its own user, mount, and network namespaces.\n\nFor debugging, you can enter the namespaces by running\n`nsenter -U --preserve-credentials -n -m -t $(cat $XDG_RUNTIME_DIR/docker.pid)`.\n\n## Uninstall\n\nTo remove the systemd service of the Docker daemon, run `dockerd-rootless-setuptool.sh uninstall`:\n\n```console\n$ dockerd-rootless-setuptool.sh uninstall\n+ systemctl --user stop docker.service\n+ systemctl --user disable docker.service\nRemoved /home/testuser/.config/systemd/user/default.target.wants/docker.service.\n[INFO] Uninstalled docker.service\n[INFO] This uninstallation tool does NOT remove Docker binaries and data.\n[INFO] To remove data, run: `/usr/bin/rootlesskit rm -rf /home/testuser/.local/share/docker`\n```\n\nUnset environment variables PATH and DOCKER_HOST if you have added them to `~/.bashrc`.\n\nTo remove the data directory, run `rootlesskit rm -rf ~/.local/share/docker`."
+        },
+        {
+          "id": "kubernetes/concepts/storage/volume-snapshots.md::0",
+          "text": "---\nreviewers:\n- saad-ali\n- thockin\n- msau42\n- jingxu97\n- xing-yang\n- yuxiangqian\ntitle: Volume Snapshots\ncontent_type: concept\nweight: 60\n---\n\n<!-- overview -->\n\nIn Kubernetes, a _VolumeSnapshot_ represents a snapshot of a volume on a storage\nsystem. This document assumes that you are already familiar with Kubernetes\n[persistent volumes](/docs/concepts/storage/persistent-volumes/).\n\n<!-- body -->\n\n## Introduction\n\nSimilar to how API resources `PersistentVolume` and `PersistentVolumeClaim` are\nused to provision volumes for users and administrators, `VolumeSnapshotContent`\nand `VolumeSnapshot` API resources are provided to create volume snapshots for\nusers and administrators.\n\nA `VolumeSnapshotContent` is a snapshot taken from a volume in the cluster that\nhas been provisioned by an administrator. It is a resource in the cluster just\nlike a PersistentVolume is a cluster resource."
+        },
+        {
+          "id": "python/howto/enum.rst::17",
+          "text": "h:`__new__` and/or :meth:`__init__`,\nany value(s) given to the enum member will be passed into those methods.\nSee `Planet`_ for an example.\n\n.. note::\n\n    The :meth:`__new__` method, if defined, is used during creation of the Enum\n    members; it is then replaced by Enum's :meth:`__new__` which is used after\n    class creation for lookup of existing members.  See :ref:`new-vs-init` for\n    more details.\n\n\nRestricted Enum subclassing\n---------------------------\n\nA new :class:`Enum` class must have one base enum class, up to one concrete\ndata type, and as many :class:`object`-based mixin classes as needed.  The\norder of these base classes is::\n\n    class EnumName([mix-in, ...,] [data-type,] base-enum):\n        pass\n\nAlso, subclassing an enumeration is allowed only if the enumeration does not define\nany members.  So this is forbidden::"
+        },
+        {
+          "id": "kubernetes/concepts/architecture/cgroups.md::3",
+          "text": "use the [systemd cgroup driver](/docs/setup/production-environment/container-runtimes#systemd-cgroup-driver)\n\n### Linux Distribution cgroup v2 support\n\nFor a list of Linux distributions that use cgroup v2, refer to the [cgroup v2 documentation](https://github.com/opencontainers/runc/blob/main/docs/cgroup-v2.md)\n\n<!-- the list should be kept in sync with https://github.com/opencontainers/runc/blob/main/docs/cgroup-v2.md -->\n* Container Optimized OS (since M97)\n* Ubuntu (since 21.10, 22.04+ recommended)\n* Debian GNU/Linux (since Debian 11 bullseye)\n* Fedora (since 31)\n* Arch Linux (since April 2021)\n* RHEL and RHEL-like distributions (since 9)\n\nTo check if your distribution is using cgroup v2, refer to your distribution's\ndocumentation or follow the instructions in [Identify the cgroup version on Linux nodes](#check-cgroup-version)."
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::69",
+          "text": "tax\n\nThe short syntax is a colon-separated string to set the host IP, host port, and container port\nin the form:\n\n`[HOST:]CONTAINER[/PROTOCOL]` where:\n\n- `HOST` is `[IP:](port | range)` (optional). If it is not set, it binds to all network interfaces (`0.0.0.0`).\n- `CONTAINER` is `port | range`.\n- `PROTOCOL` restricts ports to a specified protocol either `tcp` or `udp`(optional). Default is `tcp`.\n\n> [!WARNING]\n>\n> If you do not specify a host IP (such as `127.0.0.1`), Docker binds to all interfaces (`0.0.0.0`), bypassing host firewall rules. This can expose the container directly to the internet if the host has a public IP address. For more information, see [Port publishing and mapping](/manuals/engine/network/port-publishing.md).\n\nPorts can be either a single value or a range. `HOST` and `CONTAINER` must use equivalent ranges."
+        }
+      ],
+      "answer": "The provided context does not contain any information about Docker Engine version 28 or its changes. Therefore, I cannot answer the question based on the given documentation."
+    },
+    {
+      "item_key": "41a757e1a6",
+      "case_id": "docker_trap_001",
+      "domain": "docker",
+      "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+      "reference_information": "The premise is false: anonymous volumes persist even if the container that uses them is removed. The exception is creating the container with the --rm flag, in which case the associated anonymous volume is destroyed with it.",
+      "reference_chunks": [
+        "manuals/engine/storage/volumes.md#named-and-anonymous-volumes"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::37",
+          "text": "sing your preferred tools.\n\n## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:\n\n- Named volumes have a specific name, for example, `awesome:/bar`, where `awesome` is the name.\n- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon to remove them.\n\n### Remove anonymous volumes\n\nTo automatically remove anonymous volumes, use the `--rm` option. For example,\nthis command creates an anonymous `/foo` volume. When you remove the container,\nthe Docker Engine removes the `/foo` volume but not the `awesome` volume.\n\nThe `--rm` option works with both foreground and detached (`-d`) containers.\nThe anonymous volumes are cleaned up when the container exits.\n\n```console\n$ docker run --rm -v /foo -v awesome:/bar busybox top\n```"
+        }
+      ],
+      "answer": "To keep the data in an anonymous volume when its container is removed, you would need to mount that volume to a host directory or convert it into a named volume. Here are two common methods:\n\n1. **Mounting to a Host Directory:**\n   You can create a directory on your host machine and mount this directory as a volume inside the container. This way, any data written to the volume will be stored in the host directory.\n\n   ```console\n   $ docker run --rm -v /path/on/host:/foo busybox top\n   ```\n\n2. **Converting Anonymous Volume to Named Volume:**\n   After using the `--rm` option to clean up anonymous volumes, you can recreate them as named volumes and then mount these named volumes.\n\n   ```console\n   $ docker run --name my_container -v /foo -v awesome:/bar busybox top\n   ```\n\nBy doing this, any data written to `/foo` will be stored in a named volume that persists even after the container is removed."
+    },
+    {
+      "item_key": "4cfcaf27d9",
+      "case_id": "docker_trap_002",
+      "domain": "docker",
+      "question": "Why does a container with the `unless-stopped` restart policy start again after a daemon restart even when I had manually stopped it?",
+      "reference_information": "It doesn't \u2014 the premise is false. With `unless-stopped`, a manually stopped container is not restarted, even after the daemon restarts. The behavior described in the question belongs to the `always` policy.",
+      "reference_chunks": [
+        "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::4",
+          "text": "cy details](#restart-policy-details))                                                                                                                |\n| `unless-stopped`           | Similar to `always`, except that when the container is stopped (manually or otherwise), it isn't restarted even after Docker daemon restarts.                                                                                                                                                                                                                         |\n\nThe following command starts a Redis container with the `unless-stopped`\nrestart policy. Docker restarts the container if it exits or if the daemon\nrestarts, but not if you stopped the container yourself.\n\n```console\n$ docker run -d --name redis --restart unless-stopped redis\n```\n\nThe following command changes the restart policy for an already running\ncontainer named `redis`.\n\n```console\n$ docker update --restart unless-stopped redis\n```"
+        },
+        {
+          "id": "docker/reference/compose-file/services.md::84",
+          "text": "container to be created with a read-only filesystem.\n\n### `restart`\n\n`restart` defines the policy that the platform applies on container termination.\n\n- `no`: The default restart policy. It does not restart the container under any circumstances.\n- `always`: The policy always restarts the container until its removal.\n- `on-failure[:max-retries]`: The policy restarts the container if the exit code indicates an error.\nOptionally, limit the number of restart retries the Docker daemon attempts.\n- `unless-stopped`: The policy restarts the container irrespective of the exit code but stops\n  restarting when the service is stopped or removed.\n\n```yml\n    restart: \"no\"\n    restart: always\n    restart: on-failure\n    restart: on-failure:3\n    restart: unless-stopped\n```\n\nYou can find more detailed information on restart policies in the\n[Restart Policies (--restart)](/reference/cli/docker/container/run/#restart)\nsection of the Docker run reference page.\n\n### `runtime`"
+        },
+        {
+          "id": "docker/manuals/engine/containers/start-containers-automatically.md::6",
+          "text": "a container, the restart policy is ignored until the\n  Docker daemon restarts or the container is manually restarted. This prevents\n  a restart loop.\n\n- Restart policies only apply to containers. To configure restart policies for\n  Swarm services, see\n  [flags related to service restart](/reference/cli/docker/service/create/).\n\n### Restarting foreground containers\n\nWhen you run a container in the foreground, stopping a container causes the\nattached CLI to exit as well, regardless of the restart policy of the\ncontainer. This behavior is illustrated in the following example.\n\n1. Create a Dockerfile that prints the numbers 1 to 5 and then exits.\n\n   ```dockerfile\n   FROM busybox:latest\n   COPY --chmod=755 <<\"EOF\" /start.sh\n   echo \"Starting...\"\n   for i in $(seq 1 5); do\n     echo \"$i\"\n     sleep 1\n   done\n   echo \"Exiting...\"\n   exit 1\n   EOF\n   ENTRYPOINT /start.sh\n   ```\n\n2. Build an image from the Dockerfile.\n\n   ```console\n   $ docker build -t startstop .\n   ```"
+        },
+        {
+          "id": "docker/manuals/engine/daemon/remote-access.md::0",
+          "text": "---\ndescription:\n  Configuring remote access allows Docker to accept requests from remote\n  hosts by configuring it to listen on an IP address and port as well as the Unix\n  socket\nkeywords: configuration, daemon, remote access, engine\ntitle: Configure remote access for Docker daemon\naliases:\n  - /config/daemon/remote-access/\n---\n\nBy default, the Docker daemon listens for connections on a Unix socket to accept\nrequests from local clients. You can configure Docker to accept requests\nfrom remote clients by configuring it to listen on an IP address and port as well\nas the Unix socket."
+        },
+        {
+          "id": "docker/manuals/engine/containers/resource_constraints.md::20",
+          "text": "of the following commands guarantees the container at\nmost 50% of the CPU every second.\n\n```console\n$ docker run -it --cpus=\".5\" ubuntu /bin/bash\n```\n\nWhich is the equivalent to manually specifying `--cpu-period` and `--cpu-quota`;\n\n```console\n$ docker run -it --cpu-period=100000 --cpu-quota=50000 ubuntu /bin/bash\n```\n\n### Configure the real-time scheduler\n\nYou can configure your container to use the real-time scheduler, for tasks which\ncan't use the CFS scheduler. You need to\n[make sure the host machine's kernel is configured correctly](#configure-the-host-machines-kernel)\nbefore you can [configure the Docker daemon](#configure-the-docker-daemon) or\n[configure individual containers](#configure-individual-containers).\n\n> [!WARNING]\n>\n> CPU scheduling and prioritization are advanced kernel-level features. Most\n> users don't need to change these values from their defaults. Setting these\n> values incorrectly can cause your host system to become unstable or unusable."
+        }
+      ],
+      "answer": "A container with the `unless-stopped` restart policy starts again after a daemon restart because this policy causes Docker to restart the container if it exits or if the daemon restarts, but not if you stopped the container yourself. Therefore, upon a daemon restart, the container will be restarted according to its `unless-stopped` policy unless it was manually stopped by the user."
+    },
+    {
+      "item_key": "f865cb4747",
+      "case_id": "docker_direct_001",
+      "domain": "docker",
+      "question": "In a Docker Compose file, what is the build context if I don't set one explicitly?",
+      "reference_information": "The build context defaults to the project directory (`.`).",
+      "reference_chunks": [
+        "reference/compose-file/build.md#context"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/reference/compose-file/build.md::3",
+          "text": "this file is searched relative to the context path, which means `..` resolves to the Compose file's folder, so `backend.Dockerfile` is a sibling file.\n- A Docker image is built using the `custom` directory with the user's `$HOME` as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n\n- A relative path to the Compose file's folder. This path must be a directory and must contain a `Dockerfile`"
+        },
+        {
+          "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::4",
+          "text": "t using the `custom` directory with the user's HOME as the Docker context. Compose displays a warning about the non-portable path used to build image.\n\nOn push, both `example/webapp` and `example/database` Docker images are pushed to the default registry. The `custom` service image is skipped as no `image` attribute is set and Compose displays a warning about this missing attribute.\n\n## Attributes\n\nThe `build` subsection defines configuration options that are applied by Compose to build Docker images from source.\n`build` can be specified either as a string containing a path to the build context or as a detailed structure:\n\nUsing the string syntax, only the build context can be configured as either:\n- A relative path to the Compose file's parent folder. This path must be a directory and must contain a `Dockerfile`\n\n  ```yml\n  services:\n    webapp:\n      build: ./dir\n  ```"
+        },
+        {
+          "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::7",
+          "text": "directory and Git repository URLs, like [context](#context) does. Other context flavours\nmust be prefixed to avoid ambiguity with a `type://` prefix.\n\nCompose warns you if the image builder does not support additional contexts and may list\nthe unused contexts.\n\nIllustrative examples of how this is used in Buildx can be found\n[here](https://github.com/docker/buildx/blob/master/docs/reference/buildx_build.md#-additional-build-contexts---build-context).\n\n### args\n\n`args` define build arguments, i.e. Dockerfile `ARG` values.\n\nUsing the following Dockerfile as an example:\n\n```Dockerfile\nARG GIT_COMMIT\nRUN echo \"Based on commit: $GIT_COMMIT\"\n```\n\n`args` can be set in the Compose file under the `build` key to define `GIT_COMMIT`. `args` can be set as a mapping or a list:\n\n```yml\nbuild:\n  context: .\n  args:\n    GIT_COMMIT: cdc3b19\n```\n\n```yml\nbuild:\n  context: .\n  args:\n    - GIT_COMMIT=cdc3b19\n```"
+        },
+        {
+          "id": "docker/reference/compose-file/build@916f044b7cbcae6d02c992ac.md::8",
+          "text": "a mapping or a list:\n\n```yml\nbuild:\n  context: .\n  args:\n    GIT_COMMIT: cdc3b19\n```\n\n```yml\nbuild:\n  context: .\n  args:\n    - GIT_COMMIT=cdc3b19\n```\n\nValues can be omitted when specifying a build argument, in which case its value at build time must be obtained by user interaction,\notherwise the build arg won't be set when building the Docker image.\n\n```yml\nargs:\n  - GIT_COMMIT\n```\n\n### context\n\n`context` defines either a path to a directory containing a Dockerfile, or a URL to a git repository.\n\nWhen the value supplied is a relative path, it is interpreted as relative to the location of the Compose file.\nCompose warns you about the absolute path used to define the build context as those prevent the Compose file\nfrom being portable.\n\n```yml\nbuild:\n  context: ./dir\n```\n\n```yml\nservices:\n  webapp:\n    build: https://github.com/mycompany/webapp.git\n```\n\nIf not set explicitly, `context` defaults to project directory (`.`). \n\n### cache_from"
+        },
+        {
+          "id": "docker/reference/compose-file/build.md::0",
+          "text": "---\ntitle: Compose Build Specification\ndescription: Learn about the Compose Build Specification\nkeywords: compose, compose specification, compose file reference, compose build specification\naliases:\n  - /compose/compose-file/build/\nweight: 130\n---\n\n{{% include \"compose/build.md\" %}}\n\nWhen `build` is specified as a string, the whole path is used as a\nDocker context to execute a Docker build, looking for a canonical\n`Dockerfile` at the root of the directory.\n\nWhen `build` is specified as a detailed structure, build arguments can\nbe specified, including an alternate `Dockerfile` location.\n\nIn both cases, the path can be absolute or relative. If it is relative,\nit is resolved from the directory containing your Compose file. If it is\nabsolute, the path prevents the Compose file from being portable so\nCompose displays a warning.\n\n## Using `build` and `image`"
+        }
+      ],
+      "answer": "If not set explicitly, `context` defaults to project directory (`.`)."
+    },
+    {
+      "item_key": "06ee523345",
+      "case_id": "docker_unans_001",
+      "domain": "docker",
+      "question": "What are the main changes introduced in Docker Engine version 28?",
+      "reference_information": "The corpus does not contain release notes; the ideal response states that this information is not present in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/install/_index.md::7",
+          "text": "ons released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability.\n\nUse the test channel with caution. Pre-release versions include experimental and\nearly-access features that are subject to breaking changes.\n\n## Support\n\nDocker Engine is an open source project, supported by the Moby project maintainers\nand community members. Docker doesn't provide support for Docker Engine.\nDocker provides support for Docker products, including Docker Desktop, which uses\nDocker Engine as one of its components.\n\nFor information about the open source project, refer to the\n[Moby project website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing"
+        },
+        {
+          "id": "docker/manuals/engine/_index.md::1",
+          "text": "rces.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon.\n  icon: adjustments-horizontal\n  link: /config/daemon\n- title: Rootless mode\n  description: Run Docker without root privileges.\n  icon: shield-check\n  link: /engine/security/rootless\n- title: Deprecated features\n  description: Find out what features of Docker Engine you should stop using.\n  icon: folder-minus\n  link: /engine/deprecated/\n- title: Release notes\n  description: Read the release notes for the latest version.\n  icon: document-plus\n  link: /engine/release-notes\naliases:\n- /edge/\n- /engine/ce-ee-node-activate/\n- /engine/migration/\n- /engine/misc/\n- /linux/\n---\n\nDocker Engine is an open source containerization technology for building and\ncontainerizing your applications. Docker Engine acts as a client-server\napplication with:"
+        },
+        {
+          "id": "docker/manuals/engine/install/_index.md::8",
+          "text": "website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing\n\nCommercial use of Docker Engine obtained via Docker Desktop\nwithin larger enterprises (exceeding 250 employees OR with annual revenue surpassing\n$10 million USD), requires a [paid subscription](https://www.docker.com/pricing?ref=Docs&refAction=DocsEngineInstall).\nApache License, Version 2.0. See [LICENSE](https://github.com/moby/moby/blob/master/LICENSE) for the full license.\n\n## Reporting security issues\n\nIf you discover a security issue, we request that you bring it to our attention immediately.\n\nDO NOT file a public issue. Instead, submit your report privately to security@docker.com.\n\nSecurity reports are greatly appreciated, and Docker will publicly thank you for it.\n\n## Get started\n\nAfter setting up Docker, you can learn the basics with\n[Getting started with Docker](/get-started/introduction/_index.md)."
+        },
+        {
+          "id": "kubernetes/concepts/services-networking/service@release-1.28.md::31",
+          "text": "configured\nfor NodePort use.\n\nHere is an example manifest for a Service of `type: NodePort` that specifies\na NodePort value (30007, in this example):\n\n```yaml\napiVersion: v1\nkind: Service\nmetadata:\n  name: my-service\nspec:\n  type: NodePort\n  selector:\n    app.kubernetes.io/name: MyApp\n  ports:\n    - port: 80\n      # By default and for convenience, the `targetPort` is set to\n      # the same value as the `port` field.\n      targetPort: 80\n      # Optional field\n      # By default and for convenience, the Kubernetes control plane\n      # will allocate a port from a range (default: 30000-32767)\n      nodePort: 30007\n```\n\n#### Reserve Nodeport ranges to avoid collisions  {#avoid-nodeport-collisions}\n\n{{< feature-state for_k8s_version=\"v1.28\" state=\"beta\" >}}"
+        },
+        {
+          "id": "docker/get-started/docker-concepts/building-images/build-tag-and-publish-an-image.md::14",
+          "text": "should be pushed to Docker Hub.\n\n## Additional resources\n\nTo learn more about building, tagging, and publishing images, visit the following resources:\n\n* [What is a build context?](/build/concepts/context/#what-is-a-build-context)\n* [docker build reference](/reference/cli/docker/buildx/build/)\n* [docker image tag reference](/reference/cli/docker/image/tag/)\n* [docker push reference](/reference/cli/docker/image/push/)\n* [What is a registry?](/get-started/docker-concepts/the-basics/what-is-a-registry/)\n\n## Next steps\n\nNow that you have learned about building and publishing images, it's time to learn how to speed up the build process using the Docker build cache.\n\n{{< button text=\"Using the build cache\" url=\"using-the-build-cache\" >}}"
+        }
+      ],
+      "answer": "The provided context does not contain specific information about main changes introduced in Docker Engine version 28. Therefore, I cannot answer what the main changes were for that particular version based on the given documentation."
+    },
+    {
+      "item_key": "774f391dea",
+      "case_id": "docker_trap_001",
+      "domain": "docker",
+      "question": "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?",
+      "reference_information": "The premise is false: anonymous volumes persist even if the container that uses them is removed. The exception is creating the container with the --rm flag, in which case the associated anonymous volume is destroyed with it.",
+      "reference_chunks": [
+        "manuals/engine/storage/volumes.md#named-and-anonymous-volumes"
+      ],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::282",
+          "text": "- Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon"
+        },
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::280",
+          "text": "## Remove volumes\n\nA Docker data volume persists after you delete a container. There are two types\nof volumes to consider:"
+        },
+        {
+          "id": "docker/manuals/engine/storage/volumes.md::54",
+          "text": "volumes, anonymous volumes persist even if you remove the container that uses"
+        },
+        {
+          "id": "docker/manuals/engine/storage/_index.md::20",
+          "text": "retain data even after the containers using them are removed. Volume data is"
+        },
+        {
+          "id": "docker/manuals/engine/manage-resources/pruning.md::33",
+          "text": "host. Volumes are never removed automatically, because to do so could destroy\ndata.\n\n```console\n$ docker volume prune"
+        }
+      ],
+      "answer": "The information provided in the context does not support the claim that Docker deletes anonymous volumes automatically when their container is removed. In fact, it states that \"Anonymous volumes have no specific name. Therefore, when the container is deleted, you can instruct the Docker Engine daemon\" which implies that anonymous volumes do not get deleted automatically and need to be managed explicitly.\n\nTo keep the data contained in an anonymous volume, you should use commands like `docker volume inspect` to identify the volume ID or name, then use `docker run -v <volume_name>:<mount_point> <image>` to mount it to another container if needed. Alternatively, you can use `docker volume prune` to remove unused volumes, but this command removes only volumes that are not in use by any containers, not all anonymous volumes.\n\nSince Docker does not automatically delete anonymous volumes when their associated containers are removed, there is no need or method to keep the data they contain as a result of automatic deletion."
+    },
+    {
+      "item_key": "f479168b7a",
+      "case_id": "docker_unans_001",
+      "domain": "docker",
+      "question": "What are the main changes introduced in Docker Engine version 28?",
+      "reference_information": "The corpus does not contain release notes; the ideal response states that this information is not present in the available documentation.",
+      "reference_chunks": [],
+      "retrieved_context": [
+        {
+          "id": "docker/manuals/engine/install/_index.md::7",
+          "text": "ons released for general availability.\n* The **test** channel gives you pre-release versions that are ready for testing before\n  general availability.\n\nUse the test channel with caution. Pre-release versions include experimental and\nearly-access features that are subject to breaking changes.\n\n## Support\n\nDocker Engine is an open source project, supported by the Moby project maintainers\nand community members. Docker doesn't provide support for Docker Engine.\nDocker provides support for Docker products, including Docker Desktop, which uses\nDocker Engine as one of its components.\n\nFor information about the open source project, refer to the\n[Moby project website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing"
+        },
+        {
+          "id": "docker/manuals/engine/_index.md::1",
+          "text": "rces.\n  icon: scissors\n  link: /config/pruning\n- title: Configure the daemon\n  description: Delve into the configuration options of the Docker daemon.\n  icon: adjustments-horizontal\n  link: /config/daemon\n- title: Rootless mode\n  description: Run Docker without root privileges.\n  icon: shield-check\n  link: /engine/security/rootless\n- title: Deprecated features\n  description: Find out what features of Docker Engine you should stop using.\n  icon: folder-minus\n  link: /engine/deprecated/\n- title: Release notes\n  description: Read the release notes for the latest version.\n  icon: document-plus\n  link: /engine/release-notes\naliases:\n- /edge/\n- /engine/ce-ee-node-activate/\n- /engine/migration/\n- /engine/misc/\n- /linux/\n---\n\nDocker Engine is an open source containerization technology for building and\ncontainerizing your applications. Docker Engine acts as a client-server\napplication with:"
+        },
+        {
+          "id": "docker/manuals/engine/install/_index.md::8",
+          "text": "website](https://mobyproject.org/).\n\n### Upgrade path\n\nPatch releases are always backward compatible with its major and minor version.\n\n### Licensing\n\nCommercial use of Docker Engine obtained via Docker Desktop\nwithin larger enterprises (exceeding 250 employees OR with annual revenue surpassing\n$10 million USD), requires a [paid subscription](https://www.docker.com/pricing?ref=Docs&refAction=DocsEngineInstall).\nApache License, Version 2.0. See [LICENSE](https://github.com/moby/moby/blob/master/LICENSE) for the full license.\n\n## Reporting security issues\n\nIf you discover a security issue, we request that you bring it to our attention immediately.\n\nDO NOT file a public issue. Instead, submit your report privately to security@docker.com.\n\nSecurity reports are greatly appreciated, and Docker will publicly thank you for it.\n\n## Get started\n\nAfter setting up Docker, you can learn the basics with\n[Getting started with Docker](/get-started/introduction/_index.md)."
+        },
+        {
+          "id": "docker/manuals/engine/install/debian.md::0",
+          "text": "---\ndescription: Learn how to install Docker Engine on Debian. These instructions cover\n  the different installation methods, how to uninstall, and next steps.\nkeywords: requirements, apt, installation, debian, install, uninstall, install debian, docker engine, install docker engine, upgrade, update\ntitle: Install Docker Engine on Debian\nlinkTitle: Debian\nweight: 20\ntoc_max: 4\naliases:\n- /engine/installation/debian/\n- /engine/installation/linux/debian/\n- /engine/installation/linux/docker-ce/debian/\n- /install/linux/docker-ce/debian/\ndownload-url-base: https://download.docker.com/linux/debian\n---\n\nTo get started with Docker Engine on Debian, make sure you\n[meet the prerequisites](#prerequisites), and then follow the\n[installation steps](#installation-methods).\n\n## Prerequisites\n\n### Firewall limitations\n\n> [!WARNING]\n>\n> Before you install Docker, make sure you consider the following\n> security implications and firewall incompatibilities."
+        },
+        {
+          "id": "docker/manuals/engine/install/fedora.md::0",
+          "text": "---\ndescription: Learn how to install Docker Engine on Fedora. These instructions cover\n  the different installation methods, how to uninstall, and next steps.\nkeywords: requirements, dnf, installation, fedora, install fedora, install docker engine, rpm, install, uninstall, upgrade,\n  update\ntitle: Install Docker Engine on Fedora\nlinkTitle: Fedora\nweight: 40\ntoc_max: 4\naliases:\n- /engine/installation/fedora/\n- /engine/installation/linux/fedora/\n- /engine/installation/linux/docker-ce/fedora/\n- /install/linux/docker-ce/fedora/\ndownload-url-base: https://download.docker.com/linux/fedora\n---\n\nTo get started with Docker Engine on Fedora, make sure you\n[meet the prerequisites](#prerequisites), and then follow the\n[installation steps](#installation-methods).\n\n## Prerequisites\n\n### OS requirements\n\nTo install Docker Engine, you need a maintained version of one of the following\nFedora versions:\n\n- Fedora 44\n- Fedora 43\n\n### Uninstall old versions"
+        }
+      ],
+      "answer": "The provided context does not contain information about main changes introduced in Docker Engine version 28. Therefore, I cannot answer this question based on the given documentation."
+    }
+  ]
+}
