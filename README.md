@@ -93,7 +93,7 @@ results.summary()
 results.export("report.html")
 ```
 
-> **v1.9.0 is now available!** Production Intelligence: drift detection, live A/B testing, and root-cause diagnosis. Install with `pip install ragnarok-ai`
+> **v1.10.0 is now available!** Trustworthy Evaluation: testsets mined from real production traffic, and judge calibration against your own labels. Install with `pip install ragnarok-ai`
 
 ---
 
@@ -659,9 +659,17 @@ display_comparison([
 
 </details>
 
+<details>
+<summary><strong>v1.10.0 — Trustworthy Evaluation</strong></summary>
+
+- [x] **Production-Mined Testsets**: build test sets from real traffic (frequent/failing/slow queries), with opt-in PII-scrubbed query capture
+- [x] **Judge Calibration**: measure judge-vs-human agreement (Cohen's kappa, error rates by direction, recommended pass threshold)
+
+</details>
+
 ### Planned
 
-#### v1.10.0 — Developer Experience
+#### v1.11.0 — Developer Experience
 - [ ] Interactive TUI (textual)
 - [ ] Streaming evaluation
 - [ ] Discord & email alert adapters
