@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Judge Calibration**
+  - `JudgeCalibrator`: measure judge-vs-human agreement on a labeled
+    sample set, per criterion (faithfulness, relevance, hallucination,
+    completeness)
+  - Statistics without new dependencies: Cohen's kappa with Landis &
+    Koch interpretation, 95% Wilson confidence interval on agreement,
+    false accept/reject rates split by direction
+  - Threshold sweep recommending the pass cutoff that maximizes kappa
+    on your labels (ties keep the current threshold)
+  - `CalibrationSample` (with per-criterion human label overrides) and
+    `CalibrationSet` with JSON save/load for versionable labeled sets
+  - `insufficient_data` flag below 20 labels; disagreement indices for
+    review; public exports from package root
+  - Documentation at `docs/user-guide/calibration.md`
 - **Production-Mined Testsets**
   - `TestsetMiner`: build evaluation test sets from real production
     traffic — strategies `frequent` (most-asked), `failures` (highest

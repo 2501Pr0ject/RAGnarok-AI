@@ -104,7 +104,7 @@ results.export("report.html")
 | **100% Local** | Runs entirely on your machine with Ollama. No OpenAI, no API keys, no data leaving your network. |
 | **Production Monitoring** | Collect traces, export Prometheus metrics, track latency and success rates in production. |
 | **Production Intelligence** | Drift detection against a recorded baseline, live A/B testing, root-cause diagnosis of failures. |
-| **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness. |
+| **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness — with calibration against your own labels (kappa, error rates, threshold tuning). |
 | **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
 | **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
 | **Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
