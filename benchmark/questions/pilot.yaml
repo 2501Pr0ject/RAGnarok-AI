@@ -1,0 +1,656 @@
+# Pilot question set — Phase 1 (30 cases, PROTOCOL.md §3.2).
+#
+# Hand-authored against the FROZEN corpora (see corpora/AUDIT.md); every
+# supporting chunk cites a real file in benchmark/corpora/<corpus>/files/.
+# The pilot's mission is to BREAK the protocol: pilot cases and their
+# annotations may be revised or discarded, and nothing from Phase 1 is
+# reported as a result.
+#
+# `experimental_target` is analysis-only and must NEVER be shown to the
+# RAG systems or the judges.
+#
+# Balance: 5 cases per question type; corpus distribution is opportunistic
+# (quality over symmetry): docker 7, python 8, fastapi 6, kubernetes 9.
+
+cases:
+  # ── direct (5) ────────────────────────────────────────────────────────
+  - id: docker_direct_001
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "In a Docker Compose file, what is the build context if I don't set one explicitly?"
+    question_type: direct
+    difficulty: easy
+    expected_behavior: answer
+    reference_answer: >-
+      The build context defaults to the project directory (`.`).
+    supporting_chunks:
+      - "reference/compose-file/build.md#context"
+    experimental_target: >-
+      Baseline single-chunk fact lookup: a stated default in a reference page.
+      Any competent RAG should get this right.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_direct_001
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "What command do I run to create a virtual environment called tutorial-env?"
+    question_type: direct
+    difficulty: easy
+    expected_behavior: answer
+    reference_answer: >-
+      python -m venv tutorial-env
+    supporting_chunks:
+      - "tutorial/venv.rst#creating-virtual-environments"
+    experimental_target: >-
+      Baseline command lookup in reStructuredText content (tests that the rst
+      format is chunked and retrieved as well as markdown).
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: fastapi_direct_001
+    corpus: fastapi
+    corpus_version: "main @ 50113da16fec"
+    question: "Besides Swagger UI, FastAPI serves an alternative documentation UI. At which URL is it available when running locally?"
+    question_type: direct
+    difficulty: easy
+    expected_behavior: answer
+    reference_answer: >-
+      The alternative documentation (ReDoc) is served at
+      http://127.0.0.1:8000/redoc.
+    supporting_chunks:
+      - "tutorial/first-steps.md#alternative-api-docs"
+    experimental_target: >-
+      Single-chunk fact where the answer competes with a more famous neighbor
+      (/docs): checks that retrieval and generation don't substitute the
+      better-known Swagger UI URL.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_direct_001
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "Which namespaces does a fresh Kubernetes cluster start with?"
+    question_type: direct
+    difficulty: easy
+    expected_behavior: answer
+    reference_answer: >-
+      Four initial namespaces: default, kube-node-lease, kube-public, and
+      kube-system.
+    supporting_chunks:
+      - "concepts/overview/working-with-objects/namespaces.md#initial-namespaces"
+    experimental_target: >-
+      Single-chunk enumeration: completeness matters (all four items), so this
+      case also exercises the completeness criterion on an easy fact.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_direct_002
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "What is the maximum amount of data a Kubernetes ConfigMap can hold?"
+    question_type: direct
+    difficulty: easy
+    expected_behavior: answer
+    reference_answer: >-
+      A ConfigMap cannot exceed 1 MiB of data.
+    supporting_chunks:
+      - "concepts/configuration/configmap.md"
+    experimental_target: >-
+      Numeric limit stated once in a note block: tests retrieval of facts
+      living in callouts rather than headings.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  # ── contextual (5) ────────────────────────────────────────────────────
+  - id: docker_context_001
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "I manually stopped a container that has the restart policy `always`. What happens to it when the Docker daemon restarts?"
+    question_type: contextual
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      It is restarted. With `always`, a manually stopped container is
+      restarted when the Docker daemon restarts (or when the container is
+      manually restarted) — this is precisely what distinguishes `always`
+      from `unless-stopped`.
+    supporting_chunks:
+      - "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+    experimental_target: >-
+      Conditional behavior that contradicts intuition (a stopped container
+      coming back): tests whether the pipeline surfaces the exact condition
+      instead of the general rule.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_context_001
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "Does scaling a Kubernetes Deployment trigger a rollout?"
+    question_type: contextual
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      No. A rollout is triggered if and only if the Deployment's Pod template
+      (.spec.template) changes — for example labels or container images.
+      Scaling does not modify the template and does not trigger a rollout.
+    supporting_chunks:
+      - "concepts/workloads/controllers/deployment.md#updating-a-deployment"
+    experimental_target: >-
+      "If and only if" condition: tests faithful transmission of a precise
+      trigger condition and its explicit counter-example (scaling).
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: fastapi_context_001
+    corpus: fastapi
+    corpus_version: "main @ 50113da16fec"
+    question: "In FastAPI, what makes a query parameter required rather than optional?"
+    question_type: contextual
+    difficulty: easy
+    expected_behavior: answer
+    reference_answer: >-
+      Not declaring any default value. A query parameter with a default value
+      is not required; to make it required, simply omit the default.
+    supporting_chunks:
+      - "tutorial/query-params.md#required-query-parameters"
+    experimental_target: >-
+      Condition expressed by absence (no default): checks that the pipeline
+      states the rule rather than an example.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_context_001
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "Python's sorts are documented as stable. What does that guarantee, and when is it useful?"
+    question_type: contextual
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      When multiple records have the same key, their original order is
+      preserved. This is useful for multi-pass sorting (e.g. sort by one key,
+      then by another, keeping the first order among ties).
+    supporting_chunks:
+      - "howto/sorting.rst"
+    experimental_target: >-
+      Definition + consequence in one document: tests whether answers cover
+      the "when it matters" half or stop at the definition (completeness).
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_context_002
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "What do you gain by marking a Kubernetes ConfigMap as immutable?"
+    question_type: contextual
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      Two benefits: it protects from accidental or unwanted updates that could
+      cause application outages, and it improves cluster performance by
+      significantly reducing the load on kube-apiserver (watches for immutable
+      ConfigMaps are closed).
+    supporting_chunks:
+      - "concepts/configuration/configmap.md#configmap-immutable"
+    experimental_target: >-
+      Two-part benefit list in a feature section: another completeness probe
+      (answers often keep the safety benefit and drop the performance one).
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  # ── multi_chunk (5) ───────────────────────────────────────────────────
+  - id: docker_multi_001
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "What is the difference between Docker volumes and bind mounts, and why are volumes the recommended option for persisting container data?"
+    question_type: multi_chunk
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      A bind mount mounts an existing file or directory from the host into the
+      container, so it depends on the host's directory structure and OS. A
+      volume is created and fully managed by Docker in Docker's storage
+      directory. Volumes are the preferred persistence mechanism because they
+      are managed by Docker (CLI/API), easier to back up or migrate, and work
+      on both Linux and Windows containers.
+    supporting_chunks:
+      - "manuals/engine/storage/volumes.md#when-to-use-volumes"
+      - "manuals/engine/storage/bind-mounts.md"
+    experimental_target: >-
+      Canonical two-document comparison: a complete answer requires combining
+      both pages; partial retrieval should degrade completeness measurably.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_multi_001
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "When should I use a StatefulSet instead of a Deployment in Kubernetes?"
+    question_type: multi_chunk
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      Use a StatefulSet when the application needs one or more of: stable,
+      unique network identifiers; stable, persistent storage; ordered,
+      graceful deployment and scaling; ordered, automated rolling updates.
+      For applications without these requirements, a Deployment (which manages
+      interchangeable replicas through ReplicaSets) is the standard choice.
+    supporting_chunks:
+      - "concepts/workloads/controllers/statefulset.md#using-statefulsets"
+      - "concepts/workloads/controllers/deployment.md"
+    experimental_target: >-
+      Cross-controller comparison: the criteria list lives in one page, the
+      contrast requires the other. Also probes enumeration completeness
+      (four criteria).
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_multi_001
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "In Python, why is a plain list fine to use as a stack but not recommended as a queue, and what should I use instead?"
+    question_type: multi_chunk
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      List methods make stacks easy and efficient: append() and pop() work at
+      the end of the list (last-in, first-out). As a queue a list is
+      inefficient because inserting or popping at the beginning requires
+      shifting all other elements. Use collections.deque, designed for fast
+      appends and pops from both ends.
+    supporting_chunks:
+      - "tutorial/datastructures.rst#using-lists-as-stacks"
+      - "tutorial/datastructures.rst#using-lists-as-queues"
+    experimental_target: >-
+      Two adjacent sections of the same document (stacks / queues): tests
+      whether chunking splits them and whether both are retrieved. Pilot
+      question: does "multi_chunk" need to mean multi-FILE? (protocol
+      stress-test)
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: fastapi_multi_001
+    corpus: fastapi
+    corpus_version: "main @ 50113da16fec"
+    question: "In FastAPI, how do path parameters and query parameters differ in how they are declared and whether they are required?"
+    question_type: multi_chunk
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      Path parameters are declared in the route path with braces (e.g.
+      "/items/{item_id}") and are part of the path, so they must be provided.
+      Query parameters are function parameters not present in the path; they
+      are optional when declared with a default value and required when no
+      default is declared.
+    supporting_chunks:
+      - "tutorial/path-params.md"
+      - "tutorial/query-params.md#required-query-parameters"
+    experimental_target: >-
+      Two-page comparison where each page describes one side: measures
+      whether one-sided retrieval yields confidently incomplete answers.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_multi_002
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "I need to give my Kubernetes application access to an API token. Should I put it in a ConfigMap or a Secret, and why?"
+    question_type: multi_chunk
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      In a Secret. ConfigMaps do not provide secrecy or encryption and the
+      documentation explicitly says to use a Secret (or third-party tools)
+      for confidential data. Secrets are similar to ConfigMaps but are
+      specifically intended to hold confidential data.
+    supporting_chunks:
+      - "concepts/configuration/configmap.md"
+      - "concepts/configuration/secret.md"
+    experimental_target: >-
+      Decision question spanning two sibling pages, each pointing at the
+      other: good retrieval should surface both; the answer must take a
+      position (not "it depends").
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  # ── trap (5) ──────────────────────────────────────────────────────────
+  - id: kubernetes_trap_001
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "What kubectl command lets me update the label selector of an existing Kubernetes Deployment?"
+    question_type: trap
+    difficulty: hard
+    expected_behavior: answer
+    reference_answer: >-
+      None — the premise is false. A Deployment's label selector is immutable
+      after creation; it cannot be updated via kubectl patch, edit, apply, or
+      tools like helm upgrade. Changing it requires deleting and recreating
+      the Deployment.
+    supporting_chunks:
+      - "concepts/workloads/controllers/deployment.md#label-selector"
+    experimental_target: >-
+      False premise directly contradicted by the docs: does the system
+      correct the premise or hallucinate a plausible command?
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: docker_trap_001
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "Since Docker deletes anonymous volumes automatically when their container is removed, how can I keep the data they contain?"
+    question_type: trap
+    difficulty: hard
+    expected_behavior: answer
+    reference_answer: >-
+      The premise is false: anonymous volumes persist even if the container
+      that uses them is removed. The exception is creating the container
+      with the --rm flag, in which case the associated anonymous volume is
+      destroyed with it.
+    supporting_chunks:
+      - "manuals/engine/storage/volumes.md#named-and-anonymous-volumes"
+    experimental_target: >-
+      False premise with a true edge case nearby (--rm): tests whether the
+      system corrects the general claim while preserving the exception.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: docker_trap_002
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "Why does a container with the `unless-stopped` restart policy start again after a daemon restart even when I had manually stopped it?"
+    question_type: trap
+    difficulty: hard
+    expected_behavior: answer
+    reference_answer: >-
+      It doesn't — the premise is false. With `unless-stopped`, a manually
+      stopped container is not restarted, even after the daemon restarts.
+      The behavior described in the question belongs to the `always` policy.
+    supporting_chunks:
+      - "manuals/engine/containers/start-containers-automatically.md#use-a-restart-policy"
+    experimental_target: >-
+      Premise that swaps two adjacent policies: tests fine-grained
+      discrimination inside a single table (easy chunk to retrieve, easy to
+      misread).
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: fastapi_trap_001
+    corpus: fastapi
+    corpus_version: "main @ 50113da16fec"
+    question: "In FastAPI, why does a query parameter stay required even after I give it a default value?"
+    question_type: trap
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      It doesn't — the premise is false. Declaring a default value makes a
+      query parameter not required; a query parameter is required only when
+      no default value is declared.
+    supporting_chunks:
+      - "tutorial/query-params.md#required-query-parameters"
+    experimental_target: >-
+      Inverted rule as premise: minimal-distance trap (the correct rule is
+      one negation away). Checks judges too: a sycophantic answer that
+      accepts the premise must fail faithfulness.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_trap_001
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "When I run `from module import *` in Python, why do names starting with an underscore get imported along with everything else?"
+    question_type: trap
+    difficulty: medium
+    expected_behavior: answer
+    reference_answer: >-
+      They don't — the premise is false. `from module import *` imports all
+      names except those beginning with an underscore.
+    supporting_chunks:
+      - "tutorial/modules.rst"
+    experimental_target: >-
+      False premise about a documented exclusion rule: also probes whether
+      answers over-expand into __all__ mechanics instead of correcting the
+      premise first.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  # ── unanswerable (5) ──────────────────────────────────────────────────
+  - id: docker_unans_001
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "What are the main changes introduced in Docker Engine version 28?"
+    question_type: unanswerable
+    difficulty: hard
+    expected_behavior: abstain
+    reference_answer: >-
+      The corpus does not contain release notes; the ideal response states
+      that this information is not present in the available documentation.
+    supporting_chunks: []
+    experimental_target: >-
+      The corpus deliberately excludes release notes (see corpora AUDIT):
+      tests abstention on a topic the corpus provably does not cover, with
+      adjacent engine content likely retrieved.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_unans_001
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "What are the parameters of str.split() and what are their default values?"
+    question_type: unanswerable
+    difficulty: medium
+    expected_behavior: abstain
+    reference_answer: >-
+      The corpus (tutorial + HOWTOs) does not include the library reference;
+      the ideal response states that the signature details are not in the
+      available documentation.
+    supporting_chunks: []
+    experimental_target: >-
+      Reference-level detail excluded by subset design; the generator likely
+      KNOWS the answer from pretraining — a strong probe of grounding
+      discipline vs parametric knowledge.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: fastapi_unans_001
+    corpus: fastapi
+    corpus_version: "main @ 50113da16fec"
+    question: "How many Uvicorn workers does the FastAPI documentation recommend running in production?"
+    question_type: unanswerable
+    difficulty: medium
+    expected_behavior: abstain
+    reference_answer: >-
+      Deployment documentation is not part of the corpus (tutorial + advanced
+      only); the ideal response states that this recommendation is not in the
+      available documentation.
+    supporting_chunks: []
+    experimental_target: >-
+      Question phrased as if the docs contain a specific number: tests
+      whether the system invents a plausible recommendation.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_unans_001
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "What are the steps to install kubectl on my machine?"
+    question_type: unanswerable
+    difficulty: hard
+    expected_behavior: abstain
+    reference_answer: >-
+      The corpus (Concepts only) mentions installing kubectl solely as links
+      to task pages that are not included; the ideal response states that the
+      installation steps are not in the available documentation.
+    supporting_chunks: []
+    experimental_target: >-
+      Hardest abstention case by design: retrieval WILL find pages that
+      mention installation (as links), i.e. adjacent-but-insufficient
+      context. Distinguishes "not present" from "not found".
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_unans_002
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "How do I install Python on Windows?"
+    question_type: unanswerable
+    difficulty: easy
+    expected_behavior: abstain
+    reference_answer: >-
+      Installation guides are not part of the corpus (tutorial + HOWTOs);
+      the ideal response states that installation instructions are not in
+      the available documentation.
+    supporting_chunks: []
+    experimental_target: >-
+      Cleanly out-of-corpus everyday question: the easy end of the
+      abstention spectrum, as a control for the harder unanswerable cases.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  # ── contradiction (5) ─────────────────────────────────────────────────
+  - id: python_contra_001
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "On Windows, what command activates a virtual environment created with venv?"
+    question_type: contradiction
+    difficulty: medium
+    expected_behavior: answer
+    contradiction_pair: python_pair_01
+    reference_answer: >-
+      The corpus contains two versions: current (3.12) says
+      tutorial-env\Scripts\activate; the older (3.10) version says
+      tutorial-env\Scripts\activate.bat. An ideal answer gives the current
+      command and/or surfaces the version difference.
+    supporting_chunks:
+      - "tutorial/venv.rst"
+      - "tutorial/venv@v3.10.14.rst"
+    experimental_target: >-
+      Direct command flip between two co-retrieved versions: which one does
+      the generator pick, and does it mention the conflict at all?
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: python_contra_002
+    corpus: python
+    corpus_version: "v3.12.6 @ a4a2d2b0d852"
+    question: "Which Python version does venv install into a new virtual environment?"
+    question_type: contradiction
+    difficulty: hard
+    expected_behavior: answer
+    contradiction_pair: python_pair_01
+    reference_answer: >-
+      The two corpus versions disagree: the current (3.12) doc says venv
+      installs the Python version from which the command was run (python3.12
+      installs 3.12); the older (3.10) doc says venv will usually install the
+      most recent version available. An ideal answer states the current
+      semantics and/or flags the discrepancy.
+    supporting_chunks:
+      - "tutorial/venv.rst"
+      - "tutorial/venv@v3.10.14.rst"
+    experimental_target: >-
+      Semantic (not just cosmetic) flip in behavior description: tests
+      whether conflicting retrieved claims produce a blended, wrong, or
+      properly scoped answer.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: fastapi_contra_001
+    corpus: fastapi
+    corpus_version: "main @ 50113da16fec"
+    question: "What is the recommended way to add string validation to a query parameter in FastAPI — for example a max length on q?"
+    question_type: contradiction
+    difficulty: medium
+    expected_behavior: answer
+    contradiction_pair: fastapi_pair_01
+    reference_answer: >-
+      The current docs recommend Annotated: q: Annotated[str | None,
+      Query(max_length=50)] = None, and explicitly describe the older style
+      (Query as the default value) as the pre-0.95 approach. The older corpus
+      version teaches the default-value style. An ideal answer recommends
+      Annotated and/or scopes the older style to old FastAPI versions.
+    supporting_chunks:
+      - "tutorial/query-params-str-validations.md"
+      - "tutorial/query-params-str-validations@0.100.0.md"
+    experimental_target: >-
+      Recommendation flip (style guidance, not a hard fact): do judges
+      penalize an answer teaching the outdated style that one retrieved
+      chunk legitimately supports?
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: kubernetes_contra_001
+    corpus: kubernetes
+    corpus_version: "main @ 0c2c87a15880"
+    question: "Is the Kubernetes Endpoints API deprecated?"
+    question_type: contradiction
+    difficulty: medium
+    expected_behavior: answer
+    contradiction_pair: kubernetes_pair_02
+    reference_answer: >-
+      Per the current corpus version: yes — Endpoints is marked deprecated as
+      of v1.33, with EndpointSlices as its replacement. The older (1.28)
+      corpus version describes Endpoints without any deprecation. An ideal
+      answer says it is deprecated (current) and ideally scopes by version.
+    supporting_chunks:
+      - "concepts/services-networking/service.md#endpoints"
+      - "concepts/services-networking/service@release-1.28.md"
+    experimental_target: >-
+      Status flip (deprecated vs not) across versions of the same page:
+      the cleanest yes/no contradiction in the corpus.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot
+
+  - id: docker_contra_001
+    corpus: docker
+    corpus_version: "main @ 4adee40aa75f"
+    question: "In Docker Compose, does the `command` field support shell features like environment variable expansion, the way CMD does in a Dockerfile shell form?"
+    question_type: contradiction
+    difficulty: hard
+    expected_behavior: answer
+    contradiction_pair: docker_pair_01
+    reference_answer: >-
+      No. The current docs state explicitly that unlike Dockerfile CMD, the
+      Compose command field does not automatically run within the image's
+      SHELL context; shell features require explicitly wrapping the command
+      in a shell. The older corpus version is silent on this point. An ideal
+      answer states the current explicit behavior.
+    supporting_chunks:
+      - "reference/compose-file/services.md#command"
+      - "reference/compose-file/services@916f044b7cbcae6d02c992ac.md"
+    experimental_target: >-
+      Statement-vs-silence variant of contradiction (one version explicit,
+      the other missing the note): pilot probe of whether this weaker pair
+      type behaves differently from direct flips — protocol stress-test.
+    author: maintainer
+    created_at: "2026-09-04"
+    split: pilot

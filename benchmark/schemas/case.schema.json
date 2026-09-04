@@ -15,7 +15,8 @@
     "reference_answer",
     "supporting_chunks",
     "author",
-    "created_at"
+    "created_at",
+    "experimental_target"
   ],
   "additionalProperties": false,
   "properties": {
@@ -26,7 +27,12 @@
     },
     "corpus": {
       "type": "string",
-      "enum": ["docker", "python", "fastapi", "kubernetes"]
+      "enum": [
+        "docker",
+        "python",
+        "fastapi",
+        "kubernetes"
+      ]
     },
     "corpus_version": {
       "type": "string",
@@ -39,15 +45,29 @@
     },
     "question_type": {
       "type": "string",
-      "enum": ["direct", "contextual", "multi_chunk", "trap", "unanswerable", "contradiction"]
+      "enum": [
+        "direct",
+        "contextual",
+        "multi_chunk",
+        "trap",
+        "unanswerable",
+        "contradiction"
+      ]
     },
     "difficulty": {
       "type": "string",
-      "enum": ["easy", "medium", "hard"]
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
     },
     "expected_behavior": {
       "type": "string",
-      "enum": ["answer", "abstain"],
+      "enum": [
+        "answer",
+        "abstain"
+      ],
       "description": "abstain only for unanswerable (and allowed for contradiction)."
     },
     "reference_answer": {
@@ -70,7 +90,12 @@
     },
     "split": {
       "type": "string",
-      "enum": ["pilot", "main", "extension", "real_world"],
+      "enum": [
+        "pilot",
+        "main",
+        "extension",
+        "real_world"
+      ],
       "default": "main"
     },
     "notes": {
@@ -83,35 +108,68 @@
     "created_at": {
       "type": "string",
       "format": "date"
+    },
+    "experimental_target": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What this case is designed to test (analysis-only; NEVER shown to the RAG or the judges)."
     }
   },
   "allOf": [
     {
-      "if": {"properties": {"question_type": {"const": "unanswerable"}}},
+      "if": {
+        "properties": {
+          "question_type": {
+            "const": "unanswerable"
+          }
+        }
+      },
       "then": {
         "properties": {
-          "expected_behavior": {"const": "abstain"},
-          "supporting_chunks": {"maxItems": 0}
+          "expected_behavior": {
+            "const": "abstain"
+          },
+          "supporting_chunks": {
+            "maxItems": 0
+          }
         }
       },
       "else": {
         "properties": {
-          "supporting_chunks": {"minItems": 1}
+          "supporting_chunks": {
+            "minItems": 1
+          }
         }
       }
     },
     {
-      "if": {"properties": {"question_type": {"const": "multi_chunk"}}},
+      "if": {
+        "properties": {
+          "question_type": {
+            "const": "multi_chunk"
+          }
+        }
+      },
       "then": {
         "properties": {
-          "supporting_chunks": {"minItems": 2}
+          "supporting_chunks": {
+            "minItems": 2
+          }
         }
       }
     },
     {
-      "if": {"properties": {"question_type": {"const": "contradiction"}}},
+      "if": {
+        "properties": {
+          "question_type": {
+            "const": "contradiction"
+          }
+        }
+      },
       "then": {
-        "required": ["contradiction_pair"]
+        "required": [
+          "contradiction_pair"
+        ]
       }
     }
   ]
