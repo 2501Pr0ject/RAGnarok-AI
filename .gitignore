@@ -119,3 +119,4 @@ site/
 *.local.toml
 secrets.yaml
 .ragnarok/
+benchmark/pilot-run/embed-cache.sqlite

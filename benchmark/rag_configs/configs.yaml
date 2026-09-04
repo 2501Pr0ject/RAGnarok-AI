@@ -1,0 +1,81 @@
+# RAG configurations A-G for the evaluation study (PROTOCOL.md §4).
+#
+# Experimental controls: ONE deliberate defect per configuration, and the
+# SAME generator model across all configs (G differs only by temperature
+# and prompt). FROZEN before the first A-G run: from that point on,
+# parameters are not tuned to make results "interesting" — discoveries
+# are results or incidents, never invitations to adjust.
+#
+# Model digests are recorded at runtime in the run manifest.
+
+defaults:
+  generator_model: "qwen2.5:7b-instruct"
+  embedding_model: "nomic-embed-text"
+  chunk_chars: 1000
+  chunk_overlap: 150
+  top_k: 5
+  temperature: 0.1
+  seed: 42
+  prompt: grounded   # instructs grounding + explicit abstention when unsupported
+  noise_slots: 0
+  retrieval: cosine
+
+prompts:
+  grounded: |
+    Answer the question using ONLY the provided context.
+    If the context does not contain the information needed to answer,
+    say explicitly that the information is not present in the provided
+    documentation. Do not use outside knowledge.
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:
+  ungrounded: |
+    Answer the question.
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:
+
+configs:
+  A:
+    name: baseline
+    defect: none
+
+  B:
+    name: bad_chunking
+    defect: "128-char chunks, no overlap"
+    chunk_chars: 128
+    chunk_overlap: 0
+
+  C:
+    name: weak_embedding
+    defect: "deliberately weaker embedding model"
+    embedding_model: "all-minilm"
+
+  D:
+    name: low_k
+    defect: "top-k = 1"
+    top_k: 1
+
+  E:
+    name: noisy_context
+    defect: "2 of 5 context slots replaced with random chunks (seeded)"
+    noise_slots: 2
+
+  F:
+    name: broken_retrieval
+    defect: "retrieval returns random chunks only (seeded)"
+    retrieval: random
+
+  G:
+    name: hallucination_prone
+    defect: "temperature 1.0 + prompt without grounding instruction"
+    temperature: 1.0
+    prompt: ungrounded
