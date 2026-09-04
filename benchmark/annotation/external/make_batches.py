@@ -186,7 +186,7 @@ def main() -> int:
     print("per config:", dict(sorted(n_conf.items())))
     print("per domain:", dict(sorted(n_dom.items())))
     print("per type:  ", dict(sorted(n_type.items())))
-    print("batches:", {k: v for k, v in manifest["batches"].items()})
+    print("batches:", dict(manifest["batches"]))
     print("key_map.json written (server-side only, gitignored, re-derivable)")
     return 0
 
