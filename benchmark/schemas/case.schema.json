@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/2501Pr0ject/RAGnarok-AI/benchmark/schemas/case.schema.json",
+  "title": "Benchmark case",
+  "description": "One question of the RAGnarok evaluation study (see PROTOCOL.md section 3).",
+  "type": "object",
+  "required": [
+    "id",
+    "corpus",
+    "corpus_version",
+    "question",
+    "question_type",
+    "difficulty",
+    "expected_behavior",
+    "reference_answer",
+    "supporting_chunks",
+    "author",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+_[0-9]{3}$",
+      "description": "Stable identifier, e.g. docker_042."
+    },
+    "corpus": {
+      "type": "string",
+      "enum": ["docker", "python", "fastapi", "kubernetes"]
+    },
+    "corpus_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pinned corpus identifier (git commit or version from the corpus MANIFEST)."
+    },
+    "question": {
+      "type": "string",
+      "minLength": 10
+    },
+    "question_type": {
+      "type": "string",
+      "enum": ["direct", "contextual", "multi_chunk", "trap", "unanswerable", "contradiction"]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard"]
+    },
+    "expected_behavior": {
+      "type": "string",
+      "enum": ["answer", "abstain"],
+      "description": "abstain only for unanswerable (and allowed for contradiction)."
+    },
+    "reference_answer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-written reference. For unanswerable: the expected abstention rationale."
+    },
+    "supporting_chunks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Corpus-relative path with optional anchor, e.g. dockerfile/cmd.md#syntax."
+      },
+      "description": "Empty only for unanswerable cases."
+    },
+    "contradiction_pair": {
+      "type": "string",
+      "description": "For contradiction cases: id linking the two corpus versions involved."
+    },
+    "split": {
+      "type": "string",
+      "enum": ["pilot", "main", "extension", "real_world"],
+      "default": "main"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"question_type": {"const": "unanswerable"}}},
+      "then": {
+        "properties": {
+          "expected_behavior": {"const": "abstain"},
+          "supporting_chunks": {"maxItems": 0}
+        }
+      },
+      "else": {
+        "properties": {
+          "supporting_chunks": {"minItems": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"question_type": {"const": "multi_chunk"}}},
+      "then": {
+        "properties": {
+          "supporting_chunks": {"minItems": 2}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"question_type": {"const": "contradiction"}}},
+      "then": {
+        "required": ["contradiction_pair"]
+      }
+    }
+  ]
+}
