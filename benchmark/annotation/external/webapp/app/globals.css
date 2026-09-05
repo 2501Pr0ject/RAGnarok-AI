@@ -15,3 +15,14 @@ select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #cfd4db; bord
 .progress { height: 6px; background: #e2e5e9; border-radius: 3px; overflow: hidden; margin: 0.8rem 0; }
 .progress > div { height: 100%; background: #2456d6; }
 .pill { display: inline-block; background: #eef2ff; color: #2456d6; border-radius: 999px; padding: 0.1rem 0.7rem; font-size: 0.85rem; }
+a { color: #2456d6; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+.blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.8rem; margin: 1.1rem 0 0.4rem; }
+.block { background: #f2f4f7; border-radius: 8px; padding: 0.7rem 0.9rem; font-size: 0.9rem; }
+.block b { display: block; margin-bottom: 0.25rem; }
+details.hint { margin-top: 0.3rem; font-size: 0.85rem; color: #5b6470; }
+details.hint summary { cursor: pointer; color: #2456d6; list-style: none; }
+details.hint summary::-webkit-details-marker { display: none; }
+details.hint[open] summary { margin-bottom: 0.2rem; }
+.saved { color: #1d7a3e; font-weight: 600; margin-left: 0.5rem; }
