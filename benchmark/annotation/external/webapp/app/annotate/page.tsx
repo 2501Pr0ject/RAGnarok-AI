@@ -151,7 +151,7 @@ function AnnotatePage() {
       </div>
       <p className="muted">
         <b>Case {doneKeys.size + 1} of {items.length}</b> &middot; {doneKeys.size} completed &middot; about
-        3 minutes per case {justSaved && <span className="saved">&#10003; Saved</span>}
+        3 minutes per case {justSaved && <span className="saved">Saved</span>}
       </p>
       <p className="muted">
         Your progress is saved automatically after each case. To stop and resume later, just keep this
@@ -201,7 +201,7 @@ function AnnotatePage() {
               <br />
               <span className="muted">{help}</span>
               <details className="hint">
-                <summary>&#9432; How to think about it</summary>
+                <summary>How to think about it</summary>
                 <span>{hint}</span>
               </details>
             </p>

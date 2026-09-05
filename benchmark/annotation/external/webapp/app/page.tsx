@@ -66,15 +66,15 @@ export default function Landing() {
         </p>
         <div className="blocks">
           <div className="block">
-            <b>🔬 The study</b>
+            <b>The study</b>
             A reproducible, openly published study on human vs. automated RAG evaluation.
           </div>
           <div className="block">
-            <b>👤 Your role</b>
+            <b>Your role</b>
             Review 10&ndash;15 anonymized cases and answer four yes/no questions about each.
           </div>
           <div className="block">
-            <b>⏱️ Your time</b>
+            <b>Your time</b>
             About 30&ndash;45 minutes total. Progress is saved after each case — you can stop and resume
             later.
           </div>
