@@ -10,11 +10,31 @@ type Item = {
   answer: string;
 };
 
-const CRITERIA: [string, string, string][] = [
-  ["retrieval_relevance", "Retrieval relevance", "Could a competent person answer the question from the retrieved context?"],
-  ["faithfulness", "Faithfulness", "Is every claim in the answer supported by the retrieved context (not by your own knowledge)?"],
-  ["answer_relevance", "Answer relevance", "Does it address the question asked? (Saying the info is missing counts as Yes if the context really lacks it.)"],
-  ["completeness", "Completeness", "Given the reference information, is anything essential missing?"],
+const CRITERIA: [string, string, string, string][] = [
+  [
+    "retrieval_relevance",
+    "Retrieval relevance",
+    "Could a competent person answer the question from the retrieved context?",
+    "Ignore the answer for a moment and look only at the excerpts: do they contain enough to answer the question? Extra irrelevant excerpts don't matter — missing essential information does.",
+  ],
+  [
+    "faithfulness",
+    "Faithfulness",
+    "Is every claim in the answer supported by the retrieved context (not by your own knowledge)?",
+    "Think: could I point to the provided excerpts and show where this claim comes from? An answer can be true in the real world and still unsupported here.",
+  ],
+  [
+    "answer_relevance",
+    "Answer relevance",
+    "Does it address the question asked? (Saying the info is missing counts as Yes if the context really lacks it.)",
+    "Think: does the response actually answer what was asked, rather than discussing something related? If the context genuinely lacks the information, saying so explicitly is the right behavior.",
+  ],
+  [
+    "completeness",
+    "Completeness",
+    "Given the reference information, is anything essential missing?",
+    "Think: would leaving this information out materially change the usefulness of the answer? Less detail than the reference is fine — a missing essential is not.",
+  ],
 ];
 
 function AnnotatePage() {
@@ -30,12 +50,21 @@ function AnnotatePage() {
   const [finished, setFinished] = useState<{ annotator_id: string; cases: number } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => {
     fetch(`/api/batch?token=${token}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.error) return setError(d.error);
+        if (d.error) {
+          try {
+            if (localStorage.getItem("ragnarok_token") === token) localStorage.removeItem("ragnarok_token");
+          } catch {}
+          return setError(d.error);
+        }
+        try {
+          localStorage.setItem("ragnarok_token", token);
+        } catch {}
         setItems(d.items);
         const done = new Set<string>(d.done);
         setDoneKeys(done);
@@ -82,9 +111,16 @@ function AnnotatePage() {
         body: JSON.stringify({ token }),
       });
       const fd = await fin.json();
-      if (fin.ok) return setFinished(fd);
+      if (fin.ok) {
+        try {
+          localStorage.removeItem("ragnarok_token");
+        } catch {}
+        return setFinished(fd);
+      }
       return setError(fd.error ?? "completion failed");
     }
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2500);
     const next = items.findIndex((i) => !done.has(i.item_key));
     setIdx(next);
   }
@@ -94,7 +130,10 @@ function AnnotatePage() {
       <div className="card">
         <h1>Thank you!</h1>
         <p>
-          {finished.cases} / {finished.cases} cases completed.
+          <b>
+            {finished.cases} / {finished.cases} cases completed.
+          </b>{" "}
+          Your annotations are now part of the study&rsquo;s human reference.
         </p>
         <p>
           Your anonymous annotation ID: <b>{finished.annotator_id}</b>
@@ -111,7 +150,12 @@ function AnnotatePage() {
         <div style={{ width: `${(doneKeys.size / items.length) * 100}%` }} />
       </div>
       <p className="muted">
-        Case {doneKeys.size + 1} of {items.length}
+        <b>Case {doneKeys.size + 1} of {items.length}</b> &middot; {doneKeys.size} completed &middot; about
+        3 minutes per case {justSaved && <span className="saved">&#10003; Saved</span>}
+      </p>
+      <p className="muted">
+        Your progress is saved automatically after each case. To stop and resume later, just keep this
+        page&rsquo;s link (or come back to the start page on this device).
       </p>
 
       <div className="card">
@@ -145,12 +189,21 @@ function AnnotatePage() {
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Your evaluation</h2>
-        {CRITERIA.map(([key, title, help]) => (
+        <p className="muted">
+          There are no trick questions — judge only what is shown on this page, and do not use outside
+          knowledge when judging faithfulness or retrieval relevance. When unsure, choose the option that
+          best matches the evidence and use the confidence field to indicate uncertainty.
+        </p>
+        {CRITERIA.map(([key, title, help, hint]) => (
           <div className="crit" key={key}>
             <p>
               <b>{title}</b>
               <br />
               <span className="muted">{help}</span>
+              <details className="hint">
+                <summary>&#9432; How to think about it</summary>
+                <span>{hint}</span>
+              </details>
             </p>
             <label>
               <input type="radio" name={key} checked={labels[key] === 1} onChange={() => setLabels({ ...labels, [key]: 1 })} /> Yes
@@ -180,6 +233,8 @@ function AnnotatePage() {
         </div>
         <p>
           <b>Comment</b> {needsNote ? <span className="muted">(required: you answered No somewhere or confidence is low)</span> : <span className="muted">(optional)</span>}
+          <br />
+          <span className="muted">Please do not include personal information — comments may be published with the dataset.</span>
         </p>
         <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
         <p style={{ marginTop: "1rem" }}>

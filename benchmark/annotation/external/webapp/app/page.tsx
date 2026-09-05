@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const DOMAINS = [
   ["docker", "Docker"],
@@ -14,6 +14,15 @@ export default function Landing() {
   const [level, setLevel] = useState("undisclosed");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [resumeToken, setResumeToken] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setSearch(window.location.search);
+    try {
+      setResumeToken(localStorage.getItem("ragnarok_token") ?? "");
+    } catch {}
+  }, []);
 
   async function start() {
     setBusy(true);
@@ -33,24 +42,60 @@ export default function Landing() {
     window.location.href = `/annotate?token=${data.token}`;
   }
 
-  const smoke = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("smoke") === "1";
+  const smoke = new URLSearchParams(search).get("smoke") === "1";
 
   return (
     <>
-      <h1>RAGnarok Human Evaluation</h1>
+      <div className="topbar">
+        <h1>RAGnarok Human Evaluation</h1>
+        <a href={`/about${search}`}>About this study &rarr;</a>
+      </div>
+
       <div className="card">
+        <h2 style={{ marginTop: 0 }}>Can we trust AI-based evaluation of RAG systems?</h2>
         <p>
-          Help an <b>open-source research study</b> measure how reliably AI answers over technical
-          documentation can be evaluated. You will review 10&ndash;15 anonymized answers: for each, the
-          question, the documentation excerpts the system used, and its answer.
+          RAG systems (retrieval-augmented generation) answer questions using information retrieved from
+          technical documentation. Increasingly, <b>automated evaluators</b> — including AI judges — are
+          used to assess whether those answers are relevant, faithful to their sources, and complete. This
+          open-source research study measures how well those automated evaluations agree with{" "}
+          <b>human judgment</b>: yours.
         </p>
+        <p>
+          Your role is simple: review a small set of anonymized RAG answers and judge them against the
+          documentation excerpts provided. No coding required.
+        </p>
+        <div className="blocks">
+          <div className="block">
+            <b>🔬 The study</b>
+            A reproducible, openly published study on human vs. automated RAG evaluation.
+          </div>
+          <div className="block">
+            <b>👤 Your role</b>
+            Review 10&ndash;15 anonymized cases and answer four yes/no questions about each.
+          </div>
+          <div className="block">
+            <b>⏱️ Your time</b>
+            About 30&ndash;45 minutes total. Progress is saved after each case — you can stop and resume
+            later.
+          </div>
+        </div>
         <p className="muted">
-          ~30&ndash;45 minutes &middot; no account, no email, no personal data &middot; you can stop anytime
-          &middot; the methodology is fully public in the study repository.
+          No account or email is required. No personal information is collected. The full methodology is
+          public — see <a href={`/about${search}`}>About this study</a>.
         </p>
       </div>
+
+      {resumeToken && (
+        <div className="card">
+          <p style={{ margin: 0 }}>
+            <b>You have an annotation session in progress on this device.</b>{" "}
+            <a href={`/annotate?token=${resumeToken}`}>Resume where you left off &rarr;</a>
+          </p>
+        </div>
+      )}
+
       <div className="card">
-        <h2>Which technology do you know?</h2>
+        <h2>Which technology are you most comfortable evaluating?</h2>
         {smoke ? (
           <p className="pill">Internal smoke-test batch (mixed domains)</p>
         ) : (
@@ -62,7 +107,7 @@ export default function Landing() {
             ))}
           </p>
         )}
-        <h2>Your experience with it (optional)</h2>
+        <h2>How familiar are you with it? (optional)</h2>
         <p>
           {LEVELS.map((v) => (
             <label key={v}>
@@ -77,8 +122,10 @@ export default function Landing() {
         </p>
         {error && <p style={{ color: "#c0392b" }}>{error}</p>}
         <p className="muted">
-          By starting, you agree that your anonymous judgments become part of an openly published research
-          dataset. Please read the annotator guide linked from where you received this study.
+          By continuing, you agree that your anonymous annotations may be included in the publicly released
+          research dataset and study results. No email, name, account, or other directly identifying
+          information is required. Please read the annotator guide linked from where you received this
+          study.
         </p>
       </div>
     </>
