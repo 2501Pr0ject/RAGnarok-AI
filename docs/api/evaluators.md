@@ -245,6 +245,80 @@ async with OllamaLLM() as llm:
 
 ---
 
+## RelevanceEvaluator
+
+Measures whether the generated answer addresses the original question. Implements `EvaluatorProtocol` for use in evaluation pipelines.
+
+```python
+from ragnarok_ai.evaluators import RelevanceEvaluator
+from ragnarok_ai.adapters.llm import OllamaLLM
+
+async with OllamaLLM() as llm:
+    evaluator = RelevanceEvaluator(llm)
+    score = await evaluator.evaluate(
+        response="Paris is the capital of France.",
+        query="What is the capital of France?",
+    )
+```
+
+---
+
+## HallucinationDetector
+
+Extracts the claims made by an answer and checks each one against the provided context. The score is `hallucinated_claims / total_claims`: 0.0 means no hallucination, 1.0 means every claim is unsupported. Implements `EvaluatorProtocol`.
+
+```python
+from ragnarok_ai.evaluators import HallucinationDetector
+from ragnarok_ai.adapters.llm import OllamaLLM
+
+async with OllamaLLM() as llm:
+    detector = HallucinationDetector(llm)
+    score = await detector.evaluate(
+        response="Paris, founded in 500 BC, is the capital of France.",
+        context="France is a country in Europe. Its capital is Paris.",
+    )
+```
+
+---
+
+## Medical Evaluation
+
+Medical-domain utilities for evaluating RAG over clinical text, where ambiguous abbreviations (is "MS" multiple sclerosis or mitral stenosis?) can silently distort scores.
+
+### MedicalAbbreviationNormalizer
+
+Expands medical abbreviations before evaluation, using a built-in dictionary plus context keywords for ambiguous cases.
+
+```python
+from ragnarok_ai.evaluators.medical import MedicalAbbreviationNormalizer
+
+normalizer = MedicalAbbreviationNormalizer()
+text, expansions = normalizer.normalize_text("CHF with EF 30%")
+# text: "congestive heart failure with ejection fraction 30%"
+# expansions: ["CHF → congestive heart failure", "EF → ejection fraction"]
+```
+
+Options: `custom_abbreviations` (extra abbreviation → full-form pairs), `context_window` (words considered around an ambiguous abbreviation), and `disambiguator` (escalation strategy, below).
+
+### SLMDisambiguator
+
+Resolves ambiguous abbreviations with a small local language model (e.g. `qwen2.5:0.5b`, `phi3:mini`), consulted by `normalize_text_async` only when context keywords are inconclusive. Decisions are memoized.
+
+```python
+from ragnarok_ai.evaluators.medical import MedicalAbbreviationNormalizer, SLMDisambiguator
+from ragnarok_ai.adapters.llm import OllamaLLM
+
+async with OllamaLLM(model="qwen2.5:0.5b") as llm:
+    normalizer = MedicalAbbreviationNormalizer(disambiguator=SLMDisambiguator(llm))
+    text, expansions = await normalizer.normalize_text_async(clinical_note)
+```
+
+Any object implementing the `DisambiguationStrategy` protocol (a `resolve` method) can be plugged in instead.
+
+Related: `LLMJudge(medical_mode=True)` and `FaithfulnessEvaluator(medical_mode=True)` apply medical normalization during judging. See the [LLM-as-Judge guide](../user-guide/judge.md) for the full medical workflow.
+
+---
+
 ## Next Steps
 
 - [Core Types](types.md) — Type reference

@@ -81,14 +81,14 @@ pip install ragnarok-ai[anthropic]
 
 ---
 
-### vLLM
+### VLLMAdapter
 
-Local high-performance inference.
+Local high-performance inference via vLLM's OpenAI-compatible API.
 
 ```python
-from ragnarok_ai.adapters.llm import vLLM
+from ragnarok_ai.adapters.llm import VLLMAdapter
 
-async with vLLM(
+async with VLLMAdapter(
     model: str = "mistral-7b",
     base_url: str = "http://localhost:8000",
 ) as llm:
@@ -346,7 +346,7 @@ pip install ragnarok-ai[pgvector]
 Wrap LangChain pipelines.
 
 ```python
-from ragnarok_ai.adapters.framework import LangChainAdapter
+from ragnarok_ai.adapters.frameworks import LangChainAdapter
 from langchain.chains import RetrievalQA
 
 chain = RetrievalQA.from_chain_type(...)
@@ -368,7 +368,7 @@ pip install ragnarok-ai[langchain]
 Wrap LangGraph agents.
 
 ```python
-from ragnarok_ai.adapters.framework import LangGraphAdapter
+from ragnarok_ai.adapters.frameworks import LangGraphAdapter
 from langgraph.graph import StateGraph
 
 graph = StateGraph(...)
@@ -390,7 +390,7 @@ pip install ragnarok-ai[langgraph]
 Wrap LlamaIndex query engines.
 
 ```python
-from ragnarok_ai.adapters.framework import LlamaIndexAdapter
+from ragnarok_ai.adapters.frameworks import LlamaIndexAdapter
 from llama_index import VectorStoreIndex
 
 index = VectorStoreIndex.from_documents(...)
@@ -407,20 +407,22 @@ pip install ragnarok-ai[llamaindex]
 
 ---
 
-### DSPyAdapter
+### DSPyModuleAdapter
 
 Wrap DSPy modules.
 
 ```python
-from ragnarok_ai.adapters.framework import DSPyAdapter
+from ragnarok_ai.adapters.frameworks import DSPyModuleAdapter
 import dspy
 
 class MyRAG(dspy.Module):
     ...
 
-adapter = DSPyAdapter(MyRAG())
+adapter = DSPyModuleAdapter(MyRAG())
 response = await adapter.query("What is Python?")
 ```
+
+For the common retriever + generator pattern, `DSPyRAGAdapter(retriever, generator)` combines them directly.
 
 **Installation:**
 
@@ -482,6 +484,64 @@ pip install ragnarok-ai[semantic-kernel]
 
 ---
 
+### Lower-level framework adapters
+
+Each framework also exposes finer-grained adapters when you want to evaluate a single component instead of a full pipeline:
+
+| Adapter | Wraps |
+|---------|-------|
+| `LangChainRetrieverAdapter` | A LangChain retriever alone |
+| `LangGraphStreamAdapter` | A LangGraph graph consumed in streaming mode |
+| `LlamaIndexRetrieverAdapter` | A LlamaIndex retriever alone |
+| `LlamaIndexQueryEngineAdapter` | A LlamaIndex query engine |
+| `DSPyRetrieverAdapter` | A DSPy retriever alone |
+| `DSPyRAGAdapter` | A DSPy retriever + generator pair |
+| `HaystackRetrieverAdapter` | A Haystack retriever alone |
+| `SemanticKernelMemoryAdapter` | Semantic Kernel memory search |
+
+All are importable from `ragnarok_ai.adapters.frameworks`.
+
+---
+
+## Agent Adapters
+
+Wrap agent-style systems so their reasoning traces can be evaluated. Both return an `AgentResponse` with structured steps.
+
+### ReActAdapter
+
+Wrap a ReAct-style agent (Thought / Action / Observation loops). The agent callable can be sync or async; its raw output is parsed into structured steps.
+
+```python
+from ragnarok_ai.adapters.agents import ReActAdapter
+
+adapter = ReActAdapter(my_agent)          # my_agent: (question) -> raw ReAct output
+response = await adapter.query("What is X?")
+
+print(response.answer)
+for step in response.steps:
+    print(step.step_type, step.content)
+```
+
+`ReActParser` is also available on its own to parse raw ReAct output into steps, and can be customized and passed to the adapter (`ReActAdapter(my_agent, parser=my_parser)`).
+
+### ChainOfThoughtAdapter
+
+Prompt any LLM to reason step by step and parse the response into structured steps.
+
+```python
+from ragnarok_ai.adapters.agents import ChainOfThoughtAdapter
+
+adapter = ChainOfThoughtAdapter(
+    llm,                                      # any LLMProtocol implementation
+    cot_prompt="Let's think step by step.",   # trigger appended to the question
+    answer_prefix=None,                       # optional marker for the final answer
+)
+response = await adapter.query("What is 15% of 80?")
+print(response.reasoning_trace)
+```
+
+---
+
 ## Local vs Cloud
 
 All adapters are classified as local or cloud:
@@ -489,7 +549,7 @@ All adapters are classified as local or cloud:
 | Adapter | Type | Description |
 |---------|------|-------------|
 | OllamaLLM | Local | Runs on your machine |
-| vLLM | Local | High-performance local inference |
+| VLLMAdapter | Local | High-performance local inference |
 | OpenAILLM | Cloud | Requires API key |
 | AnthropicLLM | Cloud | Requires API key |
 | GroqLLM | Cloud | Fast inference for open-source models |
@@ -529,6 +589,19 @@ class MyCustomLLM:
         # Your implementation
         return [0.1, 0.2, ...]
 ```
+
+To evaluate a custom RAG system end to end, implement `RAGProtocol` instead — a single async `query` method returning a `RAGResponse` — and pass the object anywhere an adapter is accepted:
+
+```python
+from ragnarok_ai.core.types import RAGResponse
+
+class MyRAG:
+    async def query(self, question: str) -> RAGResponse:
+        # retrieve + generate with your own stack
+        return RAGResponse(answer=answer, retrieved_docs=docs)
+```
+
+See [Core Types — Protocols](types.md#protocols) for the full protocol definitions.
 
 ---
 
