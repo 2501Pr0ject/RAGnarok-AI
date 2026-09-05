@@ -10,43 +10,38 @@ Evaluate, benchmark, and monitor your RAG pipelines — 100% locally, no API key
 
 Building RAG systems is easy. **Knowing if they actually work is hard.**
 
-| Tool | Issue |
-|------|-------|
-| Giskard | Heavy, slow (45-60 min scans), loses progress on crash |
-| RAGAS | Requires OpenAI API keys, no local-first option |
-| Manual testing | Doesn't scale, not reproducible |
+RAGnarok-AI is built on a few principles:
 
-RAGnarok-AI solves this with:
-
-- **100% Local** — Runs entirely with Ollama, no data leaves your network
-- **Fast & Resilient** — Built-in checkpointing, resume on crash
-- **Framework Agnostic** — Works with LangChain, LangGraph, LlamaIndex
-- **CI/CD Ready** — CLI-first design, JSON output, exit codes
+- **Local-first, always** — every feature works with local models (Ollama). No API key is ever required, and air-gapped deployment is a first-class target.
+- **Your data stays yours** — nothing leaves your machine. Production traces hash queries by default; capturing text is opt-in and PII-scrubbed client-side.
+- **Trust is measured, not assumed** — judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score.
+- **Resumable by design** — long local evaluations crash. Checkpointing means you never lose progress.
+- **Engineering tool, not a notebook** — CLI-first, JSON output, exit codes, `--fail-under` CI gates, regression detection, Prometheus export, Helm chart.
 
 ---
 
 ## Quick Example
 
+```bash
+# Generate a test set from your knowledge base
+ragnarok generate --docs ./knowledge/ --num 50 --output testset.json
+```
+
 ```python
-from ragnarok_ai import evaluate, generate_testset
+from ragnarok_ai import evaluate
+from ragnarok_ai.generators import load_testset
 
-# Generate test questions from your knowledge base
-testset = await generate_testset(
-    knowledge_base="./docs/",
-    num_questions=50,
-    llm="ollama/mistral",
-    checkpoint=True,
-)
+testset = load_testset("testset.json")
 
-# Evaluate your RAG pipeline
-results = await evaluate(
-    rag_pipeline=my_rag,
-    testset=testset,
-    metrics=["retrieval", "faithfulness", "relevance"],
-)
+# my_rag: any object with an async query() method (see Adapters)
+results = await evaluate(my_rag, testset)
+print(results.summary())
+```
 
-# Get actionable insights
-results.summary()
+Or try it instantly with no setup:
+
+```bash
+ragnarok evaluate --demo
 ```
 
 ---
@@ -80,11 +75,18 @@ Retrieval is pure computation — instant. LLM-as-Judge is the bottleneck (~25s/
 | Feature | Description |
 |---------|-------------|
 | 100% Local | Ollama-powered, no API keys required |
-| LLM-as-Judge | Prometheus 2 evaluation: faithfulness, relevance, hallucination |
+| LLM-as-Judge | Prometheus 2 evaluation: faithfulness, relevance, hallucination, completeness — with calibration against your own labels |
+| Production Intelligence | Drift detection against a recorded baseline, live A/B testing, root-cause diagnosis of failures |
+| Production Monitoring | Trace collection, Prometheus metrics export, latency and success-rate tracking |
+| Test Generation | Synthetic, adversarial, and multi-hop test sets from your knowledge base — or mined from real production traffic |
+| Medical Mode | Clinical abbreviation normalization with optional SLM disambiguation |
 | Cost Tracking | Track token usage. Local models = $0.00 |
 | Checkpointing | Resume on crash, no lost progress |
-| Framework Agnostic | LangChain, LangGraph, LlamaIndex, custom RAG |
-| CI/CD Ready | CLI-first, JSON output, GitHub Action |
+| Jupyter Integration | Rich HTML display in notebooks with metrics visualization |
+| Framework Agnostic | LangChain, LangGraph, LlamaIndex, DSPy, Haystack, Semantic Kernel, or custom RAG |
+| CI/CD Ready | CLI-first, JSON output, exit codes, GitHub Action, streaming evaluation with a live terminal UI |
+| Enterprise Ready | Kubernetes Helm charts, air-gapped deployment, data sovereignty |
+| Lightweight | Minimal dependencies. No torch/transformers in core |
 
 ---
 
@@ -108,5 +110,6 @@ See [Installation](getting-started/installation.md) for details.
 
 - [Installation](getting-started/installation.md) — Set up RAGnarok-AI
 - [Quick Start](getting-started/quickstart.md) — Run your first evaluation
+- [User Guide](user-guide/evaluation.md) — Evaluation, diagnosis, judging, calibration, drift, A/B testing
 - [CLI Reference](ci-cd/cli-reference.md) — Command-line interface
 - [GitHub Action](ci-cd/github-action.md) — CI/CD integration
