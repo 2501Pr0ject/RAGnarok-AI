@@ -46,11 +46,17 @@ def main() -> int:
     records: list[dict] = []
     smoke_records: list[dict] = []
     skipped = 0
+    incomplete = 0
     for a in dump["annotations"]:
         ann = annotators.get(a["annotator_id"])
         mapping = key_map.get(a["item_key"])
         if ann is None or mapping is None:
             skipped += 1
+            continue
+        # Protocol section 6: only completed annotators' records are
+        # merged; incomplete batches stay in the raw dump.
+        if not ann.get("completed_at"):
+            incomplete += 1
             continue
         rec = {
             "case_id": mapping["case_id"],
@@ -83,14 +89,17 @@ def main() -> int:
     smoke_out = HERE / "external_smoke.yaml"
     smoke_out.write_text(yaml.safe_dump({"records": smoke_records}, sort_keys=False, allow_unicode=True))
 
-    coverage = Counter((r["case_id"], r["rag_config"]) for r in records)
     print(f"{len(records)} external records -> {out}")
     print(f"{len(smoke_records)} smoke records  -> {smoke_out} (chain test only, never analyzed)")
     if skipped:
         print(f"{skipped} annotation(s) skipped (unknown annotator or item key)")
-    if coverage:
-        depth = Counter(coverage.values())
-        print(f"item coverage: {dict(sorted(depth.items()))} (annotations per item: count)")
+    if incomplete:
+        print(f"{incomplete} annotation(s) excluded (incomplete batch; kept in the raw dump)")
+    for name, recs in (("item coverage", records), ("smoke coverage", smoke_records)):
+        coverage = Counter((r["case_id"], r["rag_config"]) for r in recs)
+        if coverage:
+            depth = Counter(coverage.values())
+            print(f"{name}: {dict(sorted(depth.items()))} (annotations per item: count)")
     return 0
 
 
