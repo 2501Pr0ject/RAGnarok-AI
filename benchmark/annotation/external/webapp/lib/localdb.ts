@@ -24,14 +24,20 @@ function save(s: Store) {
 
 class Query {
   private filters: [string, any][] = [];
+  private max: number | null = null;
   constructor(private table: keyof Store, private columns: string) {}
 
   eq(col: string, val: any) {
     this.filters.push([col, val]);
     return this;
   }
+  limit(n: number) {
+    this.max = n;
+    return this;
+  }
   private rows(): Row[] {
-    return load()[this.table].filter((r) => this.filters.every(([c, v]) => r[c] === v));
+    const rows = load()[this.table].filter((r) => this.filters.every(([c, v]) => r[c] === v));
+    return this.max === null ? rows : rows.slice(0, this.max);
   }
   then(resolve: (v: { data: Row[]; error: null }) => void) {
     resolve({ data: this.rows(), error: null });

@@ -8,7 +8,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const client = db();
-  const { data: annotators } = await client.from("annotators").select("*");
-  const { data: annotations } = await client.from("annotations").select("*");
-  return NextResponse.json({ annotators, annotations });
+  const { data: annotators, error: annotatorsError } = await client.from("annotators").select("*");
+  if (annotatorsError) {
+    return NextResponse.json({ error: annotatorsError.message }, { status: 500 });
+  }
+  const { data: annotations, error: annotationsError } = await client.from("annotations").select("*");
+  if (annotationsError) {
+    return NextResponse.json({ error: annotationsError.message }, { status: 500 });
+  }
+  return NextResponse.json({ annotators: annotators ?? [], annotations: annotations ?? [] });
 }
