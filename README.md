@@ -21,11 +21,11 @@
 </p>
 
 <p align="center">
-  <a href="#-the-problem">Problem</a> •
-  <a href="#-the-solution">Solution</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-installation">Installation</a> •
-  <a href="#-roadmap">Roadmap</a>
+  <a href="#the-problem">Problem</a> •
+  <a href="#the-solution">Solution</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#roadmap">Roadmap</a>
 </p>
 
 ---
@@ -39,7 +39,7 @@ A pipeline can have a good retriever but a bad generator, great faithfulness but
 **ragnarok-ai is designed from the ground up for local, private, reproducible RAG evaluation:**
 
 - Runs 100% locally (Ollama, local models) — your data never leaves your machine
-- Evaluates with checkpointing — crash mid-run, resume exactly where you left off
+- Checkpoints long batch evaluations — after a crash, resume from the last completed batch
 - Tells you *why* quality is low (root-cause diagnosis), not just *that* it is
 - Lets you calibrate the judge against your own labels — trust the scores, or know you can't
 - Gates your CI, monitors production, detects drift, A/B tests configurations
@@ -88,8 +88,6 @@ HTMLReporter().report_to_file(
 
 Generation quality (faithfulness, relevance, hallucination, completeness) is scored by a local [LLM-as-Judge](#llm-as-judge-v12).
 
-> **v1.11.0 is now available!** Developer Experience: evaluate your own pipeline from the CLI with live streaming results, and browse them in an interactive TUI. Install with `pip install ragnarok-ai`
-
 ---
 
 ## Key Features
@@ -102,7 +100,7 @@ Generation quality (faithfulness, relevance, hallucination, completeness) is sco
 | **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness — with calibration against your own labels (kappa, error rates, threshold tuning). |
 | **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
 | **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
-| **Fast & Resilient** | Built-in checkpointing — crash mid-evaluation? Resume exactly where you left off. |
+| **Fast & Resilient** | Parallel evaluation, result caching, timeouts and retries. `BatchEvaluator` checkpoints each completed batch — after a crash, resume without recomputing them. |
 | **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
 | **Test Generation** | Auto-generate diverse test sets from your knowledge base — or mine them from real production traffic. |
@@ -120,7 +118,7 @@ Excellent evaluation frameworks exist (RAGAS, DeepEval, TruLens...). ragnarok-ai
 |-----------|---------------------------|
 | **Local-first, always** | Every feature works with local models (Ollama). No API key is ever required. Air-gapped deployment is a first-class target. |
 | **Your data stays yours** | Nothing leaves your machine. Production traces hash queries by default; capturing text is opt-in and PII-scrubbed client-side. |
-| **Resumable by design** | Long local evaluations crash. Checkpointing means you never lose progress. |
+| **Resumable by design** | Long local evaluations crash. `BatchEvaluator` checkpoints each completed batch, so a resumed run does not recompute them. |
 | **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. |
 | **Engineering tool, not a notebook** | CLI-first, JSON output, exit codes, `--fail-under` CI gates, regression detection, Prometheus export, Helm chart. |
 | **Lightweight core** | No torch/transformers in the core. Statistics are hand-rolled over the standard library. |
@@ -129,7 +127,7 @@ Excellent evaluation frameworks exist (RAGAS, DeepEval, TruLens...). ragnarok-ai
 
 ## Performance
 
-Benchmarked on Apple M2 16GB, Python 3.10:
+Benchmarked on Apple M2 16GB, Python 3.10 (RAGnarok-AI v1.4.0):
 
 **Retrieval Metrics:** ~24,000 queries/sec
 | Queries | Time   | Peak RAM |
