@@ -296,6 +296,92 @@ class TestPluginsCommand:
         assert data["status"] == "error"
 
 
+class TestPluginsCommandWithoutOptionalDeps:
+    """plugins command on an install without httpx (no [ollama] extra)."""
+
+    @pytest.fixture(autouse=True)
+    def block_httpx(self, monkeypatch: pytest.MonkeyPatch):
+        import sys
+
+        from ragnarok_ai.plugins import PluginRegistry
+
+        monkeypatch.setitem(sys.modules, "httpx", None)
+        PluginRegistry.reset()
+        yield
+        PluginRegistry.reset()
+
+    def test_plugins_list_flags_unavailable(self) -> None:
+        """Unavailable adapters are listed with the extra to install."""
+        result = runner.invoke(app, ["plugins", "--list"])
+
+        assert result.exit_code == 0
+        assert "unavailable: pip install 'ragnarok-ai[ollama]'" in result.output
+        assert "available)" in result.output
+
+    def test_plugins_list_json_flags_unavailable(self) -> None:
+        """JSON output carries availability and the required extra."""
+        result = runner.invoke(app, ["--json", "plugins", "--list"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)["data"]
+        ollama = next(p for p in data["plugins"] if p["name"] == "ollama")
+        assert ollama["available"] is False
+        assert ollama["requires_extra"] == "ollama"
+        assert data["available"] < data["total"]
+
+    def test_plugins_info_unavailable(self) -> None:
+        """--info on an unavailable adapter explains how to install it."""
+        result = runner.invoke(app, ["plugins", "--info", "ollama"])
+
+        assert result.exit_code == 0
+        assert "Available: No (pip install 'ragnarok-ai[ollama]')" in result.output
+
+    def test_plugins_info_unavailable_json(self) -> None:
+        """--info JSON on an unavailable adapter has no class."""
+        result = runner.invoke(app, ["--json", "plugins", "--info", "ollama"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)["data"]
+        assert data["available"] is False
+        assert data["class"] is None
+
+
+class TestCommandsWithoutOllamaExtra:
+    """Commands needing a local LLM, on an install without httpx."""
+
+    @pytest.fixture(autouse=True)
+    def block_httpx(self, monkeypatch: pytest.MonkeyPatch):
+        import sys
+
+        monkeypatch.setitem(sys.modules, "httpx", None)
+
+    def test_generate_exits_with_install_hint(self) -> None:
+        result = runner.invoke(app, ["generate", "--demo", "--num", "2"])
+
+        assert result.exit_code == 1
+        assert "pip install 'ragnarok-ai[ollama]'" in result.output
+        assert result.exception is None or isinstance(result.exception, SystemExit)
+
+    def test_generate_json_exits_with_install_hint(self) -> None:
+        result = runner.invoke(app, ["--json", "generate", "--demo", "--num", "2"])
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["status"] == "error"
+        assert "ragnarok-ai[ollama]" in data["errors"][0]
+
+    def test_generate_dry_run_still_works(self) -> None:
+        result = runner.invoke(app, ["generate", "--demo", "--num", "2", "--dry-run"])
+
+        assert result.exit_code == 0
+
+    def test_judge_exits_with_install_hint(self) -> None:
+        result = runner.invoke(app, ["judge", "--context", "c", "--question", "q", "--answer", "a"])
+
+        assert result.exit_code == 1
+        assert "pip install 'ragnarok-ai[ollama]'" in result.output
+
+
 class TestGlobalOptions:
     """Tests for global CLI options."""
 

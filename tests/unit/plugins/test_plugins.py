@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from dataclasses import FrozenInstanceError
 from unittest.mock import MagicMock, patch
 
@@ -13,6 +15,7 @@ from ragnarok_ai.plugins import (
     PluginLoadError,
     PluginNotFoundError,
     PluginRegistry,
+    PluginUnavailableError,
     discover_plugins_safe,
     get_llm_adapters,
     list_entry_points,
@@ -406,3 +409,80 @@ class TestMockEntryPoints:
             plugins = discover_plugins_safe(NAMESPACE_LLM)
 
             assert "broken" not in plugins
+
+
+# =============================================================================
+# Missing Optional Dependencies Tests
+# =============================================================================
+
+
+class TestUnavailableBuiltins:
+    """Builtin adapters whose optional dependencies are missing."""
+
+    @pytest.fixture(autouse=True)
+    def block_httpx(self, monkeypatch: pytest.MonkeyPatch):
+        """Simulate an install without httpx (no [ollama] extra)."""
+        monkeypatch.setitem(sys.modules, "httpx", None)
+        PluginRegistry.reset()
+        yield
+        PluginRegistry.reset()
+
+    def test_llm_adapters_registered_as_unavailable(self):
+        """LLM adapters stay listed, flagged unavailable with their extra."""
+        registry = PluginRegistry.get()
+        registry.discover()
+
+        info = registry.get_plugin_info("ollama")
+
+        assert info.available is False
+        assert info.adapter_class is None
+        assert info.requires_extra == "ollama"
+        assert registry.get_plugin_info("openai").requires_extra == "openai"
+
+    def test_available_only_excludes_unavailable(self):
+        """available_only filters out adapters missing their dependencies."""
+        registry = PluginRegistry.get()
+        registry.discover()
+
+        names = {p.name for p in registry.list_adapters(available_only=True)}
+
+        assert names.isdisjoint({"ollama", "vllm", "anthropic", "groq", "mistral", "openai", "together"})
+
+    def test_get_adapter_raises_with_install_hint(self):
+        """Requesting an unavailable adapter names the extra to install."""
+        registry = PluginRegistry.get()
+
+        with pytest.raises(PluginUnavailableError) as excinfo:
+            registry.get_adapter("ollama")
+
+        assert isinstance(excinfo.value, ImportError)
+        assert excinfo.value.extra == "ollama"
+        assert "pip install 'ragnarok-ai[ollama]'" in str(excinfo.value)
+
+    def test_convenience_functions_skip_unavailable(self):
+        """get_llm_adapters only returns usable classes."""
+        assert get_llm_adapters() == {}
+
+
+class TestBaseInstall:
+    """Import paths that must work without any optional dependency."""
+
+    def test_adapters_import_and_plugins_list_without_httpx(self):
+        """A fresh interpreter without httpx imports adapters and lists plugins."""
+        code = (
+            "import sys\n"
+            "sys.modules['httpx'] = None\n"
+            "import ragnarok_ai.adapters\n"
+            "from ragnarok_ai.adapters import ChromaVectorStore\n"
+            "from typer.testing import CliRunner\n"
+            "from ragnarok_ai.cli.main import app\n"
+            "result = CliRunner().invoke(app, ['plugins', '--list'])\n"
+            "print(result.exit_code)\n"
+            "print(result.output)\n"
+        )
+        proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+        exit_code, _, output = proc.stdout.partition("\n")
+
+        assert exit_code == "0"
+        assert "ollama" in output
+        assert "unavailable: pip install 'ragnarok-ai[ollama]'" in output

@@ -33,7 +33,23 @@ llm = OllamaLLM(model="mistral")
 # Filter adapters
 local_llms = registry.list_adapters(adapter_type="llm", local_only=True)
 external_plugins = registry.list_adapters(external_only=True)
+usable = registry.list_adapters(available_only=True)
 ```
+
+### Adapters with missing optional dependencies
+
+Builtin adapters whose optional dependencies are not installed (for example the LLM adapters without `httpx` on a base install) are still listed, flagged `available=False` with the extra to install in `requires_extra`. Asking for one raises `PluginUnavailableError`, a subclass of `ImportError`, with the install command:
+
+```python
+from ragnarok_ai.plugins import PluginUnavailableError
+
+try:
+    OllamaLLM = registry.get_adapter("ollama")
+except PluginUnavailableError as e:
+    print(e)  # Plugin 'ollama' is not available: ... pip install 'ragnarok-ai[ollama]'
+```
+
+`ragnarok plugins --list` shows these adapters as `unavailable` with the same install command.
 
 ## CLI Commands
 

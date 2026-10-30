@@ -6,7 +6,10 @@ builtin adapters with externally registered plugins.
 
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import logging
+import sys
 from dataclasses import dataclass, field
 from typing import ClassVar, Literal
 
@@ -17,7 +20,7 @@ from ragnarok_ai.plugins.discovery import (
     NAMESPACE_VECTORSTORE,
     discover_plugins_safe,
 )
-from ragnarok_ai.plugins.exceptions import PluginNotFoundError
+from ragnarok_ai.plugins.exceptions import PluginNotFoundError, PluginUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +39,126 @@ class PluginInfo:
         is_builtin: Whether this is a builtin adapter (shipped with ragnarok-ai).
         version: Optional version string.
         description: Optional human-readable description.
+        available: Whether the adapter's dependencies are installed. When
+            False, ``adapter_class`` is None.
+        requires_extra: Extra providing the adapter's optional dependencies
+            (``pip install ragnarok-ai[<extra>]``), for builtin adapters.
     """
 
     name: str
-    adapter_class: type
+    adapter_class: type | None
     adapter_type: AdapterType
     is_local: bool
     is_builtin: bool = True
     version: str | None = None
     description: str | None = None
+    available: bool = True
+    requires_extra: str | None = None
+
+
+@dataclass(frozen=True)
+class _BuiltinAdapter:
+    """Where a builtin adapter lives and what it needs to be importable."""
+
+    name: str
+    module: str
+    class_name: str
+    adapter_type: AdapterType
+    is_local: bool
+    extra: str
+    requires: tuple[str, ...]
+
+
+# Builtin adapters with the extra providing their optional dependencies and
+# the top-level modules those dependencies install.
+_BUILTIN_ADAPTERS: tuple[_BuiltinAdapter, ...] = (
+    # LLM
+    _BuiltinAdapter("ollama", "ragnarok_ai.adapters.llm.ollama", "OllamaLLM", "llm", True, "ollama", ("httpx",)),
+    _BuiltinAdapter("vllm", "ragnarok_ai.adapters.llm.vllm", "VLLMAdapter", "llm", True, "vllm", ("httpx",)),
+    _BuiltinAdapter(
+        "anthropic", "ragnarok_ai.adapters.llm.anthropic", "AnthropicLLM", "llm", False, "anthropic", ("httpx",)
+    ),
+    _BuiltinAdapter("groq", "ragnarok_ai.adapters.llm.groq", "GroqLLM", "llm", False, "groq", ("httpx",)),
+    _BuiltinAdapter("mistral", "ragnarok_ai.adapters.llm.mistral", "MistralLLM", "llm", False, "mistral", ("httpx",)),
+    _BuiltinAdapter("openai", "ragnarok_ai.adapters.llm.openai", "OpenAILLM", "llm", False, "openai", ("httpx",)),
+    _BuiltinAdapter(
+        "together", "ragnarok_ai.adapters.llm.together", "TogetherLLM", "llm", False, "together", ("httpx",)
+    ),
+    # Vector stores
+    _BuiltinAdapter(
+        "chroma",
+        "ragnarok_ai.adapters.vectorstore.chroma",
+        "ChromaVectorStore",
+        "vectorstore",
+        True,
+        "chroma",
+        ("chromadb",),
+    ),
+    _BuiltinAdapter(
+        "faiss",
+        "ragnarok_ai.adapters.vectorstore.faiss",
+        "FAISSVectorStore",
+        "vectorstore",
+        True,
+        "faiss",
+        ("faiss", "numpy"),
+    ),
+    _BuiltinAdapter(
+        "milvus",
+        "ragnarok_ai.adapters.vectorstore.milvus",
+        "MilvusVectorStore",
+        "vectorstore",
+        True,
+        "milvus",
+        ("pymilvus",),
+    ),
+    _BuiltinAdapter(
+        "pgvector",
+        "ragnarok_ai.adapters.vectorstore.pgvector",
+        "PgvectorVectorStore",
+        "vectorstore",
+        True,
+        "pgvector",
+        ("asyncpg", "pgvector"),
+    ),
+    _BuiltinAdapter(
+        "qdrant",
+        "ragnarok_ai.adapters.vectorstore.qdrant",
+        "QdrantVectorStore",
+        "vectorstore",
+        True,
+        "qdrant",
+        ("qdrant_client",),
+    ),
+    _BuiltinAdapter(
+        "pinecone",
+        "ragnarok_ai.adapters.vectorstore.pinecone",
+        "PineconeVectorStore",
+        "vectorstore",
+        False,
+        "pinecone",
+        ("pinecone",),
+    ),
+    _BuiltinAdapter(
+        "weaviate",
+        "ragnarok_ai.adapters.vectorstore.weaviate",
+        "WeaviateVectorStore",
+        "vectorstore",
+        False,
+        "weaviate",
+        ("weaviate",),
+    ),
+)
+
+
+def _is_importable(module: str) -> bool:
+    """Whether a top-level module is installed, without importing it."""
+    if module in sys.modules:
+        return sys.modules[module] is not None  # None marks a blocked import
+    try:
+        return importlib.util.find_spec(module) is not None
+    except (ImportError, ValueError):
+        return False
 
 
 @dataclass
@@ -106,58 +220,35 @@ class PluginRegistry:
         logger.info(f"Plugin discovery complete: {len(self._plugins)} adapters available")
 
     def _register_builtins(self) -> None:
-        """Register all builtin adapters."""
-        # Import here to avoid circular imports
-        from ragnarok_ai.adapters import (
-            CLOUD_LLM_ADAPTERS,
-            CLOUD_VECTORSTORE_ADAPTERS,
-            LOCAL_LLM_ADAPTERS,
-            LOCAL_VECTORSTORE_ADAPTERS,
-        )
+        """Register all builtin adapters.
 
-        # LLM adapters
-        for cls in LOCAL_LLM_ADAPTERS:
-            name = self._class_to_name(cls)
-            self._plugins[name] = PluginInfo(
-                name=name,
-                adapter_class=cls,
-                adapter_type="llm",
-                is_local=True,
-                is_builtin=True,
-            )
-
-        for cls in CLOUD_LLM_ADAPTERS:
-            name = self._class_to_name(cls)
-            self._plugins[name] = PluginInfo(
-                name=name,
-                adapter_class=cls,
-                adapter_type="llm",
-                is_local=False,
-                is_builtin=True,
-            )
-
-        # VectorStore adapters
-        for cls in LOCAL_VECTORSTORE_ADAPTERS:
-            name = self._class_to_name(cls)
-            self._plugins[name] = PluginInfo(
-                name=name,
-                adapter_class=cls,
-                adapter_type="vectorstore",
-                is_local=True,
-                is_builtin=True,
-            )
-
-        for cls in CLOUD_VECTORSTORE_ADAPTERS:
-            name = self._class_to_name(cls)
-            self._plugins[name] = PluginInfo(
-                name=name,
-                adapter_class=cls,
-                adapter_type="vectorstore",
-                is_local=False,
-                is_builtin=True,
-            )
+        Adapters whose optional dependencies are missing are registered as
+        unavailable (with the extra to install) instead of failing discovery.
+        """
+        for spec in _BUILTIN_ADAPTERS:
+            self._plugins[spec.name] = self._load_builtin(spec)
 
         logger.debug(f"Registered {len(self._plugins)} builtin adapters")
+
+    @staticmethod
+    def _load_builtin(spec: _BuiltinAdapter) -> PluginInfo:
+        """Import a builtin adapter, or describe it as unavailable."""
+        adapter_class: type | None = None
+        if all(_is_importable(module) for module in spec.requires):
+            try:
+                adapter_class = getattr(importlib.import_module(spec.module), spec.class_name)
+            except ImportError as e:
+                logger.debug(f"Builtin adapter {spec.name} unavailable: {e}")
+
+        return PluginInfo(
+            name=spec.name,
+            adapter_class=adapter_class,
+            adapter_type=spec.adapter_type,
+            is_local=spec.is_local,
+            is_builtin=True,
+            available=adapter_class is not None,
+            requires_extra=spec.extra,
+        )
 
     def _discover_entry_points(self) -> None:
         """Discover plugins from entry points."""
@@ -183,21 +274,6 @@ class PluginRegistry:
                 )
                 logger.debug(f"Registered external plugin: {name} ({adapter_type})")
 
-    def _class_to_name(self, cls: type) -> str:
-        """Convert class name to plugin name.
-
-        OllamaLLM -> ollama
-        OpenAILLM -> openai
-        ChromaVectorStore -> chroma
-        """
-        name = cls.__name__
-        # Remove common suffixes
-        for suffix in ["LLM", "VectorStore", "Adapter", "Framework", "Evaluator"]:
-            if name.endswith(suffix):
-                name = name[: -len(suffix)]
-                break
-        return name.lower()
-
     def get_adapter(self, name: str) -> type:
         """Get an adapter class by name.
 
@@ -209,6 +285,8 @@ class PluginRegistry:
 
         Raises:
             PluginNotFoundError: If the adapter is not found.
+            PluginUnavailableError: If the adapter's optional dependencies
+                are not installed.
         """
         if not self._discovered:
             self.discover()
@@ -216,6 +294,8 @@ class PluginRegistry:
         info = self._plugins.get(name.lower())
         if info is None:
             raise PluginNotFoundError(name)
+        if info.adapter_class is None:
+            raise PluginUnavailableError(info.name, info.requires_extra)
         return info.adapter_class
 
     def get_plugin_info(self, name: str) -> PluginInfo:
@@ -245,6 +325,7 @@ class PluginRegistry:
         local_only: bool = False,
         builtin_only: bool = False,
         external_only: bool = False,
+        available_only: bool = False,
     ) -> list[PluginInfo]:
         """List available adapters with optional filtering.
 
@@ -253,6 +334,7 @@ class PluginRegistry:
             local_only: Only return local adapters.
             builtin_only: Only return builtin adapters.
             external_only: Only return external (plugin) adapters.
+            available_only: Only return adapters whose dependencies are installed.
 
         Returns:
             List of PluginInfo objects matching the filters.
@@ -283,6 +365,9 @@ class PluginRegistry:
         if external_only:
             plugins = [p for p in plugins if not p.is_builtin]
 
+        if available_only:
+            plugins = [p for p in plugins if p.available]
+
         return sorted(plugins, key=lambda p: p.name)
 
     def is_registered(self, name: str) -> bool:
@@ -308,7 +393,11 @@ def get_llm_adapters() -> dict[str, type]:
     """
     registry = PluginRegistry.get()
     registry.discover()
-    return {info.name: info.adapter_class for info in registry.list_adapters(adapter_type="llm")}
+    return {
+        info.name: info.adapter_class
+        for info in registry.list_adapters(adapter_type="llm", available_only=True)
+        if info.adapter_class is not None
+    }
 
 
 def get_vectorstore_adapters() -> dict[str, type]:  # pragma: no cover
@@ -319,7 +408,11 @@ def get_vectorstore_adapters() -> dict[str, type]:  # pragma: no cover
     """
     registry = PluginRegistry.get()
     registry.discover()
-    return {info.name: info.adapter_class for info in registry.list_adapters(adapter_type="vectorstore")}
+    return {
+        info.name: info.adapter_class
+        for info in registry.list_adapters(adapter_type="vectorstore", available_only=True)
+        if info.adapter_class is not None
+    }
 
 
 def get_framework_adapters() -> dict[str, type]:  # pragma: no cover
@@ -330,4 +423,8 @@ def get_framework_adapters() -> dict[str, type]:  # pragma: no cover
     """
     registry = PluginRegistry.get()
     registry.discover()
-    return {info.name: info.adapter_class for info in registry.list_adapters(adapter_type="framework")}
+    return {
+        info.name: info.adapter_class
+        for info in registry.list_adapters(adapter_type="framework", available_only=True)
+        if info.adapter_class is not None
+    }

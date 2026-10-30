@@ -12,6 +12,8 @@ Adapter Classification:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from ragnarok_ai.adapters.agents import (
     ChainOfThoughtAdapter,
     ReActAdapter,
@@ -29,15 +31,6 @@ from ragnarok_ai.adapters.frameworks import (
     LlamaIndexQueryEngineAdapter,
     LlamaIndexRetrieverAdapter,
 )
-from ragnarok_ai.adapters.llm import (
-    AnthropicLLM,
-    GroqLLM,
-    MistralLLM,
-    OllamaLLM,
-    OpenAILLM,
-    TogetherLLM,
-    VLLMAdapter,
-)
 from ragnarok_ai.adapters.vectorstore import (
     ChromaVectorStore,
     FAISSVectorStore,
@@ -48,9 +41,19 @@ from ragnarok_ai.adapters.vectorstore import (
     WeaviateVectorStore,
 )
 
-# LLM adapter classification
-LOCAL_LLM_ADAPTERS: tuple[type, ...] = (OllamaLLM, VLLMAdapter)
-CLOUD_LLM_ADAPTERS: tuple[type, ...] = (AnthropicLLM, GroqLLM, MistralLLM, OpenAILLM, TogetherLLM)
+if TYPE_CHECKING:
+    from ragnarok_ai.adapters.llm import (
+        AnthropicLLM,
+        GroqLLM,
+        MistralLLM,
+        OllamaLLM,
+        OpenAILLM,
+        TogetherLLM,
+        VLLMAdapter,
+    )
+
+    LOCAL_LLM_ADAPTERS: tuple[type, ...]
+    CLOUD_LLM_ADAPTERS: tuple[type, ...]
 
 # VectorStore adapter classification
 LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (
@@ -60,7 +63,32 @@ LOCAL_VECTORSTORE_ADAPTERS: tuple[type, ...] = (
     PgvectorVectorStore,
     QdrantVectorStore,
 )
+
 CLOUD_VECTORSTORE_ADAPTERS: tuple[type, ...] = (PineconeVectorStore, WeaviateVectorStore)
+
+# LLM adapters (and their classification) need httpx, an optional dependency:
+# they are resolved on first access so that importing this package works on a
+# base install.
+_LLM_ADAPTERS = ("AnthropicLLM", "GroqLLM", "MistralLLM", "OllamaLLM", "OpenAILLM", "TogetherLLM", "VLLMAdapter")
+_LLM_CLASSIFICATION = {
+    "LOCAL_LLM_ADAPTERS": ("OllamaLLM", "VLLMAdapter"),
+    "CLOUD_LLM_ADAPTERS": ("AnthropicLLM", "GroqLLM", "MistralLLM", "OpenAILLM", "TogetherLLM"),
+}
+
+
+def __getattr__(name: str) -> Any:
+    from ragnarok_ai.adapters import llm
+
+    if name in _LLM_ADAPTERS:
+        value: Any = getattr(llm, name)
+    elif name in _LLM_CLASSIFICATION:
+        value = tuple(getattr(llm, adapter) for adapter in _LLM_CLASSIFICATION[name])
+    else:
+        msg = f"module {__name__!r} has no attribute {name!r}"
+        raise AttributeError(msg)
+    globals()[name] = value  # cache: later lookups bypass __getattr__
+    return value
+
 
 __all__ = [
     "CLOUD_LLM_ADAPTERS",
