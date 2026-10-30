@@ -18,6 +18,8 @@
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
   <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/type%20checked-mypy-blue.svg" alt="Type Checked: mypy"></a>
   <a href="https://colab.research.google.com/drive/1BC90iuDMwYi4u9I59jfcjNYiBd2MNvTA?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+  <a href="https://huggingface.co/spaces/ragnarok-ai/retrieval-metrics-demo"><img src="https://img.shields.io/badge/Open%20in-Spaces-yellow.svg" alt="Open in Spaces"></a>
+  <a href="https://huggingface.co/ragnarok-ai"><img src="https://img.shields.io/badge/Hugging%20Face-ragnarok--ai-yellow.svg" alt="Hugging Face: ragnarok-ai"></a>
 </p>
 
 <p align="center">
