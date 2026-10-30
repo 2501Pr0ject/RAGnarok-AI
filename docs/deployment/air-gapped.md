@@ -10,7 +10,7 @@ RAGnarok-AI is built **local-first** by design. This means:
 
 - **Data Sovereignty**: Your evaluation data never leaves your infrastructure
 - **Data Residency**: Suited to environments with strict data residency constraints (e.g. GDPR or HIPAA); compliance itself depends on your own infrastructure and processes
-- **Security**: Eliminate external attack vectors and data exfiltration risks
+- **Security**: Remove network-based exfiltration paths and reduce the external attack surface
 - **Reproducibility**: Fully controlled environment with pinned versions
 
 RAGnarok-AI gives you the choice: use cloud services when convenient, or go fully offline when required. The framework is **open to existing solutions** while enabling complete independence.
