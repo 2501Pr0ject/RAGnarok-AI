@@ -277,7 +277,7 @@ async def _evaluate_sequential(
     total = len(testset.queries)
     start_time = time.perf_counter()
 
-    async for query, metric, answer in evaluate_stream(
+    async for query_result in _stream_query_results(
         rag_pipeline,
         testset,
         k=k,
@@ -289,11 +289,20 @@ async def _evaluate_sequential(
         max_retries=max_retries,
         retry_delay=retry_delay,
     ):
-        metrics.append(metric)
-        responses.append(answer)
+        query_results.append(query_result)
+        if query_result.error is None:
+            metrics.append(query_result.metric)
+            responses.append(query_result.answer)
+        else:
+            errors.append((query_result.query, query_result.error))
 
         if on_progress:
-            info = ProgressInfo(current=len(metrics), total=total, query=query)
+            info = ProgressInfo(
+                current=len(query_results),
+                total=total,
+                query=query_result.query,
+                result=query_result,
+            )
             callback_result = on_progress(info)
             if asyncio.iscoroutine(callback_result):
                 await callback_result
@@ -625,6 +634,43 @@ async def evaluate_stream(
     Raises:
         EvaluationError: If evaluation fails for any query and fail_fast is True.
     """
+    async for result in _stream_query_results(
+        rag_pipeline,
+        testset,
+        k=k,
+        tracer=tracer,
+        fail_fast=fail_fast,
+        cache=cache,
+        pipeline_id=pipeline_id,
+        timeout=timeout,
+        max_retries=max_retries,
+        retry_delay=retry_delay,
+    ):
+        if result.error is None:
+            yield result.query, result.metric, result.answer
+
+
+async def _stream_query_results(
+    rag_pipeline: RAGProtocol,
+    testset: TestSet,
+    *,
+    k: int = 10,
+    tracer: RAGTracer | None = None,
+    fail_fast: bool = True,
+    cache: CacheProtocol | None = None,
+    pipeline_id: str | None = None,
+    timeout: float | None = None,
+    max_retries: int = 0,
+    retry_delay: float = 1.0,
+) -> AsyncIterator[QueryResult]:
+    """Evaluate queries one by one, yielding the full QueryResult of each.
+
+    Shared engine of ``evaluate_stream`` and sequential ``evaluate``. Failed
+    queries are yielded with ``error`` set when ``fail_fast`` is False.
+
+    Raises:
+        EvaluationError: If evaluation fails for any query and fail_fast is True.
+    """
     import logging
 
     from ragnarok_ai.cache.base import compute_cache_key
@@ -648,7 +694,7 @@ async def evaluate_stream(
                     cache_key = compute_cache_key(query, pipeline_id=pipeline_id, k=k)
                     cached_result = await cache.get(cache_key)
                     if cached_result is not None:
-                        yield query, cached_result.metric, cached_result.answer
+                        yield cached_result
                         continue
                 except Exception as e:
                     logger.warning(f"Cache read error for query {i}: {e}")
@@ -673,11 +719,9 @@ async def evaluate_stream(
                 except Exception as e:
                     logger.warning(f"Cache write error for query {i}: {e}")
 
-            if result.error:
-                if fail_fast:
-                    raise EvaluationError(f"Failed to evaluate query '{query.text}': {result.error}") from result.error
-                continue
+            if result.error and fail_fast:
+                raise EvaluationError(f"Failed to evaluate query '{query.text}': {result.error}") from result.error
 
-            yield query, result.metric, result.answer
+            yield result
 
         eval_span.set_attribute("ragnarok.completed", True)
