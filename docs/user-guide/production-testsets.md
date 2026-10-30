@@ -62,7 +62,7 @@ from ragnarok_ai.dataset.io import save_testset
 
 save_testset(testset, "production-failures.json")   # version it like any test set
 
-results = await evaluate(rag_pipeline, testset, metrics=["faithfulness", "relevance"])
+results = await evaluate(rag_pipeline, testset)  # then score the answers with LLMJudge
 ```
 
 !!! note "No ground truth"

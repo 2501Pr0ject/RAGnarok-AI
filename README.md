@@ -56,38 +56,37 @@ A pipeline can have a good retriever but a bad generator, great faithfulness but
 </p>
 
 ```python
-from ragnarok_ai import evaluate, generate_testset
+from ragnarok_ai import evaluate
+from ragnarok_ai.core.types import Query, TestSet
+from ragnarok_ai.reporters import HTMLReporter
 
-# Generate test questions from your knowledge base
-testset = await generate_testset(
-    knowledge_base="./docs/",
-    num_questions=50,
-    types=["simple", "multi_hop", "adversarial"],
-    llm="ollama/mistral",
-    checkpoint=True,  # Resume if interrupted
+# A test set: questions with the documents that should be retrieved
+# (or generate one from your knowledge base: `ragnarok generate --docs ./docs/`)
+testset = TestSet(
+    queries=[
+        Query(text="Who created Python?", ground_truth_docs=["doc_python"]),
+        Query(text="When was Python first released?", ground_truth_docs=["doc_python"]),
+    ]
 )
 
-# Evaluate your RAG pipeline
-results = await evaluate(
-    rag_pipeline=my_rag,
-    testset=testset,
-    metrics=["retrieval", "faithfulness", "relevance"],
-    llm="ollama/mistral",
+# Evaluate your RAG pipeline: any object with `async def query(question) -> RAGResponse`
+results = await evaluate(my_rag, testset)
+
+print(results.summary())
+# {'num_queries': 2, 'precision': ..., 'recall': ..., 'mrr': ..., 'ndcg': ...}
+
+# Per-query details: answer, metrics, retrieved documents, latency, error
+for qr in results.query_results:
+    print(qr.query.text, qr.metric.recall, qr.retrieved_doc_ids)
+
+# Interactive HTML report with per-query drill-down
+HTMLReporter().report_to_file(
+    [(qr.query.text, qr.metric, None) for qr in results.query_results],
+    "report.html",
 )
-
-# Get actionable insights
-results.summary()
-# ┌─────────────────┬───────┬────────┐
-# │ Metric          │ Score │ Status │
-# ├─────────────────┼───────┼────────┤
-# │ Retrieval P@10  │ 0.82  │ PASS   │
-# │ Faithfulness    │ 0.74  │ WARN   │
-# │ Relevance       │ 0.89  │ PASS   │
-# │ Hallucination   │ 0.12  │ PASS   │
-# └─────────────────┴───────┴────────┘
-
-results.export("report.html")
 ```
+
+Generation quality (faithfulness, relevance, hallucination, completeness) is scored by a local [LLM-as-Judge](#llm-as-judge-v12).
 
 > **v1.11.0 is now available!** Developer Experience: evaluate your own pipeline from the CLI with live streaming results, and browse them in an interactive TUI. Install with `pip install ragnarok-ai`
 
@@ -183,8 +182,8 @@ ragnarok evaluate --demo
 # With options
 ragnarok evaluate --demo --output results.json --fail-under 0.7
 
-# Or in Python
-python examples/basic_evaluation.py
+# Or in Python, against your own pipeline
+python examples/custom_rag_adapter.py
 ```
 
 ---
@@ -252,25 +251,38 @@ The action posts a PR comment distinguishing **deterministic** retrieval metrics
 ### Compare Embedding Models
 
 ```python
-configs = [
-    {"embedder": "nomic-embed-text", "chunk_size": 512},
-    {"embedder": "mxbai-embed-large", "chunk_size": 256},
-]
+from ragnarok_ai import compare
 
-results = await benchmark(
+# create_rag(config) builds your pipeline from a config dict
+comparison = await compare(
     rag_factory=create_rag,
-    configs=configs,
+    configs={
+        "nomic-512": {"embedder": "nomic-embed-text", "chunk_size": 512},
+        "mxbai-256": {"embedder": "mxbai-embed-large", "chunk_size": 256},
+    },
     testset=testset,
 )
-results.compare()  # Side-by-side comparison
+print(comparison.summary())         # Side-by-side comparison
+print(comparison.winner("ndcg"))    # Best config on a given metric
 ```
 
 ### Monitor Production Quality
 
 ```python
-# Track quality drift over time
-metrics = await evaluate(rag, production_queries)
-metrics.log_to("./metrics/")  # Time-series storage
+from ragnarok_ai import evaluate
+from ragnarok_ai.benchmarks import BenchmarkHistory, JSONFileStore
+
+# Track quality over time (JSON time-series storage)
+history = BenchmarkHistory(JSONFileStore("./metrics/benchmarks.json"))
+
+results = await evaluate(rag, testset)
+record = await history.record(results, "production", testset)
+await history.set_baseline(record.id)
+
+# On later runs, compare against the baseline
+regression = await history.compare_to_baseline("production", await evaluate(rag, testset), testset)
+if regression is not None and regression.has_regressions:
+    print("Quality regression detected")
 ```
 
 ---
@@ -363,6 +375,8 @@ Also works with `FaithfulnessEvaluator(llm, medical_mode=True)`.
 Track exactly what your evaluations cost:
 
 ```python
+from ragnarok_ai import evaluate
+
 results = await evaluate(rag, testset, track_cost=True)
 print(results.cost)
 # +--------------------+------------+----------+
@@ -765,33 +779,27 @@ from ragnarok_ai.adapters.vectorstore import ChromaVectorStore, QdrantVectorStor
 ### Implementing a Custom RAG
 
 ```python
-from ragnarok_ai.core.protocols import RAGProtocol
-from ragnarok_ai.core.types import RAGResponse, Document
+from ragnarok_ai import evaluate
+from ragnarok_ai.core.types import Document, RAGResponse
 
 class MyCustomRAG:
-    """Custom RAG implementing the RAGProtocol."""
+    """Any object with this async method satisfies RAGProtocol."""
 
-    async def query(self, question: str, k: int = 5) -> RAGResponse:
-        # Your retrieval logic here
-        docs = await self.retrieve(question, k)
-        answer = await self.generate(question, docs)
+    def __init__(self, documents: list[Document]) -> None:
+        self.documents = documents
 
-        return RAGResponse(
-            answer=answer,
-            retrieved_docs=[
-                Document(id=d.id, content=d.text, metadata=d.meta)
-                for d in docs
-            ],
-        )
+    async def query(self, question: str) -> RAGResponse:
+        # Your retrieval logic here (naive keyword match for illustration)
+        words = set(question.lower().split())
+        docs = [d for d in self.documents if words & set(d.content.lower().split())][:5]
 
-# Use with ragnarok-ai
-from ragnarok_ai import evaluate
+        # Your generation logic here
+        answer = docs[0].content if docs else "I don't know."
 
-results = await evaluate(
-    rag_pipeline=MyCustomRAG(),
-    testset=testset,
-    metrics=["retrieval", "faithfulness"],
-)
+        return RAGResponse(answer=answer, retrieved_docs=docs)
+
+results = await evaluate(MyCustomRAG(documents), testset)
+print(results.summary())
 ```
 
 ---

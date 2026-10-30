@@ -9,7 +9,7 @@ When faithfulness sits at 0.6, the question that matters is: is it a retrieval m
 ```python
 from ragnarok_ai import RAGDiagnostician, evaluate
 
-result = await evaluate(rag_pipeline, testset, metrics=["retrieval"])
+result = await evaluate(rag_pipeline, testset)
 
 diagnostician = RAGDiagnostician()
 report = await diagnostician.diagnose(result)
