@@ -19,6 +19,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.13.6"
           enable-cache: true
 
       - name: Set up Python
@@ -42,6 +43,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.13.6"
           enable-cache: true
 
       - name: Set up Python
@@ -66,6 +68,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.13.6"
           enable-cache: true
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -111,6 +114,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.13.6"
           enable-cache: true
 
       - name: Set up Python
@@ -131,6 +135,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.13.6"
           enable-cache: true
 
       - name: Set up Python
@@ -157,6 +162,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.13.6"
           enable-cache: true
 
       - name: Set up Python
@@ -167,3 +173,71 @@ jobs:
 
       - name: Check package with twine
         run: uvx twine check dist/*
+
+  install-smoke:
+    name: Install smoke test (no extras)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.13.6"
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Build wheel
+        run: uv build --wheel
+
+      - name: Install wheel in a clean environment (pip, no extras)
+        run: |
+          uv venv --seed --python ${{ env.PYTHON_VERSION_DEFAULT }} "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install dist/*.whl
+          "$RUNNER_TEMP/venv/bin/pip" list
+
+      - name: Run the CLI outside the repository
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/ragnarok" --version
+          "$RUNNER_TEMP/venv/bin/ragnarok" evaluate --demo
+          "$RUNNER_TEMP/venv/bin/ragnarok" plugins --list
+
+  install-minimum:
+    name: Install smoke test (minimum core versions)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.13.6"
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Build wheel
+        run: uv build --wheel
+
+      # Core dependencies only (pydantic, pydantic-settings, pyyaml, typer,
+      # rich) at their declared lower bounds; extras are not covered here.
+      - name: Install minimum core dependencies, then the wheel
+        run: |
+          uv venv --python ${{ env.PYTHON_VERSION_DEFAULT }} "$RUNNER_TEMP/venv"
+          VIRTUAL_ENV="$RUNNER_TEMP/venv" uv pip install --resolution lowest-direct -r pyproject.toml
+          VIRTUAL_ENV="$RUNNER_TEMP/venv" uv pip install --no-deps dist/*.whl
+          VIRTUAL_ENV="$RUNNER_TEMP/venv" uv pip list
+
+      # pydantic < 2.10 warns on fields in its protected namespace (model_*)
+      - name: Import without warnings
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -W error::UserWarning -c "import ragnarok_ai, ragnarok_ai.core.artifacts, ragnarok_ai.monitor.models"
+
+      - name: Run the CLI outside the repository
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/ragnarok" --version
+          "$RUNNER_TEMP/venv/bin/ragnarok" evaluate --demo

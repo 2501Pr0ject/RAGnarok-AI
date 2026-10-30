@@ -898,6 +898,8 @@ def _run_generation(
             typer.echo()
         return
 
+    _require_optional("generate", module="httpx", extra="ollama")
+
     if not state["json"]:
         typer.echo("  Connecting to Ollama...")
 
@@ -1578,6 +1580,8 @@ def _run_judge(
     """Run LLM-as-Judge evaluation."""
     from ragnarok_ai.evaluators.judge import LLMJudge
 
+    _require_optional("judge", module="httpx", extra="ollama")
+
     # Parse criteria
     valid_criteria = {"faithfulness", "relevance", "hallucination", "completeness", "all"}
     if criteria.lower() == "all":
@@ -1864,10 +1868,13 @@ def _list_plugins(adapter_type: str | None = None, local_only: bool = False) -> 
                     "type": p.adapter_type,
                     "is_local": p.is_local,
                     "is_builtin": p.is_builtin,
+                    "available": p.available,
+                    "requires_extra": p.requires_extra,
                 }
                 for p in plugins
             ],
             "total": len(plugins),
+            "available": sum(1 for p in plugins if p.available),
             "filters": {
                 "type": adapter_type,
                 "local_only": local_only,
@@ -1899,11 +1906,37 @@ def _list_plugins(adapter_type: str | None = None, local_only: bool = False) -> 
                 for p in by_type[ptype]:
                     local_tag = "[local]" if p.is_local else "[cloud]"
                     builtin_tag = "" if p.is_builtin else " (plugin)"
-                    typer.echo(f"    {p.name:15} {local_tag:8}{builtin_tag}")
+                    status = "" if p.available else f"  unavailable: {_install_hint(p.requires_extra)}"
+                    typer.echo(f"    {p.name:15} {local_tag:8}{builtin_tag}{status}")
 
+        unavailable = sum(1 for p in plugins if not p.available)
         typer.echo()
-        typer.echo(f"  Total: {len(plugins)} adapters")
+        typer.echo(f"  Total: {len(plugins)} adapters ({len(plugins) - unavailable} available)")
         typer.echo()
+
+
+def _install_hint(extra: str | None) -> str:
+    """Install command for a plugin's missing optional dependencies."""
+    return f"pip install 'ragnarok-ai[{extra}]'" if extra else "missing optional dependencies"
+
+
+def _require_optional(command: str, *, module: str, extra: str) -> None:
+    """Exit with an install hint when a command's optional dependency is missing."""
+    import importlib.util
+
+    try:
+        found = importlib.util.find_spec(module) is not None
+    except (ImportError, ValueError):
+        found = False
+    if found:
+        return
+
+    message = f"'ragnarok {command}' requires the [{extra}] extra: {_install_hint(extra)}"
+    if state["json"]:
+        typer.echo(json_response(command, "error", errors=[message]))
+    else:
+        typer.echo(f"Error: {message}", err=True)
+    raise typer.Exit(EXIT_FAILURE)
 
 
 def _show_plugin_info(plugin_name: str) -> None:
@@ -1923,15 +1956,20 @@ def _show_plugin_info(plugin_name: str) -> None:
             typer.echo("Run 'ragnarok plugins --list' to see available plugins.", err=True)
         raise typer.Exit(EXIT_BAD_INPUT) from None
 
+    adapter_class = info.adapter_class
+    class_path = f"{adapter_class.__module__}.{adapter_class.__name__}" if adapter_class is not None else None
+
     if state["json"]:
         data = {
             "name": info.name,
             "type": info.adapter_type,
             "is_local": info.is_local,
             "is_builtin": info.is_builtin,
-            "class": f"{info.adapter_class.__module__}.{info.adapter_class.__name__}",
+            "class": class_path,
             "version": info.version,
             "description": info.description,
+            "available": info.available,
+            "requires_extra": info.requires_extra,
         }
         typer.echo(json_response("plugins", "success", data=data))
     else:
@@ -1941,7 +1979,9 @@ def _show_plugin_info(plugin_name: str) -> None:
         typer.echo(f"  Type:     {info.adapter_type}")
         typer.echo(f"  Local:    {'Yes' if info.is_local else 'No'}")
         typer.echo(f"  Builtin:  {'Yes' if info.is_builtin else 'No (external plugin)'}")
-        typer.echo(f"  Class:    {info.adapter_class.__module__}.{info.adapter_class.__name__}")
+        if class_path is not None:
+            typer.echo(f"  Class:    {class_path}")
+        typer.echo(f"  Available: {'Yes' if info.available else 'No (' + _install_hint(info.requires_extra) + ')'}")
         if info.version:
             typer.echo(f"  Version:  {info.version}")
         if info.description:

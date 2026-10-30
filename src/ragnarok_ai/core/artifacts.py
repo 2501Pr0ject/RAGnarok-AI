@@ -21,7 +21,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ragnarok_ai.core.hashing import (
     compute_hash,
@@ -304,7 +304,8 @@ class Trace(BaseModel):
     Prefer storing hashes; text fields are optional (PII).
     """
 
-    model_config = {"extra": "forbid", "validate_assignment": True}
+    # protected_namespaces=(): model_version is a field, not a pydantic API (pydantic<2.10 warns otherwise)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True, protected_namespaces=())
 
     trace_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

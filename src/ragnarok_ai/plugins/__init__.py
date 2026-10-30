@@ -52,6 +52,7 @@ from ragnarok_ai.plugins.exceptions import (
     PluginError,
     PluginLoadError,
     PluginNotFoundError,
+    PluginUnavailableError,
 )
 from ragnarok_ai.plugins.registry import (
     PluginInfo,
@@ -72,6 +73,7 @@ __all__ = [
     "PluginLoadError",
     "PluginNotFoundError",
     "PluginRegistry",
+    "PluginUnavailableError",
     "discover_plugins",
     "discover_plugins_safe",
     "get_framework_adapters",

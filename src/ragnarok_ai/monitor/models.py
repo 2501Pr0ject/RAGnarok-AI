@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TraceEvent(BaseModel):
@@ -45,7 +45,8 @@ class TraceEvent(BaseModel):
     # Extra metadata
     metadata: dict[str, Any] = Field(default_factory=dict)
 
-    model_config = {"frozen": False}
+    # protected_namespaces=(): model_version is a field, not a pydantic API (pydantic<2.10 warns otherwise)
+    model_config = ConfigDict(frozen=False, protected_namespaces=())
 
 
 class AggregateMetrics(BaseModel):

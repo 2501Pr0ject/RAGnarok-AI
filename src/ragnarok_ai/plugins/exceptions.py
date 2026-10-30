@@ -50,3 +50,25 @@ class PluginNotFoundError(PluginError):
         else:
             msg = f"Plugin '{plugin_name}' not found"
         super().__init__(msg)
+
+
+class PluginUnavailableError(PluginError, ImportError):
+    """Raised when a registered plugin cannot be used in this environment.
+
+    This occurs when a builtin adapter's optional dependencies are not
+    installed (e.g. httpx for the Ollama adapter on a base install).
+    """
+
+    def __init__(self, plugin_name: str, extra: str | None = None) -> None:
+        """Initialize PluginUnavailableError.
+
+        Args:
+            plugin_name: Name of the unavailable plugin.
+            extra: Optional extra providing the missing dependencies.
+        """
+        self.plugin_name = plugin_name
+        self.extra = extra
+        msg = f"Plugin '{plugin_name}' is not available: missing optional dependencies"
+        if extra:
+            msg += f" (install with: pip install 'ragnarok-ai[{extra}]')"
+        super().__init__(msg)
