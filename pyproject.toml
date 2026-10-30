@@ -32,9 +32,14 @@ classifiers = [
 ]
 
 dependencies = [
-    "pydantic>=2.0",
+    # pydantic 2.0 rejects the `model_version` field (protected namespace)
+    "pydantic>=2.0.1",
     "pydantic-settings>=2.0",
     "pyyaml>=6.0",
+    # CLI (`ragnarok` command). Minimums verified: typer<0.16 breaks --help
+    # with click>=8.2; rich<12.3 lacks the progress columns of the live display
+    "typer>=0.16",
+    "rich>=12.3",
 ]
 
 [project.optional-dependencies]
@@ -118,8 +123,10 @@ haystack = [
 semantic-kernel = [
     "semantic-kernel>=1.0",
 ]
+# Kept for backward compatibility: the CLI dependencies are now in the core
 cli = [
-    "typer>=0.9",
+    "typer>=0.16",
+    "rich>=12.3",
 ]
 telemetry = [
     "opentelemetry-api>=1.20",
