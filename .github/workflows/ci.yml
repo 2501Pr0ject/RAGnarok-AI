@@ -77,8 +77,15 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev --extra cli --extra ollama --extra tui
 
-      - name: Run tests with coverage
-        run: uv run pytest --cov=ragnarok_ai --cov-report=xml --cov-fail-under=80
+      # Random order (pytest-randomly) catches dependencies between tests; the
+      # seed is the run id, so a failure reproduces with --randomly-seed=<id>
+      - name: Run tests with coverage (random order)
+        run: uv run pytest -p randomly --randomly-seed=${{ github.run_id }} --cov=ragnarok_ai --cov-report=xml --cov-fail-under=80
+
+      # In a fresh process, so state cached by other test modules cannot hide
+      # import bugs (the 1.12.0 RecursionError passed the full suite)
+      - name: Run README examples in isolation
+        run: uv run pytest tests/unit/test_readme_examples.py -p no:randomly
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.10'
