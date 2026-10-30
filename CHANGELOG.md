@@ -5,6 +5,66 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-10-30
+
+**Bug-fix release.** No new feature: the minor version bump is required by
+Semantic Versioning only, because the fixes add backward-compatible public
+API (`PluginUnavailableError`, `PluginInfo.available` /
+`PluginInfo.requires_extra`, `list_adapters(available_only=...)`) and two
+core dependencies.
+
+### Fixed
+- **The `ragnarok` CLI works on a base install** (`pip install ragnarok-ai`)
+  - `typer` and `rich` are now core dependencies; previously `typer` was
+    only in the `[cli]` extra, so the installed `ragnarok` command crashed
+    with `ModuleNotFoundError: No module named 'typer'`
+  - The `[cli]` extra is kept for backward compatibility
+  - Core lower bounds verified and corrected: `typer>=0.16` (older versions
+    break `--help` with click 8.2+), `rich>=12.3` (progress columns of the
+    live display), `pydantic>=2.0.1` (2.0 rejects a `model_version` field)
+- **`ragnarok plugins` no longer crashes without optional dependencies**
+  - Builtin adapters whose dependencies are missing are listed as
+    unavailable with the extra to install
+    (`unavailable: pip install 'ragnarok-ai[ollama]'`); `--json` and
+    `--info` expose `available` and `requires_extra`
+  - `ragnarok_ai.adapters` and `ragnarok_ai.adapters.llm` resolve the LLM
+    adapters on first access, so importing them no longer requires `httpx`
+  - New `PluginInfo` fields `available` and `requires_extra`, and
+    `list_adapters(available_only=True)`
+- **`ragnarok generate` and `ragnarok judge` without the `[ollama]` extra**
+  exit with an install hint instead of a traceback (`generate --dry-run`
+  still works)
+- **No more pydantic warning on import**: with pydantic < 2.10, `Trace` and
+  `TraceEvent` emitted a `UserWarning` because their `model_version` field
+  falls in pydantic's protected `model_` namespace; both models now set
+  `protected_namespaces=()`
+
+### Changed
+- **`PluginInfo.adapter_class` can be `None`** (type `type | None`) for a
+  builtin adapter whose optional dependencies are not installed. Requesting
+  such an adapter with `PluginRegistry.get_adapter()` raises the new
+  `PluginUnavailableError`, a subclass of `ImportError` (and of
+  `PluginError`) carrying the install command. With all dependencies
+  installed, behavior is unchanged; code type-checked with mypy that uses
+  `adapter_class` directly may need a `None` check
+
+### CI
+- **Install smoke test**: the wheel is installed with pip in a clean
+  environment without extras, then `ragnarok --version`,
+  `ragnarok evaluate --demo` and `ragnarok plugins --list` must succeed
+- **Minimum versions test**: core dependencies (pydantic, pydantic-settings,
+  pyyaml, typer, rich) installed at their declared lower bounds
+  (`uv pip install --resolution lowest-direct`); the package must import
+  with `-W error::UserWarning`, then `ragnarok --version` and
+  `ragnarok evaluate --demo` must succeed; optional extras are not covered
+- **uv pinned to 0.13.6** in every workflow (previously the latest release);
+  `uv.lock` regenerated with it (lock format revision 1 to 5, no package
+  version change)
+
+### Notes
+- The base install still works in Pyodide 0.27.3 via `micropip`, now
+  including the CLI dependencies
+
 ## [1.11.1] - 2026-10-30
 
 ### Fixed
