@@ -633,3 +633,90 @@ async def test_evaluate_progress_carries_result(max_concurrency: int):
     assert len(seen) == 1
     assert seen[0] is not None
     assert seen[0].answer == "Answer to q1"
+
+
+# ============================================================================
+# evaluate_stream Public Contract Tests
+# ============================================================================
+
+
+async def _collect_stream(rag, testset, **kwargs):
+    from ragnarok_ai.core.evaluate import evaluate_stream
+
+    return [item async for item in evaluate_stream(rag, testset, **kwargs)]
+
+
+@pytest.mark.asyncio
+async def test_evaluate_stream_yields_query_metrics_answer_tuples():
+    """Each item is a (Query, RetrievalMetrics, answer) tuple, in testset order."""
+    from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
+
+    rag = MockRAG()
+    q1 = Query(text="q1", ground_truth_docs=["doc_1"])
+    q2 = Query(text="q2", ground_truth_docs=["doc_3"])
+
+    items = await _collect_stream(rag, TestSet(queries=[q1, q2]), k=2)
+
+    assert [type(item) for item in items] == [tuple, tuple]
+    assert [len(item) for item in items] == [3, 3]
+    assert [query for query, _, _ in items] == [q1, q2]
+    assert all(isinstance(metric, RetrievalMetrics) for _, metric, _ in items)
+    assert [answer for _, _, answer in items] == ["Answer to q1", "Answer to q2"]
+    assert [(m.precision, m.recall, m.mrr, m.k) for _, m, _ in items] == [(0.5, 1.0, 1.0, 2), (0.0, 0.0, 0.0, 2)]
+
+
+@pytest.mark.asyncio
+async def test_evaluate_stream_skips_failed_queries_without_fail_fast():
+    """With fail_fast=False, failed queries are silently skipped (no tuple, no exception)."""
+    rag = MockRAG()
+    testset = TestSet(
+        queries=[
+            Query(text="q1", ground_truth_docs=["doc_1"]),
+            Query(text="fail this query", ground_truth_docs=[]),
+            Query(text="q3", ground_truth_docs=["doc_2"]),
+        ]
+    )
+
+    items = await _collect_stream(rag, testset, fail_fast=False)
+
+    assert [query.text for query, _, _ in items] == ["q1", "q3"]
+
+
+@pytest.mark.asyncio
+async def test_evaluate_stream_raises_on_failure_with_fail_fast():
+    """With fail_fast=True (default), the first failure raises EvaluationError after earlier yields."""
+    from ragnarok_ai.core.evaluate import evaluate_stream
+
+    rag = MockRAG()
+    testset = TestSet(
+        queries=[
+            Query(text="q1", ground_truth_docs=["doc_1"]),
+            Query(text="fail this query", ground_truth_docs=[]),
+            Query(text="q3", ground_truth_docs=["doc_2"]),
+        ]
+    )
+    seen = []
+
+    with pytest.raises(EvaluationError) as excinfo:
+        async for query, _, _ in evaluate_stream(rag, testset):
+            seen.append(query.text)
+
+    assert seen == ["q1"]
+    assert str(excinfo.value) == "Failed to evaluate query 'fail this query': Simulated failure"
+    assert isinstance(excinfo.value.__cause__, ValueError)
+
+
+@pytest.mark.asyncio
+async def test_evaluate_stream_cached_results_yield_same_tuples():
+    """Results served from the cache are yielded as the same tuples as fresh ones."""
+    from ragnarok_ai.cache import MemoryCache
+
+    rag = MockRAG()
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
+    cache = MemoryCache()
+
+    fresh = await _collect_stream(rag, testset, cache=cache)
+    cached = await _collect_stream(rag, testset, cache=cache)
+
+    assert cached == fresh
+    assert cache.stats().hits == 1
