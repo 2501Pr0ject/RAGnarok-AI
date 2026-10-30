@@ -617,7 +617,7 @@ display_comparison([
 - [x] **Kubernetes Helm Chart**: Job and CronJob modes, ConfigMap, PVC support
 - [x] **Air-Gapped Deployment Guide**: Complete documentation for offline environments
 - [x] **Docker improvements**: Fixed Dockerfile for proper module installation
-- [x] **Data Sovereignty**: Full support for GDPR, HIPAA, defense environments
+- [x] **Data Sovereignty**: Designed for data sovereignty: data never leaves your infrastructure, suited to GDPR- or HIPAA-constrained environments
 
 </details>
 

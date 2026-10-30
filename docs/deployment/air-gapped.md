@@ -9,7 +9,7 @@ Deploy RAGnarok-AI in environments without internet access.
 RAGnarok-AI is built **local-first** by design. This means:
 
 - **Data Sovereignty**: Your evaluation data never leaves your infrastructure
-- **Regulatory Compliance**: Meet strict data residency requirements (GDPR, HIPAA, defense, finance)
+- **Data Residency**: Suited to environments with strict data residency constraints (e.g. GDPR or HIPAA); compliance itself depends on your own infrastructure and processes
 - **Security**: Eliminate external attack vectors and data exfiltration risks
 - **Reproducibility**: Fully controlled environment with pinned versions
 
@@ -436,7 +436,7 @@ For updating in air-gapped environments:
 RAGnarok-AI fully supports air-gapped deployments, enabling:
 
 - Complete data sovereignty
-- Regulatory compliance (GDPR, HIPAA, defense)
+- Deployment in environments with data residency constraints (e.g. GDPR or HIPAA)
 - Reproducible, auditable evaluations
 - Zero external dependencies at runtime
 
