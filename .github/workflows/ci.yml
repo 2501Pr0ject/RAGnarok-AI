@@ -230,6 +230,12 @@ jobs:
           VIRTUAL_ENV="$RUNNER_TEMP/venv" uv pip install --no-deps dist/*.whl
           VIRTUAL_ENV="$RUNNER_TEMP/venv" uv pip list
 
+      # pydantic < 2.10 warns on fields in its protected namespace (model_*)
+      - name: Import without warnings
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -W error::UserWarning -c "import ragnarok_ai, ragnarok_ai.core.artifacts, ragnarok_ai.monitor.models"
+
       - name: Run the CLI outside the repository
         working-directory: ${{ runner.temp }}
         run: |
