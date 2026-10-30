@@ -12,6 +12,7 @@ Adapter Classification:
 
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING, Any
 
 from ragnarok_ai.adapters.agents import (
@@ -77,15 +78,20 @@ _LLM_CLASSIFICATION = {
 
 
 def __getattr__(name: str) -> Any:
-    from ragnarok_ai.adapters import llm
-
-    if name in _LLM_ADAPTERS:
-        value: Any = getattr(llm, name)
-    elif name in _LLM_CLASSIFICATION:
-        value = tuple(getattr(llm, adapter) for adapter in _LLM_CLASSIFICATION[name])
-    else:
+    if name not in _LLM_ADAPTERS and name not in _LLM_CLASSIFICATION and name != "llm":
         msg = f"module {__name__!r} has no attribute {name!r}"
         raise AttributeError(msg)
+
+    # importlib rather than `from ragnarok_ai.adapters import llm`: that statement
+    # looks `llm` up on this package first, re-entering __getattr__ endlessly
+    # while the submodule is not imported yet.
+    llm = importlib.import_module(f"{__name__}.llm")
+    if name == "llm":
+        return llm
+    if name in _LLM_ADAPTERS:
+        value: Any = getattr(llm, name)
+    else:
+        value = tuple(getattr(llm, adapter) for adapter in _LLM_CLASSIFICATION[name])
     globals()[name] = value  # cache: later lookups bypass __getattr__
     return value
 

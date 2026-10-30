@@ -33,7 +33,13 @@ _ADAPTER_MODULES = {
 }
 
 
+# Adapter submodules, also reachable as attributes (ragnarok_ai.adapters.llm.ollama)
+_SUBMODULES = frozenset(module.rsplit(".", 1)[1] for module in _ADAPTER_MODULES.values())
+
+
 def __getattr__(name: str) -> Any:
+    if name in _SUBMODULES:
+        return importlib.import_module(f"{__name__}.{name}")
     module = _ADAPTER_MODULES.get(name)
     if module is None:
         msg = f"module {__name__!r} has no attribute {name!r}"

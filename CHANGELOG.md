@@ -5,6 +5,39 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1] - 2026-10-30
+
+### Fixed
+- **`RecursionError` on `from ragnarok_ai.adapters import ...` (regression
+  in 1.12.0)**
+  - In 1.12.0, importing an LLM adapter or an LLM classification tuple from
+    the `ragnarok_ai.adapters` package in a fresh interpreter
+    (`from ragnarok_ai.adapters import OllamaLLM`, `OpenAILLM`, ...,
+    `LOCAL_LLM_ADAPTERS`, `CLOUD_LLM_ADAPTERS`) raised `RecursionError`,
+    even with httpx installed; any unknown attribute of the package did the
+    same instead of raising `AttributeError`
+  - Cause: the lazy `__getattr__` added in 1.12.0 started with
+    `from ragnarok_ai.adapters import llm`, which looks `llm` up on the
+    package and re-entered `__getattr__` endlessly while the submodule was
+    not imported yet
+  - Fix: the requested name is checked first and the submodule is loaded
+    with `importlib.import_module`. `from ragnarok_ai.adapters.llm import ...`
+    was not affected
+  - `ragnarok_ai.adapters.llm` and its adapter modules
+    (`ragnarok_ai.adapters.llm.ollama`, ...) are reachable as attributes
+    again, as in 1.11
+  - Why tests missed it: other test modules imported
+    `ragnarok_ai.adapters.llm` first, so the full suite passed
+
+### Tests
+- **Public import paths checked in a fresh interpreter**, with and without
+  httpx (a plain `ImportError` is expected without it), so state cached by
+  other tests can no longer hide import bugs
+- **README examples test run in isolation in CI**
+- **Random test order in CI** with pytest-randomly (new dev dependency); the
+  seed is the workflow run id, so failures reproduce with
+  `--randomly-seed=<id>`. Sixteen seeds surfaced no other order dependency
+
 ## [1.12.0] - 2026-10-30
 
 **Bug-fix release.** No new feature: the minor version bump is required by
