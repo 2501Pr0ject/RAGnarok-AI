@@ -573,3 +573,63 @@ async def test_evaluate_continues_on_cache_write_error():
     result = await evaluate(rag, testset, cache=broken_cache)
 
     assert len(result.responses) == 1
+
+
+# ============================================================================
+# Sequential / Parallel Parity Tests
+# ============================================================================
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("max_concurrency", [1, 4])
+async def test_evaluate_populates_query_results(max_concurrency: int):
+    """query_results must be filled whatever the execution mode."""
+    rag = MockRAG()
+    testset = TestSet(
+        queries=[
+            Query(text="q1", ground_truth_docs=["doc_1"]),
+            Query(text="q2", ground_truth_docs=["doc_3"]),
+        ]
+    )
+
+    result = await evaluate(rag, testset, max_concurrency=max_concurrency)
+
+    assert [qr.query.text for qr in result.query_results] == ["q1", "q2"]
+    assert [qr.answer for qr in result.query_results] == result.responses
+    assert [qr.metric for qr in result.query_results] == result.metrics
+    assert all(qr.retrieved_doc_ids == ["doc_1", "doc_2"] for qr in result.query_results)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("max_concurrency", [1, 4])
+async def test_evaluate_collects_errors_without_fail_fast(max_concurrency: int):
+    """With fail_fast=False, failures are reported in errors and query_results."""
+    rag = MockRAG()
+    testset = TestSet(
+        queries=[
+            Query(text="q1", ground_truth_docs=["doc_1"]),
+            Query(text="fail this query", ground_truth_docs=[]),
+        ]
+    )
+
+    result = await evaluate(rag, testset, max_concurrency=max_concurrency, fail_fast=False)
+
+    assert len(result.metrics) == 1
+    assert len(result.query_results) == 2
+    assert result.query_results[1].error is not None
+    assert [q.text for q, _ in result.errors] == ["fail this query"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("max_concurrency", [1, 4])
+async def test_evaluate_progress_carries_result(max_concurrency: int):
+    """Progress callbacks receive the QueryResult in both modes."""
+    rag = MockRAG()
+    testset = TestSet(queries=[Query(text="q1", ground_truth_docs=["doc_1"])])
+    seen = []
+
+    await evaluate(rag, testset, max_concurrency=max_concurrency, on_progress=lambda info: seen.append(info.result))
+
+    assert len(seen) == 1
+    assert seen[0] is not None
+    assert seen[0].answer == "Answer to q1"
