@@ -5,6 +5,48 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 2026-10-30
+
+### Fixed
+- **`evaluate()` sequential mode now fills `query_results`**
+  - With `max_concurrency=1` (the default), `EvaluationResult.query_results`
+    was always empty, `errors` stayed empty with `fail_fast=False`, and
+    `on_progress` received `result=None`; only the parallel mode populated
+    them. Both modes now return the same per-query details
+  - Impact with the default sequential mode:
+    - `RAGDiagnostician.diagnose()` returned an empty diagnosis
+      (`total_queries=0`, no failure causes, no recommendations)
+    - `BenchmarkHistory` and regression detection recorded latency from
+      the total wall-clock time instead of per-query latencies; quality
+      metrics (precision, recall, MRR, NDCG) were not affected
+  - `evaluate_stream()` public behavior unchanged, now covered by contract
+    tests (yielded tuples, skipped failures with `fail_fast=False`,
+    `EvaluationError` with `fail_fast=True`, cached results)
+
+### Documentation
+- **README examples aligned with the real API**
+  - Removed APIs that never existed: `generate_testset()`,
+    `evaluate(metrics=..., llm=...)`, `results.export()`, `benchmark()`,
+    `results.log_to()`, `examples/basic_evaluation.py`
+  - HTML report via `HTMLReporter.report_to_file()`, configuration
+    comparison via `compare()`, tracking over time via `BenchmarkHistory`
+  - Same `metrics=` fix in the diagnosis and production test set guides
+- **README feature descriptions aligned with the code**: checkpointing is
+  described as what it is (`BatchEvaluator`, per completed batch);
+  benchmark figures labeled with the version measured; navigation anchors
+  fixed; version banner removed
+- **Data sovereignty wording**: the README roadmap and the air-gapped guide
+  no longer claim GDPR/HIPAA compliance; they describe the actual guarantee
+  (data never leaves your infrastructure)
+- **README examples tested in CI**: every `python` block of the README is
+  executed against the library (offline, scripted judge), so documentation
+  drift fails the build
+
+### Notes
+- Since 1.11.0, `ragnarok evaluate --testset` requires `--pipeline
+  module:attribute` (the pipeline to evaluate); without it the command
+  exits with code 2. `--demo` is unchanged
+
 ## [1.11.0] - 2026-09-04
 
 ### Added
