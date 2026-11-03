@@ -114,7 +114,7 @@ Generation quality (faithfulness, relevance, hallucination, completeness) is sco
 
 ## Design Principles
 
-Excellent evaluation frameworks exist (RAGAS, DeepEval, TruLens...). ragnarok-ai doesn't try to have more metrics than them — it makes a different set of guarantees:
+ragnarok-ai is built around a small set of guarantees:
 
 | Principle | What it means in practice |
 |-----------|---------------------------|
