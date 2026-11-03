@@ -5,6 +5,16 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1.post1] - 2026-11-03
+
+Documentation-only post-release (PEP 440): the code is identical to 1.12.1.
+It publishes the updated README on PyPI.
+
+### Documentation
+- **README no longer names or compares itself to other evaluation
+  frameworks**: the Design Principles introduction now only introduces the
+  project's own guarantees
+
 ## [1.12.1] - 2026-10-30
 
 ### Fixed
