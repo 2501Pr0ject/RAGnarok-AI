@@ -89,7 +89,7 @@ Le script refuse de s'exécuter tant qu'un échantillon n'est pas annoté. Les j
 ## 6. Exécution des juges
 
 ```bash
-pip install "ragnarok-ai[ollama]"   # l'extra installe httpx, absent de l'installation de base
+pip install "ragnarok-ai[ollama]>=1.12.2"   # 1.12.2 : gabarit natif de Prometheus 2, échec de lecture = erreur explicite
 ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ollama pull mistral:7b
 ollama pull llama3.1:8b   # optionnel, juge exploratoire

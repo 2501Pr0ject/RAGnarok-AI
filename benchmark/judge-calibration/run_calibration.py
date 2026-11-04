@@ -5,8 +5,9 @@ Differences with ragnarok_ai.JudgeCalibrator, on purpose:
   * dev/test split: the pass threshold is tuned on 'dev' and measured on
     'test', so the reported agreement is not optimistic;
   * deterministic local calls (temperature 0, fixed seed, explicit num_ctx);
-  * parse failures, possible context truncation, latency and run-to-run
-    stability are recorded instead of being silently absorbed;
+  * parse failures (an EvaluationError from the judge, ragnarok-ai >= 1.12.2),
+    possible context truncation, latency and run-to-run stability are
+    recorded instead of being silently absorbed;
   * every judge call is checkpointed: interrupt and rerun to resume.
 
 Usage:
@@ -32,7 +33,6 @@ import argparse
 import asyncio
 import json
 import math
-import re
 import statistics
 import sys
 import time
@@ -43,7 +43,8 @@ from typing import Any
 import httpx
 from common import CRITERIA, append_jsonl, load_labels, load_samples, read_jsonl, split_of, write_jsonl
 
-SCORE_RE = re.compile(r"Score:\s*\d")
+from ragnarok_ai.core.exceptions import EvaluationError
+
 CANDIDATE_THRESHOLDS = (0.25, 0.5, 0.75, 1.0)  # judge scores are (raw-1)/4 with raw in 1..5
 RAW_KEEP_CHARS = 4000
 
@@ -142,7 +143,12 @@ async def run_judges(args: argparse.Namespace, samples: dict, labels: dict, raw_
     if not selected:
         raise SystemExit("Aucun échantillon annoté à évaluer.")
 
-    done = {(r["judge"], r["criterion"], r["id"], r["repeat"]) for r in read_jsonl(raw_path) if not r.get("error")}
+    # A parse failure is final (deterministic judge); only transport errors are retried
+    done = {
+        (r["judge"], r["criterion"], r["id"], r["repeat"])
+        for r in read_jsonl(raw_path)
+        if not r.get("error") or r.get("parse_error")
+    }
     judges = build_judges(args.judge, args)
     plan = [
         (name, rec, c, rep, sid)
@@ -171,6 +177,16 @@ async def run_judges(args: argparse.Namespace, samples: dict, labels: dict, raw_
             try:
                 result = await judge_once(judge_objs[name], criterion, s)
                 break
+            except EvaluationError as exc:
+                row.update(
+                    {
+                        "error": f"parse: {exc}",
+                        "parse_error": True,
+                        "latency_s": round(rec.last.get("latency_s", 0.0), 3),
+                        "raw": rec.last.get("raw", "")[:RAW_KEEP_CHARS],
+                    }
+                )
+                break
             except (httpx.HTTPError, OSError) as exc:
                 if attempt == 1:
                     row["error"] = f"{type(exc).__name__}: {exc}"
@@ -183,7 +199,7 @@ async def run_judges(args: argparse.Namespace, samples: dict, labels: dict, raw_
                 {
                     "raw_score": result.raw_score,
                     "score": result.score,
-                    "parse_ok": bool(SCORE_RE.search(raw)),
+                    "parse_ok": True,
                     "latency_s": round(rec.last.get("latency_s", 0.0), 3),
                     "prompt_tokens": rec.last.get("prompt_tokens"),
                     "possibly_truncated": rec.last.get("possibly_truncated", False),
@@ -321,12 +337,14 @@ def analyze(args: argparse.Namespace, samples: dict, labels: dict, raw_path: Pat
         multi = [v for v in groups.values() if len(v) >= 2]
 
         lat = [r["latency_s"] for r in ok if r.get("latency_s")]
+        n_parse = sum(1 for r in jrows if r.get("parse_error"))
         entry = {
             "model": jrows[0].get("model"),
             "is_local": jrows[0].get("is_local"),
             "calls": len(jrows),
-            "errors": sum(1 for r in jrows if r.get("error")),
-            "parse_failure_rate": (sum(1 for r in ok if not r.get("parse_ok")) / len(ok)) if ok else None,
+            "errors": sum(1 for r in jrows if r.get("error") and not r.get("parse_error")),
+            "parse_failures": n_parse,
+            "parse_failure_rate": (n_parse / (len(ok) + n_parse)) if (ok or n_parse) else None,
             "possibly_truncated": sum(1 for r in ok if r.get("possibly_truncated")),
             "latency_median_s": statistics.median(lat) if lat else None,
             "latency_total_min": sum(lat) / 60 if lat else None,
