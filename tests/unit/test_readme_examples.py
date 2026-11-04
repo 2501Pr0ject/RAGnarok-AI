@@ -22,7 +22,7 @@ import pytest
 
 from ragnarok_ai import evaluate
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
-from ragnarok_ai.evaluators.judge import LLMJudge
+from ragnarok_ai.evaluators.judge import PROMETHEUS_ABS_SYSTEM_PROMPT, LLMJudge
 
 README = Path(__file__).resolve().parents[2] / "README.md"
 PYTHON_BLOCK = re.compile(r"^```python\n(.*?)^```", re.DOTALL | re.MULTILINE)
@@ -53,12 +53,14 @@ class StubRAG:
 
 
 class FakeOllamaLLM:
-    """Scripted stand-in for OllamaLLM returning a Prometheus-style verdict."""
+    """Scripted stand-in for OllamaLLM answering in the format the prompt asks for."""
 
     def __init__(self, model: str = "fake", **kwargs: Any) -> None:  # noqa: ARG002
         self.model = model
 
-    async def generate(self, prompt: str) -> str:  # noqa: ARG002
+    async def generate(self, prompt: str) -> str:
+        if prompt.startswith(PROMETHEUS_ABS_SYSTEM_PROMPT):
+            return "The answer is grounded in the context. [RESULT] 5"
         return "Score: 5\nVerdict: PASS\nExplanation: The answer is grounded in the context."
 
     async def embed(self, text: str) -> list[float]:  # noqa: ARG002
