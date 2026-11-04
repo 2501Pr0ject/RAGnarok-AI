@@ -5,6 +5,29 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.2] - 2026-11-04
+
+### Fixed
+- **`LLMJudge` with Prometheus 2 (the default judge) returned no real score**
+  - The judge prompts ask for a `Score: N` line, which Prometheus 2 does not
+    follow: it answers in its own format, `(feedback) [RESULT] N`, and
+    sometimes gives no number at all. The parser then silently used a
+    default score of 3 (0.5 normalized, verdict `PARTIAL`)
+  - **Prometheus scores produced by earlier versions are not usable and must
+    be discarded**: they were the default 3 whenever the output did not
+    contain `Score: N`, which is indistinguishable from a real 3
+  - Prometheus 2 models (detected by model name) now get the official
+    prometheus-eval absolute-grading template without reference answer
+    (`ABS_SYSTEM_PROMPT`, `ABSOLUTE_PROMPT_WO_REF`, `SCORE_RUBRIC_TEMPLATE`,
+    copied verbatim from prometheus-eval 0.1.20, Apache License 2.0) and a
+    `[RESULT] N` parser
+  - The Prometheus rubrics reuse, word for word, the question and the five
+    score descriptions of the `Score: N` prompts, for all four criteria
+    (faithfulness, hallucination, relevance, completeness); a test enforces it
+  - Other judge models keep the `Score: N` format, unchanged
+- **A judge response that cannot be parsed is now an explicit error**
+  (`EvaluationError`), for both formats, instead of a default score
+
 ## [1.12.1.post1] - 2026-11-03
 
 Documentation-only post-release (PEP 440): the code is identical to 1.12.1.
