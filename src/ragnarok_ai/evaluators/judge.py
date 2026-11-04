@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
 
+from ragnarok_ai.core.exceptions import EvaluationError
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,6 +124,98 @@ Verdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]
 Explanation: [What was covered and what was missed]
 
 ###Evaluation:"""
+
+# =============================================================================
+# Prometheus 2 native prompts
+# =============================================================================
+# Prometheus 2 is trained on its own absolute-grading format and does not
+# follow the "Score: N" output format above: it answers
+# "(feedback) [RESULT] N". The system prompt and the no-reference templates
+# below are copied verbatim from prometheus-eval 0.1.20
+# (prometheus_eval/prompts.py: ABS_SYSTEM_PROMPT, ABSOLUTE_PROMPT_WO_REF,
+# SCORE_RUBRIC_TEMPLATE), https://github.com/prometheus-eval/prometheus-eval,
+# Apache License 2.0.
+
+PROMETHEUS_ABS_SYSTEM_PROMPT = "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance."
+
+PROMETHEUS_ABSOLUTE_PROMPT_WO_REF = """###Task Description:
+An instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.
+1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.
+2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.
+3. The output format should look as follows: "(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)"
+4. Please do not generate any other opening, closing, and explanations.
+
+###The instruction to evaluate:
+{instruction}
+
+###Response to evaluate:
+{response}
+
+###Score Rubrics:
+{rubric}
+
+###Feedback: """
+
+PROMETHEUS_SCORE_RUBRIC_TEMPLATE = """
+[{criteria}]
+Score 1: {score1_description}
+Score 2: {score2_description}
+Score 3: {score3_description}
+Score 4: {score4_description}
+Score 5: {score5_description}
+""".strip()
+
+# Score rubrics per criterion (same criteria and score levels as the prompts above)
+PROMETHEUS_RUBRICS: dict[str, dict[str, str]] = {
+    "faithfulness": {
+        "criteria": "Does the answer contain only information supported by the context?",
+        "score1_description": "Completely unfaithful - contradicts or fabricates information",
+        "score2_description": "Mostly unfaithful - significant unsupported claims",
+        "score3_description": "Partially faithful - mix of supported and unsupported claims",
+        "score4_description": "Mostly faithful - minor unsupported details",
+        "score5_description": "Completely faithful - all claims supported by context",
+    },
+    "hallucination": {
+        "criteria": "Are there factual claims in the answer that are not grounded in the context?",
+        "score1_description": "Severe hallucinations - multiple fabricated facts",
+        "score2_description": "Significant hallucinations - key claims unsupported",
+        "score3_description": "Minor hallucinations - some details not in context",
+        "score4_description": "Negligible hallucinations - trivial unsupported details only",
+        "score5_description": "No hallucinations - every claim traceable to context",
+    },
+    "relevance": {
+        "criteria": "Does the answer address what was asked?",
+        "score1_description": "Completely irrelevant - does not address the question",
+        "score2_description": "Mostly irrelevant - misses the main point",
+        "score3_description": "Partially relevant - addresses some aspects",
+        "score4_description": "Mostly relevant - addresses main point with minor gaps",
+        "score5_description": "Completely relevant - fully addresses the question",
+    },
+    "completeness": {
+        "criteria": "Does the answer cover all relevant information from the context?",
+        "score1_description": "Very incomplete - misses most relevant information",
+        "score2_description": "Incomplete - misses significant information",
+        "score3_description": "Partially complete - covers main points but misses details",
+        "score4_description": "Mostly complete - covers most relevant information",
+        "score5_description": "Fully complete - comprehensive answer using all relevant context",
+    },
+}
+
+
+def build_prometheus_prompt(criteria: str, instruction: str, response: str) -> str:
+    """Build a Prometheus 2 absolute-grading prompt (no reference answer).
+
+    Args:
+        criteria: The evaluation criteria name (a key of PROMETHEUS_RUBRICS).
+        instruction: What the answer responds to (question, with context when relevant).
+        response: The answer to evaluate.
+
+    Returns:
+        System prompt followed by the filled prometheus-eval template.
+    """
+    rubric = PROMETHEUS_SCORE_RUBRIC_TEMPLATE.format(**PROMETHEUS_RUBRICS[criteria])
+    user = PROMETHEUS_ABSOLUTE_PROMPT_WO_REF.format(instruction=instruction, response=response, rubric=rubric)
+    return f"{PROMETHEUS_ABS_SYSTEM_PROMPT}\n\n{user}"
 
 
 # =============================================================================
@@ -232,7 +326,7 @@ class JudgeResults:
 
 
 def parse_judge_response(response: str, criteria: str) -> JudgeResult:
-    """Parse Prometheus 2 response into JudgeResult.
+    """Parse a "Score: N" judge response into JudgeResult.
 
     Args:
         response: Raw response from the judge model.
@@ -240,10 +334,17 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
 
     Returns:
         Parsed JudgeResult with score, verdict, and explanation.
+
+    Raises:
+        EvaluationError: If the response contains no "Score: N". No default
+            score is ever substituted.
     """
     # Extract score
     score_match = re.search(r"Score:\s*(\d)", response)
-    raw_score = int(score_match.group(1)) if score_match else 3
+    if score_match is None:
+        msg = f"Unparseable {criteria} judgment: no 'Score: N' in the judge response"
+        raise EvaluationError(msg)
+    raw_score = int(score_match.group(1))
 
     # Clamp score to valid range
     raw_score = max(1, min(5, raw_score))
@@ -272,6 +373,44 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
         verdict=verdict,  # type: ignore[arg-type]
         score=(raw_score - 1) / 4,  # Normalize 1-5 to 0-1
         explanation=explanation,
+        criteria=criteria,
+        raw_score=raw_score,
+    )
+
+
+_PROMETHEUS_RESULT = re.compile(r"\[RESULT\]\s*\(?\s*([1-5])\s*\)?")
+
+
+def parse_prometheus_response(response: str, criteria: str) -> JudgeResult:
+    """Parse a Prometheus 2 "(feedback) [RESULT] N" response into JudgeResult.
+
+    Args:
+        response: Raw response from the judge model.
+        criteria: The evaluation criteria name.
+
+    Returns:
+        Parsed JudgeResult; the explanation is the feedback before [RESULT].
+
+    Raises:
+        EvaluationError: If the response contains no "[RESULT] N" with N in
+            1-5. No default score is ever substituted.
+    """
+    matches = list(_PROMETHEUS_RESULT.finditer(response))
+    if not matches:
+        msg = f"Unparseable {criteria} judgment: no '[RESULT] N' (1-5) in the judge response"
+        raise EvaluationError(msg)
+    last = matches[-1]
+    raw_score = int(last.group(1))
+    if raw_score >= 4:
+        verdict: Literal["PASS", "FAIL", "PARTIAL"] = "PASS"
+    elif raw_score <= 2:
+        verdict = "FAIL"
+    else:
+        verdict = "PARTIAL"
+    return JudgeResult(
+        verdict=verdict,
+        score=(raw_score - 1) / 4,  # Normalize 1-5 to 0-1
+        explanation=response[: last.start()].strip(),
         criteria=criteria,
         raw_score=raw_score,
     )
@@ -380,6 +519,9 @@ class LLMJudge:
             )
             self.model = selected_model
 
+        # Prometheus 2 ignores the "Score: N" format and needs its native template
+        self._prometheus = "prometheus" in str(self.model).lower()
+
         # Initialize medical abbreviation normalizer if medical_mode is enabled
         self.medical_mode = medical_mode
         self._normalizer: Any = None
@@ -458,6 +600,9 @@ class LLMJudge:
             context, _ = await self._normalizer.normalize_text_async(context)
             answer, _ = await self._normalizer.normalize_text_async(answer)
 
+        if self._prometheus:
+            instruction = f"Context:\n{context}\n\nQuestion:\n{question}"
+            return await self._judge_prometheus("faithfulness", instruction, answer)
         prompt = FAITHFULNESS_PROMPT.format(
             context=context,
             question=question,
@@ -480,6 +625,8 @@ class LLMJudge:
         Returns:
             JudgeResult with relevance assessment.
         """
+        if self._prometheus:
+            return await self._judge_prometheus("relevance", question, answer)
         prompt = RELEVANCE_PROMPT.format(
             question=question,
             answer=answer,
@@ -506,6 +653,8 @@ class LLMJudge:
             context, _ = await self._normalizer.normalize_text_async(context)
             answer, _ = await self._normalizer.normalize_text_async(answer)
 
+        if self._prometheus:
+            return await self._judge_prometheus("hallucination", f"Context:\n{context}", answer)
         prompt = HALLUCINATION_PROMPT.format(
             context=context,
             answer=answer,
@@ -534,6 +683,9 @@ class LLMJudge:
             context, _ = await self._normalizer.normalize_text_async(context)
             answer, _ = await self._normalizer.normalize_text_async(answer)
 
+        if self._prometheus:
+            instruction = f"Context:\n{context}\n\nQuestion:\n{question}"
+            return await self._judge_prometheus("completeness", instruction, answer)
         prompt = COMPLETENESS_PROMPT.format(
             context=context,
             question=question,
@@ -541,6 +693,11 @@ class LLMJudge:
         )
         response = await self.llm.generate(prompt)
         return parse_judge_response(response, "completeness")
+
+    async def _judge_prometheus(self, criteria: str, instruction: str, answer: str) -> JudgeResult:
+        """Run one criterion with the native Prometheus 2 template and parser."""
+        response = await self.llm.generate(build_prometheus_prompt(criteria, instruction, answer))
+        return parse_prometheus_response(response, criteria)
 
     async def evaluate_all(
         self,
