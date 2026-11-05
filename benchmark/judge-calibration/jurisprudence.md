@@ -39,3 +39,17 @@ Précisions :
 - Attribuer un passage du contexte à un autre objet que celui qu'il décrit, quand le contexte distingue les deux, relève de CONTRA (ex. p183 : signature de re.Pattern.split présentée comme celle de str.split).
 - Le commentaire cite une ou plusieurs phrases complètes de l'explication du juge, mot pour mot.
 - (a posteriori, 2026-11-05, découvert au classement) Réponse contenant un passage substantiel dans une autre langue que celle de la question : relevance FAIL. Cas p042 : la note d'annotation mentionne le passage chinois, mais aussi la contradiction ; motif ambigu entre cette règle et la règle « prémisse fausse = relevance PASS ». Classé AUTRE.
+- (a posteriori, 2026-11-05) Une abstention reste justifiée si l'information n'est que déductible, sans être explicite dans le contexte (p093, p193 ; p101 classé ANNOT par cohérence).
+- (a posteriori, 2026-11-05, découvert au classement) L'aperçu de 1 500 caractères de `label.py` peut masquer la preuve : dans p010, la commande d'activation Windows figure dans le contexte à la position 2 206, et la note d'annotation la dit absente. Étiquette ANNOT. Pour la seconde passe, afficher le contexte complet (`c`) avant tout verdict de faithfulness.
+- (a posteriori, 2026-11-05) p198 relevance FAIL (motivé par l'inexactitude des bénéfices) et p050 relevance PASS (réponse sur l'usage de Python, pas sur son installation) : étiquettes contraires aux consignes v2.0 (l'exactitude ne se juge pas en relevance ; répondre à une autre question = FAIL). Reclassés ANNOT.
+
+## Méthode de classement des désaccords
+
+Split test, configurations F et G, puis A et B (p042, p097, p020) : classées par l'annotateur, qui a figé l'arbre de décision à cette occasion. Configurations B à E restantes (59 lignes, lignes 27 à 85 de `results/categories.csv`) : pré-classement automatisé selon l'arbre figé, chaque ligne citant mot pour mot l'explication du juge ; 7 lignes marquées « À confirmer » (p010, p050, p198, p101) tranchées par l'annotateur le 2026-11-05, toutes ANNOT, après vérification du contexte complet et des notes d'annotation (voir ci-dessus) ; p036 (CONTRA) et p093 (ABST) revérifiées sur les fragments.
+
+Vérification par échantillon, deux tirages, tous deux rapportés :
+
+1. **Tirage seed 2026** (2026-11-05) : 10 lignes parmi les 52 pré-classées hors « À confirmer » (lignes 33, 34, 41, 51, 63, 66, 69, 70, 72, 83 ; `results/verification_echantillon_seed2026.csv`). Remplacé à la demande de l'annotateur pour élargir le périmètre aux 59 lignes, ANNOT comprises.
+2. **Tirage seed 1105** (2026-11-05) : 10 lignes parmi les lignes 27 à 85 (27, 28, 32, 34, 36, 41, 44, 60, 68, 75 ; `results/verification_echantillon.csv` et `.md`). Deux lignes communes aux deux tirages (p093/mistral/faithfulness, p112/prometheus/relevance).
+
+Les 10 lignes de chaque tirage ont été classées par l'annotateur sur papier, à l'aveugle (sans consulter la catégorie ni le commentaire pré-classés), puis comparées au pré-classement automatisé : accord auteur / pré-classement de 10/10 pour chaque tirage, soit 18 lignes distinctes sur les 59. Les feuilles papier n'ont pas été transcrites : les catégories conservées dans `categories.csv` sont celles du pré-classement, identiques. Seuil de solidité fixé à 9/10 avant la vérification ; le classement est considéré vérifié. Le classement du split dev, exploratoire, suivra la même procédure.
