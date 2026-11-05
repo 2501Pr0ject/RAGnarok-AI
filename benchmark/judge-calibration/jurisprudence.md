@@ -38,3 +38,4 @@ Précisions :
 - Question à prémisse fausse : l'abstention est justifiée si le contexte ne permet pas de corriger la prémisse ; ANNOT si le contexte la réfute.
 - Attribuer un passage du contexte à un autre objet que celui qu'il décrit, quand le contexte distingue les deux, relève de CONTRA (ex. p183 : signature de re.Pattern.split présentée comme celle de str.split).
 - Le commentaire cite une ou plusieurs phrases complètes de l'explication du juge, mot pour mot.
+- (a posteriori, 2026-11-05, découvert au classement) Réponse contenant un passage substantiel dans une autre langue que celle de la question : relevance FAIL. Cas p042 : la note d'annotation mentionne le passage chinois, mais aussi la contradiction ; motif ambigu entre cette règle et la règle « prémisse fausse = relevance PASS ». Classé AUTRE.
