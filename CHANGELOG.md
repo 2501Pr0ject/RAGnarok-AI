@@ -558,18 +558,18 @@ core dependencies.
 ### Changed
 - Default pytest config now skips integration tests (run with `pytest -m integration`)
 
-## [1.1.2] - 2025-01-27
+## [1.1.2] - 2026-01-27
 
 ### Fixed
 - **`--json` flag now works** — v1.1.0/v1.1.1 required `--json-output`, now `--json` works
 - `--json-output` kept as hidden alias for backward compatibility
 
-## [1.1.1] - 2025-01-27 [YANKED]
+## [1.1.1] - 2026-01-27 [YANKED]
 
 ### Note
 - Incomplete fix for `--json` flag, use v1.1.2 instead
 
-## [1.1.0] - 2025-01-27
+## [1.1.0] - 2026-01-27
 
 ### Added
 - **CLI `generate` command**: Generate synthetic test sets from documents
@@ -600,7 +600,7 @@ core dependencies.
 - Publish workflow now runs tests before publishing
 - Build verification with twine check before upload
 
-## [1.0.2] - 2025-01-27
+## [1.0.2] - 2026-01-27
 
 ### Added
 - **CLI `evaluate --demo`**: Working demo evaluation with realistic MockRAG
@@ -616,13 +616,13 @@ core dependencies.
 ### Fixed
 - CLI tests updated to match new behavior
 
-## [1.0.1] - 2025-01-27
+## [1.0.1] - 2026-01-27
 
 ### Fixed
 - Use absolute URLs for images (PyPI compatibility)
 - Add noqa comments for e2e import tests (lint fix)
 
-## [1.0.0] - 2025-01-27
+## [1.0.0] - 2026-01-27
 
 ### Added
 - PyPI publication (`pip install ragnarok-ai`)
@@ -634,7 +634,7 @@ core dependencies.
 - Updated project metadata (author, keywords, classifiers)
 - Marked as Production/Stable
 
-## [0.9.0] - 2025-01-26
+## [0.9.0] - 2026-01-26
 
 ### Added
 - **Agent Evaluation Module**
@@ -648,7 +648,7 @@ core dependencies.
   - `ChainOfThoughtAdapter` for CoT pattern
 - Dual licensing (AGPL-3.0 + Commercial)
 
-## [0.8.0] - 2025-01-25
+## [0.8.0] - 2026-01-26
 
 ### Added
 - **Comparison & Benchmarking**
@@ -658,7 +658,7 @@ core dependencies.
   - `DiffReport` for run-to-run comparison
 - Baselines library with `BaselineResult` and `compare()`
 
-## [0.7.0] - 2025-01-24
+## [0.7.0] - 2026-01-26
 
 ### Added
 - **Framework Adapters**
@@ -667,7 +667,7 @@ core dependencies.
 - Custom RAG support via `RAGProtocol`
 - Adapter contribution guide
 
-## [0.6.0] - 2025-01-23
+## [0.6.0] - 2026-01-26
 
 ### Added
 - **Cloud & Local LLM Adapters**
@@ -678,7 +678,7 @@ core dependencies.
   - ChromaDB adapter
   - FAISS adapter (pure local, no server)
 
-## [0.5.0] - 2025-01-22
+## [0.5.0] - 2026-01-26
 
 ### Added
 - **Performance & Scale**
@@ -689,7 +689,7 @@ core dependencies.
   - Timeout and retry (`timeout`, `max_retries`, `retry_delay`)
   - Graceful cache error handling
 
-## [0.4.0] - 2025-01-21
+## [0.4.0] - 2026-01-26
 
 ### Added
 - **Framework Adapters**
@@ -698,7 +698,7 @@ core dependencies.
 - **Observability**
   - OpenTelemetry export for tracing & debugging
 
-## [0.3.0] - 2025-01-20
+## [0.3.0] - 2026-01-25
 
 ### Added
 - **Test Generation**
@@ -710,7 +710,7 @@ core dependencies.
 - Baselines library (configs + expected results)
 - NovaTech example dataset for quickstart
 
-## [0.2.0] - 2025-01-19
+## [0.2.0] - 2026-01-25
 
 ### Added
 - **Generation Metrics**
@@ -722,7 +722,7 @@ core dependencies.
 - Qdrant vector store adapter
 - Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
-## [0.1.0] - 2025-01-18
+## [0.1.0] - 2026-01-24
 
 ### Added
 - **Core Foundation**
