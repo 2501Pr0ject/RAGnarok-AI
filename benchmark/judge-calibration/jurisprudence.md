@@ -15,3 +15,26 @@ Journal des écarts au protocole (`PROTOCOLE.md`) et des décisions prises penda
 ## Gel des annotations
 
 La première passe (`labels.jsonl`, 120 échantillons, consignes v2.0) est figée avant la levée de l'aveugle et avant tout run de juge. SHA-256 : `c57e7cecc0ac9bbed897be23105554cadade1df306a8e92ee0978979dc5c8e25`.
+
+## Classement des désaccords juge/humain (figé le 2026-11-05, après F et G du split test)
+
+Arbre de décision, appliqué dans l'ordre pour chaque juge en désaccord :
+
+1. ANNOT : mon étiquette est fausse au regard des consignes v2.0 et de cette jurisprudence.
+2. Abstention justifiée (le contexte ne contient pas l'information) :
+   - ABST : en faithfulness, le juge la pénalise alors qu'elle n'affirme rien de non appuyé.
+   - DEF : en relevance, la grille du juge (« la réponse traite-t-elle la question ? ») ne prévoit pas qu'une abstention justifiée soit un PASS ; écart de définition, pas erreur de raisonnement.
+3. Humain FAIL, juge PASS :
+   - CONTRA : la réponse affirme quelque chose que le contexte contredit.
+   - INV : la réponse affirme quelque chose d'absent du contexte.
+4. Humain PASS, juge FAIL, hors abstention :
+   - LECTURE : le juge déclare non appuyée une affirmation présente dans le contexte.
+   - CRIT : le juge sanctionne un autre critère (exactitude, complétude, style).
+5. AUTRE : inclassable, avec commentaire.
+
+Une seule catégorie par ligne. Priorité : ANNOT > CONTRA > INV > ABST > DEF > LECTURE > CRIT > AUTRE.
+
+Précisions :
+- Question à prémisse fausse : l'abstention est justifiée si le contexte ne permet pas de corriger la prémisse ; ANNOT si le contexte la réfute.
+- Attribuer un passage du contexte à un autre objet que celui qu'il décrit, quand le contexte distingue les deux, relève de CONTRA (ex. p183 : signature de re.Pattern.split présentée comme celle de str.split).
+- Le commentaire cite une ou plusieurs phrases complètes de l'explication du juge, mot pour mot.
