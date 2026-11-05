@@ -6,11 +6,20 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from ragnarok_ai.core.exceptions import EvaluationError
 from ragnarok_ai.evaluators.judge import (
+    COMPLETENESS_PROMPT,
+    FAITHFULNESS_PROMPT,
+    HALLUCINATION_PROMPT,
+    PROMETHEUS_ABS_SYSTEM_PROMPT,
+    PROMETHEUS_RUBRICS,
+    RELEVANCE_PROMPT,
     JudgeResult,
     JudgeResults,
     LLMJudge,
+    build_prometheus_prompt,
     parse_judge_response,
+    parse_prometheus_response,
 )
 
 # =============================================================================
@@ -88,16 +97,17 @@ Explanation: Mixed results."""
 
         assert result.verdict == "PARTIAL"  # 2 < score < 4 -> PARTIAL
 
-    def test_default_score_when_missing(self):
-        """Should use default score 3 when not found."""
+    def test_missing_score_raises(self):
+        """A response without 'Score: N' is an explicit error, never a default score.
+
+        Regression: up to 1.12.1 a missing score silently became 3.
+        """
         response = """The answer seems okay but has some issues.
 Verdict: PARTIAL
 Explanation: Mixed quality."""
 
-        result = parse_judge_response(response, "completeness")
-
-        assert result.raw_score == 3  # default
-        assert result.verdict == "PARTIAL"
+        with pytest.raises(EvaluationError, match="Unparseable completeness judgment"):
+            parse_judge_response(response, "completeness")
 
     def test_clamp_invalid_score(self):
         """Should clamp scores to valid 1-5 range."""
@@ -559,3 +569,138 @@ async def test_judge_detects_hallucination():
     # Prometheus 2 should detect this, but may be conservative
     assert result.verdict in ["FAIL", "PARTIAL"]
     assert result.score <= 0.75  # Should not be rated highly
+
+
+# =============================================================================
+# Prometheus 2 native format
+# =============================================================================
+
+# Verbatim endings of real Prometheus 2 7B outputs under the 1.12.1 prompts:
+# both were silently parsed as a score of 3.
+PROMETHEUS_OUTPUT_WITHOUT_RESULT_1 = (
+    "Overall, the answer is mostly accurate and aligns well with the context.\n\nSo the score is 4. [PASS]"
+)
+PROMETHEUS_OUTPUT_WITHOUT_RESULT_2 = (
+    "Therefore, the answer is mostly relevant and addresses the main point with minor gaps. \n[PASS]"
+)
+
+
+class TestParsePrometheusResponse:
+    """Tests for the '[RESULT] N' parser."""
+
+    def test_parses_result(self):
+        result = parse_prometheus_response("The answer is well supported. [RESULT] 4", "faithfulness")
+
+        assert result.raw_score == 4
+        assert result.score == 0.75
+        assert result.verdict == "PASS"
+        assert result.explanation == "The answer is well supported."
+        assert result.criteria == "faithfulness"
+
+    def test_parses_parenthesized_result(self):
+        result = parse_prometheus_response("Unsupported claims. [RESULT] (2)", "faithfulness")
+
+        assert result.raw_score == 2
+        assert result.verdict == "FAIL"
+
+    def test_uses_last_result(self):
+        result = parse_prometheus_response("Quoting [RESULT] 1 from the rubric. Final: [RESULT] 5", "relevance")
+
+        assert result.raw_score == 5
+
+    @pytest.mark.parametrize(
+        "response",
+        [PROMETHEUS_OUTPUT_WITHOUT_RESULT_1, PROMETHEUS_OUTPUT_WITHOUT_RESULT_2, "Score: 4", "[RESULT] 7", ""],
+    )
+    def test_unparseable_response_raises(self, response):
+        """Never a default score (regression: 1.12.1 turned these into 3)."""
+        with pytest.raises(EvaluationError, match="no '\\[RESULT\\] N'"):
+            parse_prometheus_response(response, "faithfulness")
+
+
+class TestBuildPrometheusPrompt:
+    """Tests for the prometheus-eval absolute-grading template."""
+
+    def test_prompt_follows_official_template(self):
+        prompt = build_prometheus_prompt("faithfulness", "Context:\nX\n\nQuestion:\nY", "Z")
+
+        assert prompt.startswith(PROMETHEUS_ABS_SYSTEM_PROMPT)
+        assert "###The instruction to evaluate:\nContext:\nX\n\nQuestion:\nY" in prompt
+        assert "###Response to evaluate:\nZ" in prompt
+        assert "[Does the answer contain only information supported by the context?]" in prompt
+        assert "Score 5: Completely faithful - all claims supported by context" in prompt
+        assert '"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)"' in prompt
+        assert prompt.endswith("###Feedback: ")
+
+    @pytest.mark.parametrize(
+        ("criteria", "legacy_prompt"),
+        [
+            ("faithfulness", FAITHFULNESS_PROMPT),
+            ("hallucination", HALLUCINATION_PROMPT),
+            ("relevance", RELEVANCE_PROMPT),
+            ("completeness", COMPLETENESS_PROMPT),
+        ],
+    )
+    def test_rubric_matches_legacy_prompt(self, criteria, legacy_prompt):
+        """Both prompt formats grade against the same question and the same score descriptions."""
+        rubric = PROMETHEUS_RUBRICS[criteria]
+
+        assert f"] {rubric['criteria']}\n" in legacy_prompt
+        for n in range(1, 6):
+            assert f"Score {n}: {rubric[f'score{n}_description']}\n" in legacy_prompt
+
+
+class TestLLMJudgePromptFormat:
+    """The judge picks the native template for Prometheus, 'Score: N' otherwise."""
+
+    @staticmethod
+    def make_judge(model: str, response: str) -> tuple[LLMJudge, MagicMock]:
+        llm = MagicMock()
+        llm.model = model
+        llm.generate = AsyncMock(return_value=response)
+        return LLMJudge(llm=llm), llm
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("method", "kwargs"),
+        [
+            ("evaluate_faithfulness", {"context": "C", "question": "Q", "answer": "A"}),
+            ("evaluate_relevance", {"question": "Q", "answer": "A"}),
+            ("detect_hallucination", {"context": "C", "answer": "A"}),
+            ("evaluate_completeness", {"question": "Q", "answer": "A", "context": "C"}),
+        ],
+    )
+    async def test_prometheus_uses_native_template(self, method, kwargs):
+        judge, llm = self.make_judge(
+            "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M", "Fine. [RESULT] 5"
+        )
+
+        result = await getattr(judge, method)(**kwargs)
+
+        prompt = llm.generate.call_args.args[0]
+        assert prompt.startswith(PROMETHEUS_ABS_SYSTEM_PROMPT)
+        assert "Score: [1-5]" not in prompt
+        assert result.raw_score == 5
+
+    @pytest.mark.asyncio
+    async def test_prometheus_unparseable_output_raises(self):
+        judge, _ = self.make_judge("prometheus2", PROMETHEUS_OUTPUT_WITHOUT_RESULT_1)
+
+        with pytest.raises(EvaluationError):
+            await judge.evaluate_faithfulness(context="C", question="Q", answer="A")
+
+    @pytest.mark.asyncio
+    async def test_other_judges_keep_score_format(self):
+        judge, llm = self.make_judge("mistral:7b", "Score: 4\nVerdict: PASS\nExplanation: ok")
+
+        result = await judge.evaluate_faithfulness(context="C", question="Q", answer="A")
+
+        assert "Score: [1-5]" in llm.generate.call_args.args[0]
+        assert result.raw_score == 4
+
+    @pytest.mark.asyncio
+    async def test_other_judges_unparseable_output_raises(self):
+        judge, _ = self.make_judge("mistral:7b", "I think it is fine.")
+
+        with pytest.raises(EvaluationError):
+            await judge.evaluate_relevance(question="Q", answer="A")
