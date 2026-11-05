@@ -1,0 +1,11 @@
+{
+  "ragnarok_ai_version": "1.12.2",
+  "ragnarok_ai_commit": "4a7bae9505ceaa369d0fb765ebdb3a05b6e540b7",
+  "ragnarok_ai_dirty": false,
+  "ollama_version": "0.40.13",
+  "model_digests": {
+    "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M": "781541f1b33297adeb9f37d50ae4597e6cd405d42067fadc1187191065f6c8fe",
+    "mistral:7b": "3944fe81ec14610e0852c3d915768ee8d507ea541387fdfcbbf9edaa0c757734",
+    "llama3.1:8b": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e"
+  }
+}

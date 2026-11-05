@@ -110,6 +110,8 @@ python run_calibration.py ... --analyze-only --second-pass labels_pass2.jsonl
 
 Réglages par défaut des juges locaux : température 0, seed 42, `num_ctx` 8192. Ils sont passés à Ollama par le client de `run_calibration.py` : l'adaptateur Ollama utilisé par défaut par `LLMJudge` n'envoie ni température, ni seed, ni `num_ctx`, et ne doit pas être utilisé ici. Le script affiche une estimation du temps restant après les premiers appels. Pour mesurer l'effet de la température, utiliser un `--out` séparé.
 
+Run du 4 novembre 2026 : jugements produits avec le commit 4a7bae9 (tag `study/run-2026-11-04`), équivalent à 1.12.2 pour faithfulness et relevance. Toute analyse ultérieure (seconde passe, variantes) écrit dans un nouveau dossier `--out` ; `scelle/` et les dossiers de résultats existants ne sont jamais modifiés.
+
 ## 7. Analyse
 
 **Confirmatoire :** la fiabilité du juge (Q1) sur le split test, jugée selon les critères de décision du §1, pour Prometheus 2 et `mistral:7b`. Les analyses confirmatoires de discrimination entre configurations (Q2), de reproductibilité à deux runs complets (Q3) et de concordance entre frameworks (§7.3 du protocole d'étude) sont reportées à une phase ultérieure.
