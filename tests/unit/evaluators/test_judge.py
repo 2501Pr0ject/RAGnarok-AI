@@ -8,7 +8,12 @@ import pytest
 
 from ragnarok_ai.core.exceptions import EvaluationError
 from ragnarok_ai.evaluators.judge import (
+    COMPLETENESS_PROMPT,
+    FAITHFULNESS_PROMPT,
+    HALLUCINATION_PROMPT,
     PROMETHEUS_ABS_SYSTEM_PROMPT,
+    PROMETHEUS_RUBRICS,
+    RELEVANCE_PROMPT,
     JudgeResult,
     JudgeResults,
     LLMJudge,
@@ -626,6 +631,23 @@ class TestBuildPrometheusPrompt:
         assert "Score 5: Completely faithful - all claims supported by context" in prompt
         assert '"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)"' in prompt
         assert prompt.endswith("###Feedback: ")
+
+    @pytest.mark.parametrize(
+        ("criteria", "legacy_prompt"),
+        [
+            ("faithfulness", FAITHFULNESS_PROMPT),
+            ("hallucination", HALLUCINATION_PROMPT),
+            ("relevance", RELEVANCE_PROMPT),
+            ("completeness", COMPLETENESS_PROMPT),
+        ],
+    )
+    def test_rubric_matches_legacy_prompt(self, criteria, legacy_prompt):
+        """Both prompt formats grade against the same question and the same score descriptions."""
+        rubric = PROMETHEUS_RUBRICS[criteria]
+
+        assert f"] {rubric['criteria']}\n" in legacy_prompt
+        for n in range(1, 6):
+            assert f"Score {n}: {rubric[f'score{n}_description']}\n" in legacy_prompt
 
 
 class TestLLMJudgePromptFormat:

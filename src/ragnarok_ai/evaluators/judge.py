@@ -176,7 +176,7 @@ PROMETHEUS_RUBRICS: dict[str, dict[str, str]] = {
         "score5_description": "Completely faithful - all claims supported by context",
     },
     "hallucination": {
-        "criteria": "Are there factual claims in the answer that are not grounded in the context?",
+        "criteria": "Are there factual claims not grounded in the context?",
         "score1_description": "Severe hallucinations - multiple fabricated facts",
         "score2_description": "Significant hallucinations - key claims unsupported",
         "score3_description": "Minor hallucinations - some details not in context",
