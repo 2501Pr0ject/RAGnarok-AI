@@ -62,8 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transmits `prev_sentence` (the report counts it); runs through
   `judge_many`; writes `attempts.jsonl` as it goes and resumes from it by
   `id`, after checking its header line (judge configuration hash,
-  criterion, level, sample, seed, stratify, SHA-256 of the data file) and
-  the configuration hash of every row: a run whose parameters differ is
+  criterion, level, sample, seed, stratify, SHA-256 of the data file, or of
+  the records' content when the Python API gives no file) and the
+  configuration hash of every row: a run whose parameters differ is
   refused with the field named, never mixed; same for `dev_attempts.jsonl`
   and the dev file; `--sample N --stratify label --seed S` for slow judges;
   threshold of a probabilistic judge chosen on `--dev` and applied
