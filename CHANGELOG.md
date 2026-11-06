@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Behavior changes
+- **`JudgeCalibrator` takes its pass threshold from the judge's verdict
+  policy** (#148): 0.75 for `LLMJudge` (`raw >= 4` on the 1-5 scale)
+  instead of the fixed 0.7. Verdicts and statistics are unchanged, because
+  on the discrete scores 0, 0.25, 0.5, 0.75 and 1 both cutoffs classify
+  every sample the same way (tested). Three visible effects: the report's
+  `threshold` reads 0.75; `recommended_threshold` can read 0.75 where it
+  read 0.7, since ties in the sweep resolve to the current threshold;
+  `JudgeCalibrator.pass_threshold` is `None` by default (`threshold_for()`
+  gives the value in use). Objects exposing only the four named methods keep
+  `DEFAULT_PASS_THRESHOLD` (0.7). What to do: nothing; pass
+  `pass_threshold=0.7` to keep the old number in reports
+
 ### Added
 - **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
   (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
@@ -19,8 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `kappa_at_recommended_cv` (threshold chosen on the other folds, stratified
   5-fold above 40 samples, leave-one-out otherwise or when a class is smaller
   than the number of folds, the method is reported), `kappa_cv_ci` (95%
-  bootstrap interval; single-class draws are excluded and counted, the
-  interval is flagged unreliable above 10% exclusions), `human_pass_rate`,
+  bootstrap interval of the out-of-fold predictions, which does not repeat
+  the cross-validation and slightly underestimates the uncertainty;
+  single-class draws are excluded and counted, the interval is flagged
+  unreliable above 10% exclusions; folds and draws are made by group when
+  samples carry a `group_id`), `human_pass_rate`,
   `majority_baseline_accuracy`, `kappa_interpretable` (false below 10
   samples in the minority class), `backend_failures`, fixed and reported
   seeds (`cv_seed`, `bootstrap_seed`): two identical calibrations give
@@ -74,15 +90,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`LLMJudge.model_digest`**: the Ollama digest of the model in use, read
   once from the same `/api/tags` answer that lists the installed models;
   `None` for a client passed with `llm=`
-
-### Changed
-- `JudgeCalibrator` runs `JudgeProtocol` judges through `judge_many` and
-  takes the pass threshold from the judge's verdict policy: 0.75 for
-  `LLMJudge` (`raw >= 4` on the 1-5 scale). On those discrete scores 0.7
-  and 0.75 give the same verdicts (tested), so statistics are unchanged;
-  only the reported `threshold` reads 0.75. Objects exposing only the four
-  named methods keep the historical path and `DEFAULT_PASS_THRESHOLD`
-  (0.7), whose comment now states the documented rule
 
 ## [1.12.3] - 2026-11-06
 

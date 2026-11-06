@@ -137,10 +137,14 @@ class CriterionCalibration:
             threshold: the threshold is chosen on the other folds, the
             verdicts are scored on the held-out fold (``cv_method``).
         cv_method: ``stratified-5-fold``, ``leave-one-out``, or leave-one-out
-            with the reason when a class is smaller than the number of folds.
+            with the reason when a class is smaller than the number of folds;
+            suffixed ``(by group)`` or named ``leave-one-group-out`` when the
+            samples carry a ``group_id`` (a group never straddles two folds).
         cv_folds: Number of folds actually used.
         kappa_cv_ci: 95% bootstrap interval of ``kappa_at_recommended_cv``,
-            ``None`` when no draw could be used.
+            ``None`` when no draw could be used. The draws resample the
+            out-of-fold predictions without repeating the cross-validation,
+            so the interval slightly underestimates the uncertainty.
         bootstrap_resamples: Number of bootstrap draws requested.
         bootstrap_excluded: Draws with a single human class, where kappa is
             undefined; excluded from the interval.
@@ -234,6 +238,12 @@ class CalibrationReport:
             ValueError: If the two runs are not comparable (different judge
                 configuration, missing configuration, or no shared criterion).
         """
+        if not self.configs or not other.configs:
+            msg = (
+                "Cannot merge calibration reports: at least one of them carries no judge configuration "
+                "(judge outside JudgeProtocol, historical path), so nothing proves the runs are comparable"
+            )
+            raise ValueError(msg)
         if not self.comparable_with(other):
             msg = "Cannot merge calibration reports: the judge configurations are not comparable"
             raise ValueError(msg)

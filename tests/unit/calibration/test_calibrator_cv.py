@@ -158,6 +158,36 @@ class TestCrossValidationAndBootstrap:
         c = analyze_criterion("faithfulness", scores, human, threshold=0.75, group_ids=groups, bootstrap_resamples=200)
         assert c.group_ids == tuple(groups)
         assert c.kappa_cv_ci is not None
+        assert c.cv_method == "leave-one-group-out"
+        assert c.cv_folds == 10  # one fold per group, not per sample
+
+    def test_grouped_folds_never_split_a_group(self):
+        """Two samples of the same group are always in the same fold, in K-fold and in leave-one-group-out."""
+        from ragnarok_ai.calibration.calibrator import _folds
+
+        # 60 samples, 30 groups of 2, 18 PASS groups and 12 FAIL groups: stratified 5-fold by group
+        human = [True] * 36 + [False] * 24
+        groups = [f"g{i // 2}" for i in range(60)]
+        folds, method = _folds(human, seed=0, group_ids=groups)
+        assert method == "stratified-5-fold (by group)"
+        assert len(folds) == 5
+        fold_of = {i: k for k, fold in enumerate(folds) for i in fold}
+        for i in range(0, 60, 2):
+            assert fold_of[i] == fold_of[i + 1], f"group of samples {i} and {i + 1} is split"
+        assert sorted(fold_of) == list(range(60))  # every sample in exactly one fold
+
+        # below 40 samples: leave-one-group-out
+        folds, method = _folds(human[:20], seed=0, group_ids=groups[:20])
+        assert method == "leave-one-group-out"
+        assert folds == [[i, i + 1] for i in range(0, 20, 2)]
+
+    def test_without_groups_folds_are_per_sample(self):
+        from ragnarok_ai.calibration.calibrator import _folds
+
+        human = [True] * 36 + [False] * 24
+        folds, method = _folds(human, seed=0)
+        assert method == "stratified-5-fold"
+        assert sorted(i for f in folds for i in f) == list(range(60))
 
 
 class TestExistingFieldsUnchanged:
@@ -274,3 +304,5 @@ class TestMerge:
         c = analyze_criterion("relevance", scores, human, threshold=0.7)
         a = CalibrationReport(criteria={"relevance": c}, n_samples=62, insufficient_data=False)
         assert not a.comparable_with(a)
+        with pytest.raises(ValueError, match="carries no judge configuration"):
+            a.merge(a)

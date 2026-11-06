@@ -23,8 +23,11 @@ Two estimates of the recommended threshold's kappa are reported:
   selected the threshold, hence optimistic;
 - ``kappa_at_recommended_cv``: out-of-sample, from stratified 5-fold
   cross-validation (leave-one-out below 40 samples, or when a class is
-  smaller than the number of folds), with a bootstrap confidence interval.
-  Both use fixed seeds, recorded in the report: two identical calibrations
+  smaller than the number of folds; by group when samples carry a
+  ``group_id``), with a bootstrap confidence interval. The interval
+  resamples the out-of-fold predictions without repeating the
+  cross-validation, so it slightly underestimates the uncertainty. Both
+  use fixed seeds, recorded in the report: two identical calibrations
   give identical reports.
 
 Judges implementing ``JudgeProtocol`` run through ``judge_many``; the pass
@@ -128,36 +131,62 @@ def _best_threshold(scores: Sequence[float], human: Sequence[bool], current: flo
     return best
 
 
-def _folds(human: Sequence[bool], seed: int) -> tuple[list[list[int]], str]:
+def _units(n: int, group_ids: Sequence[str | None] | None) -> list[list[int]]:
+    """Resampling units: one per group when group ids are given, one per sample otherwise."""
+    groups: dict[str, list[int]] = {}
+    for i in range(n):
+        g = group_ids[i] if group_ids is not None else None
+        groups.setdefault(g if g is not None else f"__sample_{i}", []).append(i)
+    return list(groups.values())
+
+
+def _folds(
+    human: Sequence[bool], seed: int, group_ids: Sequence[str | None] | None = None
+) -> tuple[list[list[int]], str]:
     """Fold assignment for cross-validation, and the method's name.
 
-    Stratified ``CV_FOLDS``-fold when there are at least
+    Units are groups when ``group_ids`` are given (samples of one group
+    always share a fold), samples otherwise. Stratified ``CV_FOLDS``-fold
+    on the unit's majority label when there are at least
     ``CV_MIN_SAMPLES_FOR_KFOLD`` samples and each class has at least
-    ``CV_FOLDS`` members; leave-one-out otherwise, with the reason in the
-    method name. The shuffle inside each class uses *seed*.
+    ``CV_FOLDS`` units; leave-one-unit-out otherwise, with the reason in
+    the method name. The shuffle inside each class uses *seed*.
     """
     n = len(human)
-    positives = [i for i, h in enumerate(human) if h]
-    negatives = [i for i, h in enumerate(human) if not h]
+    units = _units(n, group_ids)
+    grouped = group_ids is not None and len(units) < n
+    suffix = " (by group)" if grouped else ""
+    one_out = "leave-one-group-out" if grouped else "leave-one-out"
+
+    def majority(unit: list[int]) -> bool:
+        passes = sum(1 for i in unit if human[i])
+        return passes * 2 >= len(unit)
+
+    positives = [u for u in units if majority(u)]
+    negatives = [u for u in units if not majority(u)]
     if n < CV_MIN_SAMPLES_FOR_KFOLD:
-        return [[i] for i in range(n)], "leave-one-out"
+        return units, one_out
     if min(len(positives), len(negatives)) < CV_FOLDS:
-        return [[i] for i in range(n)], f"leave-one-out (minority class smaller than {CV_FOLDS} folds)"
+        return units, f"{one_out} (minority class smaller than {CV_FOLDS} folds)"
     rng = random.Random(seed)
     folds: list[list[int]] = [[] for _ in range(CV_FOLDS)]
     for members in (positives, negatives):
         shuffled = list(members)
         rng.shuffle(shuffled)
-        for k, index in enumerate(shuffled):
-            folds[k % CV_FOLDS].append(index)
-    return [sorted(f) for f in folds], f"stratified-{CV_FOLDS}-fold"
+        for k, unit in enumerate(shuffled):
+            folds[k % CV_FOLDS].extend(unit)
+    return [sorted(f) for f in folds], f"stratified-{CV_FOLDS}-fold{suffix}"
 
 
 def _cross_validated_predictions(
-    scores: Sequence[float], human: Sequence[bool], current: float, seed: int
+    scores: Sequence[float],
+    human: Sequence[bool],
+    current: float,
+    seed: int,
+    group_ids: Sequence[str | None] | None = None,
 ) -> tuple[list[bool], str, int]:
     """Out-of-fold PASS predictions: the threshold is chosen on the other folds only."""
-    folds, method = _folds(human, seed)
+    folds, method = _folds(human, seed, group_ids)
     predictions: list[bool | None] = [None] * len(scores)
     for fold in folds:
         held = set(fold)
@@ -178,6 +207,11 @@ def _bootstrap_kappa(
 ) -> tuple[tuple[float, float] | None, int, bool | None]:
     """Percentile 95% interval of kappa over *resamples* bootstrap draws.
 
+    The draws resample the out-of-fold predictions as they are; the
+    cross-validation is not repeated inside each draw, so the interval
+    reflects the sampling of the labels but not the variability of the
+    threshold choice, and slightly underestimates the uncertainty.
+
     Draws are made by group when ``group_ids`` are present (several samples
     from the same question stay together), by sample otherwise. A draw that
     contains a single human class leaves kappa undefined: it is excluded and
@@ -188,10 +222,7 @@ def _bootstrap_kappa(
     n = len(human)
     if n < 2 or resamples < 1:
         return None, 0, None
-    groups: dict[str, list[int]] = {}
-    for i, g in enumerate(group_ids):
-        groups.setdefault(g if g is not None else f"__sample_{i}", []).append(i)
-    units = list(groups.values())
+    units = _units(n, group_ids)
     rng = random.Random(seed)
     kappas: list[float] = []
     excluded = 0
@@ -277,9 +308,12 @@ def analyze_criterion(
     minority = min(human_passes, human_fails)
     kappa_value = _cohens_kappa(judge_pass, human)
 
-    oof_pass, cv_method, cv_folds = _cross_validated_predictions(scores, human, threshold, cv_seed)
-    kappa_cv = _cohens_kappa(oof_pass, human)
     scored_groups = [groups[i] for i in indices]
+    has_groups = any(g is not None for g in scored_groups)
+    oof_pass, cv_method, cv_folds = _cross_validated_predictions(
+        scores, human, threshold, cv_seed, scored_groups if has_groups else None
+    )
+    kappa_cv = _cohens_kappa(oof_pass, human)
     ci, excluded, reliable = _bootstrap_kappa(oof_pass, human, scored_groups, bootstrap_seed, bootstrap_resamples)
 
     return CriterionCalibration(
