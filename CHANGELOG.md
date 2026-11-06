@@ -21,6 +21,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pass_threshold=0.7` to keep the old number in reports
 
 ### Added
+- **Sentence segmentation** (`ragnarok_ai.text.segment_sentences`): split
+  on line breaks, then into sentences with pysbd (new core dependency,
+  `pysbd>=0.3.4,<0.4`, pure Python, MIT); every `Segment` keeps its offsets
+  (`text == source[start:end]`); a citation marker following a sentence on
+  the same line ("(Passage 3)", "[Source 1]") is merged into it; segments
+  with no alphanumeric content, standalone citation markers and fragments of
+  fewer than 3 words without a digit are returned with a reason in
+  `skipped`, never dropped. `SEGMENTER_ID` (rules version, pysbd version,
+  language) goes into `JudgeConfig.segmenter`. The rules reproduce the
+  conversion script of the judge-training data; a fixture of 14 answers
+  checks offsets and exclusions against it
+- **`SentenceLevel(judge, aggregation=..., lang=...)`** (`ragnarok_ai.judges`):
+  a `JudgeProtocol` judge that applies an answer-level judge to each sentence
+  (question and context unchanged) and aggregates the unit judgments; its
+  configuration carries `unit="sentence"`, the aggregation policy and the
+  segmenter. Skipped sentences appear in `JudgeResult.units` with their
+  reason and are not sent to the inner judge; answer-level `score` and
+  `verdict` follow the aggregation, `output` is `None`, `raw_score` is the
+  aggregated score projected on the 1-5 scale
+- **Aggregation of unit judgments** (`aggregate_units`): `fraction_pass`,
+  `mean` or `min` for the score; `worst` or the judge's verdict policy
+  applied to the aggregated score for the verdict; skipped units never
+  count. When no unit can be judged, `NoUnitsError` (an `EvaluationError`)
+  is raised and `judge_many` reports a `no_units` failure
 - **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
   (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
   returns one `JudgeAttempt` per sample, in order, with the sample's

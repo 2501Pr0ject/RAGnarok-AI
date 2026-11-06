@@ -40,6 +40,9 @@ dependencies = [
     # with click>=8.2; rich<12.3 lacks the progress columns of the live display
     "typer>=0.16",
     "rich>=12.3",
+    # Sentence segmentation shared by the judges and the training pipeline
+    # (pure Python, MIT); pinned so every install segments identically
+    "pysbd>=0.3.4,<0.4",
 ]
 
 [project.optional-dependencies]

@@ -39,8 +39,10 @@ from ragnarok_ai.judges.contract import (
     canonical_json,
 )
 from ragnarok_ai.judges.runner import JudgeSample, judge_many, sample_identifier
+from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
 
 __all__ = [
+    "DEFAULT_AGGREGATION",
     "FAILURE_KINDS",
     "JUDGE_KINDS",
     "SCORE_RULES",
@@ -63,6 +65,7 @@ __all__ = [
     "OrdinalScore",
     "ScoreRule",
     "ScoreThreshold",
+    "SentenceLevel",
     "Unit",
     "UnitJudgment",
     "Verdict",
