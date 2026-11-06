@@ -6,7 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ragnarok_ai.core.exceptions import EvaluationError, JudgeModelNotFoundError, LLMConnectionError
+from ragnarok_ai.core.exceptions import (
+    EvaluationError,
+    JudgeConnectionError,
+    JudgeDependencyError,
+    JudgeModelNotFoundError,
+    LLMConnectionError,
+)
 from ragnarok_ai.evaluators.judge import (
     COMPLETENESS_PROMPT,
     FAITHFULNESS_PROMPT,
@@ -452,7 +458,7 @@ class TestLLMJudgeModelDiscovery:
 
         with (
             patch.object(httpx, "get", side_effect=httpx.ConnectError("Connection refused")),
-            pytest.raises(LLMConnectionError, match="Cannot reach Ollama at http://localhost:11434"),
+            pytest.raises(JudgeConnectionError, match="Cannot reach Ollama at http://localhost:11434"),
         ):
             LLMJudge.__new__(LLMJudge)._get_available_models("http://localhost:11434")
 
@@ -468,7 +474,7 @@ class TestLLMJudgeModelDiscovery:
 
         with (
             patch.object(httpx, "get", return_value=mock_response),
-            pytest.raises(LLMConnectionError, match="answered 500"),
+            pytest.raises(JudgeConnectionError, match="answered 500"),
         ):
             LLMJudge.__new__(LLMJudge)._get_available_models("http://localhost:11434")
 
@@ -738,22 +744,32 @@ class TestLLMJudgeConfigurationErrors:
             "try:\n"
             "    LLMJudge()\n"
             "except ImportError as e:\n"
-            "    print('IMPORT_ERROR', e)\n"
+            "    print('IMPORT_ERROR', isinstance(e, RuntimeError), type(e).__name__, e)\n"
         )
         out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
 
-        assert "IMPORT_ERROR" in out.stdout
+        assert "IMPORT_ERROR True JudgeDependencyError" in out.stdout
         assert "pip install 'ragnarok-ai[ollama]'" in out.stdout
 
     def test_unreachable_server_is_a_connection_error(self):
-        """Ollama down: LLMConnectionError naming the URL, never 'model not installed'."""
+        """Ollama down: JudgeConnectionError naming the URL, never 'model not installed'."""
+        import httpx
+
         with (
-            patch.object(
-                LLMJudge, "_get_available_models", side_effect=LLMConnectionError("Cannot reach Ollama at http://x:1")
-            ),
-            pytest.raises(LLMConnectionError, match="Cannot reach Ollama"),
+            patch.object(httpx, "get", side_effect=httpx.ConnectError("Connection refused")),
+            pytest.raises(JudgeConnectionError, match="Cannot reach Ollama at http://x:1") as info,
         ):
             LLMJudge(model="prometheus2", base_url="http://x:1")
+
+        assert isinstance(info.value, RuntimeError)  # what earlier versions raised
+        assert isinstance(info.value, LLMConnectionError)
+
+    def test_missing_dependency_is_also_a_runtime_error(self):
+        err = JudgeDependencyError(extra="ollama", module="httpx")
+
+        assert isinstance(err, ImportError)
+        assert isinstance(err, RuntimeError)
+        assert "pip install 'ragnarok-ai[ollama]'" in str(err)
 
     def test_missing_model_gives_the_pull_command(self):
         """Server up, model absent, nothing to fall back on: the error carries 'ollama pull'."""
