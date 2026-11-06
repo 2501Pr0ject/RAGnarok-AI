@@ -5,6 +5,20 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Common judge contract, data types only** (`ragnarok_ai.judges`): native
+  outputs (`OrdinalScore`, `BinaryProbability`, `ClassProbabilities`, each
+  projecting to a score in [0, 1]), verdict policies (`OrdinalBands`,
+  `ScoreThreshold`, `LabelMap`; the verdict is always computed from the
+  output, never read from a model's text; unsupported information is a
+  failure, never PARTIAL), `JudgeConfig` (everything that makes two runs
+  comparable, with a canonical `config_hash` and `comparable_with()`),
+  `CallTrace`, `UnitJudgment`, `AggregationPolicy`, `JudgeFailure` and
+  `JudgeAttempt` (a result or a failure, never both). Nothing is wired to
+  these types yet; `JudgeResult`, `JudgeResults` and `LLMJudge` are unchanged
+
 ## [1.12.3] - 2026-11-06
 
 ### Behavior changes
