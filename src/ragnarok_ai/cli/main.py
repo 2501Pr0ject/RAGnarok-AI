@@ -1510,6 +1510,13 @@ def judge(
             help="Ollama API base URL.",
         ),
     ] = "http://localhost:11434",
+    prompt_format: Annotated[
+        str,
+        typer.Option(
+            "--prompt-format",
+            help="Prompt and parser: auto (by model name), prometheus ([RESULT] N), score-n (Score: N).",
+        ),
+    ] = "auto",
 ) -> None:
     """Evaluate responses using LLM-as-Judge (Prometheus 2).
 
@@ -1563,6 +1570,7 @@ def judge(
         fail_under=fail_under,
         output=output,
         ollama_url=ollama_url,
+        prompt_format=prompt_format,
     )
 
 
@@ -1576,9 +1584,18 @@ def _run_judge(
     fail_under: float | None,
     output: str | None,
     ollama_url: str,
+    prompt_format: str = "auto",
 ) -> None:
     """Run LLM-as-Judge evaluation."""
     from ragnarok_ai.evaluators.judge import LLMJudge
+
+    if prompt_format not in LLMJudge.PROMPT_FORMATS:
+        message = f"Invalid --prompt-format {prompt_format!r}. Valid: {', '.join(LLMJudge.PROMPT_FORMATS)}"
+        if state["json"]:
+            typer.echo(json_response("judge", "error", errors=[message]))
+        else:
+            typer.echo(f"Error: {message}", err=True)
+        raise typer.Exit(EXIT_BAD_INPUT)
 
     _require_optional("judge", module="httpx", extra="ollama")
 
@@ -1640,7 +1657,11 @@ def _run_judge(
         typer.echo("  Connecting to Ollama...")
 
     async def run_evaluation() -> dict[str, Any]:
-        judge_instance = LLMJudge(model=model, base_url=ollama_url)
+        judge_instance = LLMJudge(
+            model=model,
+            base_url=ollama_url,
+            prompt_format=prompt_format,  # type: ignore[arg-type]  # validated above
+        )
 
         results: list[dict[str, Any]] = []
         total_scores: list[float] = []
@@ -1709,6 +1730,8 @@ def _run_judge(
         return {
             "items_evaluated": len(items),
             "criteria": selected_criteria,
+            "model": judge_instance.model,
+            "prompt_format": judge_instance.effective_prompt_format,
             "results": results,
             "overall_average": round(overall_avg, 4),
         }

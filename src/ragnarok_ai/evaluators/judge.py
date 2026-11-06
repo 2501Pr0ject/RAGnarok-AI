@@ -469,6 +469,7 @@ class LLMJudge:
     # Prometheus 2 7B Q5_K_M from HuggingFace (~4.8GB, fits 16GB RAM)
     # Q5 provides better precision for subtle judgments (hallucination, faithfulness)
     DEFAULT_MODEL = "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M"
+    PROMPT_FORMATS: tuple[str, ...] = ("auto", "prometheus", "score-n")
 
     def __init__(
         self,
@@ -478,6 +479,7 @@ class LLMJudge:
         llm: LLMProtocol | None = None,
         medical_mode: bool = False,
         disambiguation_llm: LLMProtocol | None = None,
+        prompt_format: Literal["auto", "prometheus", "score-n"] = "auto",
     ) -> None:
         """Initialize LLMJudge.
 
@@ -492,7 +494,24 @@ class LLMJudge:
                          resolve ambiguous medical abbreviations when the surrounding
                          context gives the keyword scorer no signal. Only used when
                          medical_mode is True.
+            prompt_format: Which prompt and parser to use. ``"prometheus"``: the
+                         prometheus-eval absolute-grading template and the
+                         ``[RESULT] N`` parser; ``"score-n"``: the ``Score: N``
+                         prompts; ``"auto"`` (default): ``"prometheus"`` when the
+                         model name contains "prometheus", ``"score-n"`` otherwise.
+                         Set it explicitly for a Prometheus 2 model served under
+                         another name (an ``ollama cp`` alias, a gateway) or for a
+                         client without a ``model`` attribute. The format in use is
+                         ``effective_prompt_format``.
+
+        Raises:
+            ValueError: If *prompt_format* is not one of ``PROMPT_FORMATS``.
         """
+        if prompt_format not in self.PROMPT_FORMATS:
+            msg = f"Unknown prompt_format {prompt_format!r}; expected one of {self.PROMPT_FORMATS}"
+            raise ValueError(msg)
+        self.prompt_format = prompt_format
+
         if llm is not None:
             self.llm = llm
             self.model = getattr(llm, "model", "custom")
@@ -519,7 +538,14 @@ class LLMJudge:
             self.model = selected_model
 
         # Prometheus 2 ignores the "Score: N" format and needs its native template
-        self._prometheus = "prometheus" in str(self.model).lower()
+        if prompt_format == "auto":
+            self._effective_prompt_format = "prometheus" if "prometheus" in str(self.model).lower() else "score-n"
+        else:
+            self._effective_prompt_format = prompt_format
+        self._prometheus = self._effective_prompt_format == "prometheus"
+        logger.info(
+            f"Judge model '{self.model}': prompt format '{self._effective_prompt_format}' (requested '{prompt_format}')"
+        )
 
         # Initialize medical abbreviation normalizer if medical_mode is enabled
         self.medical_mode = medical_mode
@@ -533,6 +559,11 @@ class LLMJudge:
 
                 disambiguator = SLMDisambiguator(disambiguation_llm)
             self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
+
+    @property
+    def effective_prompt_format(self) -> str:
+        """The prompt format actually in use: ``"prometheus"`` or ``"score-n"``."""
+        return self._effective_prompt_format
 
     def _get_available_models(self, base_url: str) -> list[str]:
         """Get the list of models installed on the Ollama server.

@@ -336,6 +336,8 @@ print(f"Hallucination: {result.hallucination.verdict}")
 ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ```
 
+`LLMJudge` picks the prompt format from the model name: the prometheus-eval template and its `[RESULT] N` parser when the name contains "prometheus", `Score: N` prompts otherwise. Force it with `prompt_format="prometheus"` or `"score-n"` (CLI: `--prompt-format`) when the name does not tell, for example a Prometheus 2 model served under another name; `judge.effective_prompt_format` says which one is in use.
+
 If the requested model is not installed, `LLMJudge` raises `JudgeModelNotFoundError` with the `ollama pull` command: it never silently substitutes another model. An `ollama cp` alias whose name contains "prometheus" (e.g. `prometheus2`) is accepted for the default model.
 
 ### Medical Mode
