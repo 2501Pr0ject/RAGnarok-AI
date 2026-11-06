@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
+  (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
+  returns one `JudgeAttempt` per sample, in order, with the sample's
+  `sample_id` (or position). Unreadable outputs, timeouts and backend errors
+  become `JudgeFailure` values; configuration errors are never caught.
+  `concurrency=1` is the default and the only setting that keeps Ollama runs
+  reproducible
+- **Calibrator, out-of-sample estimate and readable baselines**:
+  `kappa_at_recommended_cv` (threshold chosen on the other folds, stratified
+  5-fold above 40 samples, leave-one-out otherwise or when a class is smaller
+  than the number of folds, the method is reported), `kappa_cv_ci` (95%
+  bootstrap interval; single-class draws are excluded and counted, the
+  interval is flagged unreliable above 10% exclusions), `human_pass_rate`,
+  `majority_baseline_accuracy`, `kappa_interpretable` (false below 10
+  samples in the minority class), `backend_failures`, fixed and reported
+  seeds (`cv_seed`, `bootstrap_seed`): two identical calibrations give
+  identical reports. `kappa_at_recommended` keeps its in-sample value.
+  `CalibrationSample` gains optional `sample_id` and `group_id` (grouped
+  bootstrap). `CalibrationReport` carries the run's `JudgeConfig` per
+  criterion (`configs`), `comparable_with()` and `merge()`, which refuses
+  runs whose configurations differ
 - CI: the lint job fails when a tracked file contains Git conflict markers
   (`scripts/check_conflict_markers.sh`, usable locally)
 - **`JudgeProtocol`** (`ragnarok_ai.core`): `criteria`, `config(criterion)`
@@ -53,6 +74,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`LLMJudge.model_digest`**: the Ollama digest of the model in use, read
   once from the same `/api/tags` answer that lists the installed models;
   `None` for a client passed with `llm=`
+
+### Changed
+- `JudgeCalibrator` runs `JudgeProtocol` judges through `judge_many` and
+  takes the pass threshold from the judge's verdict policy: 0.75 for
+  `LLMJudge` (`raw >= 4` on the 1-5 scale). On those discrete scores 0.7
+  and 0.75 give the same verdicts (tested), so statistics are unchanged;
+  only the reported `threshold` reads 0.75. Objects exposing only the four
+  named methods keep the historical path and `DEFAULT_PASS_THRESHOLD`
+  (0.7), whose comment now states the documented rule
 
 ## [1.12.3] - 2026-11-06
 
