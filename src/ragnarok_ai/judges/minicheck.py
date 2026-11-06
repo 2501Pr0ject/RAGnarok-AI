@@ -66,6 +66,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from ragnarok_ai.core.exceptions import ConfigurationError, JudgeDependencyError
+from ragnarok_ai.core.provenance import library_commit
 from ragnarok_ai.judges.contract import BinaryProbability, CallTrace, JudgeConfig, ScoreThreshold
 from ragnarok_ai.judges.hhem import DEVICES, _validate_device
 from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
@@ -669,6 +670,7 @@ class MiniCheckJudge:
                 ("training_length", spec.max_model_len),
                 ("training_length_kind", TRAINING_LENGTH_KIND),
             ),
+            source_commit=library_commit(),
         )
 
     def config(self, criterion: str) -> JudgeConfig:

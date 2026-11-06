@@ -469,6 +469,10 @@ class JudgeConfig:
             comparable to a run without it.
         segmenter: Segmenter id and version when ``unit != "answer"``.
         judge_specific: Parameters specific to one judge, as sorted pairs.
+        source_commit: Git commit of the checkout the code ran from, ``None``
+            for an installed wheel. Provenance only: it is written in reports
+            but left out of ``config_hash``, so it never decides comparability
+            (``ragnarok_ai_version`` does).
     """
 
     judge_class: str
@@ -488,6 +492,7 @@ class JudgeConfig:
     input_transforms: tuple[str, ...] = ()
     segmenter: str | None = None
     judge_specific: tuple[tuple[str, Any], ...] = ()
+    source_commit: str | None = None
 
     def __post_init__(self) -> None:
         if self.judge_kind not in JUDGE_KINDS:
@@ -517,8 +522,10 @@ class JudgeConfig:
 
     @property
     def config_hash(self) -> str:
-        """SHA-256 of the canonical JSON of every field."""
-        return hashlib.sha256(canonical_json(self.to_dict()).encode("utf-8")).hexdigest()
+        """SHA-256 of the canonical JSON of every field but ``source_commit`` (provenance, not comparability)."""
+        payload = self.to_dict()
+        payload.pop("source_commit", None)
+        return hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()
 
     def comparable_with(self, other: JudgeConfig) -> bool:
         """Two runs are comparable when their configurations hash identically."""
