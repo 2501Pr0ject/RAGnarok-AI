@@ -37,6 +37,7 @@ from ragnarok_ai.judges.contract import (
     apply_verdict_policy,
     canonical_json,
 )
+from ragnarok_ai.judges.runner import JudgeSample, judge_many, sample_identifier
 
 __all__ = [
     "FAILURE_KINDS",
@@ -55,6 +56,7 @@ __all__ = [
     "JudgeFailure",
     "JudgeKind",
     "JudgeOutput",
+    "JudgeSample",
     "LabelMap",
     "OrdinalBands",
     "OrdinalScore",
@@ -67,4 +69,6 @@ __all__ = [
     "VerdictRule",
     "apply_verdict_policy",
     "canonical_json",
+    "judge_many",
+    "sample_identifier",
 ]

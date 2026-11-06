@@ -122,7 +122,7 @@ ragnarok-ai is built around a small set of guarantees:
 | **Local-first, always** | Every feature works with local models (Ollama). No API key is ever required. Air-gapped deployment is a first-class target. |
 | **Your data stays yours** | Nothing leaves your machine. Production traces hash queries by default; capturing text is opt-in and PII-scrubbed client-side. |
 | **Resumable by design** | Long local evaluations crash. `BatchEvaluator` checkpoints every evaluated query, so a resumed run restores their results and recomputes only the rest, whatever the batch size. |
-| **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. |
+| **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. The recommended threshold is reported both in-sample and out-of-sample (cross-validation with a bootstrap interval, fixed seeds), next to the prevalence of your labels and the agreement a constant majority-class judge would get. |
 | **Engineering tool, not a notebook** | CLI-first, JSON output, exit codes, `--fail-under` CI gates, regression detection, Prometheus export, Helm chart. |
 | **Lightweight core** | No torch/transformers in the core. Statistics are hand-rolled over the standard library. |
 

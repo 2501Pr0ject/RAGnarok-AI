@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Behavior changes
+- **`JudgeCalibrator` takes its pass threshold from the judge's verdict
+  policy** (#148): 0.75 for `LLMJudge` (`raw >= 4` on the 1-5 scale)
+  instead of the fixed 0.7. Verdicts and statistics are unchanged, because
+  on the discrete scores 0, 0.25, 0.5, 0.75 and 1 both cutoffs classify
+  every sample the same way (tested). Three visible effects: the report's
+  `threshold` reads 0.75; `recommended_threshold` can read 0.75 where it
+  read 0.7, since ties in the sweep resolve to the current threshold;
+  `JudgeCalibrator.pass_threshold` is `None` by default (`threshold_for()`
+  gives the value in use). Objects exposing only the four named methods keep
+  `DEFAULT_PASS_THRESHOLD` (0.7). What to do: nothing; pass
+  `pass_threshold=0.7` to keep the old number in reports
+
 ### Added
+- **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
+  (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
+  returns one `JudgeAttempt` per sample, in order, with the sample's
+  `sample_id` (or position). Unreadable outputs, timeouts and backend errors
+  become `JudgeFailure` values; configuration errors are never caught.
+  `concurrency=1` is the default and the only setting that keeps Ollama runs
+  reproducible
+- **Calibrator, out-of-sample estimate and readable baselines**:
+  `kappa_at_recommended_cv` (threshold chosen on the other folds, stratified
+  5-fold above 40 samples, leave-one-out otherwise or when a class is smaller
+  than the number of folds, the method is reported), `kappa_cv_ci` (95%
+  bootstrap interval of the out-of-fold predictions, which does not repeat
+  the cross-validation and slightly underestimates the uncertainty;
+  single-class draws are excluded and counted, the interval is flagged
+  unreliable above 10% exclusions; folds and draws are made by group when
+  samples carry a `group_id`), `human_pass_rate`,
+  `majority_baseline_accuracy`, `kappa_interpretable` (false below 10
+  samples in the minority class), `backend_failures`, fixed and reported
+  seeds (`cv_seed`, `bootstrap_seed`): two identical calibrations give
+  identical reports. `kappa_at_recommended` keeps its in-sample value.
+  `CalibrationSample` gains optional `sample_id` and `group_id` (grouped
+  bootstrap). `CalibrationReport` carries the run's `JudgeConfig` per
+  criterion (`configs`), `comparable_with()` and `merge()`, which refuses
+  runs whose configurations differ
 - CI: the lint job fails when a tracked file contains Git conflict markers
   (`scripts/check_conflict_markers.sh`, usable locally)
 - **`JudgeProtocol`** (`ragnarok_ai.core`): `criteria`, `config(criterion)`
