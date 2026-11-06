@@ -180,7 +180,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the sample is inserted, `OrdinalBands(4, 2)`, `input_transforms` carrying
   the medical normalizer and the disambiguation model)
 - **`JudgeResult`** gains optional `output`, `config`, `trace` and `units`
-  fields (last, default `None`) and `to_dict(detailed=False)`; the parsers
+  fields (last, default `None`) and `to_dict(detailed=False)`; `trace` is
+  excluded from equality (`compare=False`, as `OllamaGeneration.latency_ms`),
+  so two results of the same judgment compare equal whatever the call's
+  latency, as in 1.12.3; the parsers
   fill `output` with an `OrdinalScore`. `LLMJudge(keep_raw_output=True)`
   keeps the model's text in `trace.raw_output` (off by default)
 - **`JudgeParseError`** (`EvaluationError` subclass, with `criterion` and

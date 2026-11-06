@@ -11,7 +11,7 @@ import inspect
 import logging
 import re
 import time
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
@@ -274,7 +274,9 @@ class JudgeResult:
             aggregated from units, which has no single native score.
         output: The judge's native output (``OrdinalScore`` for ``LLMJudge``).
         config: The run configuration that produced the result.
-        trace: What the call cost and reported.
+        trace: What the call cost and reported. Excluded from equality, like
+            ``OllamaGeneration.latency_ms``: two results of the same judgment
+            compare equal whatever their latency.
         units: Unit judgments (sentences, claims) when the judge works below
             answer level; ``score`` and ``verdict`` stay at answer level.
     """
@@ -286,7 +288,7 @@ class JudgeResult:
     raw_score: int | None  # 1-5 original; None for an aggregated result
     output: JudgeOutput | None = None
     config: JudgeConfig | None = None
-    trace: CallTrace | None = None
+    trace: CallTrace | None = field(default=None, compare=False)
     units: tuple[UnitJudgment, ...] | None = None
 
     def to_dict(self, detailed: bool = False) -> dict[str, Any]:

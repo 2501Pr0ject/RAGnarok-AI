@@ -8,7 +8,7 @@ import pytest
 
 from ragnarok_ai.core import JudgeProtocol, LLMResponse
 from ragnarok_ai.core.exceptions import EvaluationError, JudgeParseError
-from ragnarok_ai.evaluators.judge import LLMJudge, parse_judge_response, parse_prometheus_response
+from ragnarok_ai.evaluators.judge import JudgeResult, LLMJudge, parse_judge_response, parse_prometheus_response
 from ragnarok_ai.judges import OrdinalBands, OrdinalScore
 
 
@@ -214,3 +214,21 @@ class TestJudgeParseError:
     def test_parsers_fill_the_native_output(self):
         assert parse_judge_response("Score: 3\nExplanation: x", "relevance").output == OrdinalScore(3, 1, 5)
         assert parse_prometheus_response("fine [RESULT] 2", "relevance").output == OrdinalScore(2, 1, 5)
+
+
+class TestResultEquality:
+    def test_trace_does_not_take_part_in_equality(self):
+        """Two results of the same judgment compare equal whatever the call's latency (as in 1.12.3)."""
+        from ragnarok_ai.judges import CallTrace
+
+        base = JudgeResult("PASS", 1.0, "ok", "faithfulness", 5, output=OrdinalScore(5, 1, 5))
+        fast = JudgeResult(
+            "PASS", 1.0, "ok", "faithfulness", 5, output=OrdinalScore(5, 1, 5), trace=CallTrace(latency_ms=12.0)
+        )
+        slow = JudgeResult(
+            "PASS", 1.0, "ok", "faithfulness", 5, output=OrdinalScore(5, 1, 5), trace=CallTrace(latency_ms=900.0)
+        )
+        assert base == fast == slow
+        assert fast.trace is not None and fast.trace.latency_ms == 12.0  # the trace itself is kept
+        assert JudgeResult("PASS", 0.75, "ok", "faithfulness", 4) != base  # the five historical fields still count
+        assert hash(base) == hash(fast)
