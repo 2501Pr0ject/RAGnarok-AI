@@ -21,12 +21,16 @@ Example:
 from __future__ import annotations
 
 from ragnarok_ai.benchmarks.history import BenchmarkHistory
+from ragnarok_ai.benchmarks.judges import BenchRecord, load_records, run_benchmark
 from ragnarok_ai.benchmarks.models import BenchmarkRecord
 from ragnarok_ai.benchmarks.storage import JSONFileStore, StorageProtocol
 
 __all__ = [
+    "BenchRecord",
     "BenchmarkHistory",
     "BenchmarkRecord",
     "JSONFileStore",
     "StorageProtocol",
+    "load_records",
+    "run_benchmark",
 ]

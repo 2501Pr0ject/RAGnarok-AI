@@ -52,6 +52,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   applied to the aggregated score for the verdict; skipped units never
   count. When no unit can be judged, `NoUnitsError` (an `EvaluationError`)
   is raised and `judge_many` reports a `no_units` failure
+- **Judge benchmark harness** (`ragnarok_ai.benchmarks.judges`, CLI
+  `ragnarok judge-bench --judge <llm[:model] | python:<module>:<Class>>
+  --data test.jsonl [--dev dev.jsonl] --out results/<judge>/`): reads the
+  sentence-level JSONL of the judge-training conversion (`id`, `question`,
+  `context`, `prev_sentence`, `sentence`, `label` SUPPORTED / CONTRADICTED /
+  UNSUPPORTED, free metadata) or an answer-level file (`answer`, PASS /
+  FAIL); calls the judge directly with the sentence as the answer, never
+  transmits `prev_sentence` (the report counts it); runs through
+  `judge_many`; writes `attempts.jsonl` as it goes and resumes from it by
+  `id`, after checking its header line (judge configuration hash,
+  criterion, level, sample, seed, stratify, SHA-256 of the data file) and
+  the configuration hash of every row: a run whose parameters differ is
+  refused with the field named, never mixed; same for `dev_attempts.jsonl`
+  and the dev file; `--sample N --stratify label --seed S` for slow judges;
+  threshold of a probabilistic judge chosen on `--dev` and applied
+  unchanged. Report (JSON and Markdown): the prediction rule in words (PASS
+  if score >= threshold, PARTIAL and FAIL counted as not supported, with
+  the threshold's value and source), coverage (evaluated, scored, failed;
+  metrics on scored records only), precision, recall and F1 of the
+  not-supported class, balanced accuracy, kappa, majority-class baseline,
+  per-class F1 and confusion matrix when the judge predicts the set's
+  classes, Brier and 10-bin ECE of P(pass) for probabilistic judges,
+  failures by kind, probable truncations, p50 / p90 latency, peak RSS of
+  the harness process (stated as such; for an llm judge the model's size is
+  read on Ollama's `/api/ps`), 95% grouped bootstrap intervals (fixed seed,
+  single-class draws excluded and counted), breakdowns with
+  `--by task,generator`. On an answer-level set, `--sentence-level` wraps the
+  judge in `SentenceLevel`; on a sentence-level set it is refused, the
+  segmentation being already done. No data ships with the package
 - **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
   (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
   returns one `JudgeAttempt` per sample, in order, with the sample's

@@ -6,6 +6,7 @@ This module defines the Typer application and all CLI commands.
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
 import random
 import sys
@@ -2670,6 +2671,176 @@ def monitor_stats(
         typer.echo(f"    P95:  {latency.get('p95', 0) * 1000:.0f}ms")
         typer.echo(f"    P99:  {latency.get('p99', 0) * 1000:.0f}ms")
         typer.echo()
+
+
+def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str) -> Any:
+    """Build the judge named by ``--judge``.
+
+    ``llm`` or ``llm:<model>``: ``LLMJudge`` on Ollama. ``python:<module>:<Class>``:
+    any ``JudgeProtocol`` class importable by dotted path, built without
+    arguments (used for tests and custom judges).
+    """
+    kind, _, rest = spec.partition(":")
+    if kind == "llm":
+        _require_optional("judge-bench", module="httpx", extra="ollama")
+        from ragnarok_ai.evaluators.judge import LLMJudge
+
+        return LLMJudge(model=rest or None, base_url=ollama_url, prompt_format=prompt_format)  # type: ignore[arg-type]
+    if kind == "python":
+        import importlib
+
+        module_name, _, class_name = rest.rpartition(":")
+        if not module_name or not class_name:
+            msg = f"--judge python:<module>:<Class> expected, got {spec!r}"
+            raise ValueError(msg)
+        return getattr(importlib.import_module(module_name), class_name)()
+    msg = f"Unknown judge {spec!r}. Use 'llm', 'llm:<model>' or 'python:<module>:<Class>'"
+    raise ValueError(msg)
+
+
+@app.command("judge-bench")
+def judge_bench(
+    judge: Annotated[str, typer.Option("--judge", help="llm, llm:<model>, or python:<module>:<Class>.")],
+    data: Annotated[str, typer.Option("--data", help="Evaluated JSONL set (sentence or answer level).")],
+    out: Annotated[str, typer.Option("--out", help="Output directory (attempts.jsonl, report.json, report.md).")],
+    dev: Annotated[
+        str | None, typer.Option("--dev", help="Development JSONL set used to choose the threshold.")
+    ] = None,
+    criterion: Annotated[str, typer.Option("--criterion", help="Criterion to judge.")] = "faithfulness",
+    sample: Annotated[int | None, typer.Option("--sample", help="Evaluate only N records, drawn with --seed.")] = None,
+    stratify: Annotated[str, typer.Option("--stratify", help="'label', a metadata field, or 'none'.")] = "label",
+    seed: Annotated[int, typer.Option("--seed", help="Seed of the sample and of the bootstrap.")] = 0,
+    by: Annotated[str | None, typer.Option("--by", help="Comma-separated metadata fields for breakdowns.")] = None,
+    concurrency: Annotated[
+        int, typer.Option("--concurrency", help="Judge calls in flight (1 keeps Ollama reproducible).")
+    ] = 1,
+    keep_raw_output: Annotated[
+        bool, typer.Option("--keep-raw-output", help="Keep raw model text in attempts.jsonl.")
+    ] = False,
+    bootstrap: Annotated[int, typer.Option("--bootstrap", help="Grouped bootstrap draws.")] = 1000,
+    ollama_url: Annotated[
+        str, typer.Option("--ollama-url", help="Ollama API base URL (llm judges).")
+    ] = "http://localhost:11434",
+    prompt_format: Annotated[
+        str, typer.Option("--prompt-format", help="auto, prometheus or score-n (llm judges).")
+    ] = "auto",
+    sentence_level: Annotated[
+        bool,
+        typer.Option(
+            "--sentence-level",
+            help="Answer-level set only: wrap the judge in SentenceLevel so each answer is judged sentence by sentence.",
+        ),
+    ] = False,
+) -> None:
+    """Benchmark a judge on a labeled JSONL set and write a report.
+
+    On a sentence-level set the judge receives each sentence as the answer;
+    prev_sentence is never transmitted. On an answer-level set,
+    --sentence-level wraps the judge in SentenceLevel (shared segmenter,
+    fraction of PASS sentences and worst verdict). An interrupted run
+    resumes from the attempts already written in --out. The threshold of a
+    probabilistic judge is chosen on --dev and applied unchanged to --data.
+    """
+    from ragnarok_ai.benchmarks.judges import (
+        AttemptsMismatchError,
+        file_sha256,
+        load_records,
+        ollama_model_memory,
+        run_benchmark,
+    )
+
+    def fail(message: str, code: int) -> None:
+        if state["json"]:
+            typer.echo(json_response("judge-bench", "error", errors=[message]))
+        else:
+            typer.echo(f"Error: {message}", err=True)
+        raise typer.Exit(code)
+
+    if prompt_format not in ("auto", "prometheus", "score-n"):
+        fail(f"Invalid --prompt-format {prompt_format!r}. Valid: auto, prometheus, score-n", EXIT_BAD_INPUT)
+    if concurrency < 1 or (sample is not None and sample < 1) or bootstrap < 0:
+        fail("--concurrency and --sample must be at least 1, --bootstrap at least 0", EXIT_BAD_INPUT)
+    for path in [data] + ([dev] if dev else []):
+        if not Path(path).exists():
+            fail(f"File not found: {path}", EXIT_BAD_INPUT)
+    try:
+        records = load_records(data)
+        dev_records = load_records(dev) if dev else None
+        judge_instance = _load_bench_judge(judge, ollama_url=ollama_url, prompt_format=prompt_format)
+    except (ValueError, ImportError, AttributeError, json.JSONDecodeError) as exc:
+        fail(str(exc), EXIT_BAD_INPUT)
+        return
+    if criterion not in judge_instance.criteria:
+        fail(f"Criterion {criterion!r} not supported by this judge: {sorted(judge_instance.criteria)}", EXIT_BAD_INPUT)
+    # The model of an llm judge runs in the Ollama server: its size is read there, not in this process
+    model_memory = None
+    if judge.partition(":")[0] == "llm":
+        model_memory = functools.partial(ollama_model_memory, ollama_url, str(judge_instance.model))
+    if sentence_level:
+        if records[0].level == "sentence":
+            fail("--sentence-level applies to answer-level sets only: this set is already segmented", EXIT_BAD_INPUT)
+        from ragnarok_ai.judges import SentenceLevel
+
+        judge_instance = SentenceLevel(judge_instance)
+
+    if not state["json"]:
+        typer.echo()
+        typer.echo("  RAGnarok-AI judge benchmark")
+        typer.echo("  " + "=" * 40)
+        typer.echo(
+            f"  Judge: {judge}  |  criterion: {criterion}  |  records: {len(records)}"
+            + (f"  |  sample: {sample}" if sample else "")
+        )
+        typer.echo(f"  Output: {out}")
+
+    try:
+        run = asyncio.run(
+            run_benchmark(
+                judge_instance,
+                records,
+                out_dir=out,
+                criterion=criterion,
+                dev_records=dev_records,
+                sample=sample,
+                stratify=None if stratify == "none" else stratify,
+                seed=seed,
+                by=[f.strip() for f in by.split(",") if f.strip()] if by else (),
+                concurrency=concurrency,
+                keep_raw_output=keep_raw_output,
+                bootstrap_resamples=bootstrap,
+                judge_name=judge,
+                data_sha256=file_sha256(data),
+                dev_sha256=file_sha256(dev) if dev else None,
+                model_memory=model_memory,
+            )
+        )
+    except AttemptsMismatchError as exc:  # --out holds another run's attempts: refused, never mixed
+        fail(str(exc), EXIT_BAD_INPUT)
+        return
+    except Exception as exc:  # configuration errors stop the run; they are reported, not hidden
+        fail(str(exc), EXIT_FAILURE)
+        return
+
+    data_out = {
+        "report": run.report,
+        "attempts": str(run.attempts_path),
+        "report_json": str(run.report_json),
+        "report_md": str(run.report_md),
+    }
+    if state["json"]:
+        typer.echo(json_response("judge-bench", "success", data=data_out))
+    else:
+        b = run.report["binary"]
+        typer.echo()
+        typer.echo(
+            f"  Scored {run.report['records']['scored']}/{run.report['records']['evaluated']}, threshold {run.report['threshold']['value']:.2f} ({run.report['threshold']['source']})"
+        )
+        typer.echo(
+            f"  F1 not supported {b['f1_not_supported']:.3f}  |  balanced accuracy {b['balanced_accuracy']:.3f}  |  kappa {b['kappa']:.3f}  |  majority baseline {b['majority_baseline_accuracy']:.3f}"
+        )
+        if run.report["failures"]:
+            typer.echo(f"  Failures: {run.report['failures']}")
+        typer.echo(f"  Report: {run.report_md}")
 
 
 if __name__ == "__main__":
