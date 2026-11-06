@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- CI: the lint job fails when a tracked file contains Git conflict markers
+  (`scripts/check_conflict_markers.sh`, usable locally)
 - **Common judge contract, data types only** (`ragnarok_ai.judges`): native
   outputs (`OrdinalScore`, `BinaryProbability`, `ClassProbabilities`, each
   projecting to a score in [0, 1]), verdict policies (`OrdinalBands`,
