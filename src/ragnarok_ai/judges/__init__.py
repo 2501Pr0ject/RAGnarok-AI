@@ -7,6 +7,7 @@ See :mod:`ragnarok_ai.judges.contract`. The existing judge types
 
 from __future__ import annotations
 
+from ragnarok_ai.judges.aggregation import aggregate_units, verdict_from_score, worst_verdict
 from ragnarok_ai.judges.contract import (
     FAILURE_KINDS,
     JUDGE_KINDS,
@@ -67,8 +68,11 @@ __all__ = [
     "Verdict",
     "VerdictPolicy",
     "VerdictRule",
+    "aggregate_units",
     "apply_verdict_policy",
     "canonical_json",
     "judge_many",
     "sample_identifier",
+    "verdict_from_score",
+    "worst_verdict",
 ]

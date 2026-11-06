@@ -38,6 +38,7 @@ from ragnarok_ai.core.exceptions import (
     JudgeDependencyError,
     JudgeParseError,
     LLMConnectionError,
+    NoUnitsError,
     RagnarokError,
 )
 from ragnarok_ai.core.gating import (
@@ -92,6 +93,7 @@ __all__ = [
     "LLMResponse",
     "MetricCategory",
     "MetricResult",
+    "NoUnitsError",
     "PipelineConfig",
     "Query",
     "RagnarokError",

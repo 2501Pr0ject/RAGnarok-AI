@@ -15,6 +15,7 @@ from ragnarok_ai.core.exceptions import (
     EvaluationError,
     JudgeParseError,
     LLMConnectionError,
+    NoUnitsError,
 )
 from ragnarok_ai.judges.contract import CallTrace, JudgeAttempt, JudgeFailure
 
@@ -50,6 +51,8 @@ def _failure_for(exc: Exception, keep_raw_output: bool) -> JudgeFailure:
     """Map a per-sample exception to a ``JudgeFailure``."""
     if isinstance(exc, JudgeParseError):
         return JudgeFailure("parse", str(exc), raw_output=exc.raw_output if keep_raw_output else None)
+    if isinstance(exc, NoUnitsError):
+        return JudgeFailure("no_units", str(exc))
     if isinstance(exc, asyncio.TimeoutError):
         return JudgeFailure("timeout", str(exc) or "timed out")
     if isinstance(exc, LLMConnectionError) and "timed out" in str(exc).lower():
@@ -74,7 +77,8 @@ async def judge_many(
     """Judge every sample on *criterion*; one ``JudgeAttempt`` per sample, in order.
 
     Per-sample failures become ``JudgeFailure`` values: an unreadable output
-    (``JudgeParseError``, kind ``parse``), a timeout (kind ``timeout``) or a
+    (``JudgeParseError``, kind ``parse``), an answer with nothing to judge
+    (``NoUnitsError``, kind ``no_units``), a timeout (kind ``timeout``) or a
     backend error during the call (``LLMConnectionError`` or another
     ``EvaluationError``, kind ``backend``). Configuration errors are never
     caught: ``judge.config(criterion)`` runs first, so a misconfigured judge
