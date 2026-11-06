@@ -15,11 +15,18 @@ on them, and measure agreement.
 
 All statistics are dependency-free: Cohen's kappa for chance-corrected
 agreement, a Wilson interval on accuracy, and a threshold sweep that
-recommends the pass cutoff maximizing kappa on your labels.
+recommends the pass cutoff maximizing kappa on your labels. The sweep is
+in-sample: the recommended threshold is measured on the labels that
+selected it, so confirm it on labels it has not seen.
+
+A judge response that cannot be parsed (``EvaluationError``) does not abort
+the calibration: the sample is counted in ``parse_failures`` and excluded
+from the statistics, which are computed on the scored samples only.
 """
 
 from __future__ import annotations
 
+import logging
 import math
 from typing import TYPE_CHECKING
 
@@ -30,6 +37,7 @@ from ragnarok_ai.calibration.models import (
     CriterionCalibration,
     interpret_kappa,
 )
+from ragnarok_ai.core.exceptions import EvaluationError
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Sequence
@@ -38,6 +46,8 @@ if TYPE_CHECKING:
 
 # Default pass threshold, matching the documented judge verdict rule (PASS >= 0.7)
 DEFAULT_PASS_THRESHOLD = 0.7
+
+logger = logging.getLogger(__name__)
 
 # Below this many labels, statistics are flagged as indicative only
 DEFAULT_MIN_SAMPLES = 20
@@ -135,14 +145,21 @@ class JudgeCalibrator:
 
         results: dict[str, CriterionCalibration] = {}
         for criterion in criteria:
-            scores = [(await self._judge_call(criterion, s)).score for s in sample_list]
+            scores: list[float | None] = []
+            for index, sample in enumerate(sample_list):
+                try:
+                    scores.append((await self._judge_call(criterion, sample)).score)
+                except EvaluationError as exc:
+                    logger.warning(f"{criterion}: judge response for sample {index} could not be parsed ({exc})")
+                    scores.append(None)
             human = [s.label_for(criterion) for s in sample_list]
             results[criterion] = self._analyze(criterion, scores, human)
 
         return CalibrationReport(
             criteria=results,
             n_samples=len(sample_list),
-            insufficient_data=len(sample_list) < self.min_samples,
+            insufficient_data=len(sample_list) < self.min_samples
+            or any(c.n < self.min_samples for c in results.values()),
         )
 
     # ── Judge dispatch ───────────────────────────────────────────────────
@@ -163,10 +180,41 @@ class JudgeCalibrator:
 
     # ── Statistics ───────────────────────────────────────────────────────
 
-    def _analyze(self, criterion: str, scores: list[float], human: list[bool]) -> CriterionCalibration:
-        """Agreement statistics for one criterion."""
-        judge_pass = [score >= self.pass_threshold for score in scores]
+    def _analyze(self, criterion: str, all_scores: list[float | None], all_human: list[bool]) -> CriterionCalibration:
+        """Agreement statistics for one criterion, on the scored samples only.
+
+        ``None`` scores are parse failures: counted, excluded from every
+        statistic, and listed in ``failed_indices``. Indices in
+        ``disagreements`` and ``failed_indices`` refer to the input samples.
+        """
+        failed_indices = [i for i, score in enumerate(all_scores) if score is None]
+        scored = [
+            (i, score, h) for i, (score, h) in enumerate(zip(all_scores, all_human, strict=True)) if score is not None
+        ]
+        indices = [i for i, _, _ in scored]
+        scores = [score for _, score, _ in scored]
+        human = [h for _, _, h in scored]
         n = len(scores)
+
+        if n == 0:
+            return CriterionCalibration(
+                criterion=criterion,
+                n=0,
+                accuracy=0.0,
+                accuracy_ci=(0.0, 1.0),
+                kappa=0.0,
+                kappa_interpretation="no scored samples",
+                false_accept_rate=0.0,
+                false_reject_rate=0.0,
+                threshold=self.pass_threshold,
+                recommended_threshold=self.pass_threshold,
+                kappa_at_recommended=0.0,
+                disagreements=[],
+                parse_failures=len(failed_indices),
+                failed_indices=failed_indices,
+            )
+
+        judge_pass = [score >= self.pass_threshold for score in scores]
 
         agreements = sum(1 for j, h in zip(judge_pass, human, strict=True) if j == h)
         human_fails = sum(1 for h in human if not h)
@@ -188,14 +236,18 @@ class JudgeCalibrator:
             threshold=self.pass_threshold,
             recommended_threshold=recommended,
             kappa_at_recommended=kappa_at_recommended,
-            disagreements=[i for i, (j, h) in enumerate(zip(judge_pass, human, strict=True)) if j != h],
+            disagreements=[indices[k] for k, (j, h) in enumerate(zip(judge_pass, human, strict=True)) if j != h],
+            parse_failures=len(failed_indices),
+            failed_indices=failed_indices,
         )
 
     def _best_threshold(self, scores: list[float], human: list[bool]) -> tuple[float, float]:
         """Sweep pass thresholds and return the one maximizing kappa.
 
-        Ties prefer the threshold closest to the current one, so the
-        recommendation only moves when the data supports it.
+        In-sample: the returned kappa is measured on the very labels that
+        selected the threshold, so it is optimistic. Ties prefer the
+        threshold closest to the current one, so the recommendation only
+        moves when the data supports it.
         """
         candidates = sorted({round(t / 20, 2) for t in range(1, 20)} | {self.pass_threshold})
         best = (self.pass_threshold, _cohens_kappa([s >= self.pass_threshold for s in scores], human))
