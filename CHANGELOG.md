@@ -5,7 +5,7 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.13.0] - 2026-11-06
+## [1.13.0] - 2026-11-07
 
 ### Behavior changes
 - **Cohen's kappa is `null` when undefined** (`_cohens_kappa`, calibrator and
@@ -46,11 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `EvaluationError`. It is a subclass, so `except EvaluationError` keeps
   working. What to do: code comparing the exception type exactly
   (`type(exc) is EvaluationError`) must accept the subclass
-- **`JudgeResult` carries `output`, `config` and `trace`** (#145): two
-  results with the same text no longer compare equal, since `trace` holds
-  the call's latency. `to_dict()` is unchanged; the new fields appear only
-  with `to_dict(detailed=True)`. What to do: tests that compared whole
-  results should compare `to_dict()`
 - **`CalibrationReport.summary()` prints more lines** (#148): prevalence of
   human PASS, agreement of a constant majority-class judge, out-of-sample
   kappa with its interval and method, a warning when kappa is not
