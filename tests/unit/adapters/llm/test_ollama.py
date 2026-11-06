@@ -462,3 +462,36 @@ class TestOllamaOptions:
         assert generation.prompt_eval_count is None
         assert generation.eval_count is None
         assert generation.options == {}
+
+
+class TestOllamaGenerationShape:
+    """OllamaGeneration keeps its fields and exposes the generic counter names and the latency."""
+
+    def test_positional_construction_from_1_12_3_still_works(self) -> None:
+        g = OllamaGeneration("ok", 12, 3, "m", {"seed": 1})
+        assert g.latency_ms is None
+        assert g.prompt_tokens == 12 and g.completion_tokens == 3
+
+    def test_latency_is_not_part_of_equality(self) -> None:
+        """Two generations that differ only by latency are equal, as in 1.12.3."""
+        a = OllamaGeneration("ok", 12, 3, "m", {"seed": 1}, latency_ms=3.5)
+        b = OllamaGeneration("ok", 12, 3, "m", {"seed": 1}, latency_ms=870.0)
+        c = OllamaGeneration("ok", 12, 3, "m", {"seed": 1})
+        assert a == b == c
+        assert a != OllamaGeneration("ok", 13, 3, "m", {"seed": 1}, latency_ms=3.5)
+
+    def test_generic_names_mirror_ollama_counters(self) -> None:
+        g = OllamaGeneration(text="ok", prompt_eval_count=None, eval_count=None, model="m")
+        assert g.prompt_tokens is None and g.completion_tokens is None
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_detailed_reports_latency(self) -> None:
+        respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok", "prompt_eval_count": 5, "eval_count": 1})
+        )
+
+        g = await OllamaLLM(model="m").generate_detailed("p")
+
+        assert g.latency_ms is not None and g.latency_ms >= 0.0
+        assert (g.prompt_tokens, g.completion_tokens) == (5, 1)

@@ -542,6 +542,8 @@ class LLMJudge:
             raise ValueError(msg)
         self.prompt_format = prompt_format
 
+        self._model_digests: dict[str, str] = {}
+        self.model_digest: str | None = None
         if llm is not None:
             self.llm = llm
             self.model = getattr(llm, "model", "custom")
@@ -569,6 +571,8 @@ class LLMJudge:
                 num_ctx=self.JUDGE_NUM_CTX,
             )
             self.model = selected_model
+            # Read once, from the same /api/tags answer that listed the models
+            self.model_digest = self._model_digests.get(selected_model)
 
         self.truncation_warnings = 0
 
@@ -602,7 +606,10 @@ class LLMJudge:
             return str(await self.llm.generate(prompt))
         generation = await detailed(prompt)
         num_ctx = getattr(self.llm, "num_ctx", None)
-        prompt_tokens = getattr(generation, "prompt_eval_count", None)
+        # Generic name first (LLMResponse, OllamaGeneration property), Ollama's raw name as fallback
+        prompt_tokens = getattr(generation, "prompt_tokens", None)
+        if prompt_tokens is None:
+            prompt_tokens = getattr(generation, "prompt_eval_count", None)
         if num_ctx and prompt_tokens is not None and looks_truncated(prompt_tokens, num_ctx):
             self.truncation_warnings += 1
             logger.warning(
@@ -622,6 +629,9 @@ class LLMJudge:
 
         Args:
             base_url: Ollama API base URL.
+
+        Also records each model's digest in ``self._model_digests``, so the
+        constructor can set ``model_digest`` without a second request.
 
         Returns:
             List of model names, possibly empty.
@@ -649,7 +659,9 @@ class LLMJudge:
             msg = f"Ollama at {base_url} answered {response.status_code} to {url}: {response.text[:200]}"
             raise JudgeConnectionError(msg)
         data = response.json()
-        return [str(m["name"]) for m in data.get("models", [])]
+        models = data.get("models", [])
+        self._model_digests = {str(m["name"]): str(m["digest"]) for m in models if m.get("digest")}
+        return [str(m["name"]) for m in models]
 
     @staticmethod
     def _resolve_model(requested: str, available: list[str], base_url: str) -> str:

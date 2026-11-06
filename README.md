@@ -331,7 +331,7 @@ print(f"Hallucination: {result.hallucination.verdict}")
 - Prometheus 2 Q5_K_M: ~5GB RAM usage
 - `keep_alive` enabled by default (prevents model unloading between requests)
 
-**Reproducibility:** the Ollama client built by `LLMJudge` sends `temperature=0`, `seed=42` and `num_ctx=8192` (`LLMJudge.JUDGE_TEMPERATURE`, `JUDGE_SEED`, `JUDGE_NUM_CTX`). Ollama truncates silently a prompt longer than its context window; the judge detects the signature of that truncation in the token counters and logs a warning (`judge.truncation_warnings` counts them). A client passed with `llm=` is used as given: `OllamaLLM(temperature=..., seed=..., num_ctx=..., options={...})` sets the same options yourself; by default `OllamaLLM` sends none and keeps the server defaults.
+**Reproducibility:** the Ollama client built by `LLMJudge` sends `temperature=0`, `seed=42` and `num_ctx=8192` (`LLMJudge.JUDGE_TEMPERATURE`, `JUDGE_SEED`, `JUDGE_NUM_CTX`). Ollama truncates silently a prompt longer than its context window; the judge detects the signature of that truncation in the token counters and logs a warning (`judge.truncation_warnings` counts them). A client passed with `llm=` is used as given: `OllamaLLM(temperature=..., seed=..., num_ctx=..., options={...})` sets the same options yourself; by default `OllamaLLM` sends none and keeps the server defaults. The judge reads token counters from any client whose `generate_detailed()` returns an `LLMResponse` (or any object with `text`, `prompt_tokens`, `completion_tokens`); `judge.model_digest` records the digest of the Ollama model in use.
 
 **Installation:**
 ```bash

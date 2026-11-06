@@ -50,6 +50,7 @@ from ragnarok_ai.core.gating import (
 from ragnarok_ai.core.protocols import (
     EvaluatorProtocol,
     LLMProtocol,
+    LLMResponse,
     VectorStoreProtocol,
 )
 from ragnarok_ai.core.types import (
@@ -84,6 +85,7 @@ __all__ = [
     "JudgeDependencyError",
     "LLMConnectionError",
     "LLMProtocol",
+    "LLMResponse",
     "MetricCategory",
     "MetricResult",
     "PipelineConfig",

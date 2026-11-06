@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CallTrace`, `UnitJudgment`, `AggregationPolicy`, `JudgeFailure` and
   `JudgeAttempt` (a result or a failure, never both). Nothing is wired to
   these types yet; `JudgeResult`, `JudgeResults` and `LLMJudge` are unchanged
+- **`LLMResponse`** (`ragnarok_ai.core`): the generic shape of a detailed
+  generation (`text`, `prompt_tokens`, `completion_tokens`, `model`,
+  `options`, `latency_ms`). `LLMProtocol` does not require it; the judge
+  reads the counters from any client whose `generate_detailed()` returns an
+  object with `text`, `prompt_tokens` and `completion_tokens`, and falls
+  back to `generate()` otherwise
+- **`OllamaGeneration.latency_ms`** (last field, optional) and the
+  `prompt_tokens` / `completion_tokens` properties mirroring
+  `prompt_eval_count` / `eval_count`; existing fields and positional
+  construction are unchanged
+- **`LLMJudge.model_digest`**: the Ollama digest of the model in use, read
+  once from the same `/api/tags` answer that lists the installed models;
+  `None` for a client passed with `llm=`
 
 ## [1.12.3] - 2026-11-06
 

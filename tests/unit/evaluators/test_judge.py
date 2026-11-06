@@ -847,6 +847,61 @@ class CountingLLM:
         return [0.0]
 
 
+class TestModelDigest:
+    """The digest of the model in use is read once, from the same /api/tags answer."""
+
+    def test_digest_is_captured_from_tags(self):
+        import httpx
+
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = {
+            "models": [{"name": "mistral:7b", "digest": "3944fe81ec14"}, {"name": "other:latest"}]
+        }
+        with patch.object(httpx, "get", return_value=response) as get:
+            judge = LLMJudge(model="mistral:7b")
+
+        assert judge.model_digest == "3944fe81ec14"
+        assert get.call_count == 1  # no second request for the digest
+
+    def test_digest_is_none_when_tags_carry_none_or_discovery_is_stubbed(self):
+        with patch.object(LLMJudge, "_get_available_models", return_value=["mistral:7b"]):
+            assert LLMJudge(model="mistral:7b").model_digest is None
+
+    def test_digest_is_none_for_a_client_passed_by_the_user(self):
+        llm = MagicMock()
+        llm.model = "custom"
+        assert LLMJudge(llm=llm).model_digest is None
+
+
+class TestGenericLLMResponse:
+    """The judge reads counters from any object exposing text, prompt_tokens and completion_tokens."""
+
+    @pytest.mark.asyncio
+    async def test_llm_response_counters_feed_the_truncation_check(self, caplog):
+        from ragnarok_ai.core import LLMResponse
+
+        class Client:
+            model = "x"
+            num_ctx = 8192
+
+            async def generate(self, prompt: str) -> str:
+                return (await self.generate_detailed(prompt)).text
+
+            async def generate_detailed(self, prompt: str) -> LLMResponse:  # noqa: ARG002
+                return LLMResponse("Score: 4\nExplanation: ok", prompt_tokens=4099, completion_tokens=5, latency_ms=2.0)
+
+            async def embed(self, text: str) -> list[float]:  # noqa: ARG002
+                return [0.0]
+
+        judge = LLMJudge(llm=Client())
+        with caplog.at_level("WARNING", logger="ragnarok_ai.evaluators.judge"):
+            result = await judge.evaluate_relevance(question="Q", answer="A")
+
+        assert result.raw_score == 4
+        assert judge.truncation_warnings == 1
+
+
 class TestJudgeOptionsAndTruncation:
     """The judge pins its sampling options and warns on a probably truncated prompt."""
 
