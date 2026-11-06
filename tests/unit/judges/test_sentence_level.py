@@ -143,16 +143,22 @@ class TestJudging:
         assert attempts[0].error is not None and attempts[0].error.kind == "no_units"
 
     @pytest.mark.asyncio
-    async def test_single_sentence_answer_matches_the_inner_judge(self):
-        """One sentence under the min aggregation: the wrapper's score and verdict are the inner judge's."""
-        inner = InnerJudge()
-        direct = await inner.judge("relevance", question="q", context="c", answer="A single sentence (meh).")
+    @pytest.mark.parametrize(
+        ("marker", "inner_verdict", "expected_score"),
+        [("(ok)", "PASS", 1.0), ("(meh)", "PARTIAL", 0.0), ("(bad)", "FAIL", 0.0)],
+    )
+    async def test_single_sentence_answer_matches_the_inner_judge(self, marker, inner_verdict, expected_score):
+        """One sentence, default fraction_pass + worst: the verdict is the inner judge's, the score is 1.0 for a PASS, 0.0 otherwise."""
+        answer = f"A single sentence {marker}."
+        direct = await InnerJudge().judge("relevance", question="q", context="c", answer=answer)
+        assert direct.verdict == inner_verdict
+
+        wrapped = await SentenceLevel(InnerJudge()).judge("relevance", question="q", context="c", answer=answer)
+
+        assert wrapped.verdict == direct.verdict
+        assert wrapped.score == expected_score
+        assert wrapped.raw_score is None and wrapped.output is None
+        assert wrapped.units is not None and len(wrapped.units) == 1 and wrapped.units[0].verdict == inner_verdict
+        # under the min aggregation the score itself is the inner judge's
         by_min = SentenceLevel(InnerJudge(), aggregation=AggregationPolicy("min", "worst"))
-        wrapped = await by_min.judge("relevance", question="q", context="c", answer="A single sentence (meh).")
-        assert (wrapped.score, wrapped.verdict) == (direct.score, direct.verdict)
-        assert wrapped.raw_score is None and direct.raw_score == 3
-        # default fraction_pass: a single PARTIAL sentence scores 0.0 (no PASS sentence), verdict unchanged
-        default = await SentenceLevel(InnerJudge()).judge(
-            "relevance", question="q", context="c", answer="A single sentence (meh)."
-        )
-        assert (default.score, default.verdict) == (0.0, "PARTIAL")
+        assert (await by_min.judge("relevance", question="q", context="c", answer=answer)).score == direct.score
