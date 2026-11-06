@@ -6,20 +6,31 @@ using Prometheus 2, a specialized open-source judge model.
 
 from __future__ import annotations
 
+import hashlib
 import inspect
 import logging
 import re
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
 
 from ragnarok_ai.core.exceptions import (
-    EvaluationError,
     JudgeConnectionError,
     JudgeDependencyError,
     JudgeModelNotFoundError,
+    JudgeParseError,
+)
+from ragnarok_ai.judges.contract import (
+    CallTrace,
+    JudgeConfig,
+    JudgeOutput,
+    OrdinalBands,
+    OrdinalScore,
+    UnitJudgment,
+    canonical_json,
 )
 
 logger = logging.getLogger(__name__)
@@ -260,6 +271,11 @@ class JudgeResult:
         explanation: Detailed reasoning for the score.
         criteria: The evaluation criteria used.
         raw_score: Original 1-5 score from Prometheus.
+        output: The judge's native output (``OrdinalScore`` for ``LLMJudge``).
+        config: The run configuration that produced the result.
+        trace: What the call cost and reported.
+        units: Unit judgments (sentences, claims) when the judge works below
+            answer level; ``score`` and ``verdict`` stay at answer level.
     """
 
     verdict: Literal["PASS", "FAIL", "PARTIAL"]
@@ -267,6 +283,28 @@ class JudgeResult:
     explanation: str
     criteria: str
     raw_score: int  # 1-5 original
+    output: JudgeOutput | None = None
+    config: JudgeConfig | None = None
+    trace: CallTrace | None = None
+    units: tuple[UnitJudgment, ...] | None = None
+
+    def to_dict(self, detailed: bool = False) -> dict[str, Any]:
+        """Dictionary view: the five historical fields, plus the contract fields when *detailed*."""
+        data: dict[str, Any] = {
+            "verdict": self.verdict,
+            "score": self.score,
+            "raw_score": self.raw_score,
+            "explanation": self.explanation,
+            "criteria": self.criteria,
+        }
+        if detailed:
+            from ragnarok_ai.judges.contract import _jsonable
+
+            data["output"] = _jsonable(self.output) if self.output is not None else None
+            data["config"] = self.config.to_dict() if self.config is not None else None
+            data["trace"] = _jsonable(self.trace) if self.trace is not None else None
+            data["units"] = [_jsonable(u) for u in self.units] if self.units is not None else None
+        return data
 
 
 @dataclass(frozen=True)
@@ -385,7 +423,7 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
     score_match = re.search(r"Score:\s*(\d)", response)
     if score_match is None:
         msg = f"Unparseable {criteria} judgment: no 'Score: N' in the judge response"
-        raise EvaluationError(msg)
+        raise JudgeParseError(msg, criterion=criteria, raw_output=response)
     raw_score = int(score_match.group(1))
 
     # Clamp score to valid range
@@ -408,6 +446,7 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
         explanation=explanation,
         criteria=criteria,
         raw_score=raw_score,
+        output=OrdinalScore(raw_score, 1, 5),
     )
 
 
@@ -431,7 +470,7 @@ def parse_prometheus_response(response: str, criteria: str) -> JudgeResult:
     matches = list(_PROMETHEUS_RESULT.finditer(response))
     if not matches:
         msg = f"Unparseable {criteria} judgment: no '[RESULT] N' (1-5) in the judge response"
-        raise EvaluationError(msg)
+        raise JudgeParseError(msg, criterion=criteria, raw_output=response)
     last = matches[-1]
     raw_score = int(last.group(1))
     verdict = verdict_from_raw_score(raw_score)
@@ -441,12 +480,36 @@ def parse_prometheus_response(response: str, criteria: str) -> JudgeResult:
         explanation=response[: last.start()].strip(),
         criteria=criteria,
         raw_score=raw_score,
+        output=OrdinalScore(raw_score, 1, 5),
     )
 
 
 # =============================================================================
 # LLM Judge
 # =============================================================================
+
+
+_SCORE_N_TEMPLATES: dict[str, str] = {
+    "faithfulness": FAITHFULNESS_PROMPT,
+    "relevance": RELEVANCE_PROMPT,
+    "hallucination": HALLUCINATION_PROMPT,
+    "completeness": COMPLETENESS_PROMPT,
+}
+
+
+def _library_version() -> str:
+    from ragnarok_ai import __version__
+
+    return str(__version__)
+
+
+def _medical_table_version() -> str:
+    """Fingerprint of the abbreviation tables the medical normalizer relies on."""
+    from ragnarok_ai.evaluators.medical import abbreviations as tables
+
+    names = sorted(n for n in dir(tables) if n.isupper() and isinstance(getattr(tables, n), dict))
+    payload = {n: getattr(tables, n) for n in names}
+    return hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()[:12]
 
 
 class LLMJudge:
@@ -510,6 +573,7 @@ class LLMJudge:
         medical_mode: bool = False,
         disambiguation_llm: LLMProtocol | None = None,
         prompt_format: Literal["auto", "prometheus", "score-n"] = "auto",
+        keep_raw_output: bool = False,
     ) -> None:
         """Initialize LLMJudge.
 
@@ -533,6 +597,9 @@ class LLMJudge:
                          another name (an ``ollama cp`` alias, a gateway) or for a
                          client without a ``model`` attribute. The format in use is
                          ``effective_prompt_format``.
+            keep_raw_output: Keep the model's raw text in each result's
+                         ``trace.raw_output``. Off by default: the text can copy
+                         sensitive context.
 
         Raises:
             ValueError: If *prompt_format* is not one of ``PROMPT_FORMATS``.
@@ -541,6 +608,9 @@ class LLMJudge:
             msg = f"Unknown prompt_format {prompt_format!r}; expected one of {self.PROMPT_FORMATS}"
             raise ValueError(msg)
         self.prompt_format = prompt_format
+        self.keep_raw_output = keep_raw_output
+        self.model_requested: str | None = None
+        self._disambiguation_model: str | None = None
 
         self._model_digests: dict[str, str] = {}
         self.model_digest: str | None = None
@@ -555,6 +625,7 @@ class LLMJudge:
                 raise JudgeDependencyError(extra="ollama", module="httpx") from exc
 
             selected_model = model or self.DEFAULT_MODEL
+            self.model_requested = selected_model
 
             # Dependency missing raises JudgeDependencyError (above); server unreachable
             # raises JudgeConnectionError; model not installed raises
@@ -597,27 +668,52 @@ class LLMJudge:
                 from ragnarok_ai.evaluators.medical.disambiguation import SLMDisambiguator
 
                 disambiguator = SLMDisambiguator(disambiguation_llm)
+                self._disambiguation_model = str(getattr(disambiguation_llm, "model", "custom"))
             self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
 
     async def _generate(self, prompt: str) -> str:
-        """Call the LLM; when it reports token counters, check for truncation."""
+        """Call the LLM and return its text (see ``_generate_traced`` for the counters)."""
+        text, _ = await self._generate_traced(prompt)
+        return text
+
+    async def _generate_traced(self, prompt: str) -> tuple[str, CallTrace]:
+        """Call the LLM; when it reports token counters, check for truncation and trace the call."""
+        started = time.perf_counter()
         detailed = getattr(self.llm, "generate_detailed", None)
         if detailed is None or not inspect.iscoroutinefunction(detailed):
-            return str(await self.llm.generate(prompt))
+            text = str(await self.llm.generate(prompt))
+            latency = (time.perf_counter() - started) * 1000
+            return text, CallTrace(latency_ms=latency, raw_output=text if self.keep_raw_output else None)
         generation = await detailed(prompt)
+        measured = (time.perf_counter() - started) * 1000
         num_ctx = getattr(self.llm, "num_ctx", None)
         # Generic name first (LLMResponse, OllamaGeneration property), Ollama's raw name as fallback
         prompt_tokens = getattr(generation, "prompt_tokens", None)
         if prompt_tokens is None:
             prompt_tokens = getattr(generation, "prompt_eval_count", None)
-        if num_ctx and prompt_tokens is not None and looks_truncated(prompt_tokens, num_ctx):
+        completion_tokens = getattr(generation, "completion_tokens", None)
+        if completion_tokens is None:
+            completion_tokens = getattr(generation, "eval_count", None)
+        truncated: bool | None = None
+        if num_ctx and prompt_tokens is not None:
+            truncated = looks_truncated(prompt_tokens, num_ctx)
+        if truncated:
             self.truncation_warnings += 1
             logger.warning(
                 f"Judge prompt probably truncated by Ollama: {prompt_tokens} prompt tokens evaluated for a "
                 f"context window of {num_ctx} ({len(prompt)} characters sent). The judge scored a cut "
                 "context. Raise num_ctx or shorten the context."
             )
-        return str(generation.text)
+        text = str(generation.text)
+        reported_latency = getattr(generation, "latency_ms", None)
+        trace = CallTrace(
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            context_truncated=truncated,
+            latency_ms=float(reported_latency) if reported_latency is not None else measured,
+            raw_output=text if self.keep_raw_output else None,
+        )
+        return text, trace
 
     @property
     def effective_prompt_format(self) -> str:
@@ -696,6 +792,108 @@ class LLMJudge:
                     return name
         raise JudgeModelNotFoundError(requested, available, base_url)
 
+    # ------------------------------------------------------------------
+    # JudgeProtocol
+    # ------------------------------------------------------------------
+
+    CRITERIA: frozenset[str] = frozenset({"faithfulness", "relevance", "hallucination", "completeness"})
+    VERDICT_POLICY = OrdinalBands(pass_at=4, fail_at=2)
+    # Criteria whose context and answer go through the medical normalizer
+    _NORMALIZED_CRITERIA: frozenset[str] = frozenset({"faithfulness", "hallucination", "completeness"})
+
+    @property
+    def criteria(self) -> frozenset[str]:
+        """The four criteria of the Prometheus prompts."""
+        return self.CRITERIA
+
+    def _input_transforms(self, criterion: str) -> tuple[str, ...]:
+        """Identifiers of the transformations applied to the inputs for *criterion*."""
+        if not (self.medical_mode and self._normalizer) or criterion not in self._NORMALIZED_CRITERIA:
+            return ()
+        transforms = [f"medical_normalizer:{_medical_table_version()}"]
+        if self._disambiguation_model is not None:
+            transforms.append(f"disambiguation:{self._disambiguation_model}")
+        return tuple(transforms)
+
+    def _prompt_template_sha256(self, criterion: str) -> str:
+        """Hash of the prompt template for *criterion*, before any sample is inserted."""
+        if self._prometheus:
+            rubric = PROMETHEUS_SCORE_RUBRIC_TEMPLATE.format(**PROMETHEUS_RUBRICS[criterion])
+            template = f"{PROMETHEUS_ABS_SYSTEM_PROMPT}\n\n" + PROMETHEUS_ABSOLUTE_PROMPT_WO_REF.replace(
+                "{rubric}", rubric
+            )
+        else:
+            template = _SCORE_N_TEMPLATES[criterion]
+        return hashlib.sha256(template.encode("utf-8")).hexdigest()
+
+    def config(self, criterion: str) -> JudgeConfig:
+        """The run-level configuration for *criterion*.
+
+        Raises:
+            ValueError: If *criterion* is unknown.
+        """
+        if criterion not in self.CRITERIA:
+            msg = f"Unknown criterion {criterion!r}; expected one of {sorted(self.CRITERIA)}"
+            raise ValueError(msg)
+        llm_options = getattr(self.llm, "options", None) or {}
+        backend = "ollama" if type(self.llm).__module__.startswith("ragnarok_ai.adapters.llm.ollama") else None
+        return JudgeConfig(
+            judge_class=f"{type(self).__module__}.{type(self).__qualname__}",
+            judge_kind="llm",
+            model=str(self.model),
+            criterion=criterion,
+            verdict_policy=self.VERDICT_POLICY,
+            ragnarok_ai_version=_library_version(),
+            backend=backend,
+            model_requested=self.model_requested,
+            model_digest=self.model_digest,
+            options=tuple(sorted((str(k), v) for k, v in dict(llm_options).items())),
+            prompt_format=self._effective_prompt_format,
+            prompt_template_sha256=self._prompt_template_sha256(criterion),
+            input_transforms=self._input_transforms(criterion),
+        )
+
+    async def judge(self, criterion: str, *, question: str, context: str, answer: str) -> JudgeResult:
+        """Judge one answer on one criterion.
+
+        The prompt is exactly the one the named methods have always sent:
+        ``evaluate_faithfulness``, ``evaluate_relevance``,
+        ``detect_hallucination`` and ``evaluate_completeness`` are wrappers
+        of this method. In medical mode, context and answer are normalized
+        for faithfulness, hallucination and completeness, not for relevance.
+
+        Raises:
+            ValueError: If *criterion* is unknown.
+            JudgeParseError: If the model's output cannot be parsed.
+        """
+        if criterion not in self.CRITERIA:
+            msg = f"Unknown criterion {criterion!r}; expected one of {sorted(self.CRITERIA)}"
+            raise ValueError(msg)
+        if self.medical_mode and self._normalizer and criterion in self._NORMALIZED_CRITERIA:
+            context, _ = await self._normalizer.normalize_text_async(context)
+            answer, _ = await self._normalizer.normalize_text_async(answer)
+
+        if self._prometheus:
+            if criterion == "relevance":
+                instruction = question
+            elif criterion == "hallucination":
+                instruction = f"Context:\n{context}"
+            else:
+                instruction = f"Context:\n{context}\n\nQuestion:\n{question}"
+            prompt = build_prometheus_prompt(criterion, instruction, answer)
+        elif criterion == "relevance":
+            prompt = RELEVANCE_PROMPT.format(question=question, answer=answer)
+        elif criterion == "hallucination":
+            prompt = HALLUCINATION_PROMPT.format(context=context, answer=answer)
+        else:
+            prompt = _SCORE_N_TEMPLATES[criterion].format(context=context, question=question, answer=answer)
+
+        text, trace = await self._generate_traced(prompt)
+        result = (
+            parse_prometheus_response(text, criterion) if self._prometheus else parse_judge_response(text, criterion)
+        )
+        return replace(result, config=self.config(criterion), trace=trace)
+
     async def evaluate_faithfulness(
         self,
         context: str,
@@ -712,21 +910,7 @@ class LLMJudge:
         Returns:
             JudgeResult with faithfulness assessment.
         """
-        # Normalize medical abbreviations if medical_mode is enabled
-        if self.medical_mode and self._normalizer:
-            context, _ = await self._normalizer.normalize_text_async(context)
-            answer, _ = await self._normalizer.normalize_text_async(answer)
-
-        if self._prometheus:
-            instruction = f"Context:\n{context}\n\nQuestion:\n{question}"
-            return await self._judge_prometheus("faithfulness", instruction, answer)
-        prompt = FAITHFULNESS_PROMPT.format(
-            context=context,
-            question=question,
-            answer=answer,
-        )
-        response = await self._generate(prompt)
-        return parse_judge_response(response, "faithfulness")
+        return await self.judge("faithfulness", question=question, context=context, answer=answer)
 
     async def evaluate_relevance(
         self,
@@ -742,14 +926,7 @@ class LLMJudge:
         Returns:
             JudgeResult with relevance assessment.
         """
-        if self._prometheus:
-            return await self._judge_prometheus("relevance", question, answer)
-        prompt = RELEVANCE_PROMPT.format(
-            question=question,
-            answer=answer,
-        )
-        response = await self._generate(prompt)
-        return parse_judge_response(response, "relevance")
+        return await self.judge("relevance", question=question, context="", answer=answer)
 
     async def detect_hallucination(
         self,
@@ -765,19 +942,7 @@ class LLMJudge:
         Returns:
             JudgeResult with hallucination detection results.
         """
-        # Normalize medical abbreviations if medical_mode is enabled
-        if self.medical_mode and self._normalizer:
-            context, _ = await self._normalizer.normalize_text_async(context)
-            answer, _ = await self._normalizer.normalize_text_async(answer)
-
-        if self._prometheus:
-            return await self._judge_prometheus("hallucination", f"Context:\n{context}", answer)
-        prompt = HALLUCINATION_PROMPT.format(
-            context=context,
-            answer=answer,
-        )
-        response = await self._generate(prompt)
-        return parse_judge_response(response, "hallucination")
+        return await self.judge("hallucination", question="", context=context, answer=answer)
 
     async def evaluate_completeness(
         self,
@@ -785,7 +950,7 @@ class LLMJudge:
         answer: str,
         context: str,
     ) -> JudgeResult:
-        """Evaluate if the answer is complete.
+        """Evaluate if the answer completely addresses the question.
 
         Args:
             question: The user question.
@@ -795,26 +960,7 @@ class LLMJudge:
         Returns:
             JudgeResult with completeness assessment.
         """
-        # Normalize medical abbreviations if medical_mode is enabled
-        if self.medical_mode and self._normalizer:
-            context, _ = await self._normalizer.normalize_text_async(context)
-            answer, _ = await self._normalizer.normalize_text_async(answer)
-
-        if self._prometheus:
-            instruction = f"Context:\n{context}\n\nQuestion:\n{question}"
-            return await self._judge_prometheus("completeness", instruction, answer)
-        prompt = COMPLETENESS_PROMPT.format(
-            context=context,
-            question=question,
-            answer=answer,
-        )
-        response = await self._generate(prompt)
-        return parse_judge_response(response, "completeness")
-
-    async def _judge_prometheus(self, criteria: str, instruction: str, answer: str) -> JudgeResult:
-        """Run one criterion with the native Prometheus 2 template and parser."""
-        response = await self._generate(build_prometheus_prompt(criteria, instruction, answer))
-        return parse_prometheus_response(response, criteria)
+        return await self.judge("completeness", question=question, context=context, answer=answer)
 
     async def evaluate_all(
         self,

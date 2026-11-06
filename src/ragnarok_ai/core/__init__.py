@@ -36,6 +36,7 @@ from ragnarok_ai.core.exceptions import (
     EvaluationError,
     JudgeConnectionError,
     JudgeDependencyError,
+    JudgeParseError,
     LLMConnectionError,
     RagnarokError,
 )
@@ -49,6 +50,7 @@ from ragnarok_ai.core.gating import (
 )
 from ragnarok_ai.core.protocols import (
     EvaluatorProtocol,
+    JudgeProtocol,
     LLMProtocol,
     LLMResponse,
     VectorStoreProtocol,
@@ -83,6 +85,8 @@ __all__ = [
     "JudgeConfig",
     "JudgeConnectionError",
     "JudgeDependencyError",
+    "JudgeParseError",
+    "JudgeProtocol",
     "LLMConnectionError",
     "LLMProtocol",
     "LLMResponse",

@@ -44,6 +44,25 @@ class EvaluationError(RagnarokError):
     """
 
 
+class JudgeParseError(EvaluationError):
+    """Raised when a judge's output cannot be turned into a score.
+
+    A per-sample failure, not a configuration error: the call succeeded but
+    the text follows neither ``Score: N`` nor ``[RESULT] N``. Subclass of
+    ``EvaluationError``, which earlier versions raised for the same case.
+
+    Attributes:
+        criterion: The criterion being judged.
+        raw_output: The model's text, for diagnosis.
+    """
+
+    def __init__(self, message: str, *, criterion: str | None = None, raw_output: str | None = None) -> None:
+        """Initialize JudgeParseError."""
+        super().__init__(message)
+        self.criterion = criterion
+        self.raw_output = raw_output
+
+
 class ConfigurationError(RagnarokError):
     """Raised when configuration is invalid or missing.
 

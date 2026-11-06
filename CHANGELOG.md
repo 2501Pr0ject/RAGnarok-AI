@@ -10,6 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - CI: the lint job fails when a tracked file contains Git conflict markers
   (`scripts/check_conflict_markers.sh`, usable locally)
+- **`JudgeProtocol`** (`ragnarok_ai.core`): `criteria`, `config(criterion)`
+  and `async judge(criterion, *, question, context, answer)`. `LLMJudge`
+  implements it; `evaluate_faithfulness`, `evaluate_relevance`,
+  `detect_hallucination` and `evaluate_completeness` are now wrappers of
+  `judge()` and send exactly the prompts of 1.12.3 (regression test against
+  a fixture produced by running the v1.12.3 code with a scripted LLM, for
+  both prompt formats, the four criteria, with and without medical mode).
+  In medical mode, context and answer are normalized for faithfulness,
+  hallucination and completeness, not for relevance, as before
+- **`LLMJudge.config(criterion)`**: the run's `JudgeConfig` (model actually
+  used and requested, digest, options, prompt format, template hash before
+  the sample is inserted, `OrdinalBands(4, 2)`, `input_transforms` carrying
+  the medical normalizer and the disambiguation model)
+- **`JudgeResult`** gains optional `output`, `config`, `trace` and `units`
+  fields (last, default `None`) and `to_dict(detailed=False)`; the parsers
+  fill `output` with an `OrdinalScore`. `LLMJudge(keep_raw_output=True)`
+  keeps the model's text in `trace.raw_output` (off by default)
+- **`JudgeParseError`** (`EvaluationError` subclass, with `criterion` and
+  `raw_output`): raised by both parsers instead of a bare `EvaluationError`;
+  `except EvaluationError` keeps working
 - **Common judge contract, data types only** (`ragnarok_ai.judges`): native
   outputs (`OrdinalScore`, `BinaryProbability`, `ClassProbabilities`, each
   projecting to a score in [0, 1]), verdict policies (`OrdinalBands`,
