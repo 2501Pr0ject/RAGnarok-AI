@@ -325,6 +325,19 @@ class JudgeResults:
 # =============================================================================
 
 
+def verdict_from_raw_score(raw_score: int) -> Literal["PASS", "FAIL", "PARTIAL"]:
+    """Map a 1-5 score to a verdict: 4-5 PASS, 3 PARTIAL, 1-2 FAIL.
+
+    This is the only verdict rule. Both prompt formats use it, so a verdict
+    can always be recomputed from ``JudgeResult.raw_score``.
+    """
+    if raw_score >= 4:
+        return "PASS"
+    if raw_score <= 2:
+        return "FAIL"
+    return "PARTIAL"
+
+
 def parse_judge_response(response: str, criteria: str) -> JudgeResult:
     """Parse a "Score: N" judge response into JudgeResult.
 
@@ -333,7 +346,9 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
         criteria: The evaluation criteria name.
 
     Returns:
-        Parsed JudgeResult with score, verdict, and explanation.
+        Parsed JudgeResult with score, verdict, and explanation. The verdict
+        is derived from the score (see ``verdict_from_raw_score``), never
+        read from the response.
 
     Raises:
         EvaluationError: If the response contains no "Score: N". No default
@@ -349,18 +364,9 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
     # Clamp score to valid range
     raw_score = max(1, min(5, raw_score))
 
-    # Extract verdict
-    verdict_match = re.search(r"Verdict:\s*(PASS|FAIL|PARTIAL)", response, re.IGNORECASE)
-    if verdict_match:
-        verdict = verdict_match.group(1).upper()
-    else:
-        # Infer verdict from score
-        if raw_score >= 4:
-            verdict = "PASS"
-        elif raw_score <= 2:
-            verdict = "FAIL"
-        else:
-            verdict = "PARTIAL"
+    # The verdict is always derived from the score. A "Verdict:" line written
+    # by the model is ignored: when it contradicts the score, the score wins.
+    verdict = verdict_from_raw_score(raw_score)
 
     # Extract explanation
     explanation_match = re.search(r"Explanation:\s*(.+)", response, re.DOTALL)
@@ -370,7 +376,7 @@ def parse_judge_response(response: str, criteria: str) -> JudgeResult:
     explanation = explanation.split("###")[0].strip()
 
     return JudgeResult(
-        verdict=verdict,  # type: ignore[arg-type]
+        verdict=verdict,
         score=(raw_score - 1) / 4,  # Normalize 1-5 to 0-1
         explanation=explanation,
         criteria=criteria,
@@ -401,12 +407,7 @@ def parse_prometheus_response(response: str, criteria: str) -> JudgeResult:
         raise EvaluationError(msg)
     last = matches[-1]
     raw_score = int(last.group(1))
-    if raw_score >= 4:
-        verdict: Literal["PASS", "FAIL", "PARTIAL"] = "PASS"
-    elif raw_score <= 2:
-        verdict = "FAIL"
-    else:
-        verdict = "PARTIAL"
+    verdict = verdict_from_raw_score(raw_score)
     return JudgeResult(
         verdict=verdict,
         score=(raw_score - 1) / 4,  # Normalize 1-5 to 0-1

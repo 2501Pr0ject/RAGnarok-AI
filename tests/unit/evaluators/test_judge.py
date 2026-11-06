@@ -20,6 +20,7 @@ from ragnarok_ai.evaluators.judge import (
     build_prometheus_prompt,
     parse_judge_response,
     parse_prometheus_response,
+    verdict_from_raw_score,
 )
 
 # =============================================================================
@@ -118,8 +119,24 @@ Explanation: Way too high."""
 
         assert result.raw_score == 5  # clamped to max
 
+    @pytest.mark.parametrize(
+        ("response", "expected"),
+        [
+            ("Score: 2\nVerdict: PASS\nExplanation: contradictory", "FAIL"),
+            ("Score: 5\nVerdict: FAIL\nExplanation: contradictory", "PASS"),
+            ("Score: 3\nVerdict: PASS\nExplanation: contradictory", "PARTIAL"),
+            ("Score: 4\nVerdict: partial\nExplanation: contradictory", "PASS"),
+        ],
+    )
+    def test_verdict_written_by_model_is_ignored(self, response, expected):
+        """Regression: the verdict always follows the score, even when the model writes another one."""
+        result = parse_judge_response(response, "faithfulness")
+
+        assert result.verdict == expected
+        assert result.verdict == verdict_from_raw_score(result.raw_score)
+
     def test_case_insensitive_verdict(self):
-        """Should handle case-insensitive verdict matching."""
+        """A lowercase verdict line does not disturb parsing; the verdict still comes from the score."""
         response = """Score: 4
 Verdict: pass
 Explanation: All good."""
