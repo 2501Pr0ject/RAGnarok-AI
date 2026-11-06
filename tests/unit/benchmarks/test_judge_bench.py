@@ -21,6 +21,7 @@ from ragnarok_ai.benchmarks.judges import (
     ollama_model_memory,
     parse_record,
     read_attempts,
+    records_sha256,
     run_benchmark,
     stratified_sample,
     three_class_metrics,
@@ -227,11 +228,14 @@ class TestRun:
 
     @pytest.mark.asyncio
     async def test_resume_skips_attempts_already_written(self, tmp_path: Path):
+        """An interrupted run (attempts file cut after 4 rows) resumes on the 6 missing ids only."""
         rows = study_like_rows()[:10]
         records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
         first = ScriptedOrdinalJudge()
-        await run_benchmark(first, records[:4], out_dir=tmp_path / "out", bootstrap_resamples=0)
-        assert len(first.received) == 4
+        complete = await run_benchmark(first, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+        assert len(first.received) == 10
+        kept = complete.attempts_path.read_text().splitlines()[:5]  # header + 4 attempts
+        complete.attempts_path.write_text("\n".join(kept) + "\n")
 
         second = ScriptedOrdinalJudge()
         run = await run_benchmark(second, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
@@ -246,7 +250,7 @@ class TestRun:
             "sample": None,
             "seed": 0,
             "stratify": "label",
-            "data_sha256": None,
+            "data_sha256": records_sha256(records),  # no file digest given: the records' content
         }
         assert sum(1 for row in lines if "header" in row) == 1  # the header is written once
         assert [row["sample_id"] for row in lines[1:5]] == [r.id for r in records[:4]]
@@ -311,6 +315,35 @@ class TestRun:
         await run_benchmark(ScriptedProbabilityJudge(), records, out_dir=out, dev_sha256="d" * 64, **kwargs)
         with pytest.raises(AttemptsMismatchError, match=r"dev_attempts\.jsonl was produced with another data_sha256"):
             await run_benchmark(ScriptedProbabilityJudge(), records, out_dir=out, dev_sha256="e" * 64, **kwargs)
+
+    @pytest.mark.asyncio
+    async def test_python_api_is_protected_by_the_records_digest(self, tmp_path: Path):
+        """Without a file digest, a changed record (same ids) is refused on resume, and the dev set too."""
+        rows = study_like_rows()[:6]
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        dev = load_records(write_jsonl(tmp_path / "dev.jsonl", study_like_rows()[10:14]))
+        out = tmp_path / "out"
+        await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=out, dev_records=dev, bootstrap_resamples=0)
+        dev_header = json.loads((out / "dev_attempts.jsonl").read_text().splitlines()[0])
+        assert dev_header["data_sha256"] == records_sha256(dev)
+        assert dev_header["data_sha256"] != records_sha256(records)
+
+        rows[3] = dict(rows[3], sentence="Another text under the same id.")
+        changed = load_records(write_jsonl(tmp_path / "test2.jsonl", rows))
+        assert [r.id for r in changed] == [r.id for r in records] and records_sha256(changed) != records_sha256(records)
+        with pytest.raises(AttemptsMismatchError, match=r"attempts\.jsonl was produced with another data_sha256"):
+            await run_benchmark(ScriptedOrdinalJudge(), changed, out_dir=out, dev_records=dev, bootstrap_resamples=0)
+        with pytest.raises(AttemptsMismatchError, match=r"dev_attempts\.jsonl was produced with another data_sha256"):
+            await run_benchmark(
+                ScriptedOrdinalJudge(), records, out_dir=out, dev_records=dev[:3], bootstrap_resamples=0
+            )
+
+    def test_records_sha256_is_canonical(self):
+        records = load_records_from_rows(study_like_rows()[:3])
+        again = load_records_from_rows(study_like_rows()[:3])
+        assert records_sha256(records) == records_sha256(again) and len(records_sha256(records)) == 64
+        assert records_sha256(records[::-1]) != records_sha256(records)  # order is part of the content
+        assert records_sha256([]) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
     def test_attempts_header_fields_and_file_sha256(self, tmp_path: Path):
         header = attempts_header("h", "faithfulness", "sentence", sample=3, seed=1, stratify=None, data_sha256="x")

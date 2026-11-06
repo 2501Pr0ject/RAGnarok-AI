@@ -32,7 +32,7 @@ import resource
 import statistics
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -246,6 +246,20 @@ def file_sha256(path: str | Path) -> str:
     with Path(path).open("rb") as handle:
         for chunk in iter(lambda: handle.read(1 << 20), b""):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def records_sha256(records: Sequence[BenchRecord]) -> str:
+    """Hex SHA-256 of the records' content, as canonical JSON (sorted keys, one record per line).
+
+    Used for the attempts header when the caller gives no file digest, so a
+    run through the Python API is protected like the CLI: the same records
+    give the same digest whatever the file they came from.
+    """
+    digest = hashlib.sha256()
+    for record in records:
+        digest.update(json.dumps(asdict(record), sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode())
+        digest.update(b"\n")
     return digest.hexdigest()
 
 
@@ -651,7 +665,9 @@ async def run_benchmark(
         bootstrap_resamples: Number of grouped bootstrap draws.
         judge_name: Label of the judge in the report.
         data_sha256: SHA-256 of the evaluated file, written in the header of
-            ``attempts.jsonl`` and checked on resume.
+            ``attempts.jsonl`` and checked on resume. When ``None`` (Python
+            API), the SHA-256 of the records' content replaces it
+            (``records_sha256``), so the check applies in both cases.
         dev_sha256: Same for the dev file and ``dev_attempts.jsonl``.
         model_memory: Optional coroutine function called once after the run,
             e.g. ``ollama_model_memory``; its result is reported as is.
@@ -665,6 +681,10 @@ async def run_benchmark(
     out.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
     config = judge.config(criterion)
+    if data_sha256 is None:
+        data_sha256 = records_sha256(records)
+    if dev_sha256 is None and dev_records:
+        dev_sha256 = records_sha256(dev_records)
     evaluated = stratified_sample(records, sample, stratify, seed) if sample is not None else list(records)
     level = evaluated[0].level if evaluated else "answer"
 
@@ -897,6 +917,7 @@ __all__ = [
     "ollama_model_memory",
     "parse_record",
     "read_attempts",
+    "records_sha256",
     "render_report",
     "run_benchmark",
     "stratified_sample",
