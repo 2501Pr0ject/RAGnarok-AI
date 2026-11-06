@@ -144,11 +144,15 @@ class TestJudging:
 
     @pytest.mark.asyncio
     async def test_single_sentence_answer_matches_the_inner_judge(self):
-        """One sentence: the wrapper's score and verdict are the inner judge's."""
+        """One sentence under the min aggregation: the wrapper's score and verdict are the inner judge's."""
         inner = InnerJudge()
         direct = await inner.judge("relevance", question="q", context="c", answer="A single sentence (meh).")
-        wrapped = await SentenceLevel(InnerJudge()).judge(
-            "relevance", question="q", context="c", answer="A single sentence (meh)."
-        )
+        by_min = SentenceLevel(InnerJudge(), aggregation=AggregationPolicy("min", "worst"))
+        wrapped = await by_min.judge("relevance", question="q", context="c", answer="A single sentence (meh).")
         assert (wrapped.score, wrapped.verdict) == (direct.score, direct.verdict)
         assert wrapped.raw_score is None and direct.raw_score == 3
+        # default fraction_pass: a single PARTIAL sentence scores 0.0 (no PASS sentence), verdict unchanged
+        default = await SentenceLevel(InnerJudge()).judge(
+            "relevance", question="q", context="c", answer="A single sentence (meh)."
+        )
+        assert (default.score, default.verdict) == (0.0, "PARTIAL")
