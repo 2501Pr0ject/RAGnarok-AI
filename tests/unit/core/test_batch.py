@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult
+from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult, query_key, query_keys
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
 
 # ============================================================================
@@ -557,6 +557,30 @@ class TestBatchResume:
 
             assert rag.call_count == 1
             assert len(result.query_results) == 3
+
+    @pytest.mark.asyncio
+    async def test_two_identical_questions_interrupted_between_them(self) -> None:
+        """Regression: same text twice, batches of 1, interrupted after the first -> both results after resume."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = TestSet(queries=[Query(text="same question", ground_truth_docs=["doc_1"]) for _ in range(2)])
+            config = BatchConfig(batch_size=1, checkpoint_dir=tmpdir)
+
+            first = MockRAG()
+            evaluator = BatchEvaluator(first, config=config)
+            await self._interrupt_after_first_batch(evaluator, testset)
+            assert first.call_count == 1
+            stored = evaluator.list_checkpoints()[0]
+            assert [r["query_key"] for r in stored.results] == [query_key(testset.queries[0])]
+
+            second = MockRAG()
+            result = await BatchEvaluator(second, config=config).evaluate(
+                testset, resume_from=evaluator.get_checkpoint_id()
+            )
+
+            assert second.call_count == 1  # only the second occurrence is evaluated
+            assert len(result.query_results) == 2
+            assert [qr.answer for qr in result.query_results] == ["Answer to same question"] * 2
+            assert query_keys(testset.queries) == [query_key(testset.queries[0]), query_key(testset.queries[0]) + "#1"]
 
     @pytest.mark.asyncio
     async def test_metadata_id_is_used_as_key(self) -> None:
