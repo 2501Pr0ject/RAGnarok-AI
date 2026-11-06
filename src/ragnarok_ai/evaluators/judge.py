@@ -270,7 +270,8 @@ class JudgeResult:
         score: Normalized score from 0.0 to 1.0.
         explanation: Detailed reasoning for the score.
         criteria: The evaluation criteria used.
-        raw_score: Original 1-5 score from Prometheus.
+        raw_score: Original 1-5 score from Prometheus; ``None`` for a result
+            aggregated from units, which has no single native score.
         output: The judge's native output (``OrdinalScore`` for ``LLMJudge``).
         config: The run configuration that produced the result.
         trace: What the call cost and reported.
@@ -282,7 +283,7 @@ class JudgeResult:
     score: float  # 0.0 - 1.0 (normalized from 1-5)
     explanation: str
     criteria: str
-    raw_score: int  # 1-5 original
+    raw_score: int | None  # 1-5 original; None for an aggregated result
     output: JudgeOutput | None = None
     config: JudgeConfig | None = None
     trace: CallTrace | None = None

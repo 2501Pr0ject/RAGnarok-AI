@@ -63,6 +63,15 @@ class JudgeParseError(EvaluationError):
         self.raw_output = raw_output
 
 
+class NoUnitsError(EvaluationError):
+    """Raised when an answer has no unit (sentence, claim) that can be judged.
+
+    A per-sample failure (kind ``no_units`` in ``JudgeFailure``): the answer
+    was segmented, every segment was skipped (empty, citation marker alone,
+    fragment too short), so there is nothing to score.
+    """
+
+
 class ConfigurationError(RagnarokError):
     """Raised when configuration is invalid or missing.
 

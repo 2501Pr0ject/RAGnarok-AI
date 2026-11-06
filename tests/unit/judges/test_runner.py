@@ -14,6 +14,7 @@ from ragnarok_ai.core.exceptions import (
     JudgeModelNotFoundError,
     JudgeParseError,
     LLMConnectionError,
+    NoUnitsError,
 )
 from ragnarok_ai.evaluators.judge import JudgeResult
 from ragnarok_ai.judges import CallTrace, JudgeConfig, OrdinalBands, OrdinalScore, judge_many, sample_identifier
@@ -62,6 +63,8 @@ class ScriptedJudge:
             raise asyncio.TimeoutError
         if answer == "eval":
             raise EvaluationError("something else went wrong")
+        if answer == "empty":
+            raise NoUnitsError("No unit could be judged (2 unit(s); skipped: fragment)")
         if answer == "config":
             raise JudgeModelNotFoundError("m", [], "http://x")
         raw = int(answer) if answer.isdigit() else 4
@@ -131,6 +134,7 @@ class TestFailures:
             ("asyncio-timeout", "timeout", "timed out"),
             ("backend", "backend", "500"),
             ("eval", "backend", "something else"),
+            ("empty", "no_units", "No unit could be judged"),
         ],
     )
     async def test_per_sample_failures_become_judge_failures(self, answer, kind, fragment):

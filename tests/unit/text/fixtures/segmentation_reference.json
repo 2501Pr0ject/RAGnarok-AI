@@ -1,0 +1,334 @@
+{
+  "reference": {
+    "description": "offsets and exclusion reasons produced by the RAGTruth conversion script (kept outside the repository)",
+    "pysbd_version": "0.3.4",
+    "min_words": 3,
+    "generator": "tests/unit/text/fixtures/make_segmentation_reference.py"
+  },
+  "cases": [
+    {
+      "name": "plain",
+      "text": "Docker restarts containers according to their restart policy. The default policy is no.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 61,
+          "text": "Docker restarts containers according to their restart policy.",
+          "skipped": null
+        },
+        {
+          "start": 62,
+          "end": 87,
+          "text": "The default policy is no.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "citation_merged",
+      "text": "The default restart policy is no (Passage 3). Use --restart to change it [Source 1]. Containers keep their policy across daemon restarts.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 45,
+          "text": "The default restart policy is no (Passage 3).",
+          "skipped": null
+        },
+        {
+          "start": 46,
+          "end": 84,
+          "text": "Use --restart to change it [Source 1].",
+          "skipped": null
+        },
+        {
+          "start": 85,
+          "end": 137,
+          "text": "Containers keep their policy across daemon restarts.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "citation_alone_on_its_line",
+      "text": "Passage 1:\nThe daemon reads its configuration file at startup.\nSource 2 and 3.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 10,
+          "text": "Passage 1:",
+          "skipped": "citation_marker_only"
+        },
+        {
+          "start": 11,
+          "end": 62,
+          "text": "The daemon reads its configuration file at startup.",
+          "skipped": null
+        },
+        {
+          "start": 63,
+          "end": 78,
+          "text": "Source 2 and 3.",
+          "skipped": "citation_marker_only"
+        }
+      ]
+    },
+    {
+      "name": "fragments",
+      "text": "Sure!\nIngredients:\nStep 2.\nMix 200 g of flour with the eggs. Bake for 25 minutes.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 5,
+          "text": "Sure!",
+          "skipped": "short_fragment"
+        },
+        {
+          "start": 6,
+          "end": 18,
+          "text": "Ingredients:",
+          "skipped": "short_fragment"
+        },
+        {
+          "start": 19,
+          "end": 26,
+          "text": "Step 2.",
+          "skipped": null
+        },
+        {
+          "start": 27,
+          "end": 60,
+          "text": "Mix 200 g of flour with the eggs.",
+          "skipped": null
+        },
+        {
+          "start": 61,
+          "end": 81,
+          "text": "Bake for 25 minutes.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "punctuation_only",
+      "text": "---\n***\nA real sentence follows the separators.\n...",
+      "segments": [
+        {
+          "start": 0,
+          "end": 3,
+          "text": "---",
+          "skipped": "no_alphanumeric_content"
+        },
+        {
+          "start": 4,
+          "end": 7,
+          "text": "***",
+          "skipped": "no_alphanumeric_content"
+        },
+        {
+          "start": 8,
+          "end": 47,
+          "text": "A real sentence follows the separators.",
+          "skipped": null
+        },
+        {
+          "start": 48,
+          "end": 51,
+          "text": "...",
+          "skipped": "no_alphanumeric_content"
+        }
+      ]
+    },
+    {
+      "name": "abbreviations_and_decimals",
+      "text": "Dr. Smith measured 3.5 kg, i.e. about 7.7 lb. The U.S. standard differs, e.g. in labelling. See Fig. 2 for details.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 45,
+          "text": "Dr. Smith measured 3.5 kg, i.e. about 7.7 lb.",
+          "skipped": null
+        },
+        {
+          "start": 46,
+          "end": 91,
+          "text": "The U.S. standard differs, e.g. in labelling.",
+          "skipped": null
+        },
+        {
+          "start": 92,
+          "end": 115,
+          "text": "See Fig. 2 for details.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "list_items",
+      "text": "Three steps are required:\n1. Pull the image.\n2. Create the network.\n3. Start the container with --rm.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 25,
+          "text": "Three steps are required:",
+          "skipped": null
+        },
+        {
+          "start": 26,
+          "end": 44,
+          "text": "1. Pull the image.",
+          "skipped": null
+        },
+        {
+          "start": 45,
+          "end": 67,
+          "text": "2. Create the network.",
+          "skipped": null
+        },
+        {
+          "start": 68,
+          "end": 101,
+          "text": "3. Start the container with --rm.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "blank_lines_and_spaces",
+      "text": "First paragraph.  \n\n\n   Second paragraph, indented.   \nThird one.\n",
+      "segments": [
+        {
+          "start": 0,
+          "end": 16,
+          "text": "First paragraph.",
+          "skipped": "short_fragment"
+        },
+        {
+          "start": 24,
+          "end": 51,
+          "text": "Second paragraph, indented.",
+          "skipped": null
+        },
+        {
+          "start": 55,
+          "end": 65,
+          "text": "Third one.",
+          "skipped": "short_fragment"
+        }
+      ]
+    },
+    {
+      "name": "questions_and_quotes",
+      "text": "Why does it fail? The log says \"connection refused\". Restart the service! Then retry the request.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 17,
+          "text": "Why does it fail?",
+          "skipped": null
+        },
+        {
+          "start": 18,
+          "end": 52,
+          "text": "The log says \"connection refused\".",
+          "skipped": null
+        },
+        {
+          "start": 53,
+          "end": 73,
+          "text": "Restart the service!",
+          "skipped": null
+        },
+        {
+          "start": 74,
+          "end": 97,
+          "text": "Then retry the request.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "unicode",
+      "text": "L'utilisateur crée un réseau nommé « interne ». Les conteneurs s'y attachent ensuite. Ça fonctionne.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 47,
+          "text": "L'utilisateur crée un réseau nommé « interne ».",
+          "skipped": null
+        },
+        {
+          "start": 48,
+          "end": 85,
+          "text": "Les conteneurs s'y attachent ensuite.",
+          "skipped": null
+        },
+        {
+          "start": 86,
+          "end": 100,
+          "text": "Ça fonctionne.",
+          "skipped": "short_fragment"
+        }
+      ]
+    },
+    {
+      "name": "code_and_paths",
+      "text": "Run `kubectl apply -f deploy.yaml` from the repository root. The file lives in ./manifests/prod/ and references v1.2.3 of the image.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 60,
+          "text": "Run `kubectl apply -f deploy.yaml` from the repository root.",
+          "skipped": null
+        },
+        {
+          "start": 61,
+          "end": 80,
+          "text": "The file lives in .",
+          "skipped": null
+        },
+        {
+          "start": 80,
+          "end": 132,
+          "text": "/manifests/prod/ and references v1.2.3 of the image.",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "single_fragment_only",
+      "text": "Thanks!",
+      "segments": [
+        {
+          "start": 0,
+          "end": 7,
+          "text": "Thanks!",
+          "skipped": "short_fragment"
+        }
+      ]
+    },
+    {
+      "name": "two_word_fragment_with_digit",
+      "text": "Version 2",
+      "segments": [
+        {
+          "start": 0,
+          "end": 9,
+          "text": "Version 2",
+          "skipped": null
+        }
+      ]
+    },
+    {
+      "name": "long_sentence",
+      "text": "When the daemon starts it loads the configuration file, validates every key against the schema, resolves the storage driver, opens the API socket, registers the plugins that were enabled at build time and finally reports its readiness to the init system, which is why a misconfigured key delays the whole sequence.",
+      "segments": [
+        {
+          "start": 0,
+          "end": 314,
+          "text": "When the daemon starts it loads the configuration file, validates every key against the schema, resolves the storage driver, opens the API socket, registers the plugins that were enabled at build time and finally reports its readiness to the init system, which is why a misconfigured key delays the whole sequence.",
+          "skipped": null
+        }
+      ]
+    }
+  ]
+}
