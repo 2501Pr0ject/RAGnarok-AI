@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -478,41 +479,59 @@ class TestLLMJudgeModelDiscovery:
         ):
             LLMJudge.__new__(LLMJudge)._get_available_models("http://localhost:11434")
 
-    def test_find_fallback_model_prometheus_alias(self):
-        """Test _find_fallback_model finds Prometheus aliases."""
-        judge = LLMJudge.__new__(LLMJudge)
-        available = ["some-model", "prometheus2:latest", "llama3"]
+    @pytest.mark.parametrize(
+        ("requested", "available", "expected"),
+        [
+            ("mistral:7b", ["mistral:7b", "llama3.2:latest"], "mistral:7b"),
+            ("mistral", ["mistral:latest"], "mistral:latest"),
+            (LLMJudge.DEFAULT_MODEL, ["prometheus2:latest", "mistral:7b"], "prometheus2:latest"),
+            ("prometheus2", [LLMJudge.DEFAULT_MODEL], LLMJudge.DEFAULT_MODEL),
+        ],
+    )
+    def test_resolve_model_accepted_resolutions(self, requested, available, expected):
+        """Exact name, ':latest' normalization and Prometheus aliases resolve."""
+        assert LLMJudge._resolve_model(requested, available, "http://x") == expected
 
-        result = judge._find_fallback_model(available)
+    @pytest.mark.parametrize(
+        ("requested", "available"),
+        [
+            ("prometheus2", ["mistral:7b", "llama3.2:latest"]),  # explicit model absent, generic models installed
+            (LLMJudge.DEFAULT_MODEL, ["mistral:7b"]),  # default absent
+            ("mistral", ["mistral-nemo:latest"]),  # substring is not a match
+            ("llama3", ["llama3.2:latest"]),
+            ("mistral:7b", []),
+        ],
+    )
+    def test_resolve_model_never_substitutes_another_model(self, requested, available):
+        """Regression: no generic fallback, an absent model is an error with the pull command."""
+        with pytest.raises(JudgeModelNotFoundError, match=re.escape(f"ollama pull {requested}")):
+            LLMJudge._resolve_model(requested, available, "http://x")
 
-        assert result == "prometheus2:latest"
+    def test_constructor_does_not_fall_back_to_an_installed_generic_model(self):
+        """Regression: LLMJudge() with only mistral installed used mistral silently; it now raises."""
+        with (
+            patch.object(LLMJudge, "_get_available_models", return_value=["mistral:7b"]),
+            pytest.raises(JudgeModelNotFoundError, match=re.escape("ollama pull hf.co/RichardErkhov")),
+        ):
+            LLMJudge()
 
-    def test_find_fallback_model_general(self):
-        """Test _find_fallback_model falls back to general models."""
-        judge = LLMJudge.__new__(LLMJudge)
-        available = ["some-model", "mistral:7b", "other"]
+    def test_constructor_normalizes_latest_tag(self):
+        with patch.object(LLMJudge, "_get_available_models", return_value=["mistral:latest"]):
+            judge = LLMJudge(model="mistral")
 
-        result = judge._find_fallback_model(available)
+        assert judge.model == "mistral:latest"
+        assert judge.llm.model == "mistral:latest"
 
-        assert result == "mistral:7b"
+    def test_constructor_resolves_prometheus_alias_with_a_log(self, caplog):
+        with (
+            patch.object(LLMJudge, "_get_available_models", return_value=["prometheus2:latest"]),
+            caplog.at_level("INFO", logger="ragnarok_ai.evaluators.judge"),
+        ):
+            judge = LLMJudge()
 
-    def test_find_fallback_model_none(self):
-        """Test _find_fallback_model returns None when no suitable model."""
-        judge = LLMJudge.__new__(LLMJudge)
-        available = ["unknown-model", "another-unknown"]
-
-        result = judge._find_fallback_model(available)
-
-        assert result is None
-
-    def test_find_fallback_model_llama(self):
-        """Test _find_fallback_model finds llama models."""
-        judge = LLMJudge.__new__(LLMJudge)
-        available = ["llama3.2:latest"]
-
-        result = judge._find_fallback_model(available)
-
-        assert result == "llama3.2:latest"
+        assert judge.model == "prometheus2:latest"
+        assert judge._prometheus is True
+        assert "using the installed Prometheus 2 model 'prometheus2:latest'" in caplog.text
 
 
 class TestLLMJudgeInit:

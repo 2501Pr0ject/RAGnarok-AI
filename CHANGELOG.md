@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the run. What to do: read `n_labeled` where the submitted count was
   expected; a report with `parse_failures > 0` covers fewer samples than
   were labeled
+- **No more model fallback** (#139). When the requested model, explicit
+  or default, is not installed, `LLMJudge` raises `JudgeModelNotFoundError`
+  instead of silently using an installed `mistral`, `llama3.2`, `llama3`
+  or `llama2` model. The `FALLBACK_MODELS` and `PROMETHEUS_ALIASES` class
+  attributes and `_find_fallback_model()` are removed. What to do: install
+  the model you ask for (`ollama pull <model>`; the default is in the
+  error message); `mistral` still resolves to `mistral:latest`, and a
+  Prometheus 2 alias created with `ollama cp` is still accepted
 
 ### Fixed
 - **`parse_judge_response()` let a `Verdict:` line written by the model
@@ -70,6 +78,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     All three are also `RuntimeError`, so `except RuntimeError` written
     for earlier versions keeps working (`JudgeDependencyError` is also an
     `ImportError`, `JudgeConnectionError` also an `LLMConnectionError`)
+- **`LLMJudge` silently replaced the requested model by another one**
+  - When the requested model (explicit or default) was not installed, the
+    constructor picked any installed `mistral`, `llama3.2`, `llama3` or
+    `llama2` model with only a log warning. Scores then came from a
+    different judge than the one named in the code, with the `Score: N`
+    prompt format, and runs were not comparable
+  - The generic fallback is removed (see Behavior changes). Two resolutions
+    remain: `mistral` resolves to `mistral:latest`, and a Prometheus 2 model
+    requested under a name that is not installed resolves to an installed
+    model whose name contains "prometheus" (an `ollama cp` alias), with an
+    INFO log
 
 ### Changed
 - `CalibrationReport.summary()` states that the recommended threshold and
