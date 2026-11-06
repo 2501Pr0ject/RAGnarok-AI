@@ -105,7 +105,14 @@ git merge upstream/develop
 
 ## Code Style
 
-We follow strict code style guidelines. Please read [CLAUDE.md](CLAUDE.md) for detailed conventions.
+The conventions are the ones enforced by the tooling configured in `pyproject.toml`:
+
+- **ruff** (`[tool.ruff]`): line length 120, target Python 3.10, rule sets `E`, `W`, `F`, `I`, `B`, `C4`, `UP`, `ARG`, `SIM`, `TCH`, `PTH`, `ERA`, `RUF`; `E501` is left to the formatter. `ruff format` is the only formatter.
+- **mypy** (`[tool.mypy]`): `strict = true`, every function fully typed, no untyped decorators, unused `type: ignore` comments are errors.
+- **Docstrings**: Google style (`Args:`, `Returns:`, `Raises:`, `Example:` sections), required on public modules, classes and functions; private helpers get a one-line summary.
+- **Dataclasses** for value objects are frozen and validated in `__post_init__`; adapters are plain classes implementing the protocols in `ragnarok_ai.core.protocols`.
+
+CI runs `uv run ruff check .`, `uv run ruff format --check .` and `uv run mypy src/`; run the same commands before pushing.
 
 ### Key Points
 
