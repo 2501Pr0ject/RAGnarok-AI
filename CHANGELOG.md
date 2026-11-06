@@ -144,7 +144,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the records' content when the Python API gives no file) and the
   configuration hash of every row: a run whose parameters differ is
   refused with the field named, never mixed; same for `dev_attempts.jsonl`
-  and the dev file; `--sample N --stratify label --seed S` for slow judges;
+  and the dev file; `--sample N --stratify label --seed S` for slow judges,
+  or `--per-class N` for class quotas (exclusive; recorded in the attempts
+  header; raw metrics flagged as sample-dependent; `prevalence_adjusted`
+  with per-class recall, specificity, and precision and accuracy reweighted
+  by the full set's not-supported prevalence);
   threshold of a probabilistic judge chosen on `--dev` and applied
   unchanged. Report (JSON and Markdown): the prediction rule in words (PASS
   if score >= threshold, PARTIAL and FAIL counted as not supported, with

@@ -20,6 +20,8 @@ from ragnarok_ai.benchmarks.judges import (
     load_records,
     ollama_model_memory,
     parse_record,
+    prevalence_adjusted,
+    quota_sample,
     read_attempts,
     records_sha256,
     run_benchmark,
@@ -128,6 +130,33 @@ class TestSampling:
         assert labels.count("SUPPORTED") == 29 and len(a) == 31  # 58/62 * 31 = 29
         assert [r.id for r in stratified_sample(records, 31, "label", seed=4)] != [r.id for r in a]
         assert [r.id for r in a] == sorted([r.id for r in a], key=[r.id for r in records].index)  # input order kept
+
+    def test_quota_sample_takes_at_most_n_per_label_deterministically(self):
+        records = load_records_from_rows(study_like_rows())  # 58 SUPPORTED, 2 UNSUPPORTED, 2 CONTRADICTED
+        picked = quota_sample(records, 10, seed=3)
+        labels = [r.label for r in picked]
+        assert labels.count("SUPPORTED") == 10  # capped
+        assert labels.count("UNSUPPORTED") == 2 and labels.count("CONTRADICTED") == 2  # small classes taken whole
+        assert [r.id for r in picked] == [r.id for r in quota_sample(records, 10, seed=3)]
+        assert [r.id for r in picked] != [r.id for r in quota_sample(records, 10, seed=4)]
+        assert [r.id for r in picked] == [r.id for r in records if r.id in {p.id for p in picked}]  # input order
+        with pytest.raises(ValueError, match="per_class must be at least 1"):
+            quota_sample(records, 0, seed=0)
+
+    def test_prevalence_adjusted_figures(self):
+        # quota sample: 10 supported (8 passed), 10 not supported (7 caught); full set 94% supported
+        judge = [True] * 8 + [False] * 2 + [False] * 7 + [True] * 3
+        human = [True] * 10 + [False] * 10
+        adjusted = prevalence_adjusted(judge, human, 0.06)
+        assert adjusted["recall_not_supported"] == pytest.approx(0.7)
+        assert adjusted["specificity"] == adjusted["recall_supported"] == pytest.approx(0.8)
+        pi = 0.06
+        assert adjusted["precision_not_supported_reweighted"] == pytest.approx(pi * 0.7 / (pi * 0.7 + 0.94 * 0.2))
+        assert adjusted["accuracy_reweighted"] == pytest.approx(pi * 0.7 + 0.94 * 0.8)
+        raw_precision = 7 / 9  # on the balanced sample: far higher than at the real prevalence
+        assert adjusted["precision_not_supported_reweighted"] < raw_precision
+        single = prevalence_adjusted([True] * 5, [True] * 5, 0.06)
+        assert single["recall_not_supported"] is None and single["precision_not_supported_reweighted"] is None
 
     def test_sample_larger_than_set_returns_everything(self):
         records = load_records_from_rows(study_like_rows()[:5])
@@ -297,6 +326,7 @@ class TestRun:
             "criterion": "faithfulness",
             "level": "sentence",
             "sample": None,
+            "per_class": None,
             "seed": 0,
             "stratify": "label",
             "data_sha256": records_sha256(records),  # no file digest given: the records' content
@@ -460,6 +490,44 @@ class TestRun:
             AttemptsMismatchError, match="another source commit \\(aaaaaaaaaaaa, this run: bbbbbbbbbbbb\\)"
         ):
             await run_benchmark(other, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+
+    async def test_per_class_run_flags_raw_metrics_and_adds_adjusted_ones(self, tmp_path: Path):
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", study_like_rows()))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", per_class=6, seed=1, bootstrap_resamples=0
+        )
+        report = run.report
+        assert report["records"]["evaluated"] == 10 and report["sample"] == {
+            "per_class": 6,
+            "taken": {"CONTRADICTED": 2, "SUPPORTED": 6, "UNSUPPORTED": 2},
+            "seed": 1,
+        }
+        assert report["sample_dependent_metrics"] is True
+        adjusted = report["prevalence_adjusted"]
+        assert adjusted["full_set_not_supported_prevalence"] == pytest.approx(4 / 62)  # the full set, not the sample
+        assert adjusted["recall_not_supported"] == pytest.approx(0.5)  # 2 of the 4 unsupported are caught
+        assert 0.0 <= adjusted["specificity"] <= 1.0 and adjusted["accuracy_reweighted"] is not None
+        header = json.loads(run.attempts_path.read_text().splitlines()[0])
+        assert header["per_class"] == 6 and header["sample"] is None
+        md = run.report_md.read_text()
+        assert (
+            "Class quotas: at most 6 records per label, taken CONTRADICTED 2, SUPPORTED 6, UNSUPPORTED 2 (seed 1)" in md
+        )
+        assert (
+            "## Prevalence-adjusted (independent of the quota)" in md
+            and "Not-supported prevalence in the full set: 6.5%." in md
+        )
+        # resuming with another quota is refused like any other sampling parameter
+        with pytest.raises(AttemptsMismatchError, match="another per_class"):
+            await run_benchmark(
+                ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", per_class=5, seed=1, bootstrap_resamples=0
+            )
+        with pytest.raises(ValueError, match="exclusive"):
+            await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out2", per_class=5, sample=10)
+
+        plain = await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out3", bootstrap_resamples=0)
+        assert plain.report["sample_dependent_metrics"] is False and plain.report["prevalence_adjusted"] is None
+        assert "Prevalence-adjusted" not in plain.report_md.read_text()
 
     def test_attempts_header_fields_and_file_sha256(self, tmp_path: Path):
         header = attempts_header("h", "faithfulness", "sentence", sample=3, seed=1, stratify=None, data_sha256="x")
@@ -724,6 +792,27 @@ class TestCli:
         assert changed.exit_code == 2 and "attempts.jsonl was produced with another data_sha256" in changed.output
         other_seed = runner.invoke(app, [*args, "--seed", "5"])
         assert other_seed.exit_code == 2 and "another seed (0, this run: 5)" in other_seed.output
+
+    def test_cli_per_class_option_and_exclusivity(self, tmp_path: Path):
+        data = write_jsonl(tmp_path / "test.jsonl", study_like_rows())
+        base = [
+            "--json",
+            "judge-bench",
+            "--judge",
+            "python:tests.unit.benchmarks.fake_judge:ScriptedOrdinalJudge",
+            "--data",
+            str(data),
+            "--bootstrap",
+            "0",
+        ]
+        result = runner.invoke(app, [*base, "--out", str(tmp_path / "o"), "--per-class", "6"])
+        assert result.exit_code == 0, result.output
+        report = json.loads(result.output)["data"]["report"]
+        assert report["sample"]["per_class"] == 6 and report["prevalence_adjusted"] is not None
+        both = runner.invoke(app, [*base, "--out", str(tmp_path / "o2"), "--per-class", "6", "--sample", "10"])
+        assert both.exit_code == 2 and "exclusive" in both.output
+        zero = runner.invoke(app, [*base, "--out", str(tmp_path / "o3"), "--per-class", "0"])
+        assert zero.exit_code == 2
 
     def test_sentence_level_is_refused_on_a_sentence_level_set(self, tmp_path: Path):
         data = write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:3])
