@@ -6,10 +6,38 @@ must implement. Using protocols enables duck typing and loose coupling.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.types import Document, RAGResponse
+
+
+@dataclass(frozen=True)
+class LLMResponse:
+    """A generation with what the backend reported about it.
+
+    The generic shape a detailed LLM call returns. ``LLMProtocol`` does not
+    require it: a client may expose ``generate_detailed()`` returning this
+    type, or any object with ``text``, ``prompt_tokens`` and
+    ``completion_tokens`` attributes, and the judge will use the counters;
+    otherwise the judge calls ``generate()`` and the counters are unknown.
+
+    Attributes:
+        text: The generated text.
+        prompt_tokens: Prompt tokens evaluated, as reported (``None`` if unknown).
+        completion_tokens: Generated tokens, as reported (``None`` if unknown).
+        model: Model name used for the call.
+        options: Sampling options sent with the call.
+        latency_ms: Wall-clock latency of the call, in milliseconds.
+    """
+
+    text: str
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    model: str | None = None
+    options: dict[str, Any] = field(default_factory=dict)
+    latency_ms: float | None = None
 
 
 @runtime_checkable

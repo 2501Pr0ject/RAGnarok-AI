@@ -6,6 +6,7 @@ implementing the LLMProtocol for use in evaluation pipelines.
 
 from __future__ import annotations
 
+import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -39,6 +40,11 @@ class OllamaGeneration:
         eval_count: Generated tokens, as reported.
         model: Model name sent in the request.
         options: Sampling options sent in the request (empty when none).
+        latency_ms: Wall-clock latency of the request, in milliseconds. Not
+            part of equality: two generations differing only by latency are equal.
+
+    ``prompt_tokens`` and ``completion_tokens`` expose the two counters under
+    the generic names of :class:`ragnarok_ai.core.protocols.LLMResponse`.
     """
 
     text: str
@@ -46,6 +52,17 @@ class OllamaGeneration:
     eval_count: int | None
     model: str
     options: dict[str, Any] = field(default_factory=dict)
+    latency_ms: float | None = field(default=None, compare=False)
+
+    @property
+    def prompt_tokens(self) -> int | None:
+        """Prompt tokens evaluated (``prompt_eval_count``)."""
+        return self.prompt_eval_count
+
+    @property
+    def completion_tokens(self) -> int | None:
+        """Generated tokens (``eval_count``)."""
+        return self.eval_count
 
 
 class OllamaLLM:
@@ -207,6 +224,7 @@ class OllamaLLM:
         if self.options:
             payload["options"] = dict(self.options)
 
+        started = time.perf_counter()
         try:
             async with self._get_client() as client:
                 response = await client.post(url, json=payload)
@@ -230,6 +248,7 @@ class OllamaLLM:
                     eval_count=int(output_tokens) if output_tokens is not None else None,
                     model=self.model,
                     options=dict(self.options),
+                    latency_ms=(time.perf_counter() - started) * 1000,
                 )
         except httpx.ConnectError as e:
             msg = f"Failed to connect to Ollama at {self.base_url}: {e}"
