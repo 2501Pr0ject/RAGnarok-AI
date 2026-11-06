@@ -749,6 +749,76 @@ class TestLLMJudgePromptFormat:
             await judge.evaluate_relevance(question="Q", answer="A")
 
 
+class TestPromptFormatParameter:
+    """prompt_format forces the prompt and parser regardless of the model name (issue #133)."""
+
+    @staticmethod
+    def make_llm(model: str | None, response: str) -> MagicMock:
+        llm = MagicMock(spec=["generate", "embed"] if model is None else ["generate", "embed", "model"])
+        if model is not None:
+            llm.model = model
+        llm.generate = AsyncMock(return_value=response)
+        return llm
+
+    @pytest.mark.asyncio
+    async def test_alias_without_prometheus_in_its_name(self):
+        """A Prometheus 2 model served as 'judge' gets the native template when asked."""
+        llm = self.make_llm("judge", "Grounded. [RESULT] 4")
+        judge = LLMJudge(llm=llm, prompt_format="prometheus")
+
+        result = await judge.evaluate_faithfulness(context="C", question="Q", answer="A")
+
+        assert judge.effective_prompt_format == "prometheus"
+        assert llm.generate.call_args.args[0].startswith(PROMETHEUS_ABS_SYSTEM_PROMPT)
+        assert result.raw_score == 4
+
+    @pytest.mark.asyncio
+    async def test_client_without_model_attribute(self):
+        """A client with no `model` attribute defaults to 'score-n' in auto mode and can be forced."""
+        auto = LLMJudge(llm=self.make_llm(None, "Score: 4\nExplanation: ok"))
+        forced = LLMJudge(llm=self.make_llm(None, "Fine. [RESULT] 5"), prompt_format="prometheus")
+
+        assert auto.model == "custom"
+        assert auto.effective_prompt_format == "score-n"
+        assert (await auto.evaluate_relevance(question="Q", answer="A")).raw_score == 4
+        assert forced.effective_prompt_format == "prometheus"
+        assert (await forced.evaluate_relevance(question="Q", answer="A")).raw_score == 5
+
+    @pytest.mark.asyncio
+    async def test_false_positive_name_forced_to_score_n(self):
+        """A model whose name contains 'prometheus' but follows 'Score: N' can be forced."""
+        llm = self.make_llm("my-prometheus-finetune", "Score: 3\nExplanation: so-so")
+        judge = LLMJudge(llm=llm, prompt_format="score-n")
+
+        result = await judge.evaluate_relevance(question="Q", answer="A")
+
+        assert judge.effective_prompt_format == "score-n"
+        assert "Score: [1-5]" in llm.generate.call_args.args[0]
+        assert result.raw_score == 3
+
+    @pytest.mark.parametrize(
+        ("model", "requested", "effective"),
+        [
+            ("prometheus2:latest", "auto", "prometheus"),
+            ("mistral:7b", "auto", "score-n"),
+            ("mistral:7b", "prometheus", "prometheus"),
+            ("prometheus2:latest", "score-n", "score-n"),
+        ],
+    )
+    def test_each_value_and_the_effective_format(self, model, requested, effective, caplog):
+        with caplog.at_level("INFO", logger="ragnarok_ai.evaluators.judge"):
+            judge = LLMJudge(llm=self.make_llm(model, ""), prompt_format=requested)
+
+        assert judge.prompt_format == requested
+        assert judge.effective_prompt_format == effective
+        assert judge._prometheus is (effective == "prometheus")
+        assert f"prompt format '{effective}' (requested '{requested}')" in caplog.text
+
+    def test_unknown_value_raises(self):
+        with pytest.raises(ValueError, match="Unknown prompt_format 'score'"):
+            LLMJudge(llm=self.make_llm("mistral:7b", ""), prompt_format="score")  # type: ignore[arg-type]
+
+
 class TestLLMJudgeConfigurationErrors:
     """Regression: the three configuration failures are distinct and actionable."""
 

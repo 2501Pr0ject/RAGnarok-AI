@@ -34,6 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   error message); `mistral` still resolves to `mistral:latest`, and a
   Prometheus 2 alias created with `ollama cp` is still accepted
 
+### Added
+- **`LLMJudge(prompt_format=...)`**: `"prometheus"` forces the prometheus-eval
+  template and the `[RESULT] N` parser, `"score-n"` forces the `Score: N`
+  prompts, `"auto"` (default) keeps the detection by model name. For a
+  Prometheus 2 model served under another name (`ollama cp` alias, gateway)
+  or a client without a `model` attribute. The format in use is
+  `judge.effective_prompt_format`, logged at INFO. CLI: `ragnarok judge
+  --prompt-format`; the JSON output gains `model` and `prompt_format`.
+  Closes #133
+
 ### Fixed
 - **`parse_judge_response()` let a `Verdict:` line written by the model
   override the score**: "Score: 2, Verdict: PASS" gave PASS with a score of
