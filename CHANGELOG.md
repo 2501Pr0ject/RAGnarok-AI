@@ -144,7 +144,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   classes, Brier and 10-bin ECE of P(pass) for probabilistic judges,
   failures by kind, probable truncations, share of inputs beyond the
   judge's declared training length (`input_length`, when the configuration
-  carries `training_length`), p50 / p90 latency, peak RSS of
+  carries `training_length`), size of the minority human class and whether
+  kappa is interpretable (at least 10, the calibrator's threshold) for the
+  whole set and for every `--by` sub-group, p50 / p90 latency, peak RSS of
   the harness process (stated as such; for an llm judge the model's size is
   read on Ollama's `/api/ps`), 95% grouped bootstrap intervals (fixed seed,
   single-class draws excluded and counted), breakdowns with

@@ -36,7 +36,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ragnarok_ai.calibration.calibrator import _cohens_kappa
+from ragnarok_ai.calibration.calibrator import MIN_MINORITY_FOR_KAPPA, _cohens_kappa
 from ragnarok_ai.judges.contract import (
     BinaryProbability,
     ClassProbabilities,
@@ -380,12 +380,22 @@ def choose_threshold(scores: Sequence[float], human_pass: Sequence[bool], fallba
 
 
 def binary_metrics(judge_pass: Sequence[bool], human_pass: Sequence[bool]) -> dict[str, float | None]:
-    """Agreement metrics; ``kappa`` is ``None`` when undefined (judge and humans used a single class)."""
+    """Agreement metrics of one set or sub-group.
+
+    ``kappa`` is ``None`` when undefined (judge and humans used a single class).
+    ``minority_count`` is the size of the smaller human class and
+    ``kappa_interpretable`` (0.0 or 1.0) says whether it reaches the
+    calibrator's threshold of 10 samples; below it, kappa is driven by a
+    handful of labels and should not be read as a measurement.
+    """
     precision, recall, f1 = _f1_not_supported(judge_pass, human_pass)
     n = len(human_pass)
     majority = max(sum(human_pass), n - sum(human_pass)) / n if n else 0.0
+    minority = min(sum(human_pass), n - sum(human_pass))
     return {
         "n": float(n),
+        "minority_count": float(minority),
+        "kappa_interpretable": float(minority >= MIN_MINORITY_FOR_KAPPA),
         "accuracy": sum(1 for j, h in zip(judge_pass, human_pass, strict=True) if j == h) / n if n else 0.0,
         "balanced_accuracy": _balanced_accuracy(judge_pass, human_pass) if n else 0.0,
         "kappa": _cohens_kappa(judge_pass, human_pass) if n else None,
@@ -863,6 +873,8 @@ def render_report(report: dict[str, Any]) -> str:
         f"| Balanced accuracy | {b['balanced_accuracy']:.3f} |",
         f"| Accuracy | {b['accuracy']:.3f} |",
         f"| Kappa | {_num(b['kappa'])} |",
+        f"| Minority human class (n) | {int(b['minority_count'])} |",
+        f"| Kappa interpretable (minority >= {MIN_MINORITY_FOR_KAPPA}) | {'yes' if b['kappa_interpretable'] else 'no'} |",
         f"| Majority-class baseline (accuracy) | {b['majority_baseline_accuracy']:.3f} |",
         f"| Human PASS rate | {b['human_pass_rate']:.3f} |",
     ]
@@ -930,12 +942,13 @@ def render_report(report: dict[str, Any]) -> str:
             "",
             f"## By {field_name}",
             "",
-            "| Value | n | F1 (not supported) | Balanced accuracy | Kappa |",
-            "|---|---|---|---|---|",
+            f"| Value | n | Minority class n | Kappa interpretable (>= {MIN_MINORITY_FOR_KAPPA}) | F1 (not supported) | Balanced accuracy | Kappa |",
+            "|---|---|---|---|---|---|---|",
         ]
         for value, m in values.items():
             lines.append(
-                f"| {value} | {int(m['n'])} | {m['f1_not_supported']:.3f} | {m['balanced_accuracy']:.3f} | {_num(m['kappa'])} |"
+                f"| {value} | {int(m['n'])} | {int(m['minority_count'])} | {'yes' if m['kappa_interpretable'] else 'no'} | "
+                f"{m['f1_not_supported']:.3f} | {m['balanced_accuracy']:.3f} | {_num(m['kappa'])} |"
             )
     return "\n".join(lines) + "\n"
 

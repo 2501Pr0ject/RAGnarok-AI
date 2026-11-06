@@ -152,6 +152,32 @@ class TestMetrics:
         assert m["majority_baseline_accuracy"] == pytest.approx(58 / 62)
         assert m["recall_not_supported"] == pytest.approx(0.5)  # 2 of 4 unsupported caught
         assert m["precision_not_supported"] == pytest.approx(2 / 26)
+        assert m["minority_count"] == 4 and m["kappa_interpretable"] == 0.0  # four unsupported: below ten
+
+    def test_minority_count_and_interpretability_follow_the_calibrator_threshold(self):
+        ten = binary_metrics([True] * 10 + [False] * 10, [True] * 10 + [False] * 10)
+        nine = binary_metrics([True] * 11 + [False] * 9, [True] * 11 + [False] * 9)
+        assert (ten["minority_count"], ten["kappa_interpretable"]) == (10, 1.0)
+        assert (nine["minority_count"], nine["kappa_interpretable"]) == (9, 0.0)
+        assert binary_metrics([], [])["minority_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_breakdowns_carry_minority_count_and_interpretability(self, tmp_path: Path):
+        rows = study_like_rows()
+        for i, r in enumerate(rows):
+            r["generator"] = "gen-small" if i < 20 else "gen-large"  # gen-small: 20 supported only
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", bootstrap_resamples=0, by=["generator"]
+        )
+        by = run.report["by"]["generator"]
+        assert (by["gen-small"]["minority_count"], by["gen-small"]["kappa_interpretable"]) == (0, 0.0)
+        assert (by["gen-large"]["minority_count"], by["gen-large"]["kappa_interpretable"]) == (4, 0.0)
+        assert run.report["binary"]["minority_count"] == 4 and run.report["binary"]["kappa_interpretable"] == 0.0
+        md = run.report_md.read_text()
+        assert "| Minority human class (n) | 4 |" in md and "| Kappa interpretable (minority >= 10) | no |" in md
+        assert "| Value | n | Minority class n | Kappa interpretable (>= 10) |" in md
+        assert "| gen-large | 42 | 4 | no |" in md and "| gen-small | 20 | 0 | no |" in md
 
     def test_kappa_is_null_when_judge_and_humans_use_a_single_class(self):
         """pe = 1: no chance correction is possible; None, never 1.0 (the gpt-4 cell of the acceptance breakdown)."""
@@ -173,7 +199,7 @@ class TestMetrics:
         assert run.report["by"]["generator"]["gen-a"]["kappa"] is None
         assert run.report["bootstrap"]["intervals"]["kappa"] is None  # every draw is single-class
         md = run.report_md.read_text()
-        assert "| Kappa | undefined |" in md and "| gen-a | 34 | 0.000 | 0.500 | undefined |" in md
+        assert "| Kappa | undefined |" in md and "| gen-a | 34 | 0 | no | 0.000 | 0.500 | undefined |" in md
         assert json.loads(run.report_json.read_text())["binary"]["kappa"] is None
 
     def test_choose_threshold_maximizes_f1_of_not_supported_with_tie_to_fallback(self):
