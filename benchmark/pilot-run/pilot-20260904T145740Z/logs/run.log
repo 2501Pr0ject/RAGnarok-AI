@@ -217,4 +217,4 @@
 2026-09-04 19:33:22,680 INFO [208/210] G fastapi_contra_001 (90s)
 2026-09-04 19:33:56,490 INFO [209/210] G kubernetes_contra_001 (34s)
 2026-09-04 19:35:04,569 INFO [210/210] G docker_contra_001 (68s)
-2026-09-04 19:35:04,571 INFO run complete: /Users/abdeltouati/Desktop/Professional_Projects/RAGnarok-AI/benchmark/pilot-run/pilot-20260904T145740Z
+2026-09-04 19:35:04,571 INFO run complete: benchmark/pilot-run/pilot-20260904T145740Z
