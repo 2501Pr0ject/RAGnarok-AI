@@ -136,6 +136,15 @@ class TestOrdinalBands:
         with pytest.raises(ValueError, match="defined on"):
             policy.verdict(OrdinalScore(7, 0, 10))
 
+    def test_other_scale_is_an_explicit_error_not_a_silent_verdict(self):
+        """Bands defined on 1-5 applied to a 0-10 score: error naming both scales, whatever the value."""
+        policy = OrdinalBands(pass_at=4, fail_at=2)
+        for value in (0, 4, 10):
+            with pytest.raises(ValueError, match=r"defined on \[1, 5\] but the output is on \[0, 10\]"):
+                policy.verdict(OrdinalScore(value, 0, 10))
+        with pytest.raises(ValueError, match=r"defined on \[1, 5\] but the output is on \[1, 4\]"):
+            policy.verdict(OrdinalScore(4, 1, 4))
+
     @pytest.mark.parametrize(("pass_at", "fail_at"), [(2, 4), (4, 4), (6, 2), (4, 0)])
     def test_invalid_bands(self, pass_at, fail_at):
         with pytest.raises(ValueError):
@@ -294,8 +303,17 @@ class TestJudgeConfig:
     def test_values_must_be_json_serializable(self):
         with pytest.raises(ValueError, match="not JSON-serializable"):
             make_config(options=(("callback", object()),))
-        with pytest.raises(ValueError, match="not JSON-serializable"):
-            make_config(options=(("x", math.nan),))
+
+    @pytest.mark.parametrize(
+        "value",
+        [math.nan, math.inf, -math.inf, [1.0, math.nan], {"nested": {"deep": math.inf}}, (0.5, -math.inf)],
+        ids=["nan", "inf", "-inf", "nan in list", "inf in nested dict", "-inf in tuple"],
+    )
+    @pytest.mark.parametrize("field_name", ["options", "judge_specific"])
+    def test_nan_and_inf_are_refused_at_construction(self, field_name, value):
+        """A hash must never depend on a value JSON cannot carry."""
+        with pytest.raises(ValueError, match=f"JudgeConfig {field_name}\\['x'\\] is not JSON-serializable"):
+            make_config(**{field_name: (("x", value),)})
 
     def test_pairs_must_be_sorted_and_unique(self):
         with pytest.raises(ValueError, match="sorted"):
