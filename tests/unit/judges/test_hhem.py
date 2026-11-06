@@ -400,6 +400,10 @@ class TestCli:
 # Downloads about 1 GB into the Hugging Face cache on first run.
 # =============================================================================
 
+# The seven example pairs and expected scores of the HHEM-2.1-Open model card
+# (vectara/hallucination_evaluation_model, README.md at HHEM_REVISION), copyright
+# Vectara, Apache License 2.0; reproduced to check this adapter against the
+# published behavior.
 README_PAIRS = [
     ("The capital of France is Berlin.", "The capital of France is Paris.", 0.0111),
     ("I am in California", "I am in United States.", 0.6474),

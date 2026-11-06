@@ -61,7 +61,10 @@ FOUNDATION_REPO = "google/flan-t5-base"
 FOUNDATION_REVISION = "7bcac572ce56db69c1ea7c8af255c5d7c9672fc2"
 # Tokenizer and configuration only: the HHEM checkpoint holds every weight of the encoder
 FOUNDATION_FILES = ("config.json", "special_tokens_map.json", "spiece.model", "tokenizer.json", "tokenizer_config.json")
-# The training prompt, as in configuration_hhem_v2.py at HHEM_REVISION
+# The model's input template, copied from configuration_hhem_v2.py (class attribute
+# HHEMv2Config.prompt) of vectara/hallucination_evaluation_model at HHEM_REVISION.
+# Copyright Vectara, Apache License 2.0. HHEM's config.json carries no prompt key:
+# the remote code reads this class attribute.
 HHEM_PROMPT = "<pad> Determine if the hypothesis is true given the premise?\n\nPremise: {text1}\n\nHypothesis: {text2}"
 HHEM_PROMPT_SHA256 = hashlib.sha256(HHEM_PROMPT.encode("utf-8")).hexdigest()
 CONSISTENT_CLASS = 1  # id2label: 0 hallucinated, 1 consistent
