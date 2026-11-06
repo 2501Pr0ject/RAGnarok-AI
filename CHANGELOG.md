@@ -5,6 +5,21 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Behavior changes
+- **Verdicts can change for the `Score: N` prompt format** (#135). The
+  verdict is now always derived from the score (4-5 PASS, 3 PARTIAL, 1-2
+  FAIL); a model that wrote a `Verdict:` line contradicting its score used
+  to produce that verdict. What to do: nothing for new runs; stored results
+  can be realigned with `verdict_from_raw_score(raw_score)`
+
+### Fixed
+- **`parse_judge_response()` let a `Verdict:` line written by the model
+  override the score**: "Score: 2, Verdict: PASS" gave PASS with a score of
+  0.25. The verdict now follows the score only, for both prompt formats;
+  the rule is exposed as `verdict_from_raw_score()`
+
 ## [1.12.2] - 2026-11-04
 
 ### Fixed
