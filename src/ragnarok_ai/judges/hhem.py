@@ -440,6 +440,7 @@ class HHEMJudge:
                 ("foundation", FOUNDATION_REPO),
                 ("question_used", False),
                 ("threshold_calibrated", False),
+                ("training_length", TRAINING_LENGTH),
             ),
         )
 

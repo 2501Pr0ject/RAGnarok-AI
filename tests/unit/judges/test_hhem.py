@@ -32,6 +32,9 @@ from ragnarok_ai.judges.hhem import (
 )
 from ragnarok_ai.text import SEGMENTER_ID
 
+REFERENCE_FIXTURE = Path(__file__).parent / "fixtures" / "hhem_reference.json"
+REFERENCE = json.loads(REFERENCE_FIXTURE.read_text(encoding="utf-8"))
+
 
 class FakeBackend:
     """Whitespace tokens; P(consistent) read from a '(p=0.x)' marker in the hypothesis, 0.9 by default."""
@@ -84,6 +87,7 @@ class TestContract:
             "foundation": FOUNDATION_REPO,
             "question_used": False,
             "threshold_calibrated": False,
+            "training_length": 512,
         }
         assert config.verdict_policy.pass_threshold_on_score() == 0.5
         other, _ = make_judge(unit="answer", device="cpu")
@@ -350,6 +354,32 @@ class TestDependencies:
             TransformersBackend(artifacts, "gpu")
 
 
+class TestReferenceFixture:
+    """The official remote code's probabilities, recorded once at the pinned revisions (no model needed here)."""
+
+    def test_fixture_is_pinned_to_the_same_revisions_and_prompt(self):
+        ref = REFERENCE["reference"]
+        assert (ref["hhem_revision"], ref["foundation_revision"]) == (HHEM_REVISION, FOUNDATION_REVISION)
+        assert ref["foundation_dir_pinned"] is True and ref["prompt_sha256"] == HHEM_PROMPT_SHA256
+        assert ref["remote_class"].endswith("HHEMv2ForSequenceClassification")
+        assert ref["tolerance"] == 1e-5 and len(REFERENCE["pairs"]) >= 15
+        assert "/Users" not in REFERENCE_FIXTURE.read_text(encoding="utf-8")  # no local path recorded
+
+    def test_model_card_pairs_agree_with_the_published_scores(self):
+        card = {
+            (p["premise"], p["hypothesis"]): p["official_p_consistent"]
+            for p in REFERENCE["pairs"]
+            if p["group"] == "model_card"
+        }
+        assert len(card) == len(README_PAIRS)
+        for premise, hypothesis, expected in README_PAIRS:
+            assert card[(premise, hypothesis)] == pytest.approx(expected, abs=0.001)
+
+    def test_fixture_covers_inputs_beyond_the_training_length(self):
+        assert max(p["prompt_tokens"] for p in REFERENCE["pairs"]) > 2000
+        assert sum(1 for p in REFERENCE["pairs"] if p["prompt_tokens"] > hhem_module.TRAINING_LENGTH) >= 4
+
+
 class TestPrompt:
     def test_template_is_the_published_one(self):
         assert HHEM_PROMPT == (
@@ -465,6 +495,21 @@ class TestRealModel:
         cut = await limited.judge("faithfulness", question="", context=premise, answer="Item 3 is mentioned.")
         assert cut.trace is not None
         assert cut.trace.context_truncated is True and cut.trace.prompt_tokens <= 512
+
+    @pytest.mark.asyncio
+    async def test_matches_the_official_remote_code_within_tolerance(self, real_judge: HHEMJudge):
+        """Non-regression against the official code's values recorded in the fixture (17 pairs, up to 2435 tokens)."""
+        tolerance = REFERENCE["reference"]["tolerance"]
+        worst = 0.0
+        for pair in REFERENCE["pairs"]:
+            result = await real_judge.judge(
+                "faithfulness", question="", context=pair["premise"], answer=pair["hypothesis"]
+            )
+            assert result.trace is not None and result.trace.prompt_tokens == pair["prompt_tokens"]
+            gap = abs(result.score - pair["official_p_consistent"])
+            worst = max(worst, gap)
+            assert gap <= tolerance, (pair["group"], pair["hypothesis"][:40], gap)
+        assert worst <= tolerance
 
     @pytest.mark.asyncio
     async def test_download_then_offline_load_gives_the_same_score(self, real_judge: HHEMJudge, tmp_path: Path):

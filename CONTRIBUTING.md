@@ -12,6 +12,7 @@ Thank you for your interest in contributing to ragnarok-ai! This document provid
 - [Testing](#testing)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
+- [Release Checklist](#release-checklist)
 - [Areas for Contribution](#areas-for-contribution)
 
 ---
@@ -300,6 +301,18 @@ test(retrieval): add edge cases for empty query handling
   ```
 
 ---
+
+## Release Checklist
+
+Releases are cut by the maintainer. Before tagging:
+
+1. `pyproject.toml` and `src/ragnarok_ai/__init__.py` carry the new version; CHANGELOG `[Unreleased]` becomes `[X.Y.Z] - date`.
+2. `uv lock --check`, `ruff check`, `ruff format --check`, `mypy src`, `scripts/check_conflict_markers.sh` and `pytest tests/unit` pass locally and CI is green on `main`.
+3. The integration tests that need a local model are run by hand, since CI never installs them:
+   - `[hhem]`: `uv run --extra hhem pytest tests/unit/judges/test_hhem.py -m integration -v` (about 1 GB in the Hugging Face cache on first run; checks the pinned revisions, the model card examples and the recorded official probabilities within 1e-5);
+   - Ollama judges: `uv run pytest -m integration tests/unit/evaluators/test_judge.py` with the default judge model pulled.
+4. The wheel is built and imported in a fresh virtual environment (`uv build`, then `pip install dist/*.whl` and `python -c "import ragnarok_ai"`).
+5. Tag `vX.Y.Z` on the release commit; the tag push publishes to PyPI. Write the GitHub release notes from the CHANGELOG entry.
 
 ## Areas for Contribution
 

@@ -345,6 +345,29 @@ class TestRun:
         assert records_sha256(records[::-1]) != records_sha256(records)  # order is part of the content
         assert records_sha256([]) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
+    @pytest.mark.asyncio
+    async def test_report_gives_the_share_of_inputs_beyond_the_declared_training_length(self, tmp_path: Path):
+        rows = study_like_rows()[:5]
+        rows[1]["context"] = " ".join(["word"] * 30)  # 30 + sentence words > 20
+        rows[3]["context"] = " ".join(["word"] * 40)
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedProbabilityJudge(training_length=20), records, out_dir=tmp_path / "out", bootstrap_resamples=0
+        )
+        length = run.report["input_length"]
+        assert length["training_length"] == 20 and length["with_token_count"] == 5
+        assert length["over_training_length"] == 2 and length["share_over_training_length"] == pytest.approx(0.4)
+        assert length["max_prompt_tokens"] >= 40
+        assert "inputs beyond the judge's training length (20 tokens): 2 of 5 with a token count (40.0%)" in (
+            run.report_md.read_text()
+        )
+
+        silent = await run_benchmark(
+            ScriptedProbabilityJudge(), records, out_dir=tmp_path / "out2", bootstrap_resamples=0
+        )
+        assert silent.report["input_length"] is None  # the judge declares no training length
+        assert "training length" not in silent.report_md.read_text()
+
     def test_attempts_header_fields_and_file_sha256(self, tmp_path: Path):
         header = attempts_header("h", "faithfulness", "sentence", sample=3, seed=1, stratify=None, data_sha256="x")
         assert set(ATTEMPTS_HEADER_FIELDS) <= set(header) and header["header"] == 1

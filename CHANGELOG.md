@@ -44,8 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is `False`, `trace.prompt_tokens` counts what was sent);
   `max_input_tokens=N` cuts the context, keeps the answer whole and sets the
   flag. `ragnarok judge-bench --judge hhem --device cpu` runs it at answer
-  level. `JudgeDependencyError` names the extra. README: table of the
-  available judges with their licences
+  level. The configuration declares `training_length` 512. Fidelity: the
+  official remote code and this adapter give identical probabilities on 17
+  recorded pairs (up to 2435 tokens); the recorded values are a fixture of
+  the integration tests (tolerance 1e-5). `JudgeDependencyError` names the
+  extra. README: table of the available judges with their licences.
+  CONTRIBUTING: release checklist with the manual `[hhem]` integration run
 - **Sentence segmentation** (`ragnarok_ai.text.segment_sentences`): split
   on line breaks, then into sentences with pysbd (new core dependency,
   `pysbd>=0.3.4,<0.4`, pure Python, MIT); every `Segment` keeps its offsets
@@ -94,7 +98,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not-supported class, balanced accuracy, kappa, majority-class baseline,
   per-class F1 and confusion matrix when the judge predicts the set's
   classes, Brier and 10-bin ECE of P(pass) for probabilistic judges,
-  failures by kind, probable truncations, p50 / p90 latency, peak RSS of
+  failures by kind, probable truncations, share of inputs beyond the
+  judge's declared training length (`input_length`, when the configuration
+  carries `training_length`), p50 / p90 latency, peak RSS of
   the harness process (stated as such; for an llm judge the model's size is
   read on Ollama's `/api/ps`), 95% grouped bootstrap intervals (fixed seed,
   single-class draws excluded and counted), breakdowns with

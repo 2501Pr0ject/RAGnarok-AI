@@ -6,6 +6,7 @@ from ragnarok_ai.core.exceptions import JudgeParseError
 from ragnarok_ai.evaluators.judge import JudgeResult
 from ragnarok_ai.judges import (
     BinaryProbability,
+    CallTrace,
     ClassProbabilities,
     JudgeConfig,
     LabelMap,
@@ -55,17 +56,35 @@ class ScriptedOrdinalJudge:
 
 
 class ScriptedProbabilityJudge:
-    """HHEM-like: P(supported) read from a 'p=0.x' marker, default 0.9; threshold policy 0.5."""
+    """HHEM-like: P(supported) read from a 'p=0.x' marker, default 0.9; threshold policy 0.5.
+
+    With ``training_length`` set, the configuration declares it and each
+    trace counts the whitespace tokens of context and answer, as a classifier
+    with a known training length would.
+    """
 
     criteria = CRITERIA
 
+    def __init__(self, training_length: int | None = None) -> None:
+        self.training_length = training_length
+
     def config(self, criterion: str) -> JudgeConfig:
+        specific = () if self.training_length is None else (("training_length", self.training_length),)
         return JudgeConfig(
-            "tests.ScriptedProbabilityJudge", "classifier", "scripted-prob", criterion, ScoreThreshold(0.5), "test"
+            "tests.ScriptedProbabilityJudge",
+            "classifier",
+            "scripted-prob",
+            criterion,
+            ScoreThreshold(0.5),
+            "test",
+            judge_specific=specific,
         )
 
     async def judge(self, criterion: str, *, question: str, context: str, answer: str) -> JudgeResult:  # noqa: ARG002
         p = _p_from_text(answer)
+        trace = None
+        if self.training_length is not None:
+            trace = CallTrace(prompt_tokens=len(context.split()) + len(answer.split()), context_truncated=False)
         return JudgeResult(
             verdict="PASS" if p >= 0.5 else "FAIL",
             score=p,
@@ -73,6 +92,7 @@ class ScriptedProbabilityJudge:
             criteria=criterion,
             raw_score=None,
             output=BinaryProbability(p),
+            trace=trace,
         )
 
 
