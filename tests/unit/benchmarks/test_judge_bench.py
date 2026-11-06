@@ -328,6 +328,70 @@ class TestCli:
         assert payload["data"]["report"]["records"]["scored"] == 12
         assert (out / "report.md").exists()
 
+    def test_sentence_level_wraps_the_judge_on_an_answer_level_set(self, tmp_path: Path):
+        rows = [
+            {
+                "id": "a1",
+                "group_id": "g1",
+                "question": "q",
+                "context": "c",
+                "answer": "First is fine. Second is wrong (raw 1).",
+                "label": "FAIL",
+            },
+            {
+                "id": "a2",
+                "group_id": "g2",
+                "question": "q",
+                "context": "c",
+                "answer": "Only good sentences here. Still good.",
+                "label": "PASS",
+            },
+            {"id": "a3", "group_id": "g3", "question": "q", "context": "c", "answer": "Sure!", "label": "PASS"},
+        ]
+        data = write_jsonl(tmp_path / "answers.jsonl", rows)
+        out = tmp_path / "out"
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "judge-bench",
+                "--judge",
+                "python:tests.unit.benchmarks.fake_judge:ScriptedOrdinalJudge",
+                "--data",
+                str(data),
+                "--out",
+                str(out),
+                "--bootstrap",
+                "0",
+                "--sentence-level",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        report = json.loads(result.output)["data"]["report"]
+        assert report["level"] == "answer"
+        assert report["config"]["unit"] == "sentence"
+        assert report["config"]["aggregation"]["score_rule"] == "fraction_pass"
+        assert report["records"] == {"total": 3, "evaluated": 3, "scored": 2, "failed": 1}
+        assert report["failures"] == {"no_units": 1}  # "Sure!" has no judgeable sentence
+        assert report["binary"]["accuracy"] == 1.0  # a1 FAIL (worst), a2 PASS
+
+    def test_sentence_level_is_refused_on_a_sentence_level_set(self, tmp_path: Path):
+        data = write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:3])
+        result = runner.invoke(
+            app,
+            [
+                "judge-bench",
+                "--judge",
+                "python:tests.unit.benchmarks.fake_judge:ScriptedOrdinalJudge",
+                "--data",
+                str(data),
+                "--out",
+                str(tmp_path / "o"),
+                "--sentence-level",
+            ],
+        )
+        assert result.exit_code == 2 and "already segmented" in result.output
+
     def test_judge_bench_help_and_errors(self, tmp_path: Path):
         assert "--prev" not in runner.invoke(app, ["judge-bench", "--help"]).output
         assert runner.invoke(app, ["judge-bench", "--help"]).exit_code == 0

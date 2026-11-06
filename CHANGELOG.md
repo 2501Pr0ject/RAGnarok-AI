@@ -69,7 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   10-bin ECE for probabilistic judges, failures by kind, probable
   truncations, p50 / p90 latency, peak RSS, 95% grouped bootstrap intervals
   (fixed seed, single-class draws excluded and counted), breakdowns with
-  `--by task,generator`. No data ships with the package
+  `--by task,generator`. On an answer-level set, `--sentence-level` wraps the
+  judge in `SentenceLevel`; on a sentence-level set it is refused, the
+  segmentation being already done. No data ships with the package
 - **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
   (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
   returns one `JudgeAttempt` per sample, in order, with the sample's

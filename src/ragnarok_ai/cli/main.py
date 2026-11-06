@@ -2723,13 +2723,22 @@ def judge_bench(
     prompt_format: Annotated[
         str, typer.Option("--prompt-format", help="auto, prometheus or score-n (llm judges).")
     ] = "auto",
+    sentence_level: Annotated[
+        bool,
+        typer.Option(
+            "--sentence-level",
+            help="Answer-level set only: wrap the judge in SentenceLevel so each answer is judged sentence by sentence.",
+        ),
+    ] = False,
 ) -> None:
     """Benchmark a judge on a labeled JSONL set and write a report.
 
     On a sentence-level set the judge receives each sentence as the answer;
-    prev_sentence is never transmitted. An interrupted run resumes from the
-    attempts already written in --out. The threshold of a probabilistic
-    judge is chosen on --dev and applied unchanged to --data.
+    prev_sentence is never transmitted. On an answer-level set,
+    --sentence-level wraps the judge in SentenceLevel (shared segmenter,
+    fraction of PASS sentences and worst verdict). An interrupted run
+    resumes from the attempts already written in --out. The threshold of a
+    probabilistic judge is chosen on --dev and applied unchanged to --data.
     """
     from ragnarok_ai.benchmarks.judges import load_records, run_benchmark
 
@@ -2756,6 +2765,12 @@ def judge_bench(
         return
     if criterion not in judge_instance.criteria:
         fail(f"Criterion {criterion!r} not supported by this judge: {sorted(judge_instance.criteria)}", EXIT_BAD_INPUT)
+    if sentence_level:
+        if records[0].level == "sentence":
+            fail("--sentence-level applies to answer-level sets only: this set is already segmented", EXIT_BAD_INPUT)
+        from ragnarok_ai.judges import SentenceLevel
+
+        judge_instance = SentenceLevel(judge_instance)
 
     if not state["json"]:
         typer.echo()
