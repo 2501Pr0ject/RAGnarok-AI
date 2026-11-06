@@ -30,6 +30,8 @@ class CheckpointData(BaseModel):
         results: Results collected so far.
         config: Configuration used for the task.
         metadata: Additional metadata.
+        format_version: Layout of ``results``. Files written before the
+            field existed load as version 1.
     """
 
     checkpoint_id: str = Field(..., description="Unique checkpoint identifier")
@@ -41,6 +43,7 @@ class CheckpointData(BaseModel):
     results: list[dict[str, Any]] = Field(default_factory=list, description="Results so far")
     config: dict[str, Any] = Field(default_factory=dict, description="Task configuration")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    format_version: int = Field(default=1, ge=1, description="Layout version of the stored results")
 
     @property
     def is_complete(self) -> bool:
@@ -89,6 +92,7 @@ class CheckpointManager:
         total_items: int,
         config: dict[str, Any] | None = None,
         metadata: dict[str, Any] | None = None,
+        format_version: int = 1,
     ) -> CheckpointData:
         """Create a new checkpoint.
 
@@ -97,6 +101,7 @@ class CheckpointManager:
             total_items: Total number of items to process.
             config: Configuration for the task.
             metadata: Additional metadata.
+            format_version: Layout version of the results this task will store.
 
         Returns:
             New CheckpointData instance.
@@ -114,6 +119,7 @@ class CheckpointManager:
             results=[],
             config=config or {},
             metadata=metadata or {},
+            format_version=format_version,
         )
 
         # Save initial checkpoint
@@ -145,6 +151,7 @@ class CheckpointManager:
             results=[*checkpoint.results, result],
             config=checkpoint.config,
             metadata=checkpoint.metadata,
+            format_version=checkpoint.format_version,
         )
 
         # Save atomically
@@ -178,6 +185,7 @@ class CheckpointManager:
             results=[*checkpoint.results, *results],
             config=checkpoint.config,
             metadata=checkpoint.metadata,
+            format_version=checkpoint.format_version,
         )
 
         self._save_atomic(updated)

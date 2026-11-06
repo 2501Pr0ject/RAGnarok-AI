@@ -64,3 +64,15 @@ class VectorStoreConnectionError(RagnarokError):
     Example:
         >>> raise VectorStoreConnectionError("Failed to connect to Qdrant at localhost:6333")
     """
+
+
+class CheckpointFormatError(RagnarokError):
+    """Raised when a checkpoint cannot be resumed because of its format.
+
+    Batch-evaluation checkpoints are versioned (``CheckpointData.format_version``).
+    A checkpoint written by an earlier version of ragnarok-ai, which stored
+    results by batch number instead of by query, cannot be resumed.
+
+    Example:
+        >>> raise CheckpointFormatError("Checkpoint batch_evaluation_1a2b3c4d uses format 1; version 2 is required")
+    """

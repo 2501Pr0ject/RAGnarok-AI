@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult
+from ragnarok_ai.core.batch import BatchConfig, BatchEvaluator, BatchProgress, BatchResult, query_key, query_keys
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
 
 # ============================================================================
@@ -460,3 +460,207 @@ class TestBatchIntegration:
 
         # Both evaluations ran (different cache keys)
         assert rag.call_count == 20
+
+
+# ============================================================================
+# Resume Tests
+# ============================================================================
+
+
+class TestBatchResume:
+    """Resuming from a checkpoint restores what was done and computes the rest."""
+
+    @staticmethod
+    async def _interrupt_after_first_batch(evaluator: BatchEvaluator, testset: TestSet) -> int:
+        """Run until the first batch is yielded, then stop as a crash would."""
+        async for batch in evaluator.evaluate_batches(testset):
+            return len(batch.results)
+        return 0
+
+    @pytest.mark.asyncio
+    async def test_resume_restores_completed_queries(self) -> None:
+        """Regression: 6 queries, batches of 2, interrupted after batch 0, resumed -> 6 results."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = make_testset(6)
+            config = BatchConfig(batch_size=2, checkpoint_dir=tmpdir)
+
+            first = MockRAG()
+            evaluator = BatchEvaluator(first, config=config)
+            done = await self._interrupt_after_first_batch(evaluator, testset)
+            assert done == 2
+            assert first.call_count == 2
+            checkpoint_id = evaluator.get_checkpoint_id()
+            assert checkpoint_id is not None
+
+            second = MockRAG()
+            resumed = BatchEvaluator(second, config=config)
+            result = await resumed.evaluate(testset, resume_from=checkpoint_id)
+
+            assert second.call_count == 4
+            assert len(result.query_results) == 6
+            assert len(result.metrics) == 6
+            assert len(result.responses) == 6
+            assert [qr.query.text for qr in result.query_results] == [f"q{i}" for i in range(6)]
+            assert all(qr.error is None for qr in result.query_results)
+            assert resumed.list_checkpoints() == []
+
+    @pytest.mark.asyncio
+    async def test_resume_is_independent_of_batch_size(self) -> None:
+        """A different batch_size on resume neither recomputes nor loses queries."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = make_testset(6)
+            evaluator = BatchEvaluator(MockRAG(), config=BatchConfig(batch_size=2, checkpoint_dir=tmpdir))
+            await self._interrupt_after_first_batch(evaluator, testset)
+            checkpoint_id = evaluator.get_checkpoint_id()
+
+            rag = MockRAG()
+            resumed = BatchEvaluator(rag, config=BatchConfig(batch_size=3, checkpoint_dir=tmpdir))
+            batches = [b async for b in resumed.evaluate_batches(testset, resume_from=checkpoint_id)]
+
+            assert rag.call_count == 4
+            assert batches[0].restored is True
+            assert [qr.query.text for qr in batches[0].results] == ["q0", "q1"]
+            assert [len(b.results) for b in batches[1:]] == [3, 1]
+            assert sum(len(b.results) for b in batches) == 6
+
+    @pytest.mark.asyncio
+    async def test_failed_queries_are_evaluated_again(self) -> None:
+        """A query that failed before the interruption is not restored, it is retried."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = make_testset(6)
+            config = BatchConfig(batch_size=2, checkpoint_dir=tmpdir)
+            evaluator = BatchEvaluator(FailingRAG(fail_indices={1}), config=config)
+            await self._interrupt_after_first_batch(evaluator, testset)
+
+            rag = MockRAG()
+            result = await BatchEvaluator(rag, config=config).evaluate(
+                testset, resume_from=evaluator.get_checkpoint_id()
+            )
+
+            assert rag.call_count == 5  # q1 again, plus q2..q5
+            assert len(result.query_results) == 6
+            assert all(qr.error is None for qr in result.query_results)
+
+    @pytest.mark.asyncio
+    async def test_duplicate_query_texts_get_distinct_keys(self) -> None:
+        """Two identical query texts are two queries, both restored."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = TestSet(queries=[Query(text="same", ground_truth_docs=["doc_1"]) for _ in range(3)])
+            config = BatchConfig(batch_size=2, checkpoint_dir=tmpdir)
+            evaluator = BatchEvaluator(MockRAG(), config=config)
+            await self._interrupt_after_first_batch(evaluator, testset)
+
+            rag = MockRAG()
+            result = await BatchEvaluator(rag, config=config).evaluate(
+                testset, resume_from=evaluator.get_checkpoint_id()
+            )
+
+            assert rag.call_count == 1
+            assert len(result.query_results) == 3
+
+    @pytest.mark.asyncio
+    async def test_two_identical_questions_interrupted_between_them(self) -> None:
+        """Regression: same text twice, batches of 1, interrupted after the first -> both results after resume."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = TestSet(queries=[Query(text="same question", ground_truth_docs=["doc_1"]) for _ in range(2)])
+            config = BatchConfig(batch_size=1, checkpoint_dir=tmpdir)
+
+            first = MockRAG()
+            evaluator = BatchEvaluator(first, config=config)
+            await self._interrupt_after_first_batch(evaluator, testset)
+            assert first.call_count == 1
+            stored = evaluator.list_checkpoints()[0]
+            assert [r["query_key"] for r in stored.results] == [query_key(testset.queries[0])]
+
+            second = MockRAG()
+            result = await BatchEvaluator(second, config=config).evaluate(
+                testset, resume_from=evaluator.get_checkpoint_id()
+            )
+
+            assert second.call_count == 1  # only the second occurrence is evaluated
+            assert len(result.query_results) == 2
+            assert [qr.answer for qr in result.query_results] == ["Answer to same question"] * 2
+            assert query_keys(testset.queries) == [query_key(testset.queries[0]), query_key(testset.queries[0]) + "#1"]
+
+    @pytest.mark.asyncio
+    async def test_duplicate_explicit_ids_are_refused(self) -> None:
+        """Two queries with the same metadata['id'] are a testset error, raised before any call."""
+        testset = TestSet(
+            queries=[
+                Query(text="a", ground_truth_docs=["doc_1"], metadata={"id": "q-1"}),
+                Query(text="b", ground_truth_docs=["doc_1"], metadata={"id": "q-2"}),
+                Query(text="c", ground_truth_docs=["doc_1"], metadata={"id": "q-1"}),
+            ]
+        )
+        rag = MockRAG()
+
+        with pytest.raises(ValueError, match="Duplicate query id 'q-1' at positions 0 and 2"):
+            await BatchEvaluator(rag, config=BatchConfig(batch_size=2)).evaluate(testset)
+
+        assert rag.call_count == 0
+        with pytest.raises(ValueError):
+            query_keys(testset.queries)
+
+    @pytest.mark.asyncio
+    async def test_metadata_id_is_used_as_key(self) -> None:
+        """metadata['id'] identifies a query even if its text changes."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            before = TestSet(
+                queries=[Query(text=f"q{i}", ground_truth_docs=["doc_1"], metadata={"id": f"id{i}"}) for i in range(4)]
+            )
+            after = TestSet(
+                queries=[
+                    Query(text=f"q{i} reworded", ground_truth_docs=["doc_1"], metadata={"id": f"id{i}"})
+                    for i in range(4)
+                ]
+            )
+            config = BatchConfig(batch_size=2, checkpoint_dir=tmpdir)
+            evaluator = BatchEvaluator(MockRAG(), config=config)
+            await self._interrupt_after_first_batch(evaluator, before)
+
+            rag = MockRAG()
+            result = await BatchEvaluator(rag, config=config).evaluate(after, resume_from=evaluator.get_checkpoint_id())
+
+            assert rag.call_count == 2
+            assert len(result.query_results) == 4
+
+    @pytest.mark.asyncio
+    async def test_interval_keeps_every_batch_until_saved(self) -> None:
+        """With checkpoint_interval=2, the batch before the save is not dropped."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            testset = make_testset(6)
+            config = BatchConfig(batch_size=2, checkpoint_dir=tmpdir, checkpoint_interval=2)
+            evaluator = BatchEvaluator(MockRAG(), config=config)
+            seen = 0
+            async for _ in evaluator.evaluate_batches(testset):
+                seen += 1
+                if seen == 2:
+                    break
+            checkpoint = evaluator.list_checkpoints()[0]
+            assert checkpoint.completed_items == 4
+            assert len(checkpoint.results) == 4
+
+            rag = MockRAG()
+            result = await BatchEvaluator(rag, config=config).evaluate(testset, resume_from=checkpoint.checkpoint_id)
+            assert rag.call_count == 2
+            assert len(result.query_results) == 6
+
+    @pytest.mark.asyncio
+    async def test_old_format_checkpoint_is_refused(self) -> None:
+        """A checkpoint written before the per-query format raises a clear error."""
+        from ragnarok_ai.core.checkpoint import CheckpointManager
+        from ragnarok_ai.core.exceptions import CheckpointFormatError
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            legacy = CheckpointManager(tmpdir).create("batch_evaluation", total_items=6, config={"batch_size": 2})
+            evaluator = BatchEvaluator(MockRAG(), config=BatchConfig(batch_size=2, checkpoint_dir=tmpdir))
+
+            with pytest.raises(CheckpointFormatError, match="format 1"):
+                await evaluator.evaluate(make_testset(6), resume_from=legacy.checkpoint_id)
+
+    @pytest.mark.asyncio
+    async def test_checkpoint_id_without_checkpoint_dir(self) -> None:
+        """No checkpoint directory, no checkpoint id."""
+        evaluator = BatchEvaluator(MockRAG(), config=BatchConfig(batch_size=2))
+        await evaluator.evaluate(make_testset(4))
+        assert evaluator.get_checkpoint_id() is None

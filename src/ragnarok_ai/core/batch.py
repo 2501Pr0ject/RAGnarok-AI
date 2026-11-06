@@ -6,13 +6,16 @@ with memory management, progress tracking, and resume capabilities.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from ragnarok_ai.core.exceptions import CheckpointFormatError
+
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Callable
+    from collections.abc import AsyncIterator, Callable, Sequence
 
     from ragnarok_ai.cache.base import CacheProtocol
     from ragnarok_ai.core.checkpoint import CheckpointData, CheckpointManager
@@ -22,6 +25,17 @@ if TYPE_CHECKING:
     from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
 
 logger = logging.getLogger(__name__)
+
+# Layout of the results stored in a batch-evaluation checkpoint.
+# Version 1 (before 1.12.3) stored results by batch number, without the data
+# needed to rebuild a QueryResult; such checkpoints cannot be resumed.
+# Version 2 stores one entry per query, keyed by ``query_key``.
+BATCH_CHECKPOINT_FORMAT = 2
+BATCH_TASK_TYPE = "batch_evaluation"
+
+
+class CheckpointedError(Exception):
+    """Error restored from a checkpoint; only its message survived the round trip."""
 
 
 @dataclass
@@ -35,7 +49,8 @@ class BatchConfig:
         max_retries: Maximum retries per query on failure.
         retry_delay: Delay in seconds between retries.
         checkpoint_dir: Directory for checkpoints. None to disable.
-        checkpoint_interval: Save checkpoint every N batches.
+        checkpoint_interval: Save checkpoint every N batches. The last batch
+            is always saved, whatever the interval.
         k: Number of top results for @K metrics.
     """
 
@@ -84,12 +99,91 @@ class BatchResult:
         results: List of QueryResult from this batch.
         errors: List of (query, exception) tuples for failed queries.
         latency_ms: Total time for this batch in milliseconds.
+        restored: True when the results come from a checkpoint instead of
+            having been computed in this run.
     """
 
     batch_index: int
     results: list[QueryResult] = field(default_factory=list)
     errors: list[tuple[Query, Exception]] = field(default_factory=list)
     latency_ms: float = 0.0
+    restored: bool = False
+
+
+def query_key(query: Query) -> str:
+    """Stable identifier of a query inside a checkpoint.
+
+    ``metadata["id"]`` when the testset provides one, otherwise a hash of the
+    query text. Independent of the query's position and of the batch size.
+    """
+    explicit = query.metadata.get("id") if query.metadata else None
+    if explicit is not None and str(explicit):
+        return str(explicit)
+    return hashlib.sha256(query.text.encode("utf-8")).hexdigest()[:16]
+
+
+def query_keys(queries: Sequence[Query]) -> list[str]:
+    """One unique key per query.
+
+    Keys derived from the text get an occurrence suffix (``#1``, ``#2``...)
+    when the same text appears several times. An explicit ``metadata["id"]``
+    must be unique: two queries sharing one is a testset error.
+
+    Raises:
+        ValueError: If two queries carry the same explicit ``metadata["id"]``.
+    """
+    seen: dict[str, int] = {}
+    first_position: dict[str, int] = {}
+    keys: list[str] = []
+    for position, query in enumerate(queries):
+        base = query_key(query)
+        explicit = bool(query.metadata and query.metadata.get("id") is not None and str(query.metadata.get("id")))
+        n = seen.get(base, 0)
+        if n and explicit:
+            msg = (
+                f"Duplicate query id {base!r} at positions {first_position[base]} and {position}: "
+                "metadata['id'] must be unique within a testset"
+            )
+            raise ValueError(msg)
+        seen[base] = n + 1
+        first_position.setdefault(base, position)
+        keys.append(base if n == 0 else f"{base}#{n}")
+    return keys
+
+
+def _query_result_to_dict(key: str, qr: QueryResult) -> dict[str, Any]:
+    """Everything needed to rebuild ``qr`` from a checkpoint."""
+    return {
+        "query_key": key,
+        "query_text": qr.query.text,
+        "answer": qr.answer,
+        "latency_ms": qr.latency_ms,
+        "error": str(qr.error) if qr.error else None,
+        "retrieved_doc_ids": list(qr.retrieved_doc_ids),
+        "metrics": {
+            "precision": qr.metric.precision,
+            "recall": qr.metric.recall,
+            "mrr": qr.metric.mrr,
+            "ndcg": qr.metric.ndcg,
+            "k": qr.metric.k,
+        },
+    }
+
+
+def _query_result_from_dict(entry: dict[str, Any], query: Query) -> QueryResult:
+    """Rebuild a QueryResult stored by :func:`_query_result_to_dict`."""
+    from ragnarok_ai.core.evaluate import QueryResult
+    from ragnarok_ai.evaluators.retrieval import RetrievalMetrics
+
+    error = entry.get("error")
+    return QueryResult(
+        query=query,
+        metric=RetrievalMetrics(**entry["metrics"]),
+        answer=entry["answer"],
+        latency_ms=float(entry.get("latency_ms", 0.0)),
+        error=CheckpointedError(error) if error else None,
+        retrieved_doc_ids=list(entry.get("retrieved_doc_ids", [])),
+    )
 
 
 class BatchEvaluator:
@@ -98,6 +192,11 @@ class BatchEvaluator:
     BatchEvaluator splits a large testset into smaller batches, evaluates them
     sequentially (with parallel queries within each batch), and optionally
     saves checkpoints for crash recovery.
+
+    Checkpoints are keyed by query, not by batch number: a resumed run
+    restores the results of every query already evaluated (whatever the
+    ``batch_size`` was) and evaluates only the remaining ones. Queries that
+    failed before the interruption are evaluated again.
 
     Example:
         >>> from ragnarok_ai import BatchEvaluator, BatchConfig
@@ -116,6 +215,9 @@ class BatchEvaluator:
         >>> # Or get aggregated result
         >>> result = await evaluator.evaluate(testset)
         >>> print(result.summary())
+        >>>
+        >>> # After a crash: restore what was done, evaluate the rest
+        >>> result = await evaluator.evaluate(testset, resume_from=checkpoint_id)
     """
 
     def __init__(
@@ -138,6 +240,7 @@ class BatchEvaluator:
         self.cache = cache
         self.pipeline_id = pipeline_id
         self._checkpoint_manager: CheckpointManager | None = None
+        self._checkpoint_id: str | None = None
 
         if self.config.checkpoint_dir:
             from ragnarok_ai.core.checkpoint import CheckpointManager
@@ -156,7 +259,9 @@ class BatchEvaluator:
         Args:
             testset: Test set to evaluate.
             on_progress: Optional callback for progress updates.
-            resume_from: Optional checkpoint ID to resume from.
+            resume_from: Optional checkpoint ID to resume from. Results of
+                the queries already evaluated are restored from the
+                checkpoint and included in the returned result.
 
         Returns:
             Aggregated EvaluationResult with all metrics and responses.
@@ -197,6 +302,9 @@ class BatchEvaluator:
     ) -> AsyncIterator[BatchResult]:
         """Evaluate testset batch by batch, yielding results as they complete.
 
+        When resuming, the first yielded batch carries the restored results
+        (``restored=True``); the following batches are computed.
+
         Args:
             testset: Test set to evaluate.
             on_progress: Optional callback for progress updates.
@@ -204,32 +312,49 @@ class BatchEvaluator:
 
         Yields:
             BatchResult for each completed batch.
+
+        Raises:
+            CheckpointFormatError: If the checkpoint was written in a format
+                that cannot be resumed (earlier than version 2).
         """
         from ragnarok_ai.core.evaluate import evaluate
         from ragnarok_ai.core.types import TestSet as TestSetType
 
         queries = testset.queries
+        keys = query_keys(queries)
         total = len(queries)
         batch_size = self.config.batch_size
-        total_batches = (total + batch_size - 1) // batch_size
 
-        # Resume from checkpoint if provided
-        start_batch = 0
         checkpoint: CheckpointData | None = None
+        stored: dict[str, dict[str, Any]] = {}
 
         if resume_from and self._checkpoint_manager:
             try:
                 checkpoint = self._checkpoint_manager.load_by_id(resume_from)
-                start_batch = checkpoint.completed_items // batch_size
-                logger.info(f"Resuming from checkpoint {resume_from} at batch {start_batch}")
             except FileNotFoundError:
                 logger.warning(f"Checkpoint {resume_from} not found, starting from beginning")
+            else:
+                self._check_resumable(checkpoint)
+                # Latest entry wins; failed queries are not restored, they are evaluated again
+                for entry in checkpoint.results:
+                    key = entry.get("query_key")
+                    if key is None:
+                        continue
+                    if entry.get("error") is None:
+                        stored[key] = entry
+                    else:
+                        stored.pop(key, None)
+                unknown = set(stored) - set(keys)
+                if unknown:
+                    logger.warning(
+                        f"Checkpoint {resume_from}: {len(unknown)} stored queries are not in this testset and are ignored"
+                    )
+                logger.info(f"Resuming from checkpoint {resume_from}: {len(stored)} queries restored")
 
-        # Create new checkpoint if checkpointing is enabled
         if self._checkpoint_manager and checkpoint is None:
             testset_name = getattr(testset, "name", None) or "batch_eval"
             checkpoint = self._checkpoint_manager.create(
-                task_type="batch_evaluation",
+                task_type=BATCH_TASK_TYPE,
                 total_items=total,
                 config={
                     "batch_size": batch_size,
@@ -238,15 +363,33 @@ class BatchEvaluator:
                     "pipeline_id": self.pipeline_id,
                 },
                 metadata={"testset_name": testset_name},
+                format_version=BATCH_CHECKPOINT_FORMAT,
             )
             logger.info(f"Created checkpoint {checkpoint.checkpoint_id}")
 
-        completed_queries = start_batch * batch_size
+        self._checkpoint_id = checkpoint.checkpoint_id if checkpoint else None
 
-        for batch_idx in range(start_batch, total_batches):
-            start = batch_idx * batch_size
-            end = min(start + batch_size, total)
-            batch_queries = queries[start:end]
+        restored_results = [
+            _query_result_from_dict(stored[key], query)
+            for query, key in zip(queries, keys, strict=True)
+            if key in stored
+        ]
+        pending = [(query, key) for query, key in zip(queries, keys, strict=True) if key not in stored]
+        pending_batches = (len(pending) + batch_size - 1) // batch_size
+        batch_offset = 1 if restored_results else 0
+        total_batches = pending_batches + batch_offset
+        completed_queries = len(restored_results)
+
+        if restored_results:
+            yield BatchResult(batch_index=0, results=restored_results, restored=True)
+
+        unsaved: list[dict[str, Any]] = []
+
+        for pending_idx in range(pending_batches):
+            batch_idx = pending_idx + batch_offset
+            start = pending_idx * batch_size
+            chunk = pending[start : start + batch_size]
+            batch_queries = [query for query, _ in chunk]
 
             # Create mini testset for this batch
             batch_testset = TestSetType(queries=batch_queries)
@@ -294,27 +437,20 @@ class BatchEvaluator:
                 if asyncio.iscoroutine(callback_result):
                     await callback_result
 
-            # Update checkpoint
+            # Update checkpoint: every result is kept until the next save, so
+            # an interval above 1 delays the save but never drops a batch
             if checkpoint and self._checkpoint_manager:
-                # Convert results to dicts for checkpoint storage
-                batch_results_dicts = [
-                    {
-                        "query_text": qr.query.text,
-                        "answer": qr.answer,
-                        "latency_ms": qr.latency_ms,
-                        "error": str(qr.error) if qr.error else None,
-                        "metrics": {
-                            "precision": qr.metric.precision,
-                            "recall": qr.metric.recall,
-                            "mrr": qr.metric.mrr,
-                            "ndcg": qr.metric.ndcg,
-                        },
-                    }
-                    for qr in result.query_results
-                ]
+                # Keys of this chunk grouped by base key; duplicates are consumed in order
+                keys_by_base: dict[str, list[str]] = {}
+                for query, key in chunk:
+                    keys_by_base.setdefault(query_key(query), []).append(key)
+                for qr in result.query_results:
+                    unsaved.append(_query_result_to_dict(keys_by_base[query_key(qr.query)].pop(0), qr))
 
-                if (batch_idx + 1) % self.config.checkpoint_interval == 0:
-                    checkpoint = self._checkpoint_manager.save_batch_progress(checkpoint, batch_results_dicts)
+                is_last = pending_idx == pending_batches - 1
+                if is_last or (pending_idx + 1) % self.config.checkpoint_interval == 0:
+                    checkpoint = self._checkpoint_manager.save_batch_progress(checkpoint, unsaved)
+                    unsaved = []
                     logger.debug(f"Checkpoint saved at batch {batch_idx}")
 
             yield batch_result
@@ -324,15 +460,32 @@ class BatchEvaluator:
             self._checkpoint_manager.cleanup(checkpoint)
             logger.info(f"Evaluation complete, checkpoint {checkpoint.checkpoint_id} removed")
 
+    @staticmethod
+    def _check_resumable(checkpoint: CheckpointData) -> None:
+        """Refuse checkpoints that cannot be resumed, with the reason."""
+        if checkpoint.task_type != BATCH_TASK_TYPE:
+            msg = f"Checkpoint {checkpoint.checkpoint_id} is a {checkpoint.task_type!r} checkpoint, not a batch evaluation"
+            raise CheckpointFormatError(msg)
+        if checkpoint.format_version < BATCH_CHECKPOINT_FORMAT:
+            msg = (
+                f"Checkpoint {checkpoint.checkpoint_id} uses format {checkpoint.format_version}, written by an "
+                f"earlier version of ragnarok-ai; format {BATCH_CHECKPOINT_FORMAT} is required to resume. "
+                "Delete it and run the evaluation again."
+            )
+            raise CheckpointFormatError(msg)
+
     def get_checkpoint_id(self) -> str | None:
-        """Get the current checkpoint ID if checkpointing is enabled.
+        """Get the ID of the checkpoint used by the last evaluation.
+
+        Set when ``evaluate()`` or ``evaluate_batches()`` creates or resumes a
+        checkpoint; it stays available after an interruption so the run can
+        be resumed with ``resume_from``.
 
         Returns:
-            Checkpoint ID or None if no active checkpoint.
+            Checkpoint ID or None if checkpointing is disabled or no
+            evaluation has started.
         """
-        # This would need to be tracked during evaluation
-        # For now, users should use list_checkpoints() to find checkpoints
-        return None
+        return self._checkpoint_id
 
     def list_checkpoints(self) -> list[CheckpointData]:
         """List all batch evaluation checkpoints.
@@ -342,4 +495,4 @@ class BatchEvaluator:
         """
         if not self._checkpoint_manager:
             return []
-        return self._checkpoint_manager.list_checkpoints(task_type="batch_evaluation")
+        return self._checkpoint_manager.list_checkpoints(task_type=BATCH_TASK_TYPE)
