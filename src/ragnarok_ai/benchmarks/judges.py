@@ -32,6 +32,7 @@ import resource
 import statistics
 import sys
 import time
+from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -59,7 +60,16 @@ ECE_BINS = 10
 ATTEMPTS_FORMAT = 1
 # Fields of the attempts header; a run must match all of them to resume. Checked in this
 # order so that the message names the plain field (criterion differs) before the hash it changes.
-ATTEMPTS_HEADER_FIELDS = ("criterion", "level", "sample", "seed", "stratify", "data_sha256", "config_hash")
+ATTEMPTS_HEADER_FIELDS = (
+    "criterion",
+    "level",
+    "sample",
+    "per_class",
+    "seed",
+    "stratify",
+    "data_sha256",
+    "config_hash",
+)
 # Checked only when both sides know it: a wheel (None) resumes a checkout's run and vice versa
 ATTEMPTS_PROVENANCE_FIELD = "source_commit"
 
@@ -215,6 +225,58 @@ def stratified_sample(records: Sequence[BenchRecord], size: int, stratify: str |
     return [r for i, r in enumerate(records) if i in picked]
 
 
+def quota_sample(records: Sequence[BenchRecord], per_class: int, seed: int) -> list[BenchRecord]:
+    """At most *per_class* records of every label, drawn with *seed*; a smaller class is taken whole.
+
+    The result keeps the input order. Metrics on such a sample depend on the
+    quota, not on the set's class mix: the report flags them and adds
+    prevalence-adjusted figures (``prevalence_adjusted``).
+    """
+    if per_class < 1:
+        msg = f"per_class must be at least 1, got {per_class}"
+        raise ValueError(msg)
+    rng = random.Random(seed)
+    by_label: dict[str, list[int]] = {}
+    for i, r in enumerate(records):
+        by_label.setdefault(r.label, []).append(i)
+    picked: set[int] = set()
+    for _label, indices in sorted(by_label.items()):
+        picked.update(rng.sample(indices, min(per_class, len(indices))))
+    return [r for i, r in enumerate(records) if i in picked]
+
+
+def prevalence_adjusted(
+    judge_pass: Sequence[bool], human_pass: Sequence[bool], full_not_supported_prevalence: float
+) -> dict[str, Any]:
+    """Figures that do not depend on the sample's class mix, given the full set's prevalence.
+
+    Recall of the not-supported class and specificity (supported sentences
+    recognized) are per-class rates, so a class quota leaves them
+    unchanged. Precision and accuracy are reweighted by the prevalence of
+    the not-supported class in the full set (``pi``): precision =
+    ``pi r / (pi r + (1 - pi)(1 - s))``, accuracy = ``pi r + (1 - pi) s``.
+    """
+    negatives = [j for j, h in zip(judge_pass, human_pass, strict=True) if not h]
+    positives = [j for j, h in zip(judge_pass, human_pass, strict=True) if h]
+    recall = (sum(1 for j in negatives if not j) / len(negatives)) if negatives else None
+    specificity = (sum(1 for j in positives if j) / len(positives)) if positives else None
+    pi = full_not_supported_prevalence
+    precision: float | None = None
+    accuracy: float | None = None
+    if recall is not None and specificity is not None:
+        denominator = pi * recall + (1 - pi) * (1 - specificity)
+        precision = (pi * recall / denominator) if denominator > 0 else None
+        accuracy = pi * recall + (1 - pi) * specificity
+    return {
+        "full_set_not_supported_prevalence": pi,
+        "recall_not_supported": recall,
+        "recall_supported": specificity,
+        "specificity": specificity,
+        "precision_not_supported_reweighted": precision,
+        "accuracy_reweighted": accuracy,
+    }
+
+
 # =============================================================================
 # Attempts on disk
 # =============================================================================
@@ -274,6 +336,7 @@ def attempts_header(
     seed: int | None,
     stratify: str | None,
     data_sha256: str | None,
+    per_class: int | None = None,
     source_commit: str | None = None,
 ) -> dict[str, Any]:
     """The first line of an attempts file: what the run must match to resume from it.
@@ -287,6 +350,7 @@ def attempts_header(
         "criterion": criterion,
         "level": level,
         "sample": sample,
+        "per_class": per_class,
         "seed": seed,
         "stratify": stratify,
         "data_sha256": data_sha256,
@@ -665,6 +729,7 @@ async def run_benchmark(
     criterion: str = "faithfulness",
     dev_records: Sequence[BenchRecord] | None = None,
     sample: int | None = None,
+    per_class: int | None = None,
     stratify: str | None = "label",
     seed: int = 0,
     by: Iterable[str] = (),
@@ -688,6 +753,11 @@ async def run_benchmark(
             threshold of a probabilistic judge. The evaluated set never
             influences the threshold.
         sample: Evaluate only this many records, drawn with *seed*.
+        per_class: Evaluate at most this many records of every label (class
+            quotas), drawn with *seed*; exclusive with *sample*. The raw
+            metrics are then flagged as sample-dependent and the report adds
+            per-class recall, specificity and precision reweighted by the
+            full set's prevalence.
         stratify: ``label`` (default), a metadata field, or ``None`` for a plain draw.
         seed: Seed of the sample and of the bootstrap.
         by: Metadata fields for per-value breakdowns (e.g. ``task``, ``generator``).
@@ -708,6 +778,9 @@ async def run_benchmark(
             another judge configuration, criterion, level, sample, seed,
             stratify or data file; nothing is resumed or mixed.
     """
+    if sample is not None and per_class is not None:
+        msg = "sample and per_class are exclusive: a proportional sample or class quotas, not both"
+        raise ValueError(msg)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
@@ -716,7 +789,12 @@ async def run_benchmark(
         data_sha256 = records_sha256(records)
     if dev_sha256 is None and dev_records:
         dev_sha256 = records_sha256(dev_records)
-    evaluated = stratified_sample(records, sample, stratify, seed) if sample is not None else list(records)
+    if per_class is not None:
+        evaluated = quota_sample(records, per_class, seed)
+    elif sample is not None:
+        evaluated = stratified_sample(records, sample, stratify, seed)
+    else:
+        evaluated = list(records)
     level = evaluated[0].level if evaluated else "answer"
 
     # Threshold: judge's policy, or chosen on dev for a probabilistic judge
@@ -760,6 +838,7 @@ async def run_benchmark(
         seed=seed,
         stratify=stratify,
         data_sha256=data_sha256,
+        per_class=per_class,
         source_commit=config.source_commit,
     )
     rows = await _judge_records(
@@ -790,7 +869,22 @@ async def run_benchmark(
             "transmitted_to_judge": False,
         },
         "records": {"total": len(records), "evaluated": len(evaluated), "scored": len(scored), "failed": len(failed)},
-        "sample": None if sample is None else {"size": sample, "stratify": stratify, "seed": seed},
+        "sample": (
+            {"per_class": per_class, "taken": dict(sorted(Counter(r.label for r in evaluated).items())), "seed": seed}
+            if per_class is not None
+            else None
+            if sample is None
+            else {"size": sample, "stratify": stratify, "seed": seed}
+        ),
+        # Raw metrics (binary, three_class, by) follow the sample's class mix when it is set by quotas
+        "sample_dependent_metrics": per_class is not None,
+        "prevalence_adjusted": (
+            prevalence_adjusted(
+                judge_pass, human_pass, sum(1 for r in records if not r.human_pass) / len(records) if records else 0.0
+            )
+            if per_class is not None
+            else None
+        ),
         "threshold": {
             "value": threshold,
             "source": threshold_source,
@@ -886,6 +980,16 @@ def render_report(report: dict[str, Any]) -> str:
         f"of {report['records']['total']}, {report['records']['scored']} scored, {report['records']['failed']} failed.",
         f"Threshold {report['threshold']['value']:.2f} (source: {report['threshold']['source']}).",
         f"Prediction rule: {report['threshold']['rule']}.",
+        *(
+            [
+                f"Class quotas: at most {report['sample']['per_class']} records per label, taken "
+                + ", ".join(f"{k} {v}" for k, v in report["sample"]["taken"].items())
+                + f" (seed {report['sample']['seed']}). The raw metrics below follow this class mix, not the set's: "
+                "see the prevalence-adjusted figures."
+            ]
+            if report.get("sample_dependent_metrics")
+            else []
+        ),
         f"`prev_sentence` present in {report['prev_sentence']['records_with_prev_sentence']} records, not transmitted to the judge.",
         "",
         "| Metric | Value |",
@@ -931,6 +1035,25 @@ def render_report(report: dict[str, Any]) -> str:
         lines += [
             "",
             f"Calibration: Brier {report['calibration']['brier']:.4f}, ECE ({ECE_BINS} bins) {report['calibration']['ece']:.4f}.",
+        ]
+    adjusted = report.get("prevalence_adjusted")
+    if adjusted is not None:
+
+        def pct(value: float | None) -> str:
+            return "n/a" if value is None else f"{value:.3f}"
+
+        lines += [
+            "",
+            "## Prevalence-adjusted (independent of the quota)",
+            "",
+            f"Not-supported prevalence in the full set: {adjusted['full_set_not_supported_prevalence']:.1%}.",
+            "",
+            "| Metric | Value |",
+            "|---|---|",
+            f"| Recall (not supported) | {pct(adjusted['recall_not_supported'])} |",
+            f"| Specificity (supported recognized) | {pct(adjusted['specificity'])} |",
+            f"| Precision (not supported), reweighted by full-set prevalence | {pct(adjusted['precision_not_supported_reweighted'])} |",
+            f"| Accuracy, reweighted by full-set prevalence | {pct(adjusted['accuracy_reweighted'])} |",
         ]
     lines += ["", "## Failures and cost", ""]
     lines.append(f"- failures by kind: {report['failures'] or 'none'}")
@@ -993,6 +1116,8 @@ __all__ = [
     "load_records",
     "ollama_model_memory",
     "parse_record",
+    "prevalence_adjusted",
+    "quota_sample",
     "read_attempts",
     "records_sha256",
     "render_report",

@@ -2728,6 +2728,12 @@ def judge_bench(
     ] = None,
     criterion: Annotated[str, typer.Option("--criterion", help="Criterion to judge.")] = "faithfulness",
     sample: Annotated[int | None, typer.Option("--sample", help="Evaluate only N records, drawn with --seed.")] = None,
+    per_class: Annotated[
+        int | None,
+        typer.Option(
+            "--per-class", help="Evaluate at most N records per label (class quotas); exclusive with --sample."
+        ),
+    ] = None,
     stratify: Annotated[str, typer.Option("--stratify", help="'label', a metadata field, or 'none'.")] = "label",
     seed: Annotated[int, typer.Option("--seed", help="Seed of the sample and of the bootstrap.")] = 0,
     by: Annotated[str | None, typer.Option("--by", help="Comma-separated metadata fields for breakdowns.")] = None,
@@ -2780,8 +2786,15 @@ def judge_bench(
 
     if prompt_format not in ("auto", "prometheus", "score-n"):
         fail(f"Invalid --prompt-format {prompt_format!r}. Valid: auto, prometheus, score-n", EXIT_BAD_INPUT)
-    if concurrency < 1 or (sample is not None and sample < 1) or bootstrap < 0:
-        fail("--concurrency and --sample must be at least 1, --bootstrap at least 0", EXIT_BAD_INPUT)
+    if (
+        concurrency < 1
+        or (sample is not None and sample < 1)
+        or (per_class is not None and per_class < 1)
+        or bootstrap < 0
+    ):
+        fail("--concurrency, --sample and --per-class must be at least 1, --bootstrap at least 0", EXIT_BAD_INPUT)
+    if sample is not None and per_class is not None:
+        fail("--sample and --per-class are exclusive: a proportional sample or class quotas, not both", EXIT_BAD_INPUT)
     for path in [data] + ([dev] if dev else []):
         if not Path(path).exists():
             fail(f"File not found: {path}", EXIT_BAD_INPUT)
@@ -2815,6 +2828,7 @@ def judge_bench(
         typer.echo(
             f"  Judge: {judge}  |  criterion: {criterion}  |  records: {len(records)}"
             + (f"  |  sample: {sample}" if sample else "")
+            + (f"  |  per class: {per_class}" if per_class else "")
         )
         typer.echo(f"  Output: {out}")
 
@@ -2827,6 +2841,7 @@ def judge_bench(
                 criterion=criterion,
                 dev_records=dev_records,
                 sample=sample,
+                per_class=per_class,
                 stratify=None if stratify == "none" else stratify,
                 seed=seed,
                 by=[f.strip() for f in by.split(",") if f.strip()] if by else (),
