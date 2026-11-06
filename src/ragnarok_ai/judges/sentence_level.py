@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import JudgeProtocol
     from ragnarok_ai.evaluators.judge import JudgeResult
 
-DEFAULT_AGGREGATION = AggregationPolicy(score_rule="min", verdict_rule="worst")
+DEFAULT_AGGREGATION = AggregationPolicy(score_rule="fraction_pass", verdict_rule="worst")
 
 
 class SentenceLevel:
@@ -30,7 +30,9 @@ class SentenceLevel:
     Attributes:
         inner: The answer-level judge applied to each sentence.
         aggregation: How unit scores and verdicts become the answer's;
-            default ``min`` score and ``worst`` verdict, the strictest reading.
+            default ``fraction_pass`` score (share of PASS sentences) and
+            ``worst`` verdict, as for the claim-level evaluators and the
+            grounding judge; ``min`` and ``mean`` remain available.
         lang: pysbd language code passed to the segmenter.
 
     Example:
@@ -112,14 +114,13 @@ class SentenceLevel:
         score, verdict = aggregate_units(units, self.aggregation, config.verdict_policy)
         assert last is not None  # aggregate_units raised NoUnitsError otherwise
         # Answer level: the aggregated score and verdict. There is no native
-        # output for an aggregate, so ``output`` is None and ``raw_score`` is
-        # the aggregated score projected back on the 1-5 scale.
+        # output nor single raw score for an aggregate: both are None.
         return replace(
             last,
             verdict=verdict,
             score=score,
             explanation="\n".join(explanations),
-            raw_score=max(1, min(5, round(1 + score * 4))),
+            raw_score=None,
             output=None,
             config=config,
             trace=None,

@@ -68,6 +68,9 @@ class TestProtocolAndConfig:
 
         assert config.unit == "sentence"
         assert config.aggregation == AggregationPolicy("mean", "from_score")
+        assert SentenceLevel(InnerJudge()).config("faithfulness").aggregation == AggregationPolicy(
+            "fraction_pass", "worst"
+        )
         assert config.segmenter == SEGMENTER_ID
         assert config.judge_class == "ragnarok_ai.judges.sentence_level.SentenceLevel[tests.InnerJudge]"
         assert (config.model, config.verdict_policy, config.criterion) == (
@@ -102,12 +105,12 @@ class TestJudging:
         assert judged[1].output == OrdinalScore(1, 1, 5)
 
     @pytest.mark.asyncio
-    async def test_default_aggregation_is_min_and_worst(self):
+    async def test_default_aggregation_is_fraction_pass_and_worst(self):
         result = await SentenceLevel(InnerJudge()).judge("faithfulness", question="q", context="c", answer=ANSWER)
 
-        assert result.score == 0.0  # min of 1.0, 0.0, 1.0
+        assert result.score == pytest.approx(2 / 3)  # 2 PASS sentences out of 3 judged
         assert result.verdict == "FAIL"  # worst
-        assert result.raw_score == 1  # projected back on 1-5
+        assert result.raw_score is None  # no single native score for an aggregate
         assert result.output is None and result.trace is None
         assert result.config is not None and result.config.unit == "sentence"
         assert result.explanation.splitlines()[0].startswith("[0-29] PASS:")
@@ -119,7 +122,14 @@ class TestJudging:
 
         assert result.score == pytest.approx(2 / 3)
         assert result.verdict == "PARTIAL"  # OrdinalBands(4, 2): 0.667 is between 0.25 and 0.75
-        assert result.raw_score == 4  # round(1 + 0.667 * 4) = 4
+        assert result.raw_score is None
+
+    @pytest.mark.asyncio
+    async def test_min_aggregation_remains_available(self):
+        judge = SentenceLevel(InnerJudge(), aggregation=AggregationPolicy("min", "worst"))
+        result = await judge.judge("faithfulness", question="q", context="c", answer=ANSWER)
+
+        assert (result.score, result.verdict) == (0.0, "FAIL")
 
     @pytest.mark.asyncio
     async def test_all_units_skipped_is_a_no_units_failure(self):
@@ -140,4 +150,5 @@ class TestJudging:
         wrapped = await SentenceLevel(InnerJudge()).judge(
             "relevance", question="q", context="c", answer="A single sentence (meh)."
         )
-        assert (wrapped.score, wrapped.verdict, wrapped.raw_score) == (direct.score, direct.verdict, direct.raw_score)
+        assert (wrapped.score, wrapped.verdict) == (direct.score, direct.verdict)
+        assert wrapped.raw_score is None and direct.raw_score == 3

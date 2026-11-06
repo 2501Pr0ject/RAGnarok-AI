@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Behavior changes
+- **`JudgeResult.raw_score` is typed `int | None`** (#149). `LLMJudge` and
+  both parsers always fill it with the 1-5 score, as before; a result
+  aggregated from sentences by `SentenceLevel` carries `None`, since an
+  aggregate has no single native score. What to do: nothing for `LLMJudge`
+  results; code doing arithmetic on `raw_score` must handle `None` for
+  sentence-level results (use `score`, which is always set)
 - **`JudgeCalibrator` takes its pass threshold from the judge's verdict
   policy** (#148): 0.75 for `LLMJudge` (`raw >= 4` on the 1-5 scale)
   instead of the fixed 0.7. Verdicts and statistics are unchanged, because
@@ -38,8 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configuration carries `unit="sentence"`, the aggregation policy and the
   segmenter. Skipped sentences appear in `JudgeResult.units` with their
   reason and are not sent to the inner judge; answer-level `score` and
-  `verdict` follow the aggregation, `output` is `None`, `raw_score` is the
-  aggregated score projected on the 1-5 scale
+  `verdict` follow the aggregation (default: share of PASS sentences and
+  worst sentence verdict, as for the claim-level evaluators; `min` and
+  `mean` remain available), `output` and `raw_score` are `None`
 - **Aggregation of unit judgments** (`aggregate_units`): `fraction_pass`,
   `mean` or `min` for the score; `worst` or the judge's verdict policy
   applied to the aggregated score for the verdict; skipped units never
