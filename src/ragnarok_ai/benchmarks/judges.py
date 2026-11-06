@@ -766,6 +766,7 @@ async def run_benchmark(
         "failures": {},
         "truncations": sum(1 for r in evaluated if (rows[r.id].get("trace") or {}).get("context_truncated") is True),
         "latency_ms": None,
+        "input_length": None,
         # The harness process only: an Ollama model runs in another process (see model_memory)
         "peak_rss_mb_harness": round(_peak_rss_mb(), 1),
         "model_memory": memory,
@@ -778,6 +779,21 @@ async def run_benchmark(
         kind = (rows[r.id].get("error") or {}).get("kind", "unknown")
         failures[kind] = failures.get(kind, 0) + 1
     report["failures"] = failures
+
+    # Share of inputs beyond the judge's training length, when the judge declares one
+    # (judge_specific "training_length", e.g. 512 for HHEM) and its traces count prompt tokens
+    training_length = dict(config.judge_specific).get("training_length")
+    if isinstance(training_length, int) and not isinstance(training_length, bool):
+        counts = [(rows[r.id].get("trace") or {}).get("prompt_tokens") for r in evaluated]
+        known = [int(c) for c in counts if c is not None]
+        over = sum(1 for c in known if c > training_length)
+        report["input_length"] = {
+            "training_length": training_length,
+            "with_token_count": len(known),
+            "over_training_length": over,
+            "share_over_training_length": (over / len(known)) if known else None,
+            "max_prompt_tokens": max(known) if known else None,
+        }
 
     raw_latencies = [(rows[r.id].get("trace") or {}).get("latency_ms") for r in evaluated]
     latencies = sorted(float(v) for v in raw_latencies if v is not None)
@@ -869,6 +885,15 @@ def render_report(report: dict[str, Any]) -> str:
     lines += ["", "## Failures and cost", ""]
     lines.append(f"- failures by kind: {report['failures'] or 'none'}")
     lines.append(f"- probable truncations: {report['truncations']}")
+    length = report.get("input_length")
+    if length is not None:
+        share = length["share_over_training_length"]
+        lines.append(
+            f"- inputs beyond the judge's training length ({length['training_length']} tokens): "
+            f"{length['over_training_length']} of {length['with_token_count']} with a token count"
+            + (f" ({share:.1%})" if share is not None else "")
+            + (f", longest {length['max_prompt_tokens']} tokens" if length["max_prompt_tokens"] is not None else "")
+        )
     if report.get("latency_ms"):
         lines.append(f"- latency p50 {report['latency_ms']['p50']:.0f} ms, p90 {report['latency_ms']['p90']:.0f} ms")
     lines.append(
