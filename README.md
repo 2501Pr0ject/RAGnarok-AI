@@ -774,6 +774,9 @@ Judges available out of the box. Every one is a `JudgeProtocol` judge with a com
 |---|---|---|---|---|---|---|
 | Prometheus 2 (7B, Q5_K_M) | `LLMJudge` | Ollama, local server | 1-5 score, PASS at 4 | answer | Apache-2.0 (upstream weights) | `[ollama]`, then `ollama pull` |
 | HHEM-2.1-Open (Vectara) | `HHEMJudge` | `transformers` + `torch`, in process, cpu / mps / cuda | P(consistent), PASS at 0.5 (model card default, not calibrated) | sentence | Apache-2.0 (code and weights); foundation `google/flan-t5-base` Apache-2.0 | `[hhem]` |
+| MiniCheck-Flan-T5-Large (default), MiniCheck-RoBERTa-Large, MiniCheck-DeBERTa-v3-Large | `MiniCheckJudge` | `transformers` + `torch` + `nltk`, in process, cpu / mps / cuda | max over document chunks of P(supported), PASS at 0.5 (official default, not calibrated) | sentence | MIT (all three checkpoints); official code Apache-2.0. Bespoke-MiniCheck-7B not offered (CC BY-NC 4.0) | `[minicheck]` |
+
+Fidelity to the published code is measured on CPU in float32 for both classifiers. On `mps` or `cuda` small numeric differences are possible; the device is part of the configuration, so a CPU run and an MPS run are never comparable.
 
 `HHEMJudge` loads two artifacts pinned to a commit, the HHEM weights and the flan-t5-base tokenizer, both recorded in `model_digest`; the repository's remote code is never executed. The Hugging Face cache is consulted before any download, and `HHEMJudge.download(folder)` then `HHEMJudge(model_path=folder)` work with no network at all. The context is the premise and the answer (or each sentence) the hypothesis; the question is not part of the model's input. Nothing is truncated by default (the foundation has no hard window; 512 tokens is its training length), and `trace.prompt_tokens` says what was sent; `max_input_tokens=N` cuts the context to fit and sets `trace.context_truncated`.
 
@@ -790,6 +793,21 @@ result = await judge.judge(
 result.score, result.verdict, [(u.text, u.verdict) for u in result.units if u.skipped is None]
 ```
 
+`MiniCheckJudge` reproduces the official code (`github.com/Liyan06/MiniCheck`, commit `b58b9fa`, package 0.1.0) without depending on it: sentence split with nltk, chunks of 500 words (Flan-T5) or 400 tokens (RoBERTa, DeBERTa) that never cut a sentence, each chunk checked with the claim, maximum over chunks. The checkpoint revision is pinned and recorded in `model_digest`; the official code's truncation length (2048 tokens for Flan-T5 and DeBERTa, 512 for RoBERTa) is declared as `training_length` with `training_length_kind` saying it is a truncation length, not a training length, and the benchmark report shows it as such; `trace.context_truncated` says when a chunk hit it. `MiniCheckJudge.download(folder)` also stores nltk's `punkt_tab`, the one piece no revision pins; the configuration records nltk's version and the SHA-256 of the `punkt_tab` files actually loaded, so two runs that split sentences differently are never comparable, and `model_path=folder` needs no network at all. The pinned checkpoints ship a `pytorch_model.bin`: it is loaded with `weights_only=True` (the extra requires `torch>=2.6`), a `model.safetensors` is preferred when a folder holds one, and the Hub's automatic conversions on pull request refs are not used.
+
+```python
+from ragnarok_ai.judges import MiniCheckJudge
+
+judge = MiniCheckJudge(device="cpu")  # MiniCheck-Flan-T5-Large, unit="sentence"
+result = await judge.judge(
+    "faithfulness",
+    question="Who created Python?",
+    context="Python was created by Guido van Rossum and first released in 1991.",
+    answer="Python was created by Guido van Rossum. It was first released in 1989.",
+)
+result.score, result.verdict
+```
+
 `ragnarok judge-bench` runs any judge on a labeled JSONL set and writes a report. The set is either the sentence-level output of the judge-training conversion (`id`, `question`, `context`, `prev_sentence`, `sentence`, `label` in SUPPORTED / CONTRADICTED / UNSUPPORTED, plus metadata) or an answer-level file (`answer`, `label` PASS / FAIL). No data ships with the package.
 
 ```bash
@@ -802,7 +820,7 @@ ragnarok judge-bench --judge llm --data test.jsonl --dev dev.jsonl --out results
 - For a probabilistic judge the pass threshold is chosen on `--dev` (F1 of the not-supported class) and applied unchanged to `--data`; without `--dev`, the judge's own verdict policy applies. Nothing is tuned on the evaluated set.
 - The report (`report.json`, `report.md`) states the prediction rule in words (PASS if score >= threshold, PARTIAL and FAIL counted as not supported, with the threshold's value and source) and gives precision, recall and F1 of the not-supported class, balanced accuracy, kappa, the majority-class baseline, per-class F1 and a confusion matrix when the judge predicts the set's classes, Brier and ECE for probabilistic judges, failures by kind, probable truncations, the share of inputs beyond the judge's training length when it declares one (512 tokens for HHEM), p50 / p90 latency, 95% bootstrap intervals grouped on the source (fixed seed), and breakdowns per metadata field. Metrics are computed on the scored records only; the report shows the coverage (evaluated, scored, failed) next to them.
 - Memory: `peak_rss_mb_harness` is the harness process only. An Ollama model runs in the Ollama server, so for `--judge llm` the report also gives the model's resident and VRAM size read on `/api/ps` right after the run, when the server answers.
-- `--judge hhem` benchmarks `HHEMJudge` at answer level on `--device` (the set defines the unit; add `--sentence-level` on an answer-level set). The model then runs in the harness process, so `peak_rss_mb_harness` includes it.
+- `--judge hhem` and `--judge minicheck[:<checkpoint>]` benchmark `HHEMJudge` and `MiniCheckJudge` at answer level on `--device` (the set defines the unit; add `--sentence-level` on an answer-level set). The model then runs in the harness process, so `peak_rss_mb_harness` includes it.
 - `--judge python:<module>:<Class>` benchmarks any `JudgeProtocol` class of your own.
 
 ### Importing Types

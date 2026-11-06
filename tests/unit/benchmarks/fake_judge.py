@@ -65,11 +65,16 @@ class ScriptedProbabilityJudge:
 
     criteria = CRITERIA
 
-    def __init__(self, training_length: int | None = None) -> None:
+    def __init__(self, training_length: int | None = None, training_length_kind: str | None = None) -> None:
         self.training_length = training_length
+        self.training_length_kind = training_length_kind
 
     def config(self, criterion: str) -> JudgeConfig:
-        specific = () if self.training_length is None else (("training_length", self.training_length),)
+        specific: tuple[tuple[str, object], ...] = ()
+        if self.training_length is not None:
+            specific = (("training_length", self.training_length),)
+            if self.training_length_kind is not None:
+                specific += (("training_length_kind", self.training_length_kind),)
         return JudgeConfig(
             "tests.ScriptedProbabilityJudge",
             "classifier",

@@ -782,13 +782,17 @@ async def run_benchmark(
 
     # Share of inputs beyond the judge's training length, when the judge declares one
     # (judge_specific "training_length", e.g. 512 for HHEM) and its traces count prompt tokens
-    training_length = dict(config.judge_specific).get("training_length")
+    specific = dict(config.judge_specific)
+    training_length = specific.get("training_length")
     if isinstance(training_length, int) and not isinstance(training_length, bool):
         counts = [(rows[r.id].get("trace") or {}).get("prompt_tokens") for r in evaluated]
         known = [int(c) for c in counts if c is not None]
         over = sum(1 for c in known if c > training_length)
         report["input_length"] = {
             "training_length": training_length,
+            # What the number means for this judge: a training length unless the judge says otherwise
+            # (MiniCheck declares its official truncation length)
+            "kind": str(specific.get("training_length_kind") or "training length"),
             "with_token_count": len(known),
             "over_training_length": over,
             "share_over_training_length": (over / len(known)) if known else None,
@@ -889,7 +893,8 @@ def render_report(report: dict[str, Any]) -> str:
     if length is not None:
         share = length["share_over_training_length"]
         lines.append(
-            f"- inputs beyond the judge's training length ({length['training_length']} tokens): "
+            f"- inputs beyond the judge's declared {length.get('kind', 'training length')} "
+            f"({length['training_length']} tokens): "
             f"{length['over_training_length']} of {length['with_token_count']} with a token count"
             + (f" ({share:.1%})" if share is not None else "")
             + (f", longest {length['max_prompt_tokens']} tokens" if length["max_prompt_tokens"] is not None else "")

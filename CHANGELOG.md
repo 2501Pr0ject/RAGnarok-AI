@@ -27,6 +27,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pass_threshold=0.7` to keep the old number in reports
 
 ### Added
+- **`MiniCheckJudge`** (`ragnarok_ai.judges`, extra `[minicheck]`): MiniCheck
+  as a `JudgeProtocol` judge for `faithfulness` and `hallucination`;
+  checkpoints `flan-t5-large` (default), `roberta-large` and
+  `deberta-v3-large`, all MIT, pinned to a commit and recorded in
+  `model_digest`; `Bespoke-MiniCheck-7B` is not offered (CC BY-NC 4.0, vLLM
+  only). No dependency on the official package: the official algorithm
+  (`github.com/Liyan06/MiniCheck@b58b9fa`, 0.1.0) is reproduced, nltk
+  sentence split block by block, chunks of 500 words or 400 tokens that
+  never cut a sentence, `predict: <chunk></s><claim>` for Flan-T5 with the
+  logits of tokens 3 and 209, softmax of the two logits for the classifiers,
+  truncation at the official `max_model_len`, batches of 16, maximum over
+  chunks; output `BinaryProbability`, PASS at 0.5 (official default,
+  recorded as not calibrated). Default `unit="sentence"` (each sentence a
+  claim, fraction of PASS sentences, worst verdict), `unit="answer"` for one
+  claim. `training_length` declared as the official truncation length,
+  `training_length_kind` saying so (the benchmark report's `input_length`
+  carries this `kind`); `sentence_splitter` records nltk's version and the
+  SHA-256 of the `punkt_tab` files loaded, so two runs that split
+  sentences differently are never comparable;
+  `trace.prompt_tokens` counts the tokens sent over all chunks,
+  `trace.context_truncated` says when a chunk was cut. The checkpoint's
+  `pytorch_model.bin` is loaded with `weights_only=True` (`torch>=2.6`), a
+  `model.safetensors` is preferred when present. Hugging Face cache
+  first, `offline=True`, `MiniCheckJudge.download(folder)` (weights,
+  tokenizer, nltk `punkt_tab`, `REVISIONS.json`) and `model_path=`. Explicit
+  `device`, model in eval mode. `ragnarok judge-bench --judge
+  minicheck[:<checkpoint>] --device cpu`. Fidelity: the official package and
+  this adapter were run on the same written-for-the-test pairs, documents of
+  up to six chunks included, the recorded official values are a fixture of
+  the integration tests. For both classifiers the fidelity is measured on
+  CPU in float32; on `mps` or `cuda` small numeric differences are possible
+  and, the device being part of the configuration, a CPU run and an MPS run
+  are never comparable
 - **`HHEMJudge`** (`ragnarok_ai.judges`, extra `[hhem]`): HHEM-2.1-Open
   (Vectara, Apache-2.0) as a `JudgeProtocol` judge for `faithfulness` and
   `hallucination`; score P(consistent) of the answer given the context,

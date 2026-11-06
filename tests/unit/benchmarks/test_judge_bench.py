@@ -357,10 +357,19 @@ class TestRun:
         length = run.report["input_length"]
         assert length["training_length"] == 20 and length["with_token_count"] == 5
         assert length["over_training_length"] == 2 and length["share_over_training_length"] == pytest.approx(0.4)
-        assert length["max_prompt_tokens"] >= 40
-        assert "inputs beyond the judge's training length (20 tokens): 2 of 5 with a token count (40.0%)" in (
+        assert length["max_prompt_tokens"] >= 40 and length["kind"] == "training length"
+        assert "inputs beyond the judge's declared training length (20 tokens): 2 of 5 with a token count (40.0%)" in (
             run.report_md.read_text()
         )
+
+        capped = await run_benchmark(
+            ScriptedProbabilityJudge(training_length=20, training_length_kind="official truncation length"),
+            records,
+            out_dir=tmp_path / "out3",
+            bootstrap_resamples=0,
+        )
+        assert capped.report["input_length"]["kind"] == "official truncation length"
+        assert "declared official truncation length (20 tokens)" in capped.report_md.read_text()
 
         silent = await run_benchmark(
             ScriptedProbabilityJudge(), records, out_dir=tmp_path / "out2", bootstrap_resamples=0

@@ -24,6 +24,7 @@ from ragnarok_ai import evaluate
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
 from ragnarok_ai.evaluators.judge import PROMETHEUS_ABS_SYSTEM_PROMPT, LLMJudge
 from ragnarok_ai.judges.hhem import HHEMArtifacts
+from ragnarok_ai.judges.minicheck import CHECKPOINTS, MiniCheckArtifacts
 
 README = Path(__file__).resolve().parents[2] / "README.md"
 PYTHON_BLOCK = re.compile(r"^```python\n(.*?)^```", re.DOTALL | re.MULTILINE)
@@ -81,6 +82,22 @@ class FakeHHEMBackend:
         return [0.9 for _ in prompts]
 
 
+class FakeMiniCheckBackend:
+    """Stand-in for a loaded MiniCheck checkpoint: naive sentence split, P(supported) 0.9 per chunk."""
+
+    def split_sentences(self, text: str) -> list[str]:
+        return [s for s in text.replace("? ", "?\n").replace(". ", ".\n").split("\n") if s]
+
+    def splitter_id(self) -> str:
+        return "fake-splitter"
+
+    def count_tokens(self, text: str) -> int:
+        return len(text.split())
+
+    def support(self, chunks: list[str], claim: str) -> tuple[list[float], int, bool]:  # noqa: ARG002
+        return [0.9 for _ in chunks], sum(len(c.split()) for c in chunks), False
+
+
 def test_readme_has_python_examples() -> None:
     assert BLOCKS, "no ```python block found in README.md"
 
@@ -94,6 +111,12 @@ async def test_readme_example_runs(line: int, source: str, tmp_path: Path, monke
     artifacts = HHEMArtifacts(tmp_path, tmp_path, "pinned", "pinned", "local", "fake-digest")
     monkeypatch.setattr("ragnarok_ai.judges.hhem.resolve_artifacts", lambda *a, **k: artifacts)  # noqa: ARG005
     monkeypatch.setattr("ragnarok_ai.judges.hhem.TransformersBackend", lambda artifacts, device: FakeHHEMBackend())  # noqa: ARG005
+    minicheck_artifacts = MiniCheckArtifacts(CHECKPOINTS["flan-t5-large"], tmp_path, "pinned", None, "local", "fake")
+    monkeypatch.setattr("ragnarok_ai.judges.minicheck.resolve_artifacts", lambda *a, **k: minicheck_artifacts)  # noqa: ARG005
+    monkeypatch.setattr(
+        "ragnarok_ai.judges.minicheck.TransformersBackend",
+        lambda artifacts, device, offline=False: FakeMiniCheckBackend(),  # noqa: ARG005
+    )
 
     testset = TestSet(queries=[Query(text="Who created Python?", ground_truth_docs=["doc_python"])])
     results = await evaluate(StubRAG(), testset)
