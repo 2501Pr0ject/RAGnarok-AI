@@ -32,6 +32,11 @@ input limit; HHEM-2.1-Open is documented with an unlimited context length
 premise is cut to fit, the hypothesis is kept whole, and
 ``context_truncated`` is ``True``. ``trace.prompt_tokens`` is always the
 number of tokens actually sent.
+
+Fidelity to the published model is measured on CPU in float32 (identical
+probabilities on the recorded pairs). On ``mps`` or ``cuda`` small numeric
+differences are possible; the device is part of the configuration, so a
+CPU run and an MPS run are never comparable.
 """
 
 from __future__ import annotations

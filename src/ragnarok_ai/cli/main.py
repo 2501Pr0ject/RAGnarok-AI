@@ -2678,7 +2678,9 @@ def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str, device:
 
     ``llm`` or ``llm:<model>``: ``LLMJudge`` on Ollama. ``hhem``: ``HHEMJudge``
     at answer level on *device* (the benchmark set defines the unit; wrap
-    with ``--sentence-level`` on an answer-level set). ``python:<module>:<Class>``:
+    with ``--sentence-level`` on an answer-level set). ``minicheck`` or
+    ``minicheck:<checkpoint>``: ``MiniCheckJudge`` at answer level on *device*
+    (``flan-t5-large`` by default). ``python:<module>:<Class>``:
     any ``JudgeProtocol`` class importable by dotted path, built without
     arguments (used for tests and custom judges).
     """
@@ -2696,6 +2698,11 @@ def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str, device:
         from ragnarok_ai.judges.hhem import HHEMJudge
 
         return HHEMJudge(unit="answer", device=device)
+    if kind == "minicheck":
+        _require_optional("judge-bench", module="transformers", extra="minicheck")
+        from ragnarok_ai.judges.minicheck import DEFAULT_CHECKPOINT, MiniCheckJudge
+
+        return MiniCheckJudge(checkpoint=rest or DEFAULT_CHECKPOINT, unit="answer", device=device)
     if kind == "python":
         import importlib
 
@@ -2704,13 +2711,16 @@ def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str, device:
             msg = f"--judge python:<module>:<Class> expected, got {spec!r}"
             raise ValueError(msg)
         return getattr(importlib.import_module(module_name), class_name)()
-    msg = f"Unknown judge {spec!r}. Use 'llm', 'llm:<model>', 'hhem' or 'python:<module>:<Class>'"
+    msg = f"Unknown judge {spec!r}. Use 'llm', 'llm:<model>', 'hhem', 'minicheck[:<checkpoint>]' or 'python:<module>:<Class>'"
     raise ValueError(msg)
 
 
 @app.command("judge-bench")
 def judge_bench(
-    judge: Annotated[str, typer.Option("--judge", help="llm, llm:<model>, hhem, or python:<module>:<Class>.")],
+    judge: Annotated[
+        str,
+        typer.Option("--judge", help="llm, llm:<model>, hhem, minicheck[:<checkpoint>], or python:<module>:<Class>."),
+    ],
     data: Annotated[str, typer.Option("--data", help="Evaluated JSONL set (sentence or answer level).")],
     out: Annotated[str, typer.Option("--out", help="Output directory (attempts.jsonl, report.json, report.md).")],
     dev: Annotated[

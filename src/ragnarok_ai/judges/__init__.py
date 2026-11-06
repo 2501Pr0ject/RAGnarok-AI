@@ -39,6 +39,7 @@ from ragnarok_ai.judges.contract import (
     canonical_json,
 )
 from ragnarok_ai.judges.hhem import HHEMJudge
+from ragnarok_ai.judges.minicheck import MiniCheckJudge
 from ragnarok_ai.judges.runner import JudgeSample, judge_many, sample_identifier
 from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
 
@@ -63,6 +64,7 @@ __all__ = [
     "JudgeOutput",
     "JudgeSample",
     "LabelMap",
+    "MiniCheckJudge",
     "OrdinalBands",
     "OrdinalScore",
     "ScoreRule",

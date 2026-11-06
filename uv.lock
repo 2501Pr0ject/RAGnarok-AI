@@ -5964,6 +5964,14 @@ llamaindex = [
 milvus = [
     { name = "pymilvus" },
 ]
+minicheck = [
+    { name = "huggingface-hub" },
+    { name = "nltk" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "torch", version = "2.15.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "transformers", version = "5.20.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "transformers", version = "5.22.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+]
 mistral = [
     { name = "httpx" },
 ]
@@ -6026,6 +6034,7 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'together'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'vllm'", specifier = ">=0.27" },
     { name = "huggingface-hub", marker = "extra == 'hhem'", specifier = ">=0.23" },
+    { name = "huggingface-hub", marker = "extra == 'minicheck'", specifier = ">=0.23" },
     { name = "langchain", marker = "extra == 'langchain'", specifier = ">=0.1" },
     { name = "langchain-community", marker = "extra == 'langchain'", specifier = ">=0.0.10" },
     { name = "langgraph", marker = "extra == 'langgraph'", specifier = ">=0.1" },
@@ -6034,6 +6043,7 @@ requires-dist = [
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
     { name = "mkdocs-minify-plugin", marker = "extra == 'docs'", specifier = ">=0.8" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
+    { name = "nltk", marker = "extra == 'minicheck'", specifier = ">=3.9" },
     { name = "opentelemetry-api", marker = "extra == 'telemetry'", specifier = ">=1.20" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", marker = "extra == 'telemetry'", specifier = ">=1.20" },
     { name = "opentelemetry-exporter-otlp-proto-http", marker = "extra == 'telemetry'", specifier = ">=1.20" },
@@ -6062,13 +6072,15 @@ requires-dist = [
     { name = "textual", marker = "extra == 'tui'", specifier = ">=0.60" },
     { name = "time-machine", marker = "extra == 'dev'", specifier = ">=2.10" },
     { name = "torch", marker = "extra == 'hhem'", specifier = ">=2.1" },
+    { name = "torch", marker = "extra == 'minicheck'", specifier = ">=2.6" },
     { name = "transformers", marker = "extra == 'hhem'", specifier = ">=4.40" },
+    { name = "transformers", marker = "extra == 'minicheck'", specifier = ">=4.40" },
     { name = "typer", specifier = ">=0.16" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.0" },
 ]
-provides-extras = ["dev", "docs", "ollama", "hhem", "openai", "anthropic", "vllm", "groq", "mistral", "together", "qdrant", "chroma", "faiss", "pinecone", "weaviate", "milvus", "pgvector", "langchain", "langgraph", "llamaindex", "dspy", "haystack", "semantic-kernel", "cli", "telemetry", "tui", "all"]
+provides-extras = ["dev", "docs", "ollama", "hhem", "minicheck", "openai", "anthropic", "vllm", "groq", "mistral", "together", "qdrant", "chroma", "faiss", "pinecone", "weaviate", "milvus", "pgvector", "langchain", "langgraph", "llamaindex", "dspy", "haystack", "semantic-kernel", "cli", "telemetry", "tui", "all"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "time-machine", specifier = ">=3.2.0" }]
