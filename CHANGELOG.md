@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rebuild results) raises `CheckpointFormatError`. What to do: finish the
   batch evaluations in progress before upgrading, or run them again from
   the start after upgrading, then delete the old checkpoint files
+- **Calibration statistics are computed on the scored samples only**
+  (#137). `CriterionCalibration.n` is the number of samples with a usable
+  judge score; `n_labeled` adds the parse failures, which no longer abort
+  the run. What to do: read `n_labeled` where the submitted count was
+  expected; a report with `parse_failures > 0` covers fewer samples than
+  were labeled
 
 ### Fixed
 - **`parse_judge_response()` let a `Verdict:` line written by the model
@@ -44,6 +50,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - With `checkpoint_interval > 1`, results were only kept for the batch
     that triggered the save; every batch is now kept until the next save,
     and the last batch is always saved
+- **`JudgeCalibrator` aborted at the first unparseable judge response**
+  - Since 1.12.2 an unparseable response raises `EvaluationError`; the
+    calibrator did not catch it, so one bad response lost the whole run
+  - The calibration now continues: the sample is counted in
+    `CriterionCalibration.parse_failures` (indices in `failed_indices`),
+    excluded from the statistics, and reported by `summary()` and `to_dict()`
+
+### Changed
+- `CalibrationReport.summary()` states that the recommended threshold and
+  its kappa are measured on the same samples that selected them
+  (in-sample, optimistic), and asks for confirmation on held-out labels;
+  `CalibrationReport.insufficient_data` also considers the scored count
 
 ## [1.12.2] - 2026-11-04
 

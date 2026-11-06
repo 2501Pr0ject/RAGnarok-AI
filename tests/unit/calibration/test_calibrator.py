@@ -14,6 +14,7 @@ from ragnarok_ai.calibration.models import (
     CalibrationSet,
     interpret_kappa,
 )
+from ragnarok_ai.core.exceptions import EvaluationError
 from ragnarok_ai.evaluators.judge import JudgeResult
 
 
@@ -39,6 +40,9 @@ class ScriptedJudge:
     def _result(self, criterion: str) -> JudgeResult:
         self.calls.append(criterion)
         score = self.scores[criterion].pop(0)
+        if score is None:  # scripted parse failure
+            msg = f"Unparseable {criterion} judgment: scripted"
+            raise EvaluationError(msg)
         verdict = "PASS" if score >= 0.7 else ("FAIL" if score < 0.4 else "PARTIAL")
         return JudgeResult(
             criteria=criterion,
@@ -216,3 +220,64 @@ class TestCalibration:
         assert data["insufficient_data"] is False
         assert data["criteria"]["faithfulness"]["kappa"] == 1.0
         assert "kappa 1.00 (almost perfect)" in report.summary()
+
+
+class TestParseFailures:
+    """A judge response that cannot be parsed is counted, not fatal."""
+
+    @pytest.mark.asyncio
+    async def test_calibration_continues_after_a_parse_failure(self) -> None:
+        """Regression: the failing sample is excluded, the others are still judged and scored."""
+        samples = [make_sample(True), make_sample(False), make_sample(True), make_sample(False)]
+        judge = ScriptedJudge({"faithfulness": [0.9, None, 0.8, 0.1]})
+
+        report = await JudgeCalibrator(judge, min_samples=1).calibrate(samples)  # type: ignore[arg-type]
+        c = report.criteria["faithfulness"]
+
+        assert judge.calls == ["faithfulness"] * 4  # the judge was called for every sample
+        assert c.parse_failures == 1
+        assert c.failed_indices == [1]
+        assert c.n == 3
+        assert c.n_labeled == 4
+        assert c.accuracy == 1.0  # computed on the three scored samples only
+        assert c.disagreements == []
+        assert report.n_samples == 4
+
+    @pytest.mark.asyncio
+    async def test_disagreement_indices_refer_to_input_samples(self) -> None:
+        """Indices stay aligned with the submitted samples even after an exclusion."""
+        samples = [make_sample(True), make_sample(True), make_sample(True)]
+        judge = ScriptedJudge({"faithfulness": [None, 0.9, 0.1]})
+
+        report = await JudgeCalibrator(judge, min_samples=1).calibrate(samples)  # type: ignore[arg-type]
+
+        assert report.criteria["faithfulness"].disagreements == [2]
+
+    @pytest.mark.asyncio
+    async def test_all_parse_failures_give_empty_statistics(self) -> None:
+        """No scored sample: zeroed statistics, flagged, no exception."""
+        samples = [make_sample(True), make_sample(False)]
+        judge = ScriptedJudge({"faithfulness": [None, None]})
+
+        report = await JudgeCalibrator(judge, min_samples=1).calibrate(samples)  # type: ignore[arg-type]
+        c = report.criteria["faithfulness"]
+
+        assert c.n == 0
+        assert c.parse_failures == 2
+        assert c.kappa_interpretation == "no scored samples"
+        assert report.insufficient_data is True
+
+    @pytest.mark.asyncio
+    async def test_summary_reports_failures_and_in_sample_threshold(self) -> None:
+        """The summary names the exclusions and warns that the recommended threshold is in-sample."""
+        samples = [make_sample(True), make_sample(True), make_sample(False), make_sample(False), make_sample(True)]
+        judge = ScriptedJudge({"faithfulness": [0.9, 0.8, 0.75, 0.1, None]})
+
+        report = await JudgeCalibrator(judge, min_samples=1).calibrate(samples)  # type: ignore[arg-type]
+        text = report.summary()
+        c = report.criteria["faithfulness"]
+
+        assert c.recommended_threshold != c.threshold
+        assert "parse failures 1/5" in text
+        assert "in-sample" in text
+        assert report.to_dict()["criteria"]["faithfulness"]["parse_failures"] == 1

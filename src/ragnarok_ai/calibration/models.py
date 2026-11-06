@@ -99,7 +99,8 @@ class CriterionCalibration:
 
     Attributes:
         criterion: The judged criterion (e.g. "faithfulness").
-        n: Number of labeled samples used.
+        n: Number of samples with a usable judge score. Every statistic
+            below is computed on these samples only.
         accuracy: Fraction of samples where judge and human agree.
         accuracy_ci: 95% Wilson confidence interval on accuracy.
         kappa: Cohen's kappa (chance-corrected agreement).
@@ -110,9 +111,13 @@ class CriterionCalibration:
             failed — the noisy direction (good answers flagged).
         threshold: The pass threshold these statistics were computed at.
         recommended_threshold: Threshold that maximizes kappa on this set.
-        kappa_at_recommended: Kappa at the recommended threshold.
+        kappa_at_recommended: Kappa at the recommended threshold, measured
+            on the same samples that selected it (in-sample, optimistic).
         disagreements: Indices of samples where judge and human disagree
             (at ``threshold``), for review.
+        parse_failures: Samples whose judge response could not be parsed;
+            excluded from the statistics.
+        failed_indices: Indices of those samples, for review.
     """
 
     criterion: str
@@ -127,6 +132,13 @@ class CriterionCalibration:
     recommended_threshold: float
     kappa_at_recommended: float
     disagreements: list[int]
+    parse_failures: int = 0
+    failed_indices: list[int] = field(default_factory=list)
+
+    @property
+    def n_labeled(self) -> int:
+        """Labeled samples submitted to the judge, scored or not."""
+        return self.n + self.parse_failures
 
 
 @dataclass
@@ -160,10 +172,19 @@ class CalibrationReport:
                 f"kappa {c.kappa:.2f} ({c.kappa_interpretation})"
             )
             lines.append(f"  false accepts {c.false_accept_rate:.0%}, false rejects {c.false_reject_rate:.0%}")
+            if c.parse_failures:
+                lines.append(
+                    f"  parse failures {c.parse_failures}/{c.n_labeled} "
+                    f"(excluded from the statistics above; statistics on {c.n} scored samples)"
+                )
             if abs(c.recommended_threshold - c.threshold) > 1e-9:
                 lines.append(
                     f"  recommended threshold {c.recommended_threshold:.2f} "
                     f"(kappa {c.kappa_at_recommended:.2f}, current {c.threshold:.2f})"
+                )
+                lines.append(
+                    f"  WARNING: that kappa is measured on the same {c.n} samples that selected the threshold "
+                    "(in-sample, optimistic); confirm it on labels the sweep has not seen"
                 )
         return "\n".join(lines)
 
@@ -186,6 +207,9 @@ class CalibrationReport:
                     "recommended_threshold": c.recommended_threshold,
                     "kappa_at_recommended": c.kappa_at_recommended,
                     "disagreements": list(c.disagreements),
+                    "parse_failures": c.parse_failures,
+                    "failed_indices": list(c.failed_indices),
+                    "n_labeled": c.n_labeled,
                 }
                 for name, c in self.criteria.items()
             },
