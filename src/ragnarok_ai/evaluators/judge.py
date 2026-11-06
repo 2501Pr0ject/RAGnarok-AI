@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
@@ -469,9 +469,6 @@ class LLMJudge:
     # Prometheus 2 7B Q5_K_M from HuggingFace (~4.8GB, fits 16GB RAM)
     # Q5 provides better precision for subtle judgments (hallucination, faithfulness)
     DEFAULT_MODEL = "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M"
-    # Alternative names users might create
-    PROMETHEUS_ALIASES: ClassVar[list[str]] = ["prometheus2", "prometheus", "prometheus-7b"]
-    FALLBACK_MODELS: ClassVar[list[str]] = ["mistral", "llama3.2", "llama3", "llama2"]
 
     def __init__(
         self,
@@ -508,19 +505,11 @@ class LLMJudge:
 
             selected_model = model or self.DEFAULT_MODEL
 
-            # Three distinct failures: dependency missing (above), server unreachable
-            # (JudgeConnectionError, raised by _get_available_models), model not installed
+            # Dependency missing raises JudgeDependencyError (above); server unreachable
+            # raises JudgeConnectionError; model not installed raises
+            # JudgeModelNotFoundError. No other model is ever substituted.
             available = self._get_available_models(base_url)
-            if selected_model not in available:
-                fallback = self._find_fallback_model(available)
-                if fallback:
-                    logger.warning(
-                        f"Model '{selected_model}' not found. Falling back to '{fallback}'. "
-                        f"For best results, install Prometheus 2: ollama pull {self.DEFAULT_MODEL}"
-                    )
-                    selected_model = fallback
-                else:
-                    raise JudgeModelNotFoundError(selected_model, available, base_url)
+            selected_model = self._resolve_model(selected_model, available, base_url)
 
             self.llm = OllamaLLM(
                 model=selected_model,
@@ -579,29 +568,38 @@ class LLMJudge:
         data = response.json()
         return [str(m["name"]) for m in data.get("models", [])]
 
-    def _find_fallback_model(self, available: list[str]) -> str | None:
-        """Find a fallback model from available models.
+    @staticmethod
+    def _resolve_model(requested: str, available: list[str], base_url: str) -> str:
+        """Return the installed name serving *requested*, or raise.
 
-        Prioritizes Prometheus aliases, then falls back to general models.
+        Accepted resolutions, in order:
 
-        Args:
-            available: List of available model names.
+        1. exact name;
+        2. tag normalization: ``mistral`` resolves to ``mistral:latest``;
+        3. Prometheus aliases: when the requested name is a Prometheus 2
+           model (its name contains "prometheus", e.g. the default or an
+           ``ollama cp`` alias such as ``prometheus2``) and another installed
+           model name contains "prometheus", that model is used, with an
+           INFO log.
 
-        Returns:
-            Fallback model name or None if no suitable model found.
+        Anything else raises: the judge never substitutes a different
+        model for the one requested.
+
+        Raises:
+            JudgeModelNotFoundError: If no installed model serves *requested*.
         """
-        # First, check for Prometheus aliases (user might have created one)
-        for alias in self.PROMETHEUS_ALIASES:
-            for model in available:
-                if alias in model.lower():
-                    return model
-
-        # Then check for general fallback models
-        for fallback in self.FALLBACK_MODELS:
-            for model in available:
-                if fallback in model.lower():
-                    return model
-        return None
+        if requested in available:
+            return requested
+        if ":" not in requested and f"{requested}:latest" in available:
+            return f"{requested}:latest"
+        if "prometheus" in requested.lower():
+            for name in available:
+                if "prometheus" in name.lower():
+                    logger.info(
+                        f"Judge model '{requested}' is not installed; using the installed Prometheus 2 model '{name}'"
+                    )
+                    return name
+        raise JudgeModelNotFoundError(requested, available, base_url)
 
     async def evaluate_faithfulness(
         self,

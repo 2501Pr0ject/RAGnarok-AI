@@ -336,6 +336,8 @@ print(f"Hallucination: {result.hallucination.verdict}")
 ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ```
 
+If the requested model is not installed, `LLMJudge` raises `JudgeModelNotFoundError` with the `ollama pull` command: it never silently substitutes another model. An `ollama cp` alias whose name contains "prometheus" (e.g. `prometheus2`) is accepted for the default model.
+
 ### Medical Mode
 
 Reduce false positives in healthcare RAG evaluation with automatic medical abbreviation normalization.
