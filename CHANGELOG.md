@@ -27,6 +27,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pass_threshold=0.7` to keep the old number in reports
 
 ### Added
+- **`HHEMJudge`** (`ragnarok_ai.judges`, extra `[hhem]`): HHEM-2.1-Open
+  (Vectara, Apache-2.0) as a `JudgeProtocol` judge for `faithfulness` and
+  `hallucination`; score P(consistent) of the answer given the context,
+  output `BinaryProbability`, PASS at 0.5 (the model card's reading,
+  recorded as not calibrated in `judge_specific`). Default `unit="sentence"`
+  (shared segmenter, fraction of PASS sentences, worst verdict),
+  `unit="answer"` for a single call. Weights
+  (`vectara/hallucination_evaluation_model`) and the `google/flan-t5-base`
+  tokenizer and configuration are pinned to a commit, both recorded in
+  `model_digest`; the repository's remote code is not executed. Hugging
+  Face cache first, download only when allowed (`offline=True` refuses);
+  `HHEMJudge.download(folder)` and `model_path=folder` for a machine with
+  no network. Explicit `device` (cpu, mps, cuda) in the configuration,
+  model in eval mode. No truncation by default (`trace.context_truncated`
+  is `False`, `trace.prompt_tokens` counts what was sent);
+  `max_input_tokens=N` cuts the context, keeps the answer whole and sets the
+  flag. `ragnarok judge-bench --judge hhem --device cpu` runs it at answer
+  level. `JudgeDependencyError` names the extra. README: table of the
+  available judges with their licences
 - **Sentence segmentation** (`ragnarok_ai.text.segment_sentences`): split
   on line breaks, then into sentences with pysbd (new core dependency,
   `pysbd>=0.3.4,<0.4`, pure Python, MIT); every `Segment` keeps its offsets

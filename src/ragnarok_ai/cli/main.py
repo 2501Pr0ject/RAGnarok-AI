@@ -2673,10 +2673,12 @@ def monitor_stats(
         typer.echo()
 
 
-def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str) -> Any:
+def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str, device: str = "cpu") -> Any:
     """Build the judge named by ``--judge``.
 
-    ``llm`` or ``llm:<model>``: ``LLMJudge`` on Ollama. ``python:<module>:<Class>``:
+    ``llm`` or ``llm:<model>``: ``LLMJudge`` on Ollama. ``hhem``: ``HHEMJudge``
+    at answer level on *device* (the benchmark set defines the unit; wrap
+    with ``--sentence-level`` on an answer-level set). ``python:<module>:<Class>``:
     any ``JudgeProtocol`` class importable by dotted path, built without
     arguments (used for tests and custom judges).
     """
@@ -2686,6 +2688,14 @@ def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str) -> Any:
         from ragnarok_ai.evaluators.judge import LLMJudge
 
         return LLMJudge(model=rest or None, base_url=ollama_url, prompt_format=prompt_format)  # type: ignore[arg-type]
+    if kind == "hhem":
+        if rest:
+            msg = f"--judge hhem takes no model name, got {spec!r}"
+            raise ValueError(msg)
+        _require_optional("judge-bench", module="transformers", extra="hhem")
+        from ragnarok_ai.judges.hhem import HHEMJudge
+
+        return HHEMJudge(unit="answer", device=device)
     if kind == "python":
         import importlib
 
@@ -2694,13 +2704,13 @@ def _load_bench_judge(spec: str, *, ollama_url: str, prompt_format: str) -> Any:
             msg = f"--judge python:<module>:<Class> expected, got {spec!r}"
             raise ValueError(msg)
         return getattr(importlib.import_module(module_name), class_name)()
-    msg = f"Unknown judge {spec!r}. Use 'llm', 'llm:<model>' or 'python:<module>:<Class>'"
+    msg = f"Unknown judge {spec!r}. Use 'llm', 'llm:<model>', 'hhem' or 'python:<module>:<Class>'"
     raise ValueError(msg)
 
 
 @app.command("judge-bench")
 def judge_bench(
-    judge: Annotated[str, typer.Option("--judge", help="llm, llm:<model>, or python:<module>:<Class>.")],
+    judge: Annotated[str, typer.Option("--judge", help="llm, llm:<model>, hhem, or python:<module>:<Class>.")],
     data: Annotated[str, typer.Option("--data", help="Evaluated JSONL set (sentence or answer level).")],
     out: Annotated[str, typer.Option("--out", help="Output directory (attempts.jsonl, report.json, report.md).")],
     dev: Annotated[
@@ -2731,6 +2741,7 @@ def judge_bench(
             help="Answer-level set only: wrap the judge in SentenceLevel so each answer is judged sentence by sentence.",
         ),
     ] = False,
+    device: Annotated[str, typer.Option("--device", help="cpu, mps or cuda (classifier judges).")] = "cpu",
 ) -> None:
     """Benchmark a judge on a labeled JSONL set and write a report.
 
@@ -2748,6 +2759,7 @@ def judge_bench(
         ollama_model_memory,
         run_benchmark,
     )
+    from ragnarok_ai.core.exceptions import ConfigurationError
 
     def fail(message: str, code: int) -> None:
         if state["json"]:
@@ -2766,9 +2778,12 @@ def judge_bench(
     try:
         records = load_records(data)
         dev_records = load_records(dev) if dev else None
-        judge_instance = _load_bench_judge(judge, ollama_url=ollama_url, prompt_format=prompt_format)
+        judge_instance = _load_bench_judge(judge, ollama_url=ollama_url, prompt_format=prompt_format, device=device)
     except (ValueError, ImportError, AttributeError, json.JSONDecodeError) as exc:
         fail(str(exc), EXIT_BAD_INPUT)
+        return
+    except ConfigurationError as exc:  # weights absent offline, device unavailable
+        fail(str(exc), EXIT_FAILURE)
         return
     if criterion not in judge_instance.criteria:
         fail(f"Criterion {criterion!r} not supported by this judge: {sorted(judge_instance.criteria)}", EXIT_BAD_INPUT)

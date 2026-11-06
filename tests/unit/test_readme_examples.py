@@ -23,6 +23,7 @@ import pytest
 from ragnarok_ai import evaluate
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
 from ragnarok_ai.evaluators.judge import PROMETHEUS_ABS_SYSTEM_PROMPT, LLMJudge
+from ragnarok_ai.judges.hhem import HHEMArtifacts
 
 README = Path(__file__).resolve().parents[2] / "README.md"
 PYTHON_BLOCK = re.compile(r"^```python\n(.*?)^```", re.DOTALL | re.MULTILINE)
@@ -67,6 +68,19 @@ class FakeOllamaLLM:
         return [0.0]
 
 
+class FakeHHEMBackend:
+    """Stand-in for the loaded HHEM model: whitespace tokens, P(consistent) 0.9."""
+
+    def count_tokens(self, text: str) -> int:
+        return len(text.split())
+
+    def truncate(self, text: str, max_tokens: int) -> str:
+        return " ".join(text.split()[:max_tokens])
+
+    def consistency(self, prompts: list[str]) -> list[float]:
+        return [0.9 for _ in prompts]
+
+
 def test_readme_has_python_examples() -> None:
     assert BLOCKS, "no ```python block found in README.md"
 
@@ -76,6 +90,10 @@ async def test_readme_example_runs(line: int, source: str, tmp_path: Path, monke
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("ragnarok_ai.adapters.llm.ollama.OllamaLLM", FakeOllamaLLM)
     monkeypatch.setattr(LLMJudge, "_get_available_models", lambda self, base_url: [LLMJudge.DEFAULT_MODEL])  # noqa: ARG005
+    # No weights download: HHEMJudge gets a scripted backend and fake artifacts
+    artifacts = HHEMArtifacts(tmp_path, tmp_path, "pinned", "pinned", "local", "fake-digest")
+    monkeypatch.setattr("ragnarok_ai.judges.hhem.resolve_artifacts", lambda *a, **k: artifacts)  # noqa: ARG005
+    monkeypatch.setattr("ragnarok_ai.judges.hhem.TransformersBackend", lambda artifacts, device: FakeHHEMBackend())  # noqa: ARG005
 
     testset = TestSet(queries=[Query(text="Who created Python?", ground_truth_docs=["doc_python"])])
     results = await evaluate(StubRAG(), testset)

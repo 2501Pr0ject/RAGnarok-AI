@@ -150,13 +150,25 @@ class JudgeDependencyError(ConfigurationError, ImportError, RuntimeError):
     raised for every other setup failure).
     """
 
-    def __init__(self, extra: str = "ollama", module: str = "httpx") -> None:
-        """Initialize JudgeDependencyError."""
+    def __init__(
+        self,
+        extra: str = "ollama",
+        module: str = "httpx",
+        *,
+        judge: str = "The default judge",
+        alternative: str | None = "pass your own LLM client with llm=",
+    ) -> None:
+        """Initialize JudgeDependencyError.
+
+        Args:
+            extra: The extra that installs the dependency.
+            module: The missing module.
+            judge: Who needs it, for the message.
+            alternative: What else the caller can do; ``None`` for no alternative.
+        """
         self.extra = extra
         self.module = module
-        msg = (
-            f"The default judge needs '{module}', which is not installed. "
-            f"Install it with: pip install 'ragnarok-ai[{extra}]' "
-            "(or pass your own LLM client with llm=)"
-        )
+        msg = f"{judge} needs '{module}', which is not installed. Install it with: pip install 'ragnarok-ai[{extra}]'"
+        if alternative:
+            msg += f" (or {alternative})"
         super().__init__(msg)
