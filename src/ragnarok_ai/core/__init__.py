@@ -31,6 +31,7 @@ from ragnarok_ai.core.compare import (
 )
 from ragnarok_ai.core.config import Settings
 from ragnarok_ai.core.exceptions import (
+    CheckpointFormatError,
     ConfigurationError,
     EvaluationError,
     LLMConnectionError,
@@ -58,6 +59,7 @@ from ragnarok_ai.core.types import (
 
 __all__ = [
     "CheckpointData",
+    "CheckpointFormatError",
     "CheckpointManager",
     "ComparisonProgress",
     "ComparisonResult",

@@ -41,7 +41,7 @@ A pipeline can have a good retriever but a bad generator, great faithfulness but
 **ragnarok-ai is designed from the ground up for local, private, reproducible RAG evaluation:**
 
 - Runs 100% locally (Ollama, local models) — your data never leaves your machine
-- Checkpoints long batch evaluations — after a crash, resume from the last completed batch
+- Checkpoints long batch evaluations — after a crash, resume: every query already evaluated is restored, only the rest is recomputed
 - Tells you *why* quality is low (root-cause diagnosis), not just *that* it is
 - Lets you calibrate the judge against your own labels — trust the scores, or know you can't
 - Gates your CI, monitors production, detects drift, A/B tests configurations
@@ -102,7 +102,7 @@ Generation quality (faithfulness, relevance, hallucination, completeness) is sco
 | **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness — with calibration against your own labels (kappa, error rates, threshold tuning). |
 | **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
 | **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
-| **Fast & Resilient** | Parallel evaluation, result caching, timeouts and retries. `BatchEvaluator` checkpoints each completed batch — after a crash, resume without recomputing them. |
+| **Fast & Resilient** | Parallel evaluation, result caching, timeouts and retries. `BatchEvaluator` checkpoints every evaluated query — after a crash, resume restores their results and recomputes only the rest. |
 | **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
 | **Test Generation** | Auto-generate diverse test sets from your knowledge base — or mine them from real production traffic. |
@@ -120,7 +120,7 @@ ragnarok-ai is built around a small set of guarantees:
 |-----------|---------------------------|
 | **Local-first, always** | Every feature works with local models (Ollama). No API key is ever required. Air-gapped deployment is a first-class target. |
 | **Your data stays yours** | Nothing leaves your machine. Production traces hash queries by default; capturing text is opt-in and PII-scrubbed client-side. |
-| **Resumable by design** | Long local evaluations crash. `BatchEvaluator` checkpoints each completed batch, so a resumed run does not recompute them. |
+| **Resumable by design** | Long local evaluations crash. `BatchEvaluator` checkpoints every evaluated query, so a resumed run restores their results and recomputes only the rest, whatever the batch size. |
 | **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. |
 | **Engineering tool, not a notebook** | CLI-first, JSON output, exit codes, `--fail-under` CI gates, regression detection, Prometheus export, Helm chart. |
 | **Lightweight core** | No torch/transformers in the core. Statistics are hand-rolled over the standard library. |

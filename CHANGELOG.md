@@ -13,12 +13,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   FAIL); a model that wrote a `Verdict:` line contradicting its score used
   to produce that verdict. What to do: nothing for new runs; stored results
   can be realigned with `verdict_from_raw_score(raw_score)`
+- **Batch-evaluation checkpoints written before 1.12.3 are refused on
+  resume** (#136). `CheckpointData.format_version` is now 2; resuming a
+  format 1 checkpoint (stored by batch number, without the data needed to
+  rebuild results) raises `CheckpointFormatError`. What to do: finish the
+  batch evaluations in progress before upgrading, or run them again from
+  the start after upgrading, then delete the old checkpoint files
 
 ### Fixed
 - **`parse_judge_response()` let a `Verdict:` line written by the model
   override the score**: "Score: 2, Verdict: PASS" gave PASS with a score of
   0.25. The verdict now follows the score only, for both prompt formats;
   the rule is exposed as `verdict_from_raw_score()`
+- **`BatchEvaluator` resume lost the results of the batches already done**
+  - `evaluate(testset, resume_from=...)` skipped the completed batches but
+    never read their results back from the checkpoint: the returned
+    `EvaluationResult` only covered the batches evaluated after the resume,
+    and the checkpoint was deleted at the end, so those results were lost
+  - Checkpoints are now keyed by query (`metadata["id"]`, or a hash of the
+    query text with an occurrence suffix for duplicates), not by batch
+    number: a resumed run restores the result of every query already
+    evaluated, whatever the `batch_size`, and evaluates only the remaining
+    ones. Two queries with the same explicit `metadata["id"]` are refused
+    with a `ValueError` naming the id and both positions; the occurrence
+    suffix is reserved to keys derived from the text. Queries that failed before the interruption are evaluated again.
+    The first yielded `BatchResult` carries the restored results
+    (`restored=True`)
+  - `get_checkpoint_id()` returns the checkpoint used by the last evaluation
+    (it always returned `None`)
+  - With `checkpoint_interval > 1`, results were only kept for the batch
+    that triggered the save; every batch is now kept until the next save,
+    and the last batch is always saved
 
 ## [1.12.2] - 2026-11-04
 
