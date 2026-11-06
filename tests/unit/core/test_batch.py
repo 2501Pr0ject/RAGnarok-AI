@@ -583,6 +583,25 @@ class TestBatchResume:
             assert query_keys(testset.queries) == [query_key(testset.queries[0]), query_key(testset.queries[0]) + "#1"]
 
     @pytest.mark.asyncio
+    async def test_duplicate_explicit_ids_are_refused(self) -> None:
+        """Two queries with the same metadata['id'] are a testset error, raised before any call."""
+        testset = TestSet(
+            queries=[
+                Query(text="a", ground_truth_docs=["doc_1"], metadata={"id": "q-1"}),
+                Query(text="b", ground_truth_docs=["doc_1"], metadata={"id": "q-2"}),
+                Query(text="c", ground_truth_docs=["doc_1"], metadata={"id": "q-1"}),
+            ]
+        )
+        rag = MockRAG()
+
+        with pytest.raises(ValueError, match="Duplicate query id 'q-1' at positions 0 and 2"):
+            await BatchEvaluator(rag, config=BatchConfig(batch_size=2)).evaluate(testset)
+
+        assert rag.call_count == 0
+        with pytest.raises(ValueError):
+            query_keys(testset.queries)
+
+    @pytest.mark.asyncio
     async def test_metadata_id_is_used_as_key(self) -> None:
         """metadata['id'] identifies a query even if its text changes."""
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -123,13 +123,30 @@ def query_key(query: Query) -> str:
 
 
 def query_keys(queries: Sequence[Query]) -> list[str]:
-    """One unique key per query; duplicates get an occurrence suffix."""
+    """One unique key per query.
+
+    Keys derived from the text get an occurrence suffix (``#1``, ``#2``...)
+    when the same text appears several times. An explicit ``metadata["id"]``
+    must be unique: two queries sharing one is a testset error.
+
+    Raises:
+        ValueError: If two queries carry the same explicit ``metadata["id"]``.
+    """
     seen: dict[str, int] = {}
+    first_position: dict[str, int] = {}
     keys: list[str] = []
-    for query in queries:
+    for position, query in enumerate(queries):
         base = query_key(query)
+        explicit = bool(query.metadata and query.metadata.get("id") is not None and str(query.metadata.get("id")))
         n = seen.get(base, 0)
+        if n and explicit:
+            msg = (
+                f"Duplicate query id {base!r} at positions {first_position[base]} and {position}: "
+                "metadata['id'] must be unique within a testset"
+            )
+            raise ValueError(msg)
         seen[base] = n + 1
+        first_position.setdefault(base, position)
         keys.append(base if n == 0 else f"{base}#{n}")
     return keys
 
