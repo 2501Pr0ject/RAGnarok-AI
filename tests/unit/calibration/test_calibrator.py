@@ -78,8 +78,27 @@ class TestStatistics:
         assert _cohens_kappa(judge, human) == pytest.approx(0.0)
 
     def test_kappa_unanimous_raters(self) -> None:
-        assert _cohens_kappa([True, True], [True, True]) == 1.0
+        """Same single class on both sides: undefined (None), never 1.0; opposite classes: 0."""
+        assert _cohens_kappa([True, True], [True, True]) is None
+        assert _cohens_kappa([False, False], [False, False]) is None
         assert _cohens_kappa([True, True], [False, False]) == 0.0
+        assert _cohens_kappa([False, False], [True, True]) == 0.0
+
+    @pytest.mark.asyncio
+    async def test_calibration_reports_an_undefined_kappa_as_null(self) -> None:
+        """Everyone passes everything: kappa is undefined in the report, the summary and the JSON."""
+        samples = [make_sample(human_pass=True)] * 12
+        judge = ScriptedJudge({"faithfulness": [0.9] * 12})
+
+        report = await JudgeCalibrator(judge).calibrate(samples)  # type: ignore[arg-type]
+
+        c = report.criteria["faithfulness"]
+        assert c.accuracy == 1.0 and c.kappa is None and c.kappa_at_recommended is None
+        assert c.kappa_interpretation.startswith("undefined")
+        assert c.recommended_threshold == c.threshold  # an undefined kappa never wins the sweep
+        assert c.kappa_interpretable is False
+        assert "kappa undefined (undefined (judge and humans used a single class))" in report.summary()
+        assert report.to_dict()["criteria"]["faithfulness"]["kappa"] is None
 
     def test_wilson_interval_brackets_the_proportion(self) -> None:
         low, high = _wilson_interval(80, 100)

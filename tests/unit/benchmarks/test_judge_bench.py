@@ -153,6 +153,29 @@ class TestMetrics:
         assert m["recall_not_supported"] == pytest.approx(0.5)  # 2 of 4 unsupported caught
         assert m["precision_not_supported"] == pytest.approx(2 / 26)
 
+    def test_kappa_is_null_when_judge_and_humans_use_a_single_class(self):
+        """pe = 1: no chance correction is possible; None, never 1.0 (the gpt-4 cell of the acceptance breakdown)."""
+        m = binary_metrics([True] * 20, [True] * 20)
+        assert m["kappa"] is None and m["accuracy"] == 1.0 and m["balanced_accuracy"] == 0.5
+        assert binary_metrics([False] * 5, [True] * 5)["kappa"] == 0.0  # unanimous against unanimous: defined
+        assert binary_metrics([], [])["kappa"] is None
+
+    @pytest.mark.asyncio
+    async def test_report_and_breakdown_print_an_undefined_kappa(self, tmp_path: Path):
+        rows = study_like_rows()[:34]  # all SUPPORTED, all passed by the ordinal judge
+        for r in rows:
+            r["generator"] = "gen-a"
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", bootstrap_resamples=5, by=["generator"]
+        )
+        assert run.report["binary"]["kappa"] is None
+        assert run.report["by"]["generator"]["gen-a"]["kappa"] is None
+        assert run.report["bootstrap"]["intervals"]["kappa"] is None  # every draw is single-class
+        md = run.report_md.read_text()
+        assert "| Kappa | undefined |" in md and "| gen-a | 34 | 0.000 | 0.500 | undefined |" in md
+        assert json.loads(run.report_json.read_text())["binary"]["kappa"] is None
+
     def test_choose_threshold_maximizes_f1_of_not_supported_with_tie_to_fallback(self):
         scores = [0.9, 0.8, 0.3, 0.2, 0.6, 0.4]
         human = [True, True, False, False, True, False]

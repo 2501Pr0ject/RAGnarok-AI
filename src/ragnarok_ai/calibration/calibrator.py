@@ -89,16 +89,27 @@ MIN_MINORITY_FOR_KAPPA = 10
 CRITERIA = ("faithfulness", "relevance", "hallucination", "completeness")
 
 
-def _cohens_kappa(judge: Sequence[bool], human: Sequence[bool]) -> float:
-    """Cohen's kappa for two binary raters."""
+def _cohens_kappa(judge: Sequence[bool], human: Sequence[bool]) -> float | None:
+    """Cohen's kappa for two binary raters; ``None`` when it is undefined.
+
+    Kappa is undefined when both raters use a single class, the same one
+    (expected agreement 1, denominator 0): there is nothing chance could be
+    corrected for. A judge unanimous against unanimous humans still gets a
+    defined kappa of 0.
+    """
     n = len(judge)
     po = sum(1 for j, h in zip(judge, human, strict=True) if j == h) / n
     p_yes = (sum(judge) / n) * (sum(human) / n)
     p_no = (1 - sum(judge) / n) * (1 - sum(human) / n)
     pe = p_yes + p_no
-    if pe >= 1.0:  # both raters unanimous
-        return 1.0 if po == 1.0 else 0.0
+    if pe >= 1.0:
+        return None
     return (po - pe) / (1 - pe)
+
+
+def _kappa_key(kappa: float | None) -> float:
+    """Order kappas in a sweep: an undefined kappa never wins."""
+    return -math.inf if kappa is None else kappa
 
 
 def _wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -112,7 +123,7 @@ def _wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, fl
     return (max(0.0, center - margin), min(1.0, center + margin))
 
 
-def _best_threshold(scores: Sequence[float], human: Sequence[bool], current: float) -> tuple[float, float]:
+def _best_threshold(scores: Sequence[float], human: Sequence[bool], current: float) -> tuple[float, float | None]:
     """Sweep pass thresholds and return the one maximizing kappa, with that kappa.
 
     In-sample: the returned kappa is measured on the very labels that
@@ -120,12 +131,18 @@ def _best_threshold(scores: Sequence[float], human: Sequence[bool], current: flo
     closest to *current*, so the recommendation only moves when the data
     supports it.
     """
+    current_kappa = _cohens_kappa([s >= current for s in scores], human)
+    if all(human) or not any(human):
+        # Single human class: no threshold can be told from another by kappa; keep the current one
+        return current, current_kappa
     candidates = sorted({round(t / 20, 2) for t in range(1, 20)} | {current})
-    best = (current, _cohens_kappa([s >= current for s in scores], human))
+    best = (current, current_kappa)
     for threshold in candidates:
         kappa = _cohens_kappa([s >= threshold for s in scores], human)
-        better = kappa > best[1] + 1e-9
-        as_good_but_closer = abs(kappa - best[1]) <= 1e-9 and abs(threshold - current) < abs(best[0] - current)
+        better = _kappa_key(kappa) > _kappa_key(best[1]) + 1e-9
+        as_good_but_closer = abs(_kappa_key(kappa) - _kappa_key(best[1])) <= 1e-9 and abs(threshold - current) < abs(
+            best[0] - current
+        )
         if better or as_good_but_closer:
             best = (threshold, kappa)
     return best
@@ -232,7 +249,11 @@ def _bootstrap_kappa(
         if all(drawn_human) or not any(drawn_human):
             excluded += 1
             continue
-        kappas.append(_cohens_kappa([judge_pass[i] for i in drawn], drawn_human))
+        kappa = _cohens_kappa([judge_pass[i] for i in drawn], drawn_human)
+        if kappa is None:  # cannot happen after the single-class exclusion above; counted the same way if it did
+            excluded += 1
+            continue
+        kappas.append(kappa)
     if not kappas:
         return None, excluded, False
     kappas.sort()
@@ -276,13 +297,13 @@ def analyze_criterion(
             n=0,
             accuracy=0.0,
             accuracy_ci=(0.0, 1.0),
-            kappa=0.0,
+            kappa=None,
             kappa_interpretation="no scored samples",
             false_accept_rate=0.0,
             false_reject_rate=0.0,
             threshold=threshold,
             recommended_threshold=threshold,
-            kappa_at_recommended=0.0,
+            kappa_at_recommended=None,
             disagreements=[],
             parse_failures=parse_failures,
             failed_indices=failed_indices,
@@ -531,7 +552,7 @@ class JudgeCalibrator:
             bootstrap_resamples=self.bootstrap_resamples,
         )
 
-    def _best_threshold(self, scores: list[float], human: list[bool]) -> tuple[float, float]:
+    def _best_threshold(self, scores: list[float], human: list[bool]) -> tuple[float, float | None]:
         """Threshold sweep at the calibrator's threshold; see :func:`_best_threshold`."""
         return _best_threshold(
             scores, human, self.pass_threshold if self.pass_threshold is not None else DEFAULT_PASS_THRESHOLD

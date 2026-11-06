@@ -90,14 +90,23 @@ _KAPPA_BANDS: list[tuple[float, str]] = [
 ]
 
 
-def interpret_kappa(kappa: float) -> str:
-    """Landis & Koch interpretation of a kappa value."""
+KAPPA_UNDEFINED = "undefined (judge and humans used a single class)"
+
+
+def interpret_kappa(kappa: float | None) -> str:
+    """Landis & Koch interpretation of a kappa value; ``None`` (undefined) is named as such."""
+    if kappa is None:
+        return KAPPA_UNDEFINED
     if kappa < 0:
         return "poor"
     for floor, label in _KAPPA_BANDS:
         if kappa >= floor:
             return label
     return "poor"  # pragma: no cover
+
+
+def _fmt_kappa(kappa: float | None) -> str:
+    return "undefined" if kappa is None else f"{kappa:.2f}"
 
 
 @dataclass(frozen=True)
@@ -110,7 +119,9 @@ class CriterionCalibration:
             below is computed on these samples only.
         accuracy: Fraction of samples where judge and human agree.
         accuracy_ci: 95% Wilson confidence interval on accuracy.
-        kappa: Cohen's kappa (chance-corrected agreement).
+        kappa: Cohen's kappa (chance-corrected agreement); ``None`` when
+            undefined, judge and humans having used a single class (expected
+            agreement 1), never 1.0 in that case.
         kappa_interpretation: Landis & Koch band for the kappa value.
         false_accept_rate: Fraction of human-rejected answers the judge
             passed — the dangerous direction (bad answers slip through).
@@ -118,7 +129,8 @@ class CriterionCalibration:
             failed — the noisy direction (good answers flagged).
         threshold: The pass threshold these statistics were computed at.
         recommended_threshold: Threshold that maximizes kappa on this set.
-        kappa_at_recommended: Kappa at the recommended threshold, measured
+        kappa_at_recommended: Kappa at the recommended threshold (``None``
+            when undefined), measured
             on the same samples that selected it (in-sample, optimistic).
         disagreements: Indices of samples where judge and human disagree
             (at ``threshold``), for review.
@@ -161,13 +173,13 @@ class CriterionCalibration:
     n: int
     accuracy: float
     accuracy_ci: tuple[float, float]
-    kappa: float
+    kappa: float | None
     kappa_interpretation: str
     false_accept_rate: float
     false_reject_rate: float
     threshold: float
     recommended_threshold: float
-    kappa_at_recommended: float
+    kappa_at_recommended: float | None
     disagreements: list[int]
     parse_failures: int = 0
     failed_indices: list[int] = field(default_factory=list)
@@ -284,7 +296,7 @@ class CalibrationReport:
             lines.append(
                 f"  agreement {c.accuracy:.0%} "
                 f"(95% CI {c.accuracy_ci[0]:.0%}-{c.accuracy_ci[1]:.0%}), "
-                f"kappa {c.kappa:.2f} ({c.kappa_interpretation})"
+                f"kappa {_fmt_kappa(c.kappa)} ({c.kappa_interpretation})"
             )
             lines.append(f"  false accepts {c.false_accept_rate:.0%}, false rejects {c.false_reject_rate:.0%}")
             if c.parse_failures:
@@ -306,7 +318,7 @@ class CalibrationReport:
             if abs(c.recommended_threshold - c.threshold) > 1e-9:
                 lines.append(
                     f"  recommended threshold {c.recommended_threshold:.2f} "
-                    f"(kappa {c.kappa_at_recommended:.2f}, current {c.threshold:.2f})"
+                    f"(kappa {_fmt_kappa(c.kappa_at_recommended)}, current {c.threshold:.2f})"
                 )
                 lines.append(
                     f"  WARNING: that kappa is measured on the same {c.n} samples that selected the threshold "

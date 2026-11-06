@@ -2861,7 +2861,9 @@ def judge_bench(
             f"  Scored {run.report['records']['scored']}/{run.report['records']['evaluated']}, threshold {run.report['threshold']['value']:.2f} ({run.report['threshold']['source']})"
         )
         typer.echo(
-            f"  F1 not supported {b['f1_not_supported']:.3f}  |  balanced accuracy {b['balanced_accuracy']:.3f}  |  kappa {b['kappa']:.3f}  |  majority baseline {b['majority_baseline_accuracy']:.3f}"
+            f"  F1 not supported {b['f1_not_supported']:.3f}  |  balanced accuracy {b['balanced_accuracy']:.3f}  |  kappa "
+            + ("undefined" if b["kappa"] is None else f"{b['kappa']:.3f}")
+            + f"  |  majority baseline {b['majority_baseline_accuracy']:.3f}"
         )
         if run.report["failures"]:
             typer.echo(f"  Failures: {run.report['failures']}")
