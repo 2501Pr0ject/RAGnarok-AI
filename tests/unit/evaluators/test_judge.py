@@ -25,6 +25,7 @@ from ragnarok_ai.evaluators.judge import (
     JudgeResults,
     LLMJudge,
     build_prometheus_prompt,
+    looks_truncated,
     parse_judge_response,
     parse_prometheus_response,
     verdict_from_raw_score,
@@ -817,6 +818,142 @@ class TestPromptFormatParameter:
     def test_unknown_value_raises(self):
         with pytest.raises(ValueError, match="Unknown prompt_format 'score'"):
             LLMJudge(llm=self.make_llm("mistral:7b", ""), prompt_format="score")  # type: ignore[arg-type]
+
+
+class CountingLLM:
+    """Fake Ollama client reporting a scripted prompt_eval_count."""
+
+    def __init__(
+        self, prompt_eval_count: int | None, num_ctx: int | None = 8192, text: str = "Score: 4\nExplanation: ok"
+    ) -> None:
+        self.model = "mistral:7b"
+        self.num_ctx = num_ctx
+        self.prompt_eval_count = prompt_eval_count
+        self.text = text
+        self.prompts: list[str] = []
+
+    async def generate(self, prompt: str) -> str:
+        return (await self.generate_detailed(prompt)).text
+
+    async def generate_detailed(self, prompt: str):
+        from ragnarok_ai.adapters.llm.ollama import OllamaGeneration
+
+        self.prompts.append(prompt)
+        return OllamaGeneration(
+            text=self.text, prompt_eval_count=self.prompt_eval_count, eval_count=3, model=self.model
+        )
+
+    async def embed(self, text: str) -> list[float]:  # noqa: ARG002
+        return [0.0]
+
+
+class TestJudgeOptionsAndTruncation:
+    """The judge pins its sampling options and warns on a probably truncated prompt."""
+
+    def test_judge_builds_its_ollama_client_with_pinned_options(self):
+        with patch.object(LLMJudge, "_get_available_models", return_value=["mistral:7b"]):
+            judge = LLMJudge(model="mistral:7b")
+
+        assert judge.llm.options == {"temperature": 0.0, "seed": 42, "num_ctx": 8192}
+        assert judge.llm.num_ctx == LLMJudge.JUDGE_NUM_CTX
+
+    @pytest.mark.parametrize(
+        ("count", "num_ctx", "expected"),
+        [
+            (259, 512, True),  # measured on Ollama 0.40.13
+            (515, 1024, True),
+            (1027, 2048, True),
+            (2051, 4096, True),
+            (8180, 8192, True),  # at the top of the window
+            (2413, 4096, False),  # long but not truncated
+            (493, 4096, False),
+            (1, 512, False),
+        ],
+    )
+    def test_looks_truncated(self, count, num_ctx, expected):
+        assert looks_truncated(count, num_ctx) is expected
+
+    @pytest.mark.asyncio
+    async def test_warning_fires_on_truncation_signature(self, caplog):
+        llm = CountingLLM(prompt_eval_count=4099, num_ctx=8192)
+        judge = LLMJudge(llm=llm)
+
+        with caplog.at_level("WARNING", logger="ragnarok_ai.evaluators.judge"):
+            await judge.evaluate_relevance(question="Q", answer="A")
+
+        assert judge.truncation_warnings == 1
+        assert "probably truncated" in caplog.text
+        assert "4099 prompt tokens evaluated for a context window of 8192" in caplog.text
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("count", [2413, None])
+    async def test_no_warning_without_the_signature(self, caplog, count):
+        llm = CountingLLM(prompt_eval_count=count, num_ctx=4096)
+        judge = LLMJudge(llm=llm)
+
+        with caplog.at_level("WARNING", logger="ragnarok_ai.evaluators.judge"):
+            await judge.evaluate_relevance(question="Q", answer="A")
+
+        assert judge.truncation_warnings == 0
+        assert "truncated" not in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_client_without_num_ctx_is_not_checked(self, caplog):
+        llm = CountingLLM(prompt_eval_count=4099, num_ctx=None)
+        judge = LLMJudge(llm=llm)
+
+        with caplog.at_level("WARNING", logger="ragnarok_ai.evaluators.judge"):
+            await judge.evaluate_relevance(question="Q", answer="A")
+
+        assert judge.truncation_warnings == 0
+
+    @pytest.mark.asyncio
+    async def test_client_with_generate_only_still_works(self):
+        llm = MagicMock()
+        llm.model = "mistral:7b"
+        llm.generate = AsyncMock(return_value="Score: 5\nExplanation: ok")
+        judge = LLMJudge(llm=llm)
+
+        result = await judge.evaluate_relevance(question="Q", answer="A")
+
+        assert result.raw_score == 5
+        assert judge.truncation_warnings == 0
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_truncation_warning_fires_against_a_real_ollama(caplog):
+    """The warning really fires: small window, prompt longer than it, unique prefix to defeat the prefix cache.
+
+    Requires a running Ollama with the model named by RAGNAROK_TEST_OLLAMA_MODEL (default mistral:7b).
+    """
+    import contextlib
+    import os
+    import uuid
+
+    import httpx
+
+    from ragnarok_ai.adapters.llm.ollama import OllamaLLM
+
+    model = os.environ.get("RAGNAROK_TEST_OLLAMA_MODEL", "mistral:7b")
+    base_url = os.environ.get("RAGNAROK_TEST_OLLAMA_URL", "http://localhost:11434")
+    try:
+        tags = httpx.get(f"{base_url}/api/tags", timeout=5.0).json()
+    except Exception:
+        pytest.skip("Ollama not reachable")
+    if model not in [m["name"] for m in tags.get("models", [])]:
+        pytest.skip(f"{model} not installed")
+
+    llm = OllamaLLM(model=model, base_url=base_url, timeout=300.0, temperature=0.0, seed=42, num_ctx=512)
+    judge = LLMJudge(llm=llm, prompt_format="score-n")
+    # A fresh prefix per run: a cached prefix would not be re-evaluated by some Ollama versions
+    context = f"run {uuid.uuid4()} " + " ".join(f"fact{i} alpha bravo charlie delta" for i in range(300))
+
+    with caplog.at_level("WARNING", logger="ragnarok_ai.evaluators.judge"), contextlib.suppress(EvaluationError):
+        await judge.evaluate_faithfulness(context=context, question="Q", answer="A")
+
+    assert judge.truncation_warnings == 1
+    assert "probably truncated" in caplog.text
 
 
 class TestLLMJudgeConfigurationErrors:

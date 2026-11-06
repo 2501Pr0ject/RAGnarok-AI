@@ -33,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the model you ask for (`ollama pull <model>`; the default is in the
   error message); `mistral` still resolves to `mistral:latest`, and a
   Prometheus 2 alias created with `ollama cp` is still accepted
+- **Judge scores are not comparable with runs made before 1.12.3**
+  (#141). The Ollama client built by `LLMJudge` now sends `temperature=0`,
+  `seed=42` and `num_ctx=8192`; earlier versions sent no option, so the
+  judge sampled at the server default temperature 0.8 with a random seed
+  in a 4096-token window on recent Ollama versions. What to do: run your
+  baselines again with 1.12.3 before comparing; to keep other options,
+  build the client yourself (`OllamaLLM(temperature=..., seed=...,
+  num_ctx=...)`) and pass it with `llm=`, it is used as given
 
 ### Added
 - **`LLMJudge(prompt_format=...)`**: `"prometheus"` forces the prometheus-eval
@@ -43,6 +51,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `judge.effective_prompt_format`, logged at INFO. CLI: `ragnarok judge
   --prompt-format`; the JSON output gains `model` and `prompt_format`.
   Closes #133
+- **`OllamaLLM` sampling options**: `temperature`, `seed`, `num_ctx` and a
+  free `options` dict, sent in the request `options`. By default nothing is
+  sent and the adapter behaves exactly as before (server defaults:
+  temperature 0.8, random seed, the server's context window). New
+  `generate_detailed()` returns the text with Ollama's `prompt_eval_count`
+  and `eval_count` (`OllamaGeneration`); `generate()` is unchanged
+- **Truncation warning in `LLMJudge`**: Ollama truncates silently a prompt
+  longer than `num_ctx` and reports a token count just above `num_ctx / 2`
+  (measured on Ollama 0.40.13). The judge recognizes that signature in the
+  counters, logs a warning naming the counts, and counts it in
+  `judge.truncation_warnings`. Heuristic: a legitimate prompt whose length
+  falls in that narrow band is a false positive
 
 ### Fixed
 - **`parse_judge_response()` let a `Verdict:` line written by the model

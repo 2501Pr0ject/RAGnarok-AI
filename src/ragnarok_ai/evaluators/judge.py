@@ -6,6 +6,7 @@ using Prometheus 2, a specialized open-source judge model.
 
 from __future__ import annotations
 
+import inspect
 import logging
 import re
 from dataclasses import dataclass
@@ -221,6 +222,27 @@ def build_prometheus_prompt(criteria: str, instruction: str, response: str) -> s
     rubric = PROMETHEUS_SCORE_RUBRIC_TEMPLATE.format(**PROMETHEUS_RUBRICS[criteria])
     user = PROMETHEUS_ABSOLUTE_PROMPT_WO_REF.format(instruction=instruction, response=response, rubric=rubric)
     return f"{PROMETHEUS_ABS_SYSTEM_PROMPT}\n\n{user}"
+
+
+# =============================================================================
+# Truncation heuristic
+# =============================================================================
+
+
+def looks_truncated(prompt_eval_count: int, num_ctx: int) -> bool:
+    """Whether Ollama's reported prompt token count betrays a truncated prompt.
+
+    Ollama does not report truncation. When the prompt exceeds ``num_ctx`` it
+    keeps a few leading tokens plus the last half of the window, so the
+    reported ``prompt_eval_count`` lands just above ``num_ctx // 2``
+    (measured on Ollama 0.40.13: 259 for 512, 515 for 1024, 1027 for 2048,
+    2051 for 4096). A count at the very top of the window is flagged too, in
+    case a server version truncates to the window instead. A legitimate
+    prompt whose length falls in one of these narrow bands is a false
+    positive, hence "probably" in the warning.
+    """
+    half = num_ctx // 2
+    return (half - 8 <= prompt_eval_count <= half + 16) or prompt_eval_count >= num_ctx - 16
 
 
 # =============================================================================
@@ -470,6 +492,14 @@ class LLMJudge:
     # Q5 provides better precision for subtle judgments (hallucination, faithfulness)
     DEFAULT_MODEL = "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M"
     PROMPT_FORMATS: tuple[str, ...] = ("auto", "prometheus", "score-n")
+    # Sampling options imposed on the Ollama client the judge builds itself.
+    # Greedy decoding and a fixed seed make a judgment reproducible on the same
+    # machine and Ollama version; the explicit context window is what the
+    # truncation warning is measured against. A client passed via ``llm=`` is
+    # used as given.
+    JUDGE_TEMPERATURE: float = 0.0
+    JUDGE_SEED: int = 42
+    JUDGE_NUM_CTX: int = 8192
 
     def __init__(
         self,
@@ -534,8 +564,13 @@ class LLMJudge:
                 model=selected_model,
                 base_url=base_url,
                 timeout=timeout,
+                temperature=self.JUDGE_TEMPERATURE,
+                seed=self.JUDGE_SEED,
+                num_ctx=self.JUDGE_NUM_CTX,
             )
             self.model = selected_model
+
+        self.truncation_warnings = 0
 
         # Prometheus 2 ignores the "Score: N" format and needs its native template
         if prompt_format == "auto":
@@ -559,6 +594,23 @@ class LLMJudge:
 
                 disambiguator = SLMDisambiguator(disambiguation_llm)
             self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
+
+    async def _generate(self, prompt: str) -> str:
+        """Call the LLM; when it reports token counters, check for truncation."""
+        detailed = getattr(self.llm, "generate_detailed", None)
+        if detailed is None or not inspect.iscoroutinefunction(detailed):
+            return str(await self.llm.generate(prompt))
+        generation = await detailed(prompt)
+        num_ctx = getattr(self.llm, "num_ctx", None)
+        prompt_tokens = getattr(generation, "prompt_eval_count", None)
+        if num_ctx and prompt_tokens is not None and looks_truncated(prompt_tokens, num_ctx):
+            self.truncation_warnings += 1
+            logger.warning(
+                f"Judge prompt probably truncated by Ollama: {prompt_tokens} prompt tokens evaluated for a "
+                f"context window of {num_ctx} ({len(prompt)} characters sent). The judge scored a cut "
+                "context. Raise num_ctx or shorten the context."
+            )
+        return str(generation.text)
 
     @property
     def effective_prompt_format(self) -> str:
@@ -661,7 +713,7 @@ class LLMJudge:
             question=question,
             answer=answer,
         )
-        response = await self.llm.generate(prompt)
+        response = await self._generate(prompt)
         return parse_judge_response(response, "faithfulness")
 
     async def evaluate_relevance(
@@ -684,7 +736,7 @@ class LLMJudge:
             question=question,
             answer=answer,
         )
-        response = await self.llm.generate(prompt)
+        response = await self._generate(prompt)
         return parse_judge_response(response, "relevance")
 
     async def detect_hallucination(
@@ -712,7 +764,7 @@ class LLMJudge:
             context=context,
             answer=answer,
         )
-        response = await self.llm.generate(prompt)
+        response = await self._generate(prompt)
         return parse_judge_response(response, "hallucination")
 
     async def evaluate_completeness(
@@ -744,12 +796,12 @@ class LLMJudge:
             question=question,
             answer=answer,
         )
-        response = await self.llm.generate(prompt)
+        response = await self._generate(prompt)
         return parse_judge_response(response, "completeness")
 
     async def _judge_prometheus(self, criteria: str, instruction: str, answer: str) -> JudgeResult:
         """Run one criterion with the native Prometheus 2 template and parser."""
-        response = await self.llm.generate(build_prometheus_prompt(criteria, instruction, answer))
+        response = await self._generate(build_prometheus_prompt(criteria, instruction, answer))
         return parse_prometheus_response(response, criteria)
 
     async def evaluate_all(
