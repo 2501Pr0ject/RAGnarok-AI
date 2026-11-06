@@ -34,6 +34,8 @@ from ragnarok_ai.core.exceptions import (
     CheckpointFormatError,
     ConfigurationError,
     EvaluationError,
+    JudgeConnectionError,
+    JudgeDependencyError,
     LLMConnectionError,
     RagnarokError,
 )
@@ -78,6 +80,8 @@ __all__ = [
     "GatingResult",
     "GeneratorConfig",
     "JudgeConfig",
+    "JudgeConnectionError",
+    "JudgeDependencyError",
     "LLMConnectionError",
     "LLMProtocol",
     "MetricCategory",

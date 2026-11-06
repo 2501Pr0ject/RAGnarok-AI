@@ -14,7 +14,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
 
-from ragnarok_ai.core.exceptions import EvaluationError, JudgeModelNotFoundError, LLMConnectionError
+from ragnarok_ai.core.exceptions import (
+    EvaluationError,
+    JudgeConnectionError,
+    JudgeDependencyError,
+    JudgeModelNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -499,14 +504,12 @@ class LLMJudge:
                 from ragnarok_ai.adapters.llm.ollama import OllamaLLM
             except ModuleNotFoundError as exc:
                 # httpx is only installed with an extra; say so instead of a bare ImportError
-                from ragnarok_ai.plugins.exceptions import PluginUnavailableError
-
-                raise PluginUnavailableError("ollama", extra="ollama") from exc
+                raise JudgeDependencyError(extra="ollama", module="httpx") from exc
 
             selected_model = model or self.DEFAULT_MODEL
 
-            # Three distinct failures: server unreachable (LLMConnectionError, raised
-            # by _get_available_models), model not installed, nothing usable at all
+            # Three distinct failures: dependency missing (above), server unreachable
+            # (JudgeConnectionError, raised by _get_available_models), model not installed
             available = self._get_available_models(base_url)
             if selected_model not in available:
                 fallback = self._find_fallback_model(available)
@@ -552,7 +555,7 @@ class LLMJudge:
             List of model names, possibly empty.
 
         Raises:
-            LLMConnectionError: If the server cannot be reached, times out,
+            JudgeConnectionError: If the server cannot be reached, times out,
                 or answers with an error status. An unreachable server is
                 never reported as "model not installed".
         """
@@ -563,16 +566,16 @@ class LLMJudge:
             response = httpx.get(url, timeout=5.0)
         except httpx.TimeoutException as exc:
             msg = f"Ollama at {base_url} did not answer within 5s ({url}): {exc}"
-            raise LLMConnectionError(msg) from exc
+            raise JudgeConnectionError(msg) from exc
         except httpx.HTTPError as exc:
             msg = f"Cannot reach Ollama at {base_url} ({url}): {exc}. Is the server running?"
-            raise LLMConnectionError(msg) from exc
+            raise JudgeConnectionError(msg) from exc
         except Exception as exc:
             msg = f"Unexpected error while listing Ollama models at {base_url}: {exc}"
-            raise LLMConnectionError(msg) from exc
+            raise JudgeConnectionError(msg) from exc
         if response.status_code != 200:
             msg = f"Ollama at {base_url} answered {response.status_code} to {url}: {response.text[:200]}"
-            raise LLMConnectionError(msg)
+            raise JudgeConnectionError(msg)
         data = response.json()
         return [str(m["name"]) for m in data.get("models", [])]
 

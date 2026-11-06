@@ -99,3 +99,34 @@ class JudgeModelNotFoundError(ConfigurationError, RuntimeError):
             f"Install it with: ollama pull {model} (installed models: {listed})"
         )
         super().__init__(msg)
+
+
+class JudgeConnectionError(LLMConnectionError, RuntimeError):
+    """Raised by ``LLMJudge()`` when the Ollama server cannot be reached.
+
+    Distinct from ``JudgeModelNotFoundError``: the server did not answer (or
+    answered an error status), so nothing can be said about the model. Also
+    a ``RuntimeError`` so code written for earlier versions, which raised
+    one from the constructor, keeps catching it.
+    """
+
+
+class JudgeDependencyError(ConfigurationError, ImportError, RuntimeError):
+    """Raised by ``LLMJudge()`` when the Ollama client's dependency is missing.
+
+    ``httpx`` is only installed with an extra. The message carries the
+    install command. Also an ``ImportError`` (earlier versions raised a bare
+    ``ModuleNotFoundError``) and a ``RuntimeError`` (what the constructor
+    raised for every other setup failure).
+    """
+
+    def __init__(self, extra: str = "ollama", module: str = "httpx") -> None:
+        """Initialize JudgeDependencyError."""
+        self.extra = extra
+        self.module = module
+        msg = (
+            f"The default judge needs '{module}', which is not installed. "
+            f"Install it with: pip install 'ragnarok-ai[{extra}]' "
+            "(or pass your own LLM client with llm=)"
+        )
+        super().__init__(msg)
