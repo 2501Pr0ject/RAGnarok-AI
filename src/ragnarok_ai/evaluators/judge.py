@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
 
-from ragnarok_ai.core.exceptions import EvaluationError
+from ragnarok_ai.core.exceptions import EvaluationError, JudgeModelNotFoundError, LLMConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -495,11 +495,18 @@ class LLMJudge:
             self.llm = llm
             self.model = getattr(llm, "model", "custom")
         else:
-            from ragnarok_ai.adapters.llm.ollama import OllamaLLM
+            try:
+                from ragnarok_ai.adapters.llm.ollama import OllamaLLM
+            except ModuleNotFoundError as exc:
+                # httpx is only installed with an extra; say so instead of a bare ImportError
+                from ragnarok_ai.plugins.exceptions import PluginUnavailableError
+
+                raise PluginUnavailableError("ollama", extra="ollama") from exc
 
             selected_model = model or self.DEFAULT_MODEL
 
-            # Check model availability and fallback if needed
+            # Three distinct failures: server unreachable (LLMConnectionError, raised
+            # by _get_available_models), model not installed, nothing usable at all
             available = self._get_available_models(base_url)
             if selected_model not in available:
                 fallback = self._find_fallback_model(available)
@@ -510,8 +517,7 @@ class LLMJudge:
                     )
                     selected_model = fallback
                 else:
-                    msg = f"No suitable judge model found. Install Prometheus 2 with: ollama pull {self.DEFAULT_MODEL}"
-                    raise RuntimeError(msg)
+                    raise JudgeModelNotFoundError(selected_model, available, base_url)
 
             self.llm = OllamaLLM(
                 model=selected_model,
@@ -537,24 +543,38 @@ class LLMJudge:
             self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
 
     def _get_available_models(self, base_url: str) -> list[str]:
-        """Get list of available Ollama models.
+        """Get the list of models installed on the Ollama server.
 
         Args:
             base_url: Ollama API base URL.
 
         Returns:
-            List of model names.
+            List of model names, possibly empty.
+
+        Raises:
+            LLMConnectionError: If the server cannot be reached, times out,
+                or answers with an error status. An unreachable server is
+                never reported as "model not installed".
         """
         import httpx
 
+        url = f"{base_url}/api/tags"
         try:
-            response = httpx.get(f"{base_url}/api/tags", timeout=5.0)
-            if response.status_code == 200:
-                data = response.json()
-                return [m["name"] for m in data.get("models", [])]
-        except Exception:
-            pass
-        return []
+            response = httpx.get(url, timeout=5.0)
+        except httpx.TimeoutException as exc:
+            msg = f"Ollama at {base_url} did not answer within 5s ({url}): {exc}"
+            raise LLMConnectionError(msg) from exc
+        except httpx.HTTPError as exc:
+            msg = f"Cannot reach Ollama at {base_url} ({url}): {exc}. Is the server running?"
+            raise LLMConnectionError(msg) from exc
+        except Exception as exc:
+            msg = f"Unexpected error while listing Ollama models at {base_url}: {exc}"
+            raise LLMConnectionError(msg) from exc
+        if response.status_code != 200:
+            msg = f"Ollama at {base_url} answered {response.status_code} to {url}: {response.text[:200]}"
+            raise LLMConnectionError(msg)
+        data = response.json()
+        return [str(m["name"]) for m in data.get("models", [])]
 
     def _find_fallback_model(self, available: list[str]) -> str | None:
         """Find a fallback model from available models.

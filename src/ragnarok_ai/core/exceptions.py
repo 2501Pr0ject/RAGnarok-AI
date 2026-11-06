@@ -76,3 +76,26 @@ class CheckpointFormatError(RagnarokError):
     Example:
         >>> raise CheckpointFormatError("Checkpoint batch_evaluation_1a2b3c4d uses format 1; version 2 is required")
     """
+class JudgeModelNotFoundError(ConfigurationError, RuntimeError):
+    """Raised when the judge model is not installed on the Ollama server.
+
+    Distinct from ``LLMConnectionError`` (the server could not be reached):
+    the server answered, but does not serve the requested model. The message
+    carries the command to install it. Also a ``RuntimeError`` so code
+    written for earlier versions, which raised one, keeps catching it.
+
+    Attributes:
+        model: The requested model name.
+        available: Model names the server reported.
+    """
+
+    def __init__(self, model: str, available: list[str], base_url: str) -> None:
+        """Initialize JudgeModelNotFoundError."""
+        self.model = model
+        self.available = list(available)
+        listed = ", ".join(self.available) if self.available else "none"
+        msg = (
+            f"Judge model '{model}' is not installed on the Ollama server at {base_url}. "
+            f"Install it with: ollama pull {model} (installed models: {listed})"
+        )
+        super().__init__(msg)

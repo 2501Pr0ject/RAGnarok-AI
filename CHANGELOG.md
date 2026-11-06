@@ -56,6 +56,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The calibration now continues: the sample is counted in
     `CriterionCalibration.parse_failures` (indices in `failed_indices`),
     excluded from the statistics, and reported by `summary()` and `to_dict()`
+- **`LLMJudge()` said "no suitable judge model" whatever went wrong**
+  - A stopped Ollama server, a timeout or an HTTP error all ended in the
+    same `RuntimeError` asking to install Prometheus 2; on a base install
+    without the `[ollama]` extra, `LLMJudge()` failed with a bare
+    `ModuleNotFoundError: No module named 'httpx'`
+  - `LLMJudge()` now raises one of three errors, each naming the remedy:
+    `JudgeDependencyError` with `pip install 'ragnarok-ai[ollama]'` when
+    httpx is missing; `JudgeConnectionError` with the server URL when
+    Ollama cannot be reached or answers an error status;
+    `JudgeModelNotFoundError` with `ollama pull <model>` and the installed
+    models when the server is up but does not serve the requested model.
+    All three are also `RuntimeError`, so `except RuntimeError` written
+    for earlier versions keeps working (`JudgeDependencyError` is also an
+    `ImportError`, `JudgeConnectionError` also an `LLMConnectionError`)
 
 ### Changed
 - `CalibrationReport.summary()` states that the recommended threshold and
