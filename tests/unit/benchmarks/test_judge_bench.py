@@ -9,11 +9,16 @@ import pytest
 from typer.testing import CliRunner
 
 from ragnarok_ai.benchmarks.judges import (
+    ATTEMPTS_HEADER_FIELDS,
+    AttemptsMismatchError,
+    attempts_header,
     binary_metrics,
     calibration_metrics,
     choose_threshold,
+    file_sha256,
     grouped_bootstrap,
     load_records,
+    ollama_model_memory,
     parse_record,
     read_attempts,
     run_benchmark,
@@ -203,7 +208,12 @@ class TestRun:
         report = run.report
         assert report["prev_sentence"] == {"records_with_prev_sentence": 46, "transmitted_to_judge": False}
         assert report["level"] == "sentence"
-        assert report["threshold"] == {"value": 0.75, "source": "verdict_policy", "policy_threshold": 0.75}
+        assert report["threshold"] == {
+            "value": 0.75,
+            "source": "verdict_policy",
+            "policy_threshold": 0.75,
+            "rule": "PASS if score >= 0.75 (source: verdict_policy); PARTIAL and FAIL counted as not supported",
+        }
         assert report["binary"]["kappa"] == pytest.approx(0.024, abs=5e-4)
         assert report["binary"]["accuracy"] == pytest.approx(36 / 62)
         assert report["binary"]["majority_baseline_accuracy"] == pytest.approx(58 / 62)
@@ -227,9 +237,119 @@ class TestRun:
         run = await run_benchmark(second, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
         assert len(second.received) == 6  # only the 6 missing ids were judged
         assert run.report["records"]["scored"] == 10
-        assert [r["sample_id"] for r in map(json.loads, run.attempts_path.read_text().splitlines())][:4] == [
-            r.id for r in records[:4]
-        ]
+        lines = [json.loads(line) for line in run.attempts_path.read_text().splitlines()]
+        assert lines[0] == {
+            "header": 1,
+            "config_hash": run.report["config_hash"],
+            "criterion": "faithfulness",
+            "level": "sentence",
+            "sample": None,
+            "seed": 0,
+            "stratify": "label",
+            "data_sha256": None,
+        }
+        assert sum(1 for row in lines if "header" in row) == 1  # the header is written once
+        assert [row["sample_id"] for row in lines[1:5]] == [r.id for r in records[:4]]
+        assert all(row["config_hash"] == run.report["config_hash"] for row in lines[1:])
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("first", "second", "field_name"),
+        [
+            ({"judge": "ordinal"}, {"judge": "probability"}, "config_hash"),
+            ({"seed": 0}, {"seed": 1}, "seed"),
+            ({"sample": 4}, {"sample": 3}, "sample"),
+            ({"stratify": "label"}, {"stratify": None}, "stratify"),
+            ({"criterion": "faithfulness"}, {"criterion": "relevance"}, "criterion"),
+            ({"data_sha256": "a" * 64}, {"data_sha256": "b" * 64}, "data_sha256"),
+        ],
+    )
+    async def test_resume_refuses_another_run_and_names_the_field(self, tmp_path: Path, first, second, field_name):
+        """Same --out, another judge, seed, sample, stratify, criterion or data file: refused, nothing mixed."""
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:6]))
+        judges = {"ordinal": ScriptedOrdinalJudge, "probability": ScriptedProbabilityJudge}
+
+        async def run(params: dict[str, object]):
+            judge = judges[str(params.pop("judge", "ordinal"))]()
+            return await run_benchmark(judge, records, out_dir=tmp_path / "out", bootstrap_resamples=0, **params), judge
+
+        await run(dict(first))
+        before = (tmp_path / "out" / "attempts.jsonl").read_text()
+        with pytest.raises(AttemptsMismatchError, match=f"another {field_name} ") as excinfo:
+            await run(dict(second))
+        assert "attempts.jsonl" in str(excinfo.value)
+        assert (tmp_path / "out" / "attempts.jsonl").read_text() == before  # untouched
+
+    @pytest.mark.asyncio
+    async def test_resume_refuses_a_row_with_another_config_hash_or_no_header(self, tmp_path: Path):
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:4]))
+        out = tmp_path / "out"
+        await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=out, bootstrap_resamples=0)
+        path = out / "attempts.jsonl"
+        lines = path.read_text().splitlines()
+        tampered = json.loads(lines[2])
+        tampered["config_hash"] = "0" * 16
+        path.write_text("\n".join([*lines[:2], json.dumps(tampered), *lines[3:]]) + "\n")
+        with pytest.raises(AttemptsMismatchError, match="line 3: config_hash"):
+            await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=out, bootstrap_resamples=0)
+
+        path.write_text("\n".join(lines[1:]) + "\n")  # rows without the header line
+        with pytest.raises(AttemptsMismatchError, match="no header line"):
+            await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=out, bootstrap_resamples=0)
+        assert len(read_attempts(path)) == 4  # a plain read still works, the header is skipped
+
+    @pytest.mark.asyncio
+    async def test_dev_attempts_have_their_own_header_checked_on_the_dev_file(self, tmp_path: Path):
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:4]))
+        dev = load_records(write_jsonl(tmp_path / "dev.jsonl", study_like_rows()[10:14]))
+        out = tmp_path / "out"
+        kwargs = {"dev_records": dev, "bootstrap_resamples": 0, "sample": 2}
+        await run_benchmark(ScriptedProbabilityJudge(), records, out_dir=out, dev_sha256="d" * 64, **kwargs)
+        header = json.loads((out / "dev_attempts.jsonl").read_text().splitlines()[0])
+        assert header["data_sha256"] == "d" * 64
+        assert (header["sample"], header["seed"], header["stratify"]) == (None, None, None)  # dev is never sampled
+        await run_benchmark(ScriptedProbabilityJudge(), records, out_dir=out, dev_sha256="d" * 64, **kwargs)
+        with pytest.raises(AttemptsMismatchError, match=r"dev_attempts\.jsonl was produced with another data_sha256"):
+            await run_benchmark(ScriptedProbabilityJudge(), records, out_dir=out, dev_sha256="e" * 64, **kwargs)
+
+    def test_attempts_header_fields_and_file_sha256(self, tmp_path: Path):
+        header = attempts_header("h", "faithfulness", "sentence", sample=3, seed=1, stratify=None, data_sha256="x")
+        assert set(ATTEMPTS_HEADER_FIELDS) <= set(header) and header["header"] == 1
+        path = tmp_path / "f"
+        path.write_bytes(b"abc")
+        assert file_sha256(path) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+
+    @pytest.mark.asyncio
+    async def test_report_states_the_prediction_rule_and_the_harness_memory(self, tmp_path: Path):
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:6]))
+
+        async def memory() -> dict[str, object]:
+            return {
+                "source": "ollama /api/ps",
+                "model": "m:7b",
+                "available": True,
+                "size_mb": 4096.0,
+                "size_vram_mb": 4000.0,
+            }
+
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", bootstrap_resamples=0, model_memory=memory
+        )
+        assert run.report["threshold"]["rule"] == (
+            "PASS if score >= 0.75 (source: verdict_policy); PARTIAL and FAIL counted as not supported"
+        )
+        assert "peak_rss_mb" not in run.report and run.report["peak_rss_mb_harness"] > 0
+        assert run.report["model_memory"]["size_mb"] == 4096.0
+        md = run.report_md.read_text()
+        assert (
+            "Prediction rule: PASS if score >= 0.75 (source: verdict_policy); PARTIAL and FAIL counted as not supported."
+            in md
+        )
+        assert "harness process only; an Ollama model runs in another process" in md
+        assert "model memory (ollama /api/ps): m:7b, 4096.0 MiB resident, 4000.0 MiB in VRAM" in md
+
+        plain = await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out2", bootstrap_resamples=0)
+        assert plain.report["model_memory"] is None and "model memory" not in plain.report_md.read_text()
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):
@@ -267,7 +387,12 @@ class TestRun:
         without_dev = await run_benchmark(
             ScriptedProbabilityJudge(), test, out_dir=tmp_path / "out2", bootstrap_resamples=0
         )
-        assert without_dev.report["threshold"] == {"value": 0.5, "source": "verdict_policy", "policy_threshold": 0.5}
+        assert without_dev.report["threshold"] == {
+            "value": 0.5,
+            "source": "verdict_policy",
+            "policy_threshold": 0.5,
+            "rule": "PASS if score >= 0.50 (source: verdict_policy); PARTIAL and FAIL counted as not supported",
+        }
 
     @pytest.mark.asyncio
     async def test_three_class_judge_gets_a_confusion_matrix(self, tmp_path: Path):
@@ -299,6 +424,58 @@ class TestRun:
         assert read_attempts(a.attempts_path).keys() == read_attempts(b.attempts_path).keys()
         for key in ("binary", "bootstrap", "by", "threshold"):
             assert a.report[key] == b.report[key]
+
+
+class TestOllamaModelMemory:
+    @pytest.mark.asyncio
+    async def test_reads_the_loaded_model_size_on_api_ps(self):
+        import httpx
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            assert request.url.path == "/api/ps"
+            return httpx.Response(
+                200,
+                json={
+                    "models": [
+                        {"name": "other:latest", "model": "other:latest", "size": 1, "size_vram": 1},
+                        {
+                            "name": "prometheus:7b",
+                            "model": "prometheus:7b",
+                            "size": 4 * 1024**3,
+                            "size_vram": 3 * 1024**3,
+                        },
+                    ]
+                },
+            )
+
+        result = await ollama_model_memory(
+            "http://ollama.test", "prometheus:7b", transport=httpx.MockTransport(handler)
+        )
+        assert result == {
+            "source": "ollama /api/ps",
+            "model": "prometheus:7b",
+            "available": True,
+            "size_mb": 4096.0,
+            "size_vram_mb": 3072.0,
+            "reason": None,
+        }
+        bare = await ollama_model_memory("http://ollama.test", "other", transport=httpx.MockTransport(handler))
+        assert bare["available"] and bare["model"] == "other:latest"  # the :latest tag is implied
+
+    @pytest.mark.asyncio
+    async def test_says_why_when_unavailable(self):
+        import httpx
+
+        empty = httpx.MockTransport(lambda _request: httpx.Response(200, json={"models": []}))
+        result = await ollama_model_memory("http://ollama.test", "prometheus:7b", transport=empty)
+        assert not result["available"] and result["reason"] == "model not loaded (listed: none)"
+
+        def down(_request: httpx.Request) -> httpx.Response:
+            raise httpx.ConnectError("refused")
+
+        result = await ollama_model_memory("http://ollama.test", "prometheus:7b", transport=httpx.MockTransport(down))
+        assert not result["available"] and result["reason"] == "ConnectError: refused"
+        assert result["size_mb"] is None
 
 
 class TestCli:
@@ -374,6 +551,30 @@ class TestCli:
         assert report["records"] == {"total": 3, "evaluated": 3, "scored": 2, "failed": 1}
         assert report["failures"] == {"no_units": 1}  # "Sure!" has no judgeable sentence
         assert report["binary"]["accuracy"] == 1.0  # a1 FAIL (worst), a2 PASS
+
+    def test_cli_refuses_to_resume_after_the_data_file_changed(self, tmp_path: Path):
+        rows = study_like_rows()[:4]
+        data = write_jsonl(tmp_path / "test.jsonl", rows)
+        args = [
+            "judge-bench",
+            "--judge",
+            "python:tests.unit.benchmarks.fake_judge:ScriptedOrdinalJudge",
+            "--data",
+            str(data),
+            "--out",
+            str(tmp_path / "out"),
+            "--bootstrap",
+            "0",
+        ]
+        assert runner.invoke(app, args).exit_code == 0
+        header = json.loads((tmp_path / "out" / "attempts.jsonl").read_text().splitlines()[0])
+        assert header["data_sha256"] == file_sha256(data)
+        assert runner.invoke(app, args).exit_code == 0  # identical run: resumed
+        write_jsonl(data, [*rows, sentence_row(99, "SUPPORTED", "One more sentence.")])
+        changed = runner.invoke(app, args)
+        assert changed.exit_code == 2 and "attempts.jsonl was produced with another data_sha256" in changed.output
+        other_seed = runner.invoke(app, [*args, "--seed", "5"])
+        assert other_seed.exit_code == 2 and "another seed (0, this run: 5)" in other_seed.output
 
     def test_sentence_level_is_refused_on_a_sentence_level_set(self, tmp_path: Path):
         data = write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:3])

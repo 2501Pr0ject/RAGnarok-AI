@@ -13,7 +13,10 @@ report says how many records carry one.
 
 Every call goes through ``judge_many``. Attempts are appended to
 ``attempts.jsonl`` as they complete, so an interrupted run resumes from that
-file by ``id``. For a probabilistic judge the pass threshold is chosen on
+file by ``id``. The first line of the file is a header (config hash,
+criterion, level, sample, seed, stratify, SHA-256 of the data file); a run
+whose parameters differ from the header is refused, never mixed. For a
+probabilistic judge the pass threshold is chosen on
 the ``--dev`` set and applied unchanged to the evaluated set; without a dev
 set the judge's own verdict policy applies. Nothing is tuned on the
 evaluated set.
@@ -21,6 +24,7 @@ evaluated set.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import random
@@ -42,7 +46,7 @@ from ragnarok_ai.judges.contract import (
 from ragnarok_ai.judges.runner import judge_many
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Awaitable, Callable, Iterable, Sequence
 
     from ragnarok_ai.core.protocols import JudgeProtocol
 
@@ -52,6 +56,14 @@ ANSWER_LABELS = ("PASS", "FAIL")
 NEGATIVE_CLASS = "not supported"
 DEFAULT_BOOTSTRAP_RESAMPLES = 1000
 ECE_BINS = 10
+ATTEMPTS_FORMAT = 1
+# Fields of the attempts header; a run must match all of them to resume. Checked in this
+# order so that the message names the plain field (criterion differs) before the hash it changes.
+ATTEMPTS_HEADER_FIELDS = ("criterion", "level", "sample", "seed", "stratify", "data_sha256", "config_hash")
+
+
+class AttemptsMismatchError(ValueError):
+    """An existing attempts file was produced by a run with other parameters."""
 
 
 # =============================================================================
@@ -228,21 +240,93 @@ def attempt_to_dict(attempt: JudgeAttempt) -> dict[str, Any]:
     }
 
 
-def read_attempts(path: Path) -> dict[str, dict[str, Any]]:
-    """Attempts already written, by ``sample_id``; a truncated last line is ignored."""
-    done: dict[str, dict[str, Any]] = {}
+def file_sha256(path: str | Path) -> str:
+    """Hex SHA-256 of a file's bytes."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def attempts_header(
+    config_hash: str,
+    criterion: str,
+    level: str,
+    *,
+    sample: int | None,
+    seed: int | None,
+    stratify: str | None,
+    data_sha256: str | None,
+) -> dict[str, Any]:
+    """The first line of an attempts file: what the run must match to resume from it."""
+    return {
+        "header": ATTEMPTS_FORMAT,
+        "config_hash": config_hash,
+        "criterion": criterion,
+        "level": level,
+        "sample": sample,
+        "seed": seed,
+        "stratify": stratify,
+        "data_sha256": data_sha256,
+    }
+
+
+def _json_lines(path: Path) -> list[tuple[int, dict[str, Any]]]:
+    """Non-empty lines of a JSONL file as (line number, object); a truncated last line is ignored."""
+    rows: list[tuple[int, dict[str, Any]]] = []
     if not path.exists():
-        return done
+        return rows
     with path.open(encoding="utf-8") as handle:
-        for line in handle:
+        for number, line in enumerate(handle, start=1):
             line = line.strip()
             if not line:
                 continue
             try:
-                row = json.loads(line)
+                rows.append((number, json.loads(line)))
             except json.JSONDecodeError:
                 continue
-            done[str(row["sample_id"])] = row
+    return rows
+
+
+def _is_header(row: dict[str, Any]) -> bool:
+    return "header" in row and "sample_id" not in row
+
+
+def read_attempts(path: Path, expected: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+    """Attempts already written, by ``sample_id``.
+
+    With *expected* (an ``attempts_header``), the file's header must carry the
+    same value for every field of ``ATTEMPTS_HEADER_FIELDS`` and every row
+    must carry the expected ``config_hash``; otherwise ``AttemptsMismatchError``
+    names the field, and nothing is resumed.
+    """
+    done: dict[str, dict[str, Any]] = {}
+    rows = _json_lines(path)
+    if not rows:
+        return done
+    first = rows[0][1]
+    if expected is not None:
+        if not _is_header(first):
+            msg = f"{path.name}: no header line, the file comes from another run format. Use another --out directory"
+            raise AttemptsMismatchError(msg)
+        for field_name in ATTEMPTS_HEADER_FIELDS:
+            if first.get(field_name) != expected[field_name]:
+                msg = (
+                    f"{path.name} was produced with another {field_name} "
+                    f"({first.get(field_name)!r}, this run: {expected[field_name]!r}). Use another --out directory"
+                )
+                raise AttemptsMismatchError(msg)
+    for number, row in rows:
+        if _is_header(row):
+            continue
+        if expected is not None and row.get("config_hash") != expected["config_hash"]:
+            msg = (
+                f"{path.name} line {number}: config_hash {row.get('config_hash')!r} differs from this run's "
+                f"{expected['config_hash']!r}. Use another --out directory"
+            )
+            raise AttemptsMismatchError(msg)
+        done[str(row["sample_id"])] = row
     return done
 
 
@@ -403,6 +487,51 @@ def _peak_rss_mb() -> float:
     return maxrss / (1024 * 1024) if sys.platform == "darwin" else maxrss / 1024
 
 
+async def ollama_model_memory(
+    base_url: str, model: str, *, timeout: float = 5.0, transport: Any = None
+) -> dict[str, Any]:
+    """Resident size of *model* as Ollama reports it on ``/api/ps`` (``size`` and ``size_vram``, in MiB).
+
+    The harness RSS never includes the model, which runs in the Ollama
+    server. Called right after the run, while the model is still loaded.
+    When the server does not answer or the model is not listed, the result
+    says so in ``reason`` and ``available`` is false.
+    """
+    import httpx
+
+    result: dict[str, Any] = {
+        "source": "ollama /api/ps",
+        "model": model,
+        "available": False,
+        "size_mb": None,
+        "size_vram_mb": None,
+        "reason": None,
+    }
+    try:
+        async with httpx.AsyncClient(base_url=base_url, timeout=timeout, transport=transport) as client:
+            response = await client.get("/api/ps")
+            response.raise_for_status()
+            entries = response.json().get("models", [])
+    except Exception as exc:  # the report must be written even when Ollama is gone
+        result["reason"] = f"{type(exc).__name__}: {exc}"
+        return result
+    wanted = {model, f"{model}:latest"}
+    names: list[str] = []
+    for entry in entries:
+        name = str(entry.get("name") or entry.get("model") or "")
+        names.append(name)
+        if name in wanted or str(entry.get("model")) in wanted:
+            result.update(
+                model=name,
+                available=True,
+                size_mb=round(float(entry.get("size", 0)) / (1024 * 1024), 1),
+                size_vram_mb=round(float(entry.get("size_vram", 0)) / (1024 * 1024), 1),
+            )
+            return result
+    result["reason"] = f"model not loaded (listed: {names or 'none'})"
+    return result
+
+
 # =============================================================================
 # Run
 # =============================================================================
@@ -453,15 +582,23 @@ async def _judge_records(
     records: Sequence[BenchRecord],
     attempts_path: Path,
     *,
+    header: dict[str, Any],
     concurrency: int,
     keep_raw_output: bool,
 ) -> dict[str, dict[str, Any]]:
-    """Judge the records not yet in *attempts_path*, appending as they complete; return all rows by id."""
-    done = read_attempts(attempts_path)
+    """Judge the records not yet in *attempts_path*, appending as they complete; return all rows by id.
+
+    A new file starts with *header*; an existing one must match it.
+    """
+    done = read_attempts(attempts_path, header)
+    has_header = any(_is_header(row) for _, row in _json_lines(attempts_path)[:1])
     pending = [r for r in records if r.id not in done]
     chunk = max(1, concurrency)
     attempts_path.parent.mkdir(parents=True, exist_ok=True)
     with attempts_path.open("a", encoding="utf-8") as handle:
+        if not has_header:
+            handle.write(json.dumps(header, ensure_ascii=False) + "\n")
+            handle.flush()
         for start in range(0, len(pending), chunk):
             batch = pending[start : start + chunk]
             attempts = await judge_many(
@@ -490,6 +627,9 @@ async def run_benchmark(
     keep_raw_output: bool = False,
     bootstrap_resamples: int = DEFAULT_BOOTSTRAP_RESAMPLES,
     judge_name: str | None = None,
+    data_sha256: str | None = None,
+    dev_sha256: str | None = None,
+    model_memory: Callable[[], Awaitable[dict[str, Any]]] | None = None,
 ) -> BenchmarkRun:
     """Run *judge* on *records*, write ``attempts.jsonl``, ``report.json`` and ``report.md`` in *out_dir*.
 
@@ -510,6 +650,16 @@ async def run_benchmark(
         keep_raw_output: Keep raw model text in the attempts file.
         bootstrap_resamples: Number of grouped bootstrap draws.
         judge_name: Label of the judge in the report.
+        data_sha256: SHA-256 of the evaluated file, written in the header of
+            ``attempts.jsonl`` and checked on resume.
+        dev_sha256: Same for the dev file and ``dev_attempts.jsonl``.
+        model_memory: Optional coroutine function called once after the run,
+            e.g. ``ollama_model_memory``; its result is reported as is.
+
+    Raises:
+        AttemptsMismatchError: An existing attempts file was produced with
+            another judge configuration, criterion, level, sample, seed,
+            stratify or data file; nothing is resumed or mixed.
     """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -524,11 +674,22 @@ async def run_benchmark(
     threshold_source = "verdict_policy"
     dev_rows: dict[str, dict[str, Any]] = {}
     if dev_records:
+        # The dev set is never sampled: its header carries no sample, seed or stratify
+        dev_header = attempts_header(
+            config.config_hash,
+            criterion,
+            dev_records[0].level,
+            sample=None,
+            seed=None,
+            stratify=None,
+            data_sha256=dev_sha256,
+        )
         dev_rows = await _judge_records(
             judge,
             criterion,
             dev_records,
             out / "dev_attempts.jsonl",
+            header=dev_header,
             concurrency=concurrency,
             keep_raw_output=keep_raw_output,
         )
@@ -539,9 +700,19 @@ async def run_benchmark(
             )
             threshold_source = f"dev ({len(dev_scored)} scored records, F1 of {NEGATIVE_CLASS} maximized)"
 
-    rows = await _judge_records(
-        judge, criterion, evaluated, out / "attempts.jsonl", concurrency=concurrency, keep_raw_output=keep_raw_output
+    header = attempts_header(
+        config.config_hash, criterion, level, sample=sample, seed=seed, stratify=stratify, data_sha256=data_sha256
     )
+    rows = await _judge_records(
+        judge,
+        criterion,
+        evaluated,
+        out / "attempts.jsonl",
+        header=header,
+        concurrency=concurrency,
+        keep_raw_output=keep_raw_output,
+    )
+    memory = await model_memory() if model_memory is not None else None
 
     scored = [r for r in evaluated if _score_of(rows[r.id]) is not None]
     failed = [r for r in evaluated if _score_of(rows[r.id]) is None]
@@ -561,13 +732,23 @@ async def run_benchmark(
         },
         "records": {"total": len(records), "evaluated": len(evaluated), "scored": len(scored), "failed": len(failed)},
         "sample": None if sample is None else {"size": sample, "stratify": stratify, "seed": seed},
-        "threshold": {"value": threshold, "source": threshold_source, "policy_threshold": policy_threshold},
+        "threshold": {
+            "value": threshold,
+            "source": threshold_source,
+            "policy_threshold": policy_threshold,
+            "rule": (
+                f"PASS if score >= {threshold:.2f} (source: {threshold_source}); "
+                f"PARTIAL and FAIL counted as {NEGATIVE_CLASS}"
+            ),
+        },
         "binary": binary_metrics(judge_pass, human_pass),
         "bootstrap": grouped_bootstrap(judge_pass, human_pass, groups, seed, bootstrap_resamples) if scored else None,
         "failures": {},
         "truncations": sum(1 for r in evaluated if (rows[r.id].get("trace") or {}).get("context_truncated") is True),
         "latency_ms": None,
-        "peak_rss_mb": round(_peak_rss_mb(), 1),
+        # The harness process only: an Ollama model runs in another process (see model_memory)
+        "peak_rss_mb_harness": round(_peak_rss_mb(), 1),
+        "model_memory": memory,
         "duration_s": None,
         "by": {},
     }
@@ -620,6 +801,7 @@ def render_report(report: dict[str, Any]) -> str:
         f"Config hash `{report['config_hash']}`. Records: {report['records']['evaluated']} evaluated "
         f"of {report['records']['total']}, {report['records']['scored']} scored, {report['records']['failed']} failed.",
         f"Threshold {report['threshold']['value']:.2f} (source: {report['threshold']['source']}).",
+        f"Prediction rule: {report['threshold']['rule']}.",
         f"`prev_sentence` present in {report['prev_sentence']['records_with_prev_sentence']} records, not transmitted to the judge.",
         "",
         "| Metric | Value |",
@@ -669,7 +851,19 @@ def render_report(report: dict[str, Any]) -> str:
     lines.append(f"- probable truncations: {report['truncations']}")
     if report.get("latency_ms"):
         lines.append(f"- latency p50 {report['latency_ms']['p50']:.0f} ms, p90 {report['latency_ms']['p90']:.0f} ms")
-    lines.append(f"- peak RSS {report['peak_rss_mb']} MiB, duration {report['duration_s']} s")
+    lines.append(
+        f"- peak RSS {report['peak_rss_mb_harness']} MiB (harness process only; an Ollama model runs in another "
+        f"process), duration {report['duration_s']} s"
+    )
+    memory = report.get("model_memory")
+    if memory is not None:
+        if memory.get("available"):
+            lines.append(
+                f"- model memory ({memory['source']}): {memory['model']}, {memory['size_mb']} MiB resident, "
+                f"{memory['size_vram_mb']} MiB in VRAM"
+            )
+        else:
+            lines.append(f"- model memory ({memory['source']}): not available ({memory.get('reason')})")
     for field_name, values in report["by"].items():
         lines += [
             "",
@@ -687,15 +881,20 @@ def render_report(report: dict[str, Any]) -> str:
 
 __all__ = [
     "ANSWER_LABELS",
+    "ATTEMPTS_HEADER_FIELDS",
     "SENTENCE_LABELS",
+    "AttemptsMismatchError",
     "BenchRecord",
     "BenchmarkRun",
     "attempt_to_dict",
+    "attempts_header",
     "binary_metrics",
     "calibration_metrics",
     "choose_threshold",
+    "file_sha256",
     "grouped_bootstrap",
     "load_records",
+    "ollama_model_memory",
     "parse_record",
     "read_attempts",
     "render_report",

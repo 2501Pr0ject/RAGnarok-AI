@@ -6,6 +6,7 @@ This module defines the Typer application and all CLI commands.
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
 import random
 import sys
@@ -2740,7 +2741,13 @@ def judge_bench(
     resumes from the attempts already written in --out. The threshold of a
     probabilistic judge is chosen on --dev and applied unchanged to --data.
     """
-    from ragnarok_ai.benchmarks.judges import load_records, run_benchmark
+    from ragnarok_ai.benchmarks.judges import (
+        AttemptsMismatchError,
+        file_sha256,
+        load_records,
+        ollama_model_memory,
+        run_benchmark,
+    )
 
     def fail(message: str, code: int) -> None:
         if state["json"]:
@@ -2765,6 +2772,10 @@ def judge_bench(
         return
     if criterion not in judge_instance.criteria:
         fail(f"Criterion {criterion!r} not supported by this judge: {sorted(judge_instance.criteria)}", EXIT_BAD_INPUT)
+    # The model of an llm judge runs in the Ollama server: its size is read there, not in this process
+    model_memory = None
+    if judge.partition(":")[0] == "llm":
+        model_memory = functools.partial(ollama_model_memory, ollama_url, str(judge_instance.model))
     if sentence_level:
         if records[0].level == "sentence":
             fail("--sentence-level applies to answer-level sets only: this set is already segmented", EXIT_BAD_INPUT)
@@ -2798,8 +2809,14 @@ def judge_bench(
                 keep_raw_output=keep_raw_output,
                 bootstrap_resamples=bootstrap,
                 judge_name=judge,
+                data_sha256=file_sha256(data),
+                dev_sha256=file_sha256(dev) if dev else None,
+                model_memory=model_memory,
             )
         )
+    except AttemptsMismatchError as exc:  # --out holds another run's attempts: refused, never mixed
+        fail(str(exc), EXIT_BAD_INPUT)
+        return
     except Exception as exc:  # configuration errors stop the run; they are reported, not hidden
         fail(str(exc), EXIT_FAILURE)
         return
