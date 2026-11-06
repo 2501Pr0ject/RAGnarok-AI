@@ -16,6 +16,14 @@ if TYPE_CHECKING:
 
 SHA_A = "a" * 40
 SHA_B = "b" * 40
+PYPROJECT = 'name = "ragnarok-ai"\nversion = "0.0.0"\n'
+
+
+def make_checkout(root: Path) -> Path:
+    """A folder that looks like a ragnarok-ai checkout; returns the package folder."""
+    (root / "src" / "ragnarok_ai").mkdir(parents=True)
+    (root / "pyproject.toml").write_text(f"[project]\n{PYPROJECT}")
+    return root / "src" / "ragnarok_ai"
 
 
 def test_library_commit_matches_git_in_this_checkout():
@@ -31,13 +39,38 @@ def test_none_outside_a_checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert commit_of(package) is None
 
 
+def test_never_another_projects_commit(tmp_path: Path):
+    """ragnarok-ai installed in another repository's .venv: the walk stops at site-packages."""
+    other = tmp_path / "other-project"
+    (other / ".git" / "refs" / "heads").mkdir(parents=True)
+    (other / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    (other / ".git" / "refs" / "heads" / "main").write_text(SHA_B + "\n")
+    (other / "pyproject.toml").write_text('[project]\nname = "other-project"\n')
+    installed = other / ".venv" / "lib" / "python3.12" / "site-packages" / "ragnarok_ai"
+    installed.mkdir(parents=True)
+    assert commit_of(installed) is None
+
+    # A git repository that is not a ragnarok-ai checkout (no src/ragnarok_ai, other name): refused, no walk beyond
+    vendored = other / "vendor" / "ragnarok_ai"
+    vendored.mkdir(parents=True)
+    assert commit_of(vendored) is None
+    (other / "src" / "ragnarok_ai").mkdir(parents=True)
+    assert commit_of(vendored) is None  # the name still says other-project
+
+    # A ragnarok-ai checkout nested in that project: its own commit, not the parent's
+    nested = other / "deps" / "RAGnarok-AI"
+    package = make_checkout(nested)
+    (nested / ".git" / "refs" / "heads").mkdir(parents=True)
+    (nested / ".git" / "HEAD").write_text(SHA_A + "\n")
+    assert commit_of(package) == SHA_A
+
+
 def test_symbolic_head_loose_ref_packed_ref_and_detached_head(tmp_path: Path):
     git = tmp_path / ".git"
     (git / "refs" / "heads").mkdir(parents=True)
     (git / "HEAD").write_text("ref: refs/heads/main\n")
     (git / "refs" / "heads" / "main").write_text(SHA_A + "\n")
-    package = tmp_path / "src" / "ragnarok_ai"
-    package.mkdir(parents=True)
+    package = make_checkout(tmp_path)
     assert commit_of(package) == SHA_A
 
     (git / "refs" / "heads" / "main").unlink()
@@ -60,9 +93,9 @@ def test_worktree_gitdir_file_and_commondir(tmp_path: Path):
     (worktree_git / "HEAD").write_text("ref: refs/heads/feature\n")
     (worktree_git / "commondir").write_text("../..\n")
     checkout = tmp_path / "wt"
-    (checkout / "src" / "ragnarok_ai").mkdir(parents=True)
+    package = make_checkout(checkout)
     (checkout / ".git").write_text(f"gitdir: {worktree_git}\n")
-    assert commit_of(checkout / "src" / "ragnarok_ai") == SHA_B
+    assert commit_of(package) == SHA_B
 
 
 def test_source_commit_is_recorded_but_never_decides_comparability():

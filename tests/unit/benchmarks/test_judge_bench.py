@@ -300,6 +300,7 @@ class TestRun:
             "seed": 0,
             "stratify": "label",
             "data_sha256": records_sha256(records),  # no file digest given: the records' content
+            "source_commit": None,  # the scripted judge's configuration carries no commit
         }
         assert sum(1 for row in lines if "header" in row) == 1  # the header is written once
         assert [row["sample_id"] for row in lines[1:5]] == [r.id for r in records[:4]]
@@ -425,6 +426,40 @@ class TestRun:
         )
         assert silent.report["input_length"] is None  # the judge declares no training length
         assert "training length" not in silent.report_md.read_text()
+
+    @pytest.mark.asyncio
+    async def test_resume_refuses_another_known_source_commit_but_tolerates_an_unknown_one(self, tmp_path: Path):
+        from dataclasses import replace
+
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", study_like_rows()[:4]))
+
+        class Committed(ScriptedOrdinalJudge):
+            commit: str | None = "a" * 40
+
+            def config(self, criterion):
+                return replace(super().config(criterion), source_commit=self.commit)
+
+        first = Committed()
+        run = await run_benchmark(first, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+        header = json.loads(run.attempts_path.read_text().splitlines()[0])
+        assert header["source_commit"] == "a" * 40
+        assert first.config("faithfulness").config_hash == ScriptedOrdinalJudge().config("faithfulness").config_hash
+
+        same = Committed()
+        await run_benchmark(same, records, out_dir=tmp_path / "out", bootstrap_resamples=0)  # resumed
+        assert same.received == []
+
+        unknown = Committed()
+        unknown.commit = None
+        await run_benchmark(unknown, records, out_dir=tmp_path / "out", bootstrap_resamples=0)  # a wheel may resume
+        assert unknown.received == []
+
+        other = Committed()
+        other.commit = "b" * 40
+        with pytest.raises(
+            AttemptsMismatchError, match="another source commit \\(aaaaaaaaaaaa, this run: bbbbbbbbbbbb\\)"
+        ):
+            await run_benchmark(other, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
 
     def test_attempts_header_fields_and_file_sha256(self, tmp_path: Path):
         header = attempts_header("h", "faithfulness", "sentence", sample=3, seed=1, stratify=None, data_sha256="x")

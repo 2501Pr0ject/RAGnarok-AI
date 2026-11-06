@@ -4,6 +4,12 @@ An installed wheel has no commit; a checkout does. ``library_commit()`` reads
 it from the ``.git`` directory above the package without running git, so a
 judge configuration can record which revision produced a run (provenance,
 not comparability: the commit is not part of ``JudgeConfig.config_hash``).
+
+It never reports another project's commit: the walk up stops at a
+``site-packages`` (or ``dist-packages``) folder, since a wheel installed in
+some other repository's virtual environment sits below that repository's
+``.git``, and the repository found must be ragnarok-ai itself, its
+``pyproject.toml`` naming the project and holding ``src/ragnarok_ai``.
 """
 
 from __future__ import annotations
@@ -12,6 +18,8 @@ import re
 from pathlib import Path
 
 _SHA = re.compile(r"^[0-9a-f]{40}$")
+_PROJECT_NAME = re.compile(r'^name\s*=\s*"ragnarok-ai"\s*$', re.MULTILINE)
+_INSTALL_FOLDERS = frozenset({"site-packages", "dist-packages"})
 
 
 def _package_root() -> Path:
@@ -20,10 +28,30 @@ def _package_root() -> Path:
     return Path(ragnarok_ai.__file__).resolve().parent
 
 
+def _is_ragnarok_checkout(folder: Path) -> bool:
+    """*folder* is a ragnarok-ai source checkout: ``pyproject.toml`` names it and ``src/ragnarok_ai`` is there."""
+    pyproject = folder / "pyproject.toml"
+    if not pyproject.is_file() or not (folder / "src" / "ragnarok_ai").is_dir():
+        return False
+    return _PROJECT_NAME.search(pyproject.read_text(encoding="utf-8", errors="replace")) is not None
+
+
 def _git_dir(start: Path) -> Path | None:
-    """The ``.git`` directory governing *start*, following a worktree's ``gitdir:`` file."""
+    """The ``.git`` of the ragnarok-ai checkout containing *start*, or ``None``.
+
+    The walk stops at an installation folder (``site-packages``): a wheel
+    installed in another repository's virtual environment must not inherit
+    that repository's commit. The first ``.git`` met is accepted only when
+    the folder holding it is a ragnarok-ai checkout; otherwise the walk ends.
+    """
     for folder in (start, *start.parents):
+        if folder.name in _INSTALL_FOLDERS:
+            return None
         candidate = folder / ".git"
+        if not candidate.exists():
+            continue
+        if not _is_ragnarok_checkout(folder):
+            return None
         if candidate.is_dir():
             return candidate
         if candidate.is_file():  # worktree or submodule: a file pointing at the real directory
@@ -31,6 +59,7 @@ def _git_dir(start: Path) -> Path | None:
             if text.startswith("gitdir:"):
                 target = Path(text.split(":", 1)[1].strip())
                 return target if target.is_absolute() else (folder / target).resolve()
+        return None
     return None
 
 
