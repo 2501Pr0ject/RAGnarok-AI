@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Behavior changes
+- **Cohen's kappa is `null` when undefined** (`_cohens_kappa`, calibrator and
+  benchmark harness): when judge and humans use a single class, the same
+  one, the expected agreement is 1 and kappa has no value; it was reported
+  as 1.0. `CriterionCalibration.kappa` and `kappa_at_recommended` are typed
+  `float | None`, the interpretation reads "undefined", the summary and the
+  benchmark report print "undefined", `binary_metrics()["kappa"]` is `None`
+  (also for empty inputs), bootstrap draws with an undefined kappa are
+  excluded and counted, and the threshold sweep keeps the current threshold
+  when the human labels hold a single class. A judge unanimous against
+  unanimous humans keeps a defined kappa of 0. What to do: code reading
+  `kappa` must accept `None`
 - **`JudgeResult.raw_score` is typed `int | None`** (#149). `LLMJudge` and
   both parsers always fill it with the 1-5 score, as before; a result
   aggregated from sentences by `SentenceLevel` carries `None`, since an

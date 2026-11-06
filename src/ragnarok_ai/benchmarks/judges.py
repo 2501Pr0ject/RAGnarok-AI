@@ -379,7 +379,8 @@ def choose_threshold(scores: Sequence[float], human_pass: Sequence[bool], fallba
     return best[0]
 
 
-def binary_metrics(judge_pass: Sequence[bool], human_pass: Sequence[bool]) -> dict[str, float]:
+def binary_metrics(judge_pass: Sequence[bool], human_pass: Sequence[bool]) -> dict[str, float | None]:
+    """Agreement metrics; ``kappa`` is ``None`` when undefined (judge and humans used a single class)."""
     precision, recall, f1 = _f1_not_supported(judge_pass, human_pass)
     n = len(human_pass)
     majority = max(sum(human_pass), n - sum(human_pass)) / n if n else 0.0
@@ -387,7 +388,7 @@ def binary_metrics(judge_pass: Sequence[bool], human_pass: Sequence[bool]) -> di
         "n": float(n),
         "accuracy": sum(1 for j, h in zip(judge_pass, human_pass, strict=True) if j == h) / n if n else 0.0,
         "balanced_accuracy": _balanced_accuracy(judge_pass, human_pass) if n else 0.0,
-        "kappa": _cohens_kappa(judge_pass, human_pass) if n else 0.0,
+        "kappa": _cohens_kappa(judge_pass, human_pass) if n else None,
         "precision_not_supported": precision,
         "recall_not_supported": recall,
         "f1_not_supported": f1,
@@ -456,7 +457,8 @@ def grouped_bootstrap(
     """95% percentile intervals of F1 (negative class), balanced accuracy and kappa, resampling by group.
 
     Draws with a single human class are excluded and counted; the intervals
-    are flagged unreliable above 10% exclusions.
+    are flagged unreliable above 10% exclusions. A draw whose kappa is
+    undefined (cannot happen after that exclusion) would be counted too.
     """
     units: dict[str, list[int]] = {}
     for i, g in enumerate(groups):
@@ -474,7 +476,11 @@ def grouped_bootstrap(
         j = [judge_pass[i] for i in drawn]
         samples["f1_not_supported"].append(_f1_not_supported(j, h)[2])
         samples["balanced_accuracy"].append(_balanced_accuracy(j, h))
-        samples["kappa"].append(_cohens_kappa(j, h))
+        kappa = _cohens_kappa(j, h)
+        if kappa is None:
+            excluded += 1
+            continue
+        samples["kappa"].append(kappa)
 
     def interval(values: list[float]) -> list[float] | None:
         if not values:
@@ -816,7 +822,7 @@ async def run_benchmark(
         report["calibration"] = calibration_metrics([p for p in probabilities if p is not None], human_pass)
 
     for field_name in by:
-        values: dict[str, dict[str, float]] = {}
+        values: dict[str, dict[str, float | None]] = {}
         for value in sorted({str(r.metadata.get(field_name)) for r in scored}):
             idx = [i for i, r in enumerate(scored) if str(r.metadata.get(field_name)) == value]
             values[value] = binary_metrics([judge_pass[i] for i in idx], [human_pass[i] for i in idx])
@@ -830,6 +836,11 @@ async def run_benchmark(
     return BenchmarkRun(
         report=report, attempts_path=out / "attempts.jsonl", report_json=report_json, report_md=report_md
     )
+
+
+def _num(value: float | None, digits: int = 3) -> str:
+    """A number for the Markdown report; ``undefined`` for a ``None`` kappa."""
+    return "undefined" if value is None else f"{value:.{digits}f}"
 
 
 def render_report(report: dict[str, Any]) -> str:
@@ -851,7 +862,7 @@ def render_report(report: dict[str, Any]) -> str:
         f"| F1 ({NEGATIVE_CLASS}) | {b['f1_not_supported']:.3f} |",
         f"| Balanced accuracy | {b['balanced_accuracy']:.3f} |",
         f"| Accuracy | {b['accuracy']:.3f} |",
-        f"| Kappa | {b['kappa']:.3f} |",
+        f"| Kappa | {_num(b['kappa'])} |",
         f"| Majority-class baseline (accuracy) | {b['majority_baseline_accuracy']:.3f} |",
         f"| Human PASS rate | {b['human_pass_rate']:.3f} |",
     ]
@@ -924,7 +935,7 @@ def render_report(report: dict[str, Any]) -> str:
         ]
         for value, m in values.items():
             lines.append(
-                f"| {value} | {int(m['n'])} | {m['f1_not_supported']:.3f} | {m['balanced_accuracy']:.3f} | {m['kappa']:.3f} |"
+                f"| {value} | {int(m['n'])} | {m['f1_not_supported']:.3f} | {m['balanced_accuracy']:.3f} | {_num(m['kappa'])} |"
             )
     return "\n".join(lines) + "\n"
 
