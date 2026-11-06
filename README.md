@@ -766,6 +766,21 @@ mypy src/                 # Type check
 
 ## Advanced Usage
 
+### Comparing Judges
+
+`ragnarok judge-bench` runs any judge on a labeled JSONL set and writes a report. The set is either the sentence-level output of the judge-training conversion (`id`, `question`, `context`, `prev_sentence`, `sentence`, `label` in SUPPORTED / CONTRADICTED / UNSUPPORTED, plus metadata) or an answer-level file (`answer`, `label` PASS / FAIL). No data ships with the package.
+
+```bash
+ragnarok judge-bench --judge llm --data test.jsonl --dev dev.jsonl --out results/prometheus/ \
+  --sample 200 --stratify label --seed 7 --by task,generator
+```
+
+- On a sentence-level set the judge receives each sentence as the answer; `prev_sentence` is kept in the file, never sent, and the report says how many records carry one.
+- Every call goes through `judge_many`; `attempts.jsonl` is written as the run goes and an interrupted run resumes from it by `id`.
+- For a probabilistic judge the pass threshold is chosen on `--dev` (F1 of the not-supported class) and applied unchanged to `--data`; without `--dev`, the judge's own verdict policy applies. Nothing is tuned on the evaluated set.
+- The report (`report.json`, `report.md`) gives precision, recall and F1 of the not-supported class, balanced accuracy, kappa, the majority-class baseline, per-class F1 and a confusion matrix when the judge predicts the set's classes, Brier and ECE for probabilistic judges, failures by kind, probable truncations, p50 / p90 latency, peak memory, 95% bootstrap intervals grouped on the source (fixed seed), and breakdowns per metadata field.
+- `--judge python:<module>:<Class>` benchmarks any `JudgeProtocol` class of your own.
+
 ### Importing Types
 
 For advanced use cases (custom RAG implementations, type hints), import types directly from submodules:

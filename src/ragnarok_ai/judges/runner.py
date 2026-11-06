@@ -30,15 +30,21 @@ else:
 
 
 class JudgeSample(Protocol):
-    """What ``judge_many`` needs from a sample: the three texts.
+    """What ``judge_many`` needs from a sample: the three texts, read-only.
 
-    ``CalibrationSample`` satisfies it. Optional attributes: ``sample_id``
-    (defaults to the sample's position) and ``group_id``.
+    ``CalibrationSample`` and frozen dataclasses satisfy it. Optional
+    attributes: ``sample_id`` (defaults to the sample's position) and
+    ``group_id``.
     """
 
-    question: str
-    context: str
-    answer: str
+    @property
+    def question(self) -> str: ...  # pragma: no cover
+
+    @property
+    def context(self) -> str: ...  # pragma: no cover
+
+    @property
+    def answer(self) -> str: ...  # pragma: no cover
 
 
 def sample_identifier(sample: Any, index: int) -> str:

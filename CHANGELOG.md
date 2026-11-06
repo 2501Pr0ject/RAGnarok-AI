@@ -52,6 +52,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   applied to the aggregated score for the verdict; skipped units never
   count. When no unit can be judged, `NoUnitsError` (an `EvaluationError`)
   is raised and `judge_many` reports a `no_units` failure
+- **Judge benchmark harness** (`ragnarok_ai.benchmarks.judges`, CLI
+  `ragnarok judge-bench --judge <llm[:model] | python:<module>:<Class>>
+  --data test.jsonl [--dev dev.jsonl] --out results/<judge>/`): reads the
+  sentence-level JSONL of the judge-training conversion (`id`, `question`,
+  `context`, `prev_sentence`, `sentence`, `label` SUPPORTED / CONTRADICTED /
+  UNSUPPORTED, free metadata) or an answer-level file (`answer`, PASS /
+  FAIL); calls the judge directly with the sentence as the answer, never
+  transmits `prev_sentence` (the report counts it); runs through
+  `judge_many`; writes `attempts.jsonl` as it goes and resumes from it by
+  `id`; `--sample N --stratify label --seed S` for slow judges; threshold of
+  a probabilistic judge chosen on `--dev` and applied unchanged. Report
+  (JSON and Markdown): precision, recall and F1 of the not-supported class,
+  balanced accuracy, kappa, majority-class baseline, per-class F1 and
+  confusion matrix when the judge predicts the set's classes, Brier and
+  10-bin ECE for probabilistic judges, failures by kind, probable
+  truncations, p50 / p90 latency, peak RSS, 95% grouped bootstrap intervals
+  (fixed seed, single-class draws excluded and counted), breakdowns with
+  `--by task,generator`. No data ships with the package
 - **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
   (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
   returns one `JudgeAttempt` per sample, in order, with the sample's
