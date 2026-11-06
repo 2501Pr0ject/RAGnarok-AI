@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.types import Document, RAGResponse
+    from ragnarok_ai.evaluators.judge import JudgeResult
+    from ragnarok_ai.judges.contract import JudgeConfig
 
 
 @dataclass(frozen=True)
@@ -206,5 +208,39 @@ class RAGProtocol(Protocol):
 
         Returns:
             RAGResponse containing the answer and retrieved documents.
+        """
+        ...  # pragma: no cover
+
+
+@runtime_checkable
+class JudgeProtocol(Protocol):
+    """Protocol for judges: one call per (sample, criterion), a comparable configuration.
+
+    Any object with these members is a judge, whatever produces the
+    judgment (a prompted LLM, a classifier, a trained model).
+
+    Example:
+        >>> judge = LLMJudge()
+        >>> assert isinstance(judge, JudgeProtocol)
+        >>> "faithfulness" in judge.criteria
+        True
+        >>> result = await judge.judge("faithfulness", question=q, context=c, answer=a)
+    """
+
+    @property
+    def criteria(self) -> frozenset[str]:
+        """The criteria this judge can evaluate."""
+        ...  # pragma: no cover
+
+    def config(self, criterion: str) -> JudgeConfig:
+        """The run-level configuration for *criterion*; equal hashes mean comparable runs."""
+        ...  # pragma: no cover
+
+    async def judge(self, criterion: str, *, question: str, context: str, answer: str) -> JudgeResult:
+        """Judge one answer on one criterion.
+
+        Raises:
+            ValueError: If *criterion* is not in ``criteria``.
+            JudgeParseError: If the judge's output cannot be parsed (per-sample failure).
         """
         ...  # pragma: no cover

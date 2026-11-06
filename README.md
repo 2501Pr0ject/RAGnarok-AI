@@ -341,6 +341,8 @@ ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 
 `LLMJudge` picks the prompt format from the model name: the prometheus-eval template and its `[RESULT] N` parser when the name contains "prometheus", `Score: N` prompts otherwise. Force it with `prompt_format="prometheus"` or `"score-n"` (CLI: `--prompt-format`) when the name does not tell, for example a Prometheus 2 model served under another name; `judge.effective_prompt_format` says which one is in use.
 
+Every judge follows the same contract (`ragnarok_ai.core.JudgeProtocol`): `judge.criteria`, `judge.config(criterion)` describing the run (model, options, prompt template hash, verdict policy, input transforms) with a `config_hash` that tells whether two runs are comparable, and `await judge.judge(criterion, question=..., context=..., answer=...)`. The four named methods of `LLMJudge` are wrappers of `judge()`; each `JudgeResult` carries its `output`, `config` and `trace` (token counters, probable truncation, latency).
+
 If the requested model is not installed, `LLMJudge` raises `JudgeModelNotFoundError` with the `ollama pull` command: it never silently substitutes another model. An `ollama cp` alias whose name contains "prometheus" (e.g. `prometheus2`) is accepted for the default model.
 
 ### Medical Mode
