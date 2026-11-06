@@ -76,6 +76,8 @@ class CheckpointFormatError(RagnarokError):
     Example:
         >>> raise CheckpointFormatError("Checkpoint batch_evaluation_1a2b3c4d uses format 1; version 2 is required")
     """
+
+
 class JudgeModelNotFoundError(ConfigurationError, RuntimeError):
     """Raised when the judge model is not installed on the Ollama server.
 
