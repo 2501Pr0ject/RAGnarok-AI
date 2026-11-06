@@ -12,6 +12,7 @@ from ragnarok_ai.adapters.llm.ollama import (
     DEFAULT_EMBED_MODEL,
     DEFAULT_MODEL,
     DEFAULT_TIMEOUT,
+    OllamaGeneration,
     OllamaLLM,
 )
 from ragnarok_ai.core.exceptions import LLMConnectionError
@@ -391,3 +392,73 @@ class TestOllamaLLMContextManager:
 
         async with llm as entered_llm:
             assert entered_llm is llm
+
+
+class TestOllamaOptions:
+    """Sampling options are sent only when asked, and counters come back."""
+
+    @staticmethod
+    def _request_json(route) -> dict:
+        import json
+
+        return json.loads(route.calls[0].request.content)
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_default_payload_has_no_options(self) -> None:
+        """Regression guard: the default adapter keeps the server defaults (testset generation relies on it)."""
+        route = respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok"})
+        )
+
+        await OllamaLLM().generate("p")
+
+        assert "options" not in self._request_json(route)
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_named_options_are_sent(self) -> None:
+        route = respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok"})
+        )
+
+        await OllamaLLM(temperature=0.0, seed=42, num_ctx=8192).generate("p")
+
+        assert self._request_json(route)["options"] == {"temperature": 0.0, "seed": 42, "num_ctx": 8192}
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_options_dict_is_merged_and_named_parameters_win(self) -> None:
+        route = respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok"})
+        )
+
+        llm = OllamaLLM(seed=7, options={"top_p": 0.9, "seed": 1, "num_predict": 64})
+        await llm.generate("p")
+
+        assert self._request_json(route)["options"] == {"top_p": 0.9, "seed": 7, "num_predict": 64}
+        assert llm.num_ctx is None
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_detailed_returns_counters(self) -> None:
+        respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok", "prompt_eval_count": 2051, "eval_count": 12})
+        )
+
+        generation = await OllamaLLM(model="m", num_ctx=4096).generate_detailed("p")
+
+        assert generation == OllamaGeneration(
+            text="ok", prompt_eval_count=2051, eval_count=12, model="m", options={"num_ctx": 4096}
+        )
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_detailed_without_counters(self) -> None:
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={"response": "ok"}))
+
+        generation = await OllamaLLM().generate_detailed("p")
+
+        assert generation.prompt_eval_count is None
+        assert generation.eval_count is None
+        assert generation.options == {}

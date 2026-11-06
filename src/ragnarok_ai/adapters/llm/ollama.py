@@ -7,7 +7,8 @@ implementing the LLMProtocol for use in evaluation pipelines.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -25,6 +26,28 @@ DEFAULT_TIMEOUT = 60.0
 DEFAULT_EMBED_MODEL = "nomic-embed-text"
 
 
+@dataclass(frozen=True)
+class OllamaGeneration:
+    """One ``/api/generate`` answer with the counters Ollama reports.
+
+    Attributes:
+        text: The generated text.
+        prompt_eval_count: Prompt tokens the server evaluated, as reported
+            (``None`` when absent). When the prompt exceeded ``num_ctx``,
+            Ollama truncates it silently and this count reflects the
+            truncated prompt, not the one sent.
+        eval_count: Generated tokens, as reported.
+        model: Model name sent in the request.
+        options: Sampling options sent in the request (empty when none).
+    """
+
+    text: str
+    prompt_eval_count: int | None
+    eval_count: int | None
+    model: str
+    options: dict[str, Any] = field(default_factory=dict)
+
+
 class OllamaLLM:
     """Async client for Ollama LLM API.
 
@@ -40,6 +63,12 @@ class OllamaLLM:
         model: Model name for text generation.
         embed_model: Model name for embeddings.
         timeout: Request timeout in seconds.
+        temperature: Sampling temperature sent to the server, or None to
+            keep the server default (0.8 for Ollama).
+        seed: Sampling seed, or None for a random one (server default).
+        num_ctx: Context window in tokens, or None for the server default
+            (4096 on recent Ollama versions, whatever the model supports).
+        options: Any other Ollama option, sent as given.
 
     Example:
         Context manager (recommended for multiple calls):
@@ -61,8 +90,18 @@ class OllamaLLM:
         embed_model: str = DEFAULT_EMBED_MODEL,
         timeout: float = DEFAULT_TIMEOUT,
         keep_alive: str = "10m",
+        temperature: float | None = None,
+        seed: int | None = None,
+        num_ctx: int | None = None,
+        options: dict[str, Any] | None = None,
     ) -> None:
         """Initialize OllamaLLM client.
+
+        By default no sampling option is sent: the server applies its own
+        defaults (temperature 0.8, random seed, its default context window),
+        so two identical calls can produce different texts and a long prompt
+        is truncated silently. Pass ``temperature``, ``seed`` and ``num_ctx``
+        for reproducible calls with a known context window.
 
         Args:
             base_url: Base URL for Ollama API. Defaults to localhost:11434.
@@ -70,12 +109,24 @@ class OllamaLLM:
             embed_model: Model name for embeddings. Defaults to "nomic-embed-text".
             timeout: Request timeout in seconds. Defaults to 60.0.
             keep_alive: How long to keep model in memory after request. Defaults to "10m".
+            temperature: Sampling temperature. None keeps the server default.
+            seed: Sampling seed. None keeps the server default (random).
+            num_ctx: Context window in tokens. None keeps the server default.
+            options: Other Ollama options (``top_p``, ``num_predict``, ...).
+                The three named parameters take precedence over this dict.
         """
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.embed_model = embed_model
         self.timeout = timeout
         self.keep_alive = keep_alive
+        self.temperature = temperature
+        self.seed = seed
+        self.num_ctx = num_ctx
+        self.options: dict[str, Any] = dict(options or {})
+        for name, value in (("temperature", temperature), ("seed", seed), ("num_ctx", num_ctx)):
+            if value is not None:
+                self.options[name] = value
         self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> OllamaLLM:
@@ -129,13 +180,32 @@ class OllamaLLM:
             >>> print(response)
             'RAG combines retrieval and generation for accurate responses.'
         """
+        return (await self.generate_detailed(prompt)).text
+
+    async def generate_detailed(self, prompt: str) -> OllamaGeneration:
+        """Generate text and return it with the counters Ollama reports.
+
+        Same request as :meth:`generate`; use it when the token counts
+        matter (truncation detection, provenance).
+
+        Args:
+            prompt: The input prompt for text generation.
+
+        Returns:
+            The generated text, token counters, model and options sent.
+
+        Raises:
+            LLMConnectionError: If connection to Ollama fails or request errors.
+        """
         url = f"{self.base_url}/api/generate"
-        payload = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
             "keep_alive": self.keep_alive,
         }
+        if self.options:
+            payload["options"] = dict(self.options)
 
         try:
             async with self._get_client() as client:
@@ -152,7 +222,15 @@ class OllamaLLM:
                     output_tokens=data.get("eval_count", 0),
                 )
 
-                return str(data.get("response", ""))
+                prompt_tokens = data.get("prompt_eval_count")
+                output_tokens = data.get("eval_count")
+                return OllamaGeneration(
+                    text=str(data.get("response", "")),
+                    prompt_eval_count=int(prompt_tokens) if prompt_tokens is not None else None,
+                    eval_count=int(output_tokens) if output_tokens is not None else None,
+                    model=self.model,
+                    options=dict(self.options),
+                )
         except httpx.ConnectError as e:
             msg = f"Failed to connect to Ollama at {self.base_url}: {e}"
             raise LLMConnectionError(msg) from e

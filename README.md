@@ -41,6 +41,7 @@ A pipeline can have a good retriever but a bad generator, great faithfulness but
 **ragnarok-ai is designed from the ground up for local, private, reproducible RAG evaluation:**
 
 - Runs 100% locally (Ollama, local models) — your data never leaves your machine
+- Pins the judge's sampling options (temperature 0, fixed seed, explicit 8192-token context window) and warns when Ollama probably truncated a prompt — the same inputs give the same judgment on the same machine and Ollama version
 - Checkpoints long batch evaluations — after a crash, resume: every query already evaluated is restored, only the rest is recomputed
 - Tells you *why* quality is low (root-cause diagnosis), not just *that* it is
 - Lets you calibrate the judge against your own labels — trust the scores, or know you can't
@@ -329,6 +330,8 @@ print(f"Hallucination: {result.hallucination.verdict}")
 - ~20-30s per evaluation on Apple M2 16GB
 - Prometheus 2 Q5_K_M: ~5GB RAM usage
 - `keep_alive` enabled by default (prevents model unloading between requests)
+
+**Reproducibility:** the Ollama client built by `LLMJudge` sends `temperature=0`, `seed=42` and `num_ctx=8192` (`LLMJudge.JUDGE_TEMPERATURE`, `JUDGE_SEED`, `JUDGE_NUM_CTX`). Ollama truncates silently a prompt longer than its context window; the judge detects the signature of that truncation in the token counters and logs a warning (`judge.truncation_warnings` counts them). A client passed with `llm=` is used as given: `OllamaLLM(temperature=..., seed=..., num_ctx=..., options={...})` sets the same options yourself; by default `OllamaLLM` sends none and keeps the server defaults.
 
 **Installation:**
 ```bash
