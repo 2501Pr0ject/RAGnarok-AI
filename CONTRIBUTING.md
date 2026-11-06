@@ -314,6 +314,7 @@ Releases are cut by the maintainer. Before tagging:
    - Ollama judges: `uv run pytest -m integration tests/unit/evaluators/test_judge.py` with the default judge model pulled.
 4. The wheel is built and imported in a fresh virtual environment (`uv build`, then `pip install dist/*.whl` and `python -c "import ragnarok_ai"`).
 5. Tag `vX.Y.Z` on the release commit; the tag push publishes to PyPI. Write the GitHub release notes from the CHANGELOG entry.
+6. After the tag, `main` moves to the next development version: `X.(Y+1).0.dev0` in `pyproject.toml` and `src/ragnarok_ai/__init__.py` (then `uv lock`), through a pull request like any other change. Judge configurations record `ragnarok_ai_version`, so runs made from `main` between two releases are never mistaken for the released version; they also record `source_commit`, the commit of the checkout, when the code runs from a git clone.
 
 ## Areas for Contribution
 

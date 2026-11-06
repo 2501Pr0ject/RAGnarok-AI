@@ -38,6 +38,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pass_threshold=0.7` to keep the old number in reports
 
 ### Added
+- **`JudgeConfig.source_commit`**: the git commit of the checkout the code
+  runs from (`ragnarok_ai.core.provenance.library_commit()`, read from the
+  `.git` directory without running git, worktrees and packed refs
+  included), `None` for an installed wheel. Filled by `LLMJudge`,
+  `HHEMJudge` and `MiniCheckJudge`, written in reports, left out of
+  `config_hash`: provenance, not comparability. Never another project's
+  commit: the walk up stops at `site-packages` and the repository found
+  must be a ragnarok-ai checkout. The benchmark harness writes it in the
+  attempts header and refuses to resume a run when both commits are known
+  and differ. CONTRIBUTING: after a release, `main` moves to
+  `X.(Y+1).0.dev0`
 - **`MiniCheckJudge`** (`ragnarok_ai.judges`, extra `[minicheck]`): MiniCheck
   as a `JudgeProtocol` judge for `faithfulness` and `hallucination`;
   checkpoints `flan-t5-large` (default), `roberta-large` and

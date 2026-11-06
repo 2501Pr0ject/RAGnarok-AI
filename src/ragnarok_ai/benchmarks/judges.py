@@ -60,6 +60,8 @@ ATTEMPTS_FORMAT = 1
 # Fields of the attempts header; a run must match all of them to resume. Checked in this
 # order so that the message names the plain field (criterion differs) before the hash it changes.
 ATTEMPTS_HEADER_FIELDS = ("criterion", "level", "sample", "seed", "stratify", "data_sha256", "config_hash")
+# Checked only when both sides know it: a wheel (None) resumes a checkout's run and vice versa
+ATTEMPTS_PROVENANCE_FIELD = "source_commit"
 
 
 class AttemptsMismatchError(ValueError):
@@ -272,8 +274,13 @@ def attempts_header(
     seed: int | None,
     stratify: str | None,
     data_sha256: str | None,
+    source_commit: str | None = None,
 ) -> dict[str, Any]:
-    """The first line of an attempts file: what the run must match to resume from it."""
+    """The first line of an attempts file: what the run must match to resume from it.
+
+    ``source_commit`` (the checkout's commit, ``None`` for a wheel) is
+    compared only when both runs know it.
+    """
     return {
         "header": ATTEMPTS_FORMAT,
         "config_hash": config_hash,
@@ -283,6 +290,7 @@ def attempts_header(
         "seed": seed,
         "stratify": stratify,
         "data_sha256": data_sha256,
+        ATTEMPTS_PROVENANCE_FIELD: source_commit,
     }
 
 
@@ -331,6 +339,13 @@ def read_attempts(path: Path, expected: dict[str, Any] | None = None) -> dict[st
                     f"({first.get(field_name)!r}, this run: {expected[field_name]!r}). Use another --out directory"
                 )
                 raise AttemptsMismatchError(msg)
+        recorded, current = first.get(ATTEMPTS_PROVENANCE_FIELD), expected.get(ATTEMPTS_PROVENANCE_FIELD)
+        if recorded and current and recorded != current:
+            msg = (
+                f"{path.name} was produced from another source commit ({recorded[:12]}, this run: {current[:12]}). "
+                "Use another --out directory"
+            )
+            raise AttemptsMismatchError(msg)
     for number, row in rows:
         if _is_header(row):
             continue
@@ -719,6 +734,7 @@ async def run_benchmark(
             seed=None,
             stratify=None,
             data_sha256=dev_sha256,
+            source_commit=config.source_commit,
         )
         dev_rows = await _judge_records(
             judge,
@@ -737,7 +753,14 @@ async def run_benchmark(
             threshold_source = f"dev ({len(dev_scored)} scored records, F1 of {NEGATIVE_CLASS} maximized)"
 
     header = attempts_header(
-        config.config_hash, criterion, level, sample=sample, seed=seed, stratify=stratify, data_sha256=data_sha256
+        config.config_hash,
+        criterion,
+        level,
+        sample=sample,
+        seed=seed,
+        stratify=stratify,
+        data_sha256=data_sha256,
+        source_commit=config.source_commit,
     )
     rows = await _judge_records(
         judge,

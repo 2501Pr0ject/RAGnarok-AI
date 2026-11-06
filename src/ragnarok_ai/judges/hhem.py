@@ -49,6 +49,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 from ragnarok_ai.core.exceptions import ConfigurationError, JudgeDependencyError
+from ragnarok_ai.core.provenance import library_commit
 from ragnarok_ai.judges.contract import BinaryProbability, CallTrace, JudgeConfig, ScoreThreshold
 from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
 from ragnarok_ai.text.segmentation import segmenter_id
@@ -447,6 +448,7 @@ class HHEMJudge:
                 ("threshold_calibrated", False),
                 ("training_length", TRAINING_LENGTH),
             ),
+            source_commit=library_commit(),
         )
 
     def config(self, criterion: str) -> JudgeConfig:

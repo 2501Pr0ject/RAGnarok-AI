@@ -23,6 +23,7 @@ from ragnarok_ai.core.exceptions import (
     JudgeModelNotFoundError,
     JudgeParseError,
 )
+from ragnarok_ai.core.provenance import library_commit
 from ragnarok_ai.judges.contract import (
     CallTrace,
     JudgeConfig,
@@ -854,6 +855,7 @@ class LLMJudge:
             prompt_format=self._effective_prompt_format,
             prompt_template_sha256=self._prompt_template_sha256(criterion),
             input_transforms=self._input_transforms(criterion),
+            source_commit=library_commit(),
         )
 
     async def judge(self, criterion: str, *, question: str, context: str, answer: str) -> JudgeResult:
