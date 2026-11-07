@@ -5,7 +5,7 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.13.0] - 2026-11-07
 
 ### Behavior changes
 - **Cohen's kappa is `null` when undefined** (`_cohens_kappa`, calibrator and
@@ -36,6 +36,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gives the value in use). Objects exposing only the four named methods keep
   `DEFAULT_PASS_THRESHOLD` (0.7). What to do: nothing; pass
   `pass_threshold=0.7` to keep the old number in reports
+- **`pysbd` becomes a core dependency** (#149): `pip install ragnarok-ai`
+  now installs `pysbd>=0.3.4,<0.4` (pure Python, MIT) for the sentence
+  segmenter. The classifier judges are separate extras, `[hhem]` and
+  `[minicheck]`, and are not part of `[all]`: they pull `torch` and
+  `transformers`. What to do: nothing for existing installations; add the
+  extra of the judge you use
+- **Both judge parsers raise `JudgeParseError`** (#145) in place of a bare
+  `EvaluationError`. It is a subclass, so `except EvaluationError` keeps
+  working. What to do: code comparing the exception type exactly
+  (`type(exc) is EvaluationError`) must accept the subclass
+- **`CalibrationReport.summary()` prints more lines** (#148): prevalence of
+  human PASS, agreement of a constant majority-class judge, out-of-sample
+  kappa with its interval and method, a warning when kappa is not
+  interpretable; `to_dict()` gains the corresponding keys. Numbers already
+  printed are unchanged. What to do: nothing, unless a test matches the
+  summary text exactly
 
 ### Added
 - **`JudgeConfig.source_commit`**: the git commit of the checkout the code
