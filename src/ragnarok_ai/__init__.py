@@ -26,7 +26,7 @@ from ragnarok_ai.mining import TestsetMiner
 from ragnarok_ai.monitor import MonitorClient
 from ragnarok_ai.privacy import PiiMode, sanitize_dict, sanitize_value
 
-__version__ = "1.13.0"
+__version__ = "1.14.0.dev0"
 __all__ = [
     "ABAnalyzer",
     "ABTestConfig",
