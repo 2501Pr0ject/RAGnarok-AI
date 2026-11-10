@@ -932,6 +932,48 @@ core dependencies.
 ### Changed
 - Default pytest config now skips integration tests (run with `pytest -m integration`)
 
+## [1.1.3] - 2026-02-03
+
+### Added
+- **Forge bundle loader** (`ragnarok_ai.loaders.forge_bundle`): `load_forge_bundle()`
+  reads a bundle's `manifest.json` and `load_forge_documents()` turns its
+  `documents.jsonl` into `Document` objects, without importing the Forge package
+  - Tolerant read: `doc_id` or `id`, `content` or `text`, `_schema_version` or
+    `schema_version` (normalized to `_schema_version`); `title`, `format` and
+    `source_uri` are merged into `metadata`
+  - `ForgeLoadError` for a missing bundle, manifest or documents file, invalid
+    JSON, or a document without identifier or content
+  - Exported from `ragnarok_ai` and `ragnarok_ai.loaders`
+- **Privacy utilities** (`ragnarok_ai.privacy`): `PiiMode` (`full`, `hash`,
+  `redact`), `sanitize_value()` and `sanitize_dict()` (recursive) replace values
+  that look like PII (file paths, e-mail addresses, IP addresses, usernames) or
+  sit under a sensitive key (`source`, `path`, `user`, `email`, `host`...) with
+  their SHA-256 or with `[REDACTED]`; `full` is the API default and passes data
+  through unchanged
+- **CLI `--pii-mode` global option** (`hash` by default, `redact`, `full`):
+  accepted and recorded with the other global options, but no command applies
+  it to its output; this is still the case in 1.13.0 (`PiiMode` is used by
+  `MonitorClient` through its own `pii_mode` parameter)
+- **GitHub issue templates** in YAML form (bug report, feedback, feature
+  request), with Discussions and a private security contact in the template
+  chooser; README gains a Feedback section with the links
+- **README "Advanced Usage"**: importing types, protocols, evaluators and
+  adapters from their submodules, and implementing a custom RAG with
+  `RAGProtocol`
+
+### Changed
+- **CLI exit codes**: invalid arguments and missing files exit with code 2
+  (`EXIT_BAD_INPUT`); runtime failures and unmet thresholds keep code 1
+  (`EXIT_FAILURE`). Scripts testing for exit code 1 on a missing `--demo`,
+  `--testset`, `--docs` or benchmark option must expect 2
+
+### Fixed
+- **Test suite with optional dependencies**: the dspy factory test is skipped
+  when dspy is installed, the LlamaIndex factory tests accept `TypeError` when
+  llama-index is installed, the Ollama request assertions parse the JSON body
+  instead of matching bytes; `pytest` ignores the collection warning on
+  `SyntheticQuestionGenerator`
+
 ## [1.1.2] - 2026-01-27
 
 ### Fixed
