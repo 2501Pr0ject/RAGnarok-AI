@@ -31,9 +31,14 @@ from ragnarok_ai.core.compare import (
 )
 from ragnarok_ai.core.config import Settings
 from ragnarok_ai.core.exceptions import (
+    CheckpointFormatError,
     ConfigurationError,
     EvaluationError,
+    JudgeConnectionError,
+    JudgeDependencyError,
+    JudgeParseError,
     LLMConnectionError,
+    NoUnitsError,
     RagnarokError,
 )
 from ragnarok_ai.core.gating import (
@@ -46,7 +51,9 @@ from ragnarok_ai.core.gating import (
 )
 from ragnarok_ai.core.protocols import (
     EvaluatorProtocol,
+    JudgeProtocol,
     LLMProtocol,
+    LLMResponse,
     VectorStoreProtocol,
 )
 from ragnarok_ai.core.types import (
@@ -58,6 +65,7 @@ from ragnarok_ai.core.types import (
 
 __all__ = [
     "CheckpointData",
+    "CheckpointFormatError",
     "CheckpointManager",
     "ComparisonProgress",
     "ComparisonResult",
@@ -76,10 +84,16 @@ __all__ = [
     "GatingResult",
     "GeneratorConfig",
     "JudgeConfig",
+    "JudgeConnectionError",
+    "JudgeDependencyError",
+    "JudgeParseError",
+    "JudgeProtocol",
     "LLMConnectionError",
     "LLMProtocol",
+    "LLMResponse",
     "MetricCategory",
     "MetricResult",
+    "NoUnitsError",
     "PipelineConfig",
     "Query",
     "RagnarokError",

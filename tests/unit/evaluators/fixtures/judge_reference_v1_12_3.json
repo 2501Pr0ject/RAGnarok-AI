@@ -1,0 +1,405 @@
+{
+  "reference": {
+    "ragnarok_ai_version": "1.12.3",
+    "commit": "fa08ee6535010b969a1c85c8646a4202f783e81c",
+    "generator": "tests/unit/evaluators/fixtures/make_judge_reference.py"
+  },
+  "cases": [
+    {
+      "format": "prometheus",
+      "model": "prometheus2:latest",
+      "medical_mode": false,
+      "inputs": {
+        "question": "What is the default restart policy of a Docker container?",
+        "context": "Docker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.",
+        "answer": "By default, a container is not restarted (policy `no`)."
+      },
+      "criteria": {
+        "faithfulness": {
+          "response": "Every claim is supported by the context. [RESULT] 5",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\nQuestion:\nWhat is the default restart policy of a Docker container?\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Does the answer contain only information supported by the context?]\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Feedback: ",
+          "result": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "explanation": "Every claim is supported by the context.",
+            "criteria": "faithfulness",
+            "raw_score": 5
+          }
+        },
+        "relevance": {
+          "response": "The answer addresses part of the question only. [RESULT] 3",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nWhat is the default restart policy of a Docker container?\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Does the answer address what was asked?]\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Feedback: ",
+          "result": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "explanation": "The answer addresses part of the question only.",
+            "criteria": "relevance",
+            "raw_score": 3
+          }
+        },
+        "hallucination": {
+          "response": "Two details are not in the context. [RESULT] 2",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Are there factual claims not grounded in the context?]\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Feedback: ",
+          "result": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "explanation": "Two details are not in the context.",
+            "criteria": "hallucination",
+            "raw_score": 2
+          }
+        },
+        "completeness": {
+          "response": "Most of the relevant information is covered. [RESULT] 4",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\nQuestion:\nWhat is the default restart policy of a Docker container?\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Does the answer cover all relevant information from the context?]\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Feedback: ",
+          "result": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "explanation": "Most of the relevant information is covered.",
+            "criteria": "completeness",
+            "raw_score": 4
+          }
+        }
+      },
+      "evaluate_all": {
+        "prompts": [
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\nQuestion:\nWhat is the default restart policy of a Docker container?\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Does the answer contain only information supported by the context?]\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Feedback: ",
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nWhat is the default restart policy of a Docker container?\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Does the answer address what was asked?]\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Feedback: ",
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Are there factual claims not grounded in the context?]\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Feedback: ",
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\nQuestion:\nWhat is the default restart policy of a Docker container?\n\n###Response to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Score Rubrics:\n[Does the answer cover all relevant information from the context?]\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Feedback: "
+        ],
+        "to_dict": {
+          "faithfulness": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "raw_score": 5,
+            "explanation": "Every claim is supported by the context."
+          },
+          "relevance": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "raw_score": 3,
+            "explanation": "The answer addresses part of the question only."
+          },
+          "hallucination": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "raw_score": 2,
+            "explanation": "Two details are not in the context."
+          },
+          "completeness": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "raw_score": 4,
+            "explanation": "Most of the relevant information is covered."
+          },
+          "overall": {
+            "verdict": "FAIL",
+            "score": 0.625
+          }
+        }
+      },
+      "unparseable": {
+        "response": "The response is acceptable.",
+        "exception": "EvaluationError",
+        "message": "Unparseable faithfulness judgment: no '[RESULT] N' (1-5) in the judge response"
+      }
+    },
+    {
+      "format": "score-n",
+      "model": "mistral:7b",
+      "medical_mode": false,
+      "inputs": {
+        "question": "What is the default restart policy of a Docker container?",
+        "context": "Docker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.",
+        "answer": "By default, a container is not restarted (policy `no`)."
+      },
+      "criteria": {
+        "faithfulness": {
+          "response": "Score: 5\nVerdict: PASS\nExplanation: Every claim is supported by the context.",
+          "prompt": "###Task Description:\nEvaluate if the answer is faithful to the given context.\n\n###Context:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Question:\nWhat is the default restart policy of a Docker container?\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Faithfulness] Does the answer contain only information supported by the context?\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Detailed reasoning for the score]\n\n###Evaluation:",
+          "result": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "explanation": "Every claim is supported by the context.",
+            "criteria": "faithfulness",
+            "raw_score": 5
+          }
+        },
+        "relevance": {
+          "response": "Score: 3\nVerdict: PARTIAL\nExplanation: The answer addresses part of the question only.",
+          "prompt": "###Task Description:\nEvaluate if the answer is relevant to the question asked.\n\n###Question:\nWhat is the default restart policy of a Docker container?\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Relevance] Does the answer address what was asked?\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Reasoning for relevance assessment]\n\n###Evaluation:",
+          "result": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "explanation": "The answer addresses part of the question only.",
+            "criteria": "relevance",
+            "raw_score": 3
+          }
+        },
+        "hallucination": {
+          "response": "Score: 2\nVerdict: FAIL\nExplanation: Two details are not in the context.",
+          "prompt": "###Task Description:\nDetect if the answer contains hallucinations (claims not supported by context).\n\n###Context:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Hallucination Detection] Are there factual claims not grounded in the context?\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [List specific hallucinations found, if any]\n\n###Evaluation:",
+          "result": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "explanation": "Two details are not in the context.",
+            "criteria": "hallucination",
+            "raw_score": 2
+          }
+        },
+        "completeness": {
+          "response": "Score: 4\nVerdict: PASS\nExplanation: Most of the relevant information is covered.",
+          "prompt": "###Task Description:\nEvaluate if the answer is complete given the available context.\n\n###Context:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Question:\nWhat is the default restart policy of a Docker container?\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Completeness] Does the answer cover all relevant information from the context?\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [What was covered and what was missed]\n\n###Evaluation:",
+          "result": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "explanation": "Most of the relevant information is covered.",
+            "criteria": "completeness",
+            "raw_score": 4
+          }
+        }
+      },
+      "evaluate_all": {
+        "prompts": [
+          "###Task Description:\nEvaluate if the answer is faithful to the given context.\n\n###Context:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Question:\nWhat is the default restart policy of a Docker container?\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Faithfulness] Does the answer contain only information supported by the context?\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Detailed reasoning for the score]\n\n###Evaluation:",
+          "###Task Description:\nEvaluate if the answer is relevant to the question asked.\n\n###Question:\nWhat is the default restart policy of a Docker container?\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Relevance] Does the answer address what was asked?\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Reasoning for relevance assessment]\n\n###Evaluation:",
+          "###Task Description:\nDetect if the answer contains hallucinations (claims not supported by context).\n\n###Context:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Hallucination Detection] Are there factual claims not grounded in the context?\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [List specific hallucinations found, if any]\n\n###Evaluation:",
+          "###Task Description:\nEvaluate if the answer is complete given the available context.\n\n###Context:\nDocker containers use the `no` restart policy by default.\n\n---\n\nUse `--restart` to change it.\n\n###Question:\nWhat is the default restart policy of a Docker container?\n\n###Answer to evaluate:\nBy default, a container is not restarted (policy `no`).\n\n###Evaluation Criteria:\n[Completeness] Does the answer cover all relevant information from the context?\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [What was covered and what was missed]\n\n###Evaluation:"
+        ],
+        "to_dict": {
+          "faithfulness": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "raw_score": 5,
+            "explanation": "Every claim is supported by the context."
+          },
+          "relevance": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "raw_score": 3,
+            "explanation": "The answer addresses part of the question only."
+          },
+          "hallucination": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "raw_score": 2,
+            "explanation": "Two details are not in the context."
+          },
+          "completeness": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "raw_score": 4,
+            "explanation": "Most of the relevant information is covered."
+          },
+          "overall": {
+            "verdict": "FAIL",
+            "score": 0.625
+          }
+        }
+      },
+      "unparseable": {
+        "response": "I think the answer is fine overall.",
+        "exception": "EvaluationError",
+        "message": "Unparseable faithfulness judgment: no 'Score: N' in the judge response"
+      }
+    },
+    {
+      "format": "prometheus",
+      "model": "prometheus2:latest",
+      "medical_mode": true,
+      "inputs": {
+        "question": "What condition does the pt have and what was prescribed?",
+        "context": "Pt diagnosed with CHF. BP 140/90. Prescribed ACE inhibitor, follow-up in 2 wk.",
+        "answer": "The patient has CHF and was given an ACE inhibitor; BP was 140/90."
+      },
+      "criteria": {
+        "faithfulness": {
+          "response": "Every claim is supported by the context. [RESULT] 5",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\nQuestion:\nWhat condition does the pt have and what was prescribed?\n\n###Response to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Score Rubrics:\n[Does the answer contain only information supported by the context?]\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Feedback: ",
+          "result": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "explanation": "Every claim is supported by the context.",
+            "criteria": "faithfulness",
+            "raw_score": 5
+          }
+        },
+        "relevance": {
+          "response": "The answer addresses part of the question only. [RESULT] 3",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nWhat condition does the pt have and what was prescribed?\n\n###Response to evaluate:\nThe patient has CHF and was given an ACE inhibitor; BP was 140/90.\n\n###Score Rubrics:\n[Does the answer address what was asked?]\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Feedback: ",
+          "result": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "explanation": "The answer addresses part of the question only.",
+            "criteria": "relevance",
+            "raw_score": 3
+          }
+        },
+        "hallucination": {
+          "response": "Two details are not in the context. [RESULT] 2",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Response to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Score Rubrics:\n[Are there factual claims not grounded in the context?]\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Feedback: ",
+          "result": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "explanation": "Two details are not in the context.",
+            "criteria": "hallucination",
+            "raw_score": 2
+          }
+        },
+        "completeness": {
+          "response": "Most of the relevant information is covered. [RESULT] 4",
+          "prompt": "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\nQuestion:\nWhat condition does the pt have and what was prescribed?\n\n###Response to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Score Rubrics:\n[Does the answer cover all relevant information from the context?]\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Feedback: ",
+          "result": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "explanation": "Most of the relevant information is covered.",
+            "criteria": "completeness",
+            "raw_score": 4
+          }
+        }
+      },
+      "evaluate_all": {
+        "prompts": [
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\nQuestion:\nWhat condition does the pt have and what was prescribed?\n\n###Response to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Score Rubrics:\n[Does the answer contain only information supported by the context?]\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Feedback: ",
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nWhat condition does the pt have and what was prescribed?\n\n###Response to evaluate:\nThe patient has CHF and was given an ACE inhibitor; BP was 140/90.\n\n###Score Rubrics:\n[Does the answer address what was asked?]\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Feedback: ",
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Response to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Score Rubrics:\n[Are there factual claims not grounded in the context?]\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Feedback: ",
+          "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.\n\n###Task Description:\nAn instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.\n1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.\n2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.\n3. The output format should look as follows: \"(write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n4. Please do not generate any other opening, closing, and explanations.\n\n###The instruction to evaluate:\nContext:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\nQuestion:\nWhat condition does the pt have and what was prescribed?\n\n###Response to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Score Rubrics:\n[Does the answer cover all relevant information from the context?]\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Feedback: "
+        ],
+        "to_dict": {
+          "faithfulness": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "raw_score": 5,
+            "explanation": "Every claim is supported by the context."
+          },
+          "relevance": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "raw_score": 3,
+            "explanation": "The answer addresses part of the question only."
+          },
+          "hallucination": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "raw_score": 2,
+            "explanation": "Two details are not in the context."
+          },
+          "completeness": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "raw_score": 4,
+            "explanation": "Most of the relevant information is covered."
+          },
+          "overall": {
+            "verdict": "FAIL",
+            "score": 0.625
+          }
+        }
+      },
+      "unparseable": {
+        "response": "The response is acceptable.",
+        "exception": "EvaluationError",
+        "message": "Unparseable faithfulness judgment: no '[RESULT] N' (1-5) in the judge response"
+      }
+    },
+    {
+      "format": "score-n",
+      "model": "mistral:7b",
+      "medical_mode": true,
+      "inputs": {
+        "question": "What condition does the pt have and what was prescribed?",
+        "context": "Pt diagnosed with CHF. BP 140/90. Prescribed ACE inhibitor, follow-up in 2 wk.",
+        "answer": "The patient has CHF and was given an ACE inhibitor; BP was 140/90."
+      },
+      "criteria": {
+        "faithfulness": {
+          "response": "Score: 5\nVerdict: PASS\nExplanation: Every claim is supported by the context.",
+          "prompt": "###Task Description:\nEvaluate if the answer is faithful to the given context.\n\n###Context:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Question:\nWhat condition does the pt have and what was prescribed?\n\n###Answer to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Evaluation Criteria:\n[Faithfulness] Does the answer contain only information supported by the context?\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Detailed reasoning for the score]\n\n###Evaluation:",
+          "result": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "explanation": "Every claim is supported by the context.",
+            "criteria": "faithfulness",
+            "raw_score": 5
+          }
+        },
+        "relevance": {
+          "response": "Score: 3\nVerdict: PARTIAL\nExplanation: The answer addresses part of the question only.",
+          "prompt": "###Task Description:\nEvaluate if the answer is relevant to the question asked.\n\n###Question:\nWhat condition does the pt have and what was prescribed?\n\n###Answer to evaluate:\nThe patient has CHF and was given an ACE inhibitor; BP was 140/90.\n\n###Evaluation Criteria:\n[Relevance] Does the answer address what was asked?\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Reasoning for relevance assessment]\n\n###Evaluation:",
+          "result": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "explanation": "The answer addresses part of the question only.",
+            "criteria": "relevance",
+            "raw_score": 3
+          }
+        },
+        "hallucination": {
+          "response": "Score: 2\nVerdict: FAIL\nExplanation: Two details are not in the context.",
+          "prompt": "###Task Description:\nDetect if the answer contains hallucinations (claims not supported by context).\n\n###Context:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Answer to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Evaluation Criteria:\n[Hallucination Detection] Are there factual claims not grounded in the context?\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [List specific hallucinations found, if any]\n\n###Evaluation:",
+          "result": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "explanation": "Two details are not in the context.",
+            "criteria": "hallucination",
+            "raw_score": 2
+          }
+        },
+        "completeness": {
+          "response": "Score: 4\nVerdict: PASS\nExplanation: Most of the relevant information is covered.",
+          "prompt": "###Task Description:\nEvaluate if the answer is complete given the available context.\n\n###Context:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Question:\nWhat condition does the pt have and what was prescribed?\n\n###Answer to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Evaluation Criteria:\n[Completeness] Does the answer cover all relevant information from the context?\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [What was covered and what was missed]\n\n###Evaluation:",
+          "result": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "explanation": "Most of the relevant information is covered.",
+            "criteria": "completeness",
+            "raw_score": 4
+          }
+        }
+      },
+      "evaluate_all": {
+        "prompts": [
+          "###Task Description:\nEvaluate if the answer is faithful to the given context.\n\n###Context:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Question:\nWhat condition does the pt have and what was prescribed?\n\n###Answer to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Evaluation Criteria:\n[Faithfulness] Does the answer contain only information supported by the context?\nScore 1: Completely unfaithful - contradicts or fabricates information\nScore 2: Mostly unfaithful - significant unsupported claims\nScore 3: Partially faithful - mix of supported and unsupported claims\nScore 4: Mostly faithful - minor unsupported details\nScore 5: Completely faithful - all claims supported by context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Detailed reasoning for the score]\n\n###Evaluation:",
+          "###Task Description:\nEvaluate if the answer is relevant to the question asked.\n\n###Question:\nWhat condition does the pt have and what was prescribed?\n\n###Answer to evaluate:\nThe patient has CHF and was given an ACE inhibitor; BP was 140/90.\n\n###Evaluation Criteria:\n[Relevance] Does the answer address what was asked?\nScore 1: Completely irrelevant - does not address the question\nScore 2: Mostly irrelevant - misses the main point\nScore 3: Partially relevant - addresses some aspects\nScore 4: Mostly relevant - addresses main point with minor gaps\nScore 5: Completely relevant - fully addresses the question\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [Reasoning for relevance assessment]\n\n###Evaluation:",
+          "###Task Description:\nDetect if the answer contains hallucinations (claims not supported by context).\n\n###Context:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Answer to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Evaluation Criteria:\n[Hallucination Detection] Are there factual claims not grounded in the context?\nScore 1: Severe hallucinations - multiple fabricated facts\nScore 2: Significant hallucinations - key claims unsupported\nScore 3: Minor hallucinations - some details not in context\nScore 4: Negligible hallucinations - trivial unsupported details only\nScore 5: No hallucinations - every claim traceable to context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [List specific hallucinations found, if any]\n\n###Evaluation:",
+          "###Task Description:\nEvaluate if the answer is complete given the available context.\n\n###Context:\nPt diagnosed with congestive heart failure. blood pressure 140/90. Prescribed angiotensin-converting enzyme inhibitor, follow-up in 2 wk.\n\n###Question:\nWhat condition does the pt have and what was prescribed?\n\n###Answer to evaluate:\nThe patient has congestive heart failure and was given an angiotensin-converting enzyme inhibitor; blood pressure was 140/90.\n\n###Evaluation Criteria:\n[Completeness] Does the answer cover all relevant information from the context?\nScore 1: Very incomplete - misses most relevant information\nScore 2: Incomplete - misses significant information\nScore 3: Partially complete - covers main points but misses details\nScore 4: Mostly complete - covers most relevant information\nScore 5: Fully complete - comprehensive answer using all relevant context\n\n###Output Format:\nScore: [1-5]\nVerdict: [PASS if score >= 4, FAIL if score <= 2, PARTIAL otherwise]\nExplanation: [What was covered and what was missed]\n\n###Evaluation:"
+        ],
+        "to_dict": {
+          "faithfulness": {
+            "verdict": "PASS",
+            "score": 1.0,
+            "raw_score": 5,
+            "explanation": "Every claim is supported by the context."
+          },
+          "relevance": {
+            "verdict": "PARTIAL",
+            "score": 0.5,
+            "raw_score": 3,
+            "explanation": "The answer addresses part of the question only."
+          },
+          "hallucination": {
+            "verdict": "FAIL",
+            "score": 0.25,
+            "raw_score": 2,
+            "explanation": "Two details are not in the context."
+          },
+          "completeness": {
+            "verdict": "PASS",
+            "score": 0.75,
+            "raw_score": 4,
+            "explanation": "Most of the relevant information is covered."
+          },
+          "overall": {
+            "verdict": "FAIL",
+            "score": 0.625
+          }
+        }
+      },
+      "unparseable": {
+        "response": "I think the answer is fine overall.",
+        "exception": "EvaluationError",
+        "message": "Unparseable faithfulness judgment: no 'Score: N' in the judge response"
+      }
+    }
+  ]
+}

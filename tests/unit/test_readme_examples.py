@@ -22,7 +22,9 @@ import pytest
 
 from ragnarok_ai import evaluate
 from ragnarok_ai.core.types import Document, Query, RAGResponse, TestSet
-from ragnarok_ai.evaluators.judge import LLMJudge
+from ragnarok_ai.evaluators.judge import PROMETHEUS_ABS_SYSTEM_PROMPT, LLMJudge
+from ragnarok_ai.judges.hhem import HHEMArtifacts
+from ragnarok_ai.judges.minicheck import CHECKPOINTS, MiniCheckArtifacts
 
 README = Path(__file__).resolve().parents[2] / "README.md"
 PYTHON_BLOCK = re.compile(r"^```python\n(.*?)^```", re.DOTALL | re.MULTILINE)
@@ -53,16 +55,47 @@ class StubRAG:
 
 
 class FakeOllamaLLM:
-    """Scripted stand-in for OllamaLLM returning a Prometheus-style verdict."""
+    """Scripted stand-in for OllamaLLM answering in the format the prompt asks for."""
 
     def __init__(self, model: str = "fake", **kwargs: Any) -> None:  # noqa: ARG002
         self.model = model
 
-    async def generate(self, prompt: str) -> str:  # noqa: ARG002
+    async def generate(self, prompt: str) -> str:
+        if prompt.startswith(PROMETHEUS_ABS_SYSTEM_PROMPT):
+            return "The answer is grounded in the context. [RESULT] 5"
         return "Score: 5\nVerdict: PASS\nExplanation: The answer is grounded in the context."
 
     async def embed(self, text: str) -> list[float]:  # noqa: ARG002
         return [0.0]
+
+
+class FakeHHEMBackend:
+    """Stand-in for the loaded HHEM model: whitespace tokens, P(consistent) 0.9."""
+
+    def count_tokens(self, text: str) -> int:
+        return len(text.split())
+
+    def truncate(self, text: str, max_tokens: int) -> str:
+        return " ".join(text.split()[:max_tokens])
+
+    def consistency(self, prompts: list[str]) -> list[float]:
+        return [0.9 for _ in prompts]
+
+
+class FakeMiniCheckBackend:
+    """Stand-in for a loaded MiniCheck checkpoint: naive sentence split, P(supported) 0.9 per chunk."""
+
+    def split_sentences(self, text: str) -> list[str]:
+        return [s for s in text.replace("? ", "?\n").replace(". ", ".\n").split("\n") if s]
+
+    def splitter_id(self) -> str:
+        return "fake-splitter"
+
+    def count_tokens(self, text: str) -> int:
+        return len(text.split())
+
+    def support(self, chunks: list[str], claim: str) -> tuple[list[float], int, bool]:  # noqa: ARG002
+        return [0.9 for _ in chunks], sum(len(c.split()) for c in chunks), False
 
 
 def test_readme_has_python_examples() -> None:
@@ -74,6 +107,16 @@ async def test_readme_example_runs(line: int, source: str, tmp_path: Path, monke
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("ragnarok_ai.adapters.llm.ollama.OllamaLLM", FakeOllamaLLM)
     monkeypatch.setattr(LLMJudge, "_get_available_models", lambda self, base_url: [LLMJudge.DEFAULT_MODEL])  # noqa: ARG005
+    # No weights download: HHEMJudge gets a scripted backend and fake artifacts
+    artifacts = HHEMArtifacts(tmp_path, tmp_path, "pinned", "pinned", "local", "fake-digest")
+    monkeypatch.setattr("ragnarok_ai.judges.hhem.resolve_artifacts", lambda *a, **k: artifacts)  # noqa: ARG005
+    monkeypatch.setattr("ragnarok_ai.judges.hhem.TransformersBackend", lambda artifacts, device: FakeHHEMBackend())  # noqa: ARG005
+    minicheck_artifacts = MiniCheckArtifacts(CHECKPOINTS["flan-t5-large"], tmp_path, "pinned", None, "local", "fake")
+    monkeypatch.setattr("ragnarok_ai.judges.minicheck.resolve_artifacts", lambda *a, **k: minicheck_artifacts)  # noqa: ARG005
+    monkeypatch.setattr(
+        "ragnarok_ai.judges.minicheck.TransformersBackend",
+        lambda artifacts, device, offline=False: FakeMiniCheckBackend(),  # noqa: ARG005
+    )
 
     testset = TestSet(queries=[Query(text="Who created Python?", ground_truth_docs=["doc_python"])])
     results = await evaluate(StubRAG(), testset)

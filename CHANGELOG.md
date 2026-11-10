@@ -5,6 +5,403 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.13.0] - 2026-11-07
+
+### Behavior changes
+- **Cohen's kappa is `null` when undefined** (`_cohens_kappa`, calibrator and
+  benchmark harness): when judge and humans use a single class, the same
+  one, the expected agreement is 1 and kappa has no value; it was reported
+  as 1.0. `CriterionCalibration.kappa` and `kappa_at_recommended` are typed
+  `float | None`, the interpretation reads "undefined", the summary and the
+  benchmark report print "undefined", `binary_metrics()["kappa"]` is `None`
+  (also for empty inputs), bootstrap draws with an undefined kappa are
+  excluded and counted, and the threshold sweep keeps the current threshold
+  when the human labels hold a single class. A judge unanimous against
+  unanimous humans keeps a defined kappa of 0. What to do: code reading
+  `kappa` must accept `None`
+- **`JudgeResult.raw_score` is typed `int | None`** (#149). `LLMJudge` and
+  both parsers always fill it with the 1-5 score, as before; a result
+  aggregated from sentences by `SentenceLevel` carries `None`, since an
+  aggregate has no single native score. What to do: nothing for `LLMJudge`
+  results; code doing arithmetic on `raw_score` must handle `None` for
+  sentence-level results (use `score`, which is always set)
+- **`JudgeCalibrator` takes its pass threshold from the judge's verdict
+  policy** (#148): 0.75 for `LLMJudge` (`raw >= 4` on the 1-5 scale)
+  instead of the fixed 0.7. Verdicts and statistics are unchanged, because
+  on the discrete scores 0, 0.25, 0.5, 0.75 and 1 both cutoffs classify
+  every sample the same way (tested). Three visible effects: the report's
+  `threshold` reads 0.75; `recommended_threshold` can read 0.75 where it
+  read 0.7, since ties in the sweep resolve to the current threshold;
+  `JudgeCalibrator.pass_threshold` is `None` by default (`threshold_for()`
+  gives the value in use). Objects exposing only the four named methods keep
+  `DEFAULT_PASS_THRESHOLD` (0.7). What to do: nothing; pass
+  `pass_threshold=0.7` to keep the old number in reports
+- **`pysbd` becomes a core dependency** (#149): `pip install ragnarok-ai`
+  now installs `pysbd>=0.3.4,<0.4` (pure Python, MIT) for the sentence
+  segmenter. The classifier judges are separate extras, `[hhem]` and
+  `[minicheck]`, and are not part of `[all]`: they pull `torch` and
+  `transformers`. What to do: nothing for existing installations; add the
+  extra of the judge you use
+- **Both judge parsers raise `JudgeParseError`** (#145) in place of a bare
+  `EvaluationError`. It is a subclass, so `except EvaluationError` keeps
+  working. What to do: code comparing the exception type exactly
+  (`type(exc) is EvaluationError`) must accept the subclass
+- **`CalibrationReport.summary()` prints more lines** (#148): prevalence of
+  human PASS, agreement of a constant majority-class judge, out-of-sample
+  kappa with its interval and method, a warning when kappa is not
+  interpretable; `to_dict()` gains the corresponding keys. Numbers already
+  printed are unchanged. What to do: nothing, unless a test matches the
+  summary text exactly
+
+### Added
+- **`JudgeConfig.source_commit`**: the git commit of the checkout the code
+  runs from (`ragnarok_ai.core.provenance.library_commit()`, read from the
+  `.git` directory without running git, worktrees and packed refs
+  included), `None` for an installed wheel. Filled by `LLMJudge`,
+  `HHEMJudge` and `MiniCheckJudge`, written in reports, left out of
+  `config_hash`: provenance, not comparability. Never another project's
+  commit: the walk up stops at `site-packages` and the repository found
+  must be a ragnarok-ai checkout. The benchmark harness writes it in the
+  attempts header and refuses to resume a run when both commits are known
+  and differ. CONTRIBUTING: after a release, `main` moves to
+  `X.(Y+1).0.dev0`
+- **`MiniCheckJudge`** (`ragnarok_ai.judges`, extra `[minicheck]`): MiniCheck
+  as a `JudgeProtocol` judge for `faithfulness` and `hallucination`;
+  checkpoints `flan-t5-large` (default), `roberta-large` and
+  `deberta-v3-large`, all MIT, pinned to a commit and recorded in
+  `model_digest`; `Bespoke-MiniCheck-7B` is not offered (CC BY-NC 4.0, vLLM
+  only). No dependency on the official package: the official algorithm
+  (`github.com/Liyan06/MiniCheck@b58b9fa`, 0.1.0) is reproduced, nltk
+  sentence split block by block, chunks of 500 words or 400 tokens that
+  never cut a sentence, `predict: <chunk></s><claim>` for Flan-T5 with the
+  logits of tokens 3 and 209, softmax of the two logits for the classifiers,
+  truncation at the official `max_model_len`, batches of 16, maximum over
+  chunks; output `BinaryProbability`, PASS at 0.5 (official default,
+  recorded as not calibrated). Default `unit="sentence"` (each sentence a
+  claim, fraction of PASS sentences, worst verdict), `unit="answer"` for one
+  claim. `training_length` declared as the official truncation length,
+  `training_length_kind` saying so (the benchmark report's `input_length`
+  carries this `kind`); `sentence_splitter` records nltk's version and the
+  SHA-256 of the `punkt_tab` files loaded, so two runs that split
+  sentences differently are never comparable;
+  `trace.prompt_tokens` counts the tokens sent over all chunks,
+  `trace.context_truncated` says when a chunk was cut. The checkpoint's
+  `pytorch_model.bin` is loaded with `weights_only=True` (`torch>=2.6`), a
+  `model.safetensors` is preferred when present. Hugging Face cache
+  first, `offline=True`, `MiniCheckJudge.download(folder)` (weights,
+  tokenizer, nltk `punkt_tab`, `REVISIONS.json`) and `model_path=`. Explicit
+  `device`, model in eval mode. `ragnarok judge-bench --judge
+  minicheck[:<checkpoint>] --device cpu`. Fidelity: the official package and
+  this adapter were run on the same written-for-the-test pairs, documents of
+  up to six chunks included, the recorded official values are a fixture of
+  the integration tests. For both classifiers the fidelity is measured on
+  CPU in float32; on `mps` or `cuda` small numeric differences are possible
+  and, the device being part of the configuration, a CPU run and an MPS run
+  are never comparable
+- **`HHEMJudge`** (`ragnarok_ai.judges`, extra `[hhem]`): HHEM-2.1-Open
+  (Vectara, Apache-2.0) as a `JudgeProtocol` judge for `faithfulness` and
+  `hallucination`; score P(consistent) of the answer given the context,
+  output `BinaryProbability`, PASS at 0.5 (the model card's reading,
+  recorded as not calibrated in `judge_specific`). Default `unit="sentence"`
+  (shared segmenter, fraction of PASS sentences, worst verdict),
+  `unit="answer"` for a single call. Weights
+  (`vectara/hallucination_evaluation_model`) and the `google/flan-t5-base`
+  tokenizer and configuration are pinned to a commit, both recorded in
+  `model_digest`; the repository's remote code is not executed. Hugging
+  Face cache first, download only when allowed (`offline=True` refuses);
+  `HHEMJudge.download(folder)` and `model_path=folder` for a machine with
+  no network. Explicit `device` (cpu, mps, cuda) in the configuration,
+  model in eval mode. No truncation by default (`trace.context_truncated`
+  is `False`, `trace.prompt_tokens` counts what was sent);
+  `max_input_tokens=N` cuts the context, keeps the answer whole and sets the
+  flag. `ragnarok judge-bench --judge hhem --device cpu` runs it at answer
+  level. The configuration declares `training_length` 512. Fidelity: the
+  official remote code and this adapter give identical probabilities on 17
+  recorded pairs (up to 2435 tokens); the recorded values are a fixture of
+  the integration tests (tolerance 1e-5). `JudgeDependencyError` names the
+  extra. README: table of the available judges with their licences.
+  CONTRIBUTING: release checklist with the manual `[hhem]` integration run
+- **Sentence segmentation** (`ragnarok_ai.text.segment_sentences`): split
+  on line breaks, then into sentences with pysbd (new core dependency,
+  `pysbd>=0.3.4,<0.4`, pure Python, MIT); every `Segment` keeps its offsets
+  (`text == source[start:end]`); a citation marker following a sentence on
+  the same line ("(Passage 3)", "[Source 1]") is merged into it; segments
+  with no alphanumeric content, standalone citation markers and fragments of
+  fewer than 3 words without a digit are returned with a reason in
+  `skipped`, never dropped. `SEGMENTER_ID` (rules version, pysbd version,
+  language) goes into `JudgeConfig.segmenter`. The rules reproduce the
+  conversion script of the judge-training data; a fixture of 14 answers
+  checks offsets and exclusions against it
+- **`SentenceLevel(judge, aggregation=..., lang=...)`** (`ragnarok_ai.judges`):
+  a `JudgeProtocol` judge that applies an answer-level judge to each sentence
+  (question and context unchanged) and aggregates the unit judgments; its
+  configuration carries `unit="sentence"`, the aggregation policy and the
+  segmenter. Skipped sentences appear in `JudgeResult.units` with their
+  reason and are not sent to the inner judge; answer-level `score` and
+  `verdict` follow the aggregation (default: share of PASS sentences and
+  worst sentence verdict, as for the claim-level evaluators; `min` and
+  `mean` remain available), `output` and `raw_score` are `None`
+- **Aggregation of unit judgments** (`aggregate_units`): `fraction_pass`,
+  `mean` or `min` for the score; `worst` or the judge's verdict policy
+  applied to the aggregated score for the verdict; skipped units never
+  count. When no unit can be judged, `NoUnitsError` (an `EvaluationError`)
+  is raised and `judge_many` reports a `no_units` failure
+- **Judge benchmark harness** (`ragnarok_ai.benchmarks.judges`, CLI
+  `ragnarok judge-bench --judge <llm[:model] | python:<module>:<Class>>
+  --data test.jsonl [--dev dev.jsonl] --out results/<judge>/`): reads the
+  sentence-level JSONL of the judge-training conversion (`id`, `question`,
+  `context`, `prev_sentence`, `sentence`, `label` SUPPORTED / CONTRADICTED /
+  UNSUPPORTED, free metadata) or an answer-level file (`answer`, PASS /
+  FAIL); calls the judge directly with the sentence as the answer, never
+  transmits `prev_sentence` (the report counts it); runs through
+  `judge_many`; writes `attempts.jsonl` as it goes and resumes from it by
+  `id`, after checking its header line (judge configuration hash,
+  criterion, level, sample, seed, stratify, SHA-256 of the data file, or of
+  the records' content when the Python API gives no file) and the
+  configuration hash of every row: a run whose parameters differ is
+  refused with the field named, never mixed; same for `dev_attempts.jsonl`
+  and the dev file; `--sample N --stratify label --seed S` for slow judges,
+  or `--per-class N` for class quotas (exclusive; recorded in the attempts
+  header; raw metrics flagged as sample-dependent; `prevalence_adjusted`
+  with per-class recall, specificity, and precision and accuracy reweighted
+  by the full set's not-supported prevalence);
+  threshold of a probabilistic judge chosen on `--dev` and applied
+  unchanged. Report (JSON and Markdown): the prediction rule in words (PASS
+  if score >= threshold, PARTIAL and FAIL counted as not supported, with
+  the threshold's value and source), coverage (evaluated, scored, failed;
+  metrics on scored records only), precision, recall and F1 of the
+  not-supported class, balanced accuracy, kappa, majority-class baseline,
+  per-class F1 and confusion matrix when the judge predicts the set's
+  classes, Brier and 10-bin ECE of P(pass) for probabilistic judges,
+  failures by kind, probable truncations, share of inputs beyond the
+  judge's declared training length (`input_length`, when the configuration
+  carries `training_length`), size of the minority human class and whether
+  kappa is interpretable (at least 10, the calibrator's threshold) for the
+  whole set and for every `--by` sub-group, p50 / p90 latency, peak RSS of
+  the harness process (stated as such; for an llm judge the model's size is
+  read on Ollama's `/api/ps`), 95% grouped bootstrap intervals (fixed seed,
+  single-class draws excluded and counted), breakdowns with
+  `--by task,generator`. On an answer-level set, `--sentence-level` wraps the
+  judge in `SentenceLevel`; on a sentence-level set it is refused, the
+  segmentation being already done. No data ships with the package
+- **`judge_many(judge, criterion, samples, *, concurrency=1, keep_raw_output=False)`**
+  (`ragnarok_ai.judges`): runs a `JudgeProtocol` judge over samples and
+  returns one `JudgeAttempt` per sample, in order, with the sample's
+  `sample_id` (or position). Unreadable outputs, timeouts and backend errors
+  become `JudgeFailure` values; configuration errors are never caught.
+  `concurrency=1` is the default and the only setting that keeps Ollama runs
+  reproducible
+- **Calibrator, out-of-sample estimate and readable baselines**:
+  `kappa_at_recommended_cv` (threshold chosen on the other folds, stratified
+  5-fold above 40 samples, leave-one-out otherwise or when a class is smaller
+  than the number of folds, the method is reported), `kappa_cv_ci` (95%
+  bootstrap interval of the out-of-fold predictions, which does not repeat
+  the cross-validation and slightly underestimates the uncertainty;
+  single-class draws are excluded and counted, the interval is flagged
+  unreliable above 10% exclusions; folds and draws are made by group when
+  samples carry a `group_id`), `human_pass_rate`,
+  `majority_baseline_accuracy`, `kappa_interpretable` (false below 10
+  samples in the minority class), `backend_failures`, fixed and reported
+  seeds (`cv_seed`, `bootstrap_seed`): two identical calibrations give
+  identical reports. `kappa_at_recommended` keeps its in-sample value.
+  `CalibrationSample` gains optional `sample_id` and `group_id` (grouped
+  bootstrap). `CalibrationReport` carries the run's `JudgeConfig` per
+  criterion (`configs`), `comparable_with()` and `merge()`, which refuses
+  runs whose configurations differ
+- CI: the lint job fails when a tracked file contains Git conflict markers
+  (`scripts/check_conflict_markers.sh`, usable locally)
+- **`JudgeProtocol`** (`ragnarok_ai.core`): `criteria`, `config(criterion)`
+  and `async judge(criterion, *, question, context, answer)`. `LLMJudge`
+  implements it; `evaluate_faithfulness`, `evaluate_relevance`,
+  `detect_hallucination` and `evaluate_completeness` are now wrappers of
+  `judge()` and send exactly the prompts of 1.12.3 (regression test against
+  a fixture produced by running the v1.12.3 code with a scripted LLM, for
+  both prompt formats, the four criteria, with and without medical mode).
+  In medical mode, context and answer are normalized for faithfulness,
+  hallucination and completeness, not for relevance, as before
+- **`LLMJudge.config(criterion)`**: the run's `JudgeConfig` (model actually
+  used and requested, digest, options, prompt format, template hash before
+  the sample is inserted, `OrdinalBands(4, 2)`, `input_transforms` carrying
+  the medical normalizer and the disambiguation model)
+- **`JudgeResult`** gains optional `output`, `config`, `trace` and `units`
+  fields (last, default `None`) and `to_dict(detailed=False)`; `trace` is
+  excluded from equality (`compare=False`, as `OllamaGeneration.latency_ms`),
+  so two results of the same judgment compare equal whatever the call's
+  latency, as in 1.12.3; the parsers
+  fill `output` with an `OrdinalScore`. `LLMJudge(keep_raw_output=True)`
+  keeps the model's text in `trace.raw_output` (off by default)
+- **`JudgeParseError`** (`EvaluationError` subclass, with `criterion` and
+  `raw_output`): raised by both parsers instead of a bare `EvaluationError`;
+  `except EvaluationError` keeps working
+- **Common judge contract, data types only** (`ragnarok_ai.judges`): native
+  outputs (`OrdinalScore`, `BinaryProbability`, `ClassProbabilities`, each
+  projecting to a score in [0, 1]), verdict policies (`OrdinalBands`,
+  `ScoreThreshold`, `LabelMap`; the verdict is always computed from the
+  output, never read from a model's text; unsupported information is a
+  failure, never PARTIAL), `JudgeConfig` (everything that makes two runs
+  comparable, with a canonical `config_hash` and `comparable_with()`),
+  `CallTrace`, `UnitJudgment`, `AggregationPolicy`, `JudgeFailure` and
+  `JudgeAttempt` (a result or a failure, never both)
+- **`LLMResponse`** (`ragnarok_ai.core`): the generic shape of a detailed
+  generation (`text`, `prompt_tokens`, `completion_tokens`, `model`,
+  `options`, `latency_ms`). `LLMProtocol` does not require it; the judge
+  reads the counters from any client whose `generate_detailed()` returns an
+  object with `text`, `prompt_tokens` and `completion_tokens`, and falls
+  back to `generate()` otherwise
+- **`OllamaGeneration.latency_ms`** (last field, optional) and the
+  `prompt_tokens` / `completion_tokens` properties mirroring
+  `prompt_eval_count` / `eval_count`; existing fields and positional
+  construction are unchanged
+- **`LLMJudge.model_digest`**: the Ollama digest of the model in use, read
+  once from the same `/api/tags` answer that lists the installed models;
+  `None` for a client passed with `llm=`
+
+## [1.12.3] - 2026-11-06
+
+### Behavior changes
+- **Verdicts can change for the `Score: N` prompt format** (#135). The
+  verdict is now always derived from the score (4-5 PASS, 3 PARTIAL, 1-2
+  FAIL); a model that wrote a `Verdict:` line contradicting its score used
+  to produce that verdict. What to do: nothing for new runs; stored results
+  can be realigned with `verdict_from_raw_score(raw_score)`
+- **Batch-evaluation checkpoints written before 1.12.3 are refused on
+  resume** (#136). `CheckpointData.format_version` is now 2; resuming a
+  format 1 checkpoint (stored by batch number, without the data needed to
+  rebuild results) raises `CheckpointFormatError`. What to do: finish the
+  batch evaluations in progress before upgrading, or run them again from
+  the start after upgrading, then delete the old checkpoint files
+- **Calibration statistics are computed on the scored samples only**
+  (#137). `CriterionCalibration.n` is the number of samples with a usable
+  judge score; `n_labeled` adds the parse failures, which no longer abort
+  the run. What to do: read `n_labeled` where the submitted count was
+  expected; a report with `parse_failures > 0` covers fewer samples than
+  were labeled
+- **No more model fallback** (#139). When the requested model, explicit
+  or default, is not installed, `LLMJudge` raises `JudgeModelNotFoundError`
+  instead of silently using an installed `mistral`, `llama3.2`, `llama3`
+  or `llama2` model. The `FALLBACK_MODELS` and `PROMETHEUS_ALIASES` class
+  attributes and `_find_fallback_model()` are removed. What to do: install
+  the model you ask for (`ollama pull <model>`; the default is in the
+  error message); `mistral` still resolves to `mistral:latest`, and a
+  Prometheus 2 alias created with `ollama cp` is still accepted
+- **Judge scores are not comparable with runs made before 1.12.3**
+  (#141). The Ollama client built by `LLMJudge` now sends `temperature=0`,
+  `seed=42` and `num_ctx=8192`; earlier versions sent no option, so the
+  judge sampled at the server default temperature 0.8 with a random seed
+  in a 4096-token window on recent Ollama versions. What to do: run your
+  baselines again with 1.12.3 before comparing; to keep other options,
+  build the client yourself (`OllamaLLM(temperature=..., seed=...,
+  num_ctx=...)`) and pass it with `llm=`, it is used as given
+
+### Added
+- **`LLMJudge(prompt_format=...)`**: `"prometheus"` forces the prometheus-eval
+  template and the `[RESULT] N` parser, `"score-n"` forces the `Score: N`
+  prompts, `"auto"` (default) keeps the detection by model name. For a
+  Prometheus 2 model served under another name (`ollama cp` alias, gateway)
+  or a client without a `model` attribute. The format in use is
+  `judge.effective_prompt_format`, logged at INFO. CLI: `ragnarok judge
+  --prompt-format`; the JSON output gains `model` and `prompt_format`.
+  Closes #133
+- **`OllamaLLM` sampling options**: `temperature`, `seed`, `num_ctx` and a
+  free `options` dict, sent in the request `options`. By default nothing is
+  sent and the adapter behaves exactly as before (server defaults:
+  temperature 0.8, random seed, the server's context window). New
+  `generate_detailed()` returns the text with Ollama's `prompt_eval_count`
+  and `eval_count` (`OllamaGeneration`); `generate()` is unchanged
+- **Truncation warning in `LLMJudge`**: Ollama truncates silently a prompt
+  longer than `num_ctx` and reports a token count just above `num_ctx / 2`
+  (measured on Ollama 0.40.13). The judge recognizes that signature in the
+  counters, logs a warning naming the counts, and counts it in
+  `judge.truncation_warnings`. Heuristic: a legitimate prompt whose length
+  falls in that narrow band is a false positive
+
+### Fixed
+- **`parse_judge_response()` let a `Verdict:` line written by the model
+  override the score**: "Score: 2, Verdict: PASS" gave PASS with a score of
+  0.25. The verdict now follows the score only, for both prompt formats;
+  the rule is exposed as `verdict_from_raw_score()`
+- **`BatchEvaluator` resume lost the results of the batches already done**
+  - `evaluate(testset, resume_from=...)` skipped the completed batches but
+    never read their results back from the checkpoint: the returned
+    `EvaluationResult` only covered the batches evaluated after the resume,
+    and the checkpoint was deleted at the end, so those results were lost
+  - Checkpoints are now keyed by query (`metadata["id"]`, or a hash of the
+    query text with an occurrence suffix for duplicates), not by batch
+    number: a resumed run restores the result of every query already
+    evaluated, whatever the `batch_size`, and evaluates only the remaining
+    ones. Two queries with the same explicit `metadata["id"]` are refused
+    with a `ValueError` naming the id and both positions; the occurrence
+    suffix is reserved to keys derived from the text. Queries that failed before the interruption are evaluated again.
+    The first yielded `BatchResult` carries the restored results
+    (`restored=True`)
+  - `get_checkpoint_id()` returns the checkpoint used by the last evaluation
+    (it always returned `None`)
+  - With `checkpoint_interval > 1`, results were only kept for the batch
+    that triggered the save; every batch is now kept until the next save,
+    and the last batch is always saved
+- **`JudgeCalibrator` aborted at the first unparseable judge response**
+  - Since 1.12.2 an unparseable response raises `EvaluationError`; the
+    calibrator did not catch it, so one bad response lost the whole run
+  - The calibration now continues: the sample is counted in
+    `CriterionCalibration.parse_failures` (indices in `failed_indices`),
+    excluded from the statistics, and reported by `summary()` and `to_dict()`
+- **`LLMJudge()` said "no suitable judge model" whatever went wrong**
+  - A stopped Ollama server, a timeout or an HTTP error all ended in the
+    same `RuntimeError` asking to install Prometheus 2; on a base install
+    without the `[ollama]` extra, `LLMJudge()` failed with a bare
+    `ModuleNotFoundError: No module named 'httpx'`
+  - `LLMJudge()` now raises one of three errors, each naming the remedy:
+    `JudgeDependencyError` with `pip install 'ragnarok-ai[ollama]'` when
+    httpx is missing; `JudgeConnectionError` with the server URL when
+    Ollama cannot be reached or answers an error status;
+    `JudgeModelNotFoundError` with `ollama pull <model>` and the installed
+    models when the server is up but does not serve the requested model.
+    All three are also `RuntimeError`, so `except RuntimeError` written
+    for earlier versions keeps working (`JudgeDependencyError` is also an
+    `ImportError`, `JudgeConnectionError` also an `LLMConnectionError`)
+- **`LLMJudge` silently replaced the requested model by another one**
+  - When the requested model (explicit or default) was not installed, the
+    constructor picked any installed `mistral`, `llama3.2`, `llama3` or
+    `llama2` model with only a log warning. Scores then came from a
+    different judge than the one named in the code, with the `Score: N`
+    prompt format, and runs were not comparable
+  - The generic fallback is removed (see Behavior changes). Two resolutions
+    remain: `mistral` resolves to `mistral:latest`, and a Prometheus 2 model
+    requested under a name that is not installed resolves to an installed
+    model whose name contains "prometheus" (an `ollama cp` alias), with an
+    INFO log
+
+### Changed
+- `CalibrationReport.summary()` states that the recommended threshold and
+  its kappa are measured on the same samples that selected them
+  (in-sample, optimistic), and asks for confirmation on held-out labels;
+  `CalibrationReport.insufficient_data` also considers the scored count
+
+## [1.12.2] - 2026-11-04
+
+### Fixed
+- **`LLMJudge` with Prometheus 2 (the default judge) returned no real score**
+  - The judge prompts ask for a `Score: N` line, which Prometheus 2 does not
+    follow: it answers in its own format, `(feedback) [RESULT] N`, and
+    sometimes gives no number at all. The parser then silently used a
+    default score of 3 (0.5 normalized, verdict `PARTIAL`)
+  - **Prometheus scores produced by earlier versions are not usable and must
+    be discarded**: they were the default 3 whenever the output did not
+    contain `Score: N`, which is indistinguishable from a real 3
+  - Prometheus 2 models (detected by model name) now get the official
+    prometheus-eval absolute-grading template without reference answer
+    (`ABS_SYSTEM_PROMPT`, `ABSOLUTE_PROMPT_WO_REF`, `SCORE_RUBRIC_TEMPLATE`,
+    copied verbatim from prometheus-eval 0.1.20, Apache License 2.0) and a
+    `[RESULT] N` parser
+  - The Prometheus rubrics reuse, word for word, the question and the five
+    score descriptions of the `Score: N` prompts, for all four criteria
+    (faithfulness, hallucination, relevance, completeness); a test enforces it
+  - Other judge models keep the `Score: N` format, unchanged
+- **A judge response that cannot be parsed is now an explicit error**
+  (`EvaluationError`), for both formats, instead of a default score
+
 ## [1.12.1.post1] - 2026-11-03
 
 Documentation-only post-release (PEP 440): the code is identical to 1.12.1.
@@ -535,18 +932,18 @@ core dependencies.
 ### Changed
 - Default pytest config now skips integration tests (run with `pytest -m integration`)
 
-## [1.1.2] - 2025-01-27
+## [1.1.2] - 2026-01-27
 
 ### Fixed
 - **`--json` flag now works** — v1.1.0/v1.1.1 required `--json-output`, now `--json` works
 - `--json-output` kept as hidden alias for backward compatibility
 
-## [1.1.1] - 2025-01-27 [YANKED]
+## [1.1.1] - 2026-01-27 [YANKED]
 
 ### Note
 - Incomplete fix for `--json` flag, use v1.1.2 instead
 
-## [1.1.0] - 2025-01-27
+## [1.1.0] - 2026-01-27
 
 ### Added
 - **CLI `generate` command**: Generate synthetic test sets from documents
@@ -577,7 +974,7 @@ core dependencies.
 - Publish workflow now runs tests before publishing
 - Build verification with twine check before upload
 
-## [1.0.2] - 2025-01-27
+## [1.0.2] - 2026-01-27
 
 ### Added
 - **CLI `evaluate --demo`**: Working demo evaluation with realistic MockRAG
@@ -593,13 +990,13 @@ core dependencies.
 ### Fixed
 - CLI tests updated to match new behavior
 
-## [1.0.1] - 2025-01-27
+## [1.0.1] - 2026-01-27
 
 ### Fixed
 - Use absolute URLs for images (PyPI compatibility)
 - Add noqa comments for e2e import tests (lint fix)
 
-## [1.0.0] - 2025-01-27
+## [1.0.0] - 2026-01-27
 
 ### Added
 - PyPI publication (`pip install ragnarok-ai`)
@@ -611,7 +1008,7 @@ core dependencies.
 - Updated project metadata (author, keywords, classifiers)
 - Marked as Production/Stable
 
-## [0.9.0] - 2025-01-26
+## [0.9.0] - 2026-01-26
 
 ### Added
 - **Agent Evaluation Module**
@@ -625,7 +1022,7 @@ core dependencies.
   - `ChainOfThoughtAdapter` for CoT pattern
 - Dual licensing (AGPL-3.0 + Commercial)
 
-## [0.8.0] - 2025-01-25
+## [0.8.0] - 2026-01-26
 
 ### Added
 - **Comparison & Benchmarking**
@@ -635,7 +1032,7 @@ core dependencies.
   - `DiffReport` for run-to-run comparison
 - Baselines library with `BaselineResult` and `compare()`
 
-## [0.7.0] - 2025-01-24
+## [0.7.0] - 2026-01-26
 
 ### Added
 - **Framework Adapters**
@@ -644,7 +1041,7 @@ core dependencies.
 - Custom RAG support via `RAGProtocol`
 - Adapter contribution guide
 
-## [0.6.0] - 2025-01-23
+## [0.6.0] - 2026-01-26
 
 ### Added
 - **Cloud & Local LLM Adapters**
@@ -655,7 +1052,7 @@ core dependencies.
   - ChromaDB adapter
   - FAISS adapter (pure local, no server)
 
-## [0.5.0] - 2025-01-22
+## [0.5.0] - 2026-01-26
 
 ### Added
 - **Performance & Scale**
@@ -666,7 +1063,7 @@ core dependencies.
   - Timeout and retry (`timeout`, `max_retries`, `retry_delay`)
   - Graceful cache error handling
 
-## [0.4.0] - 2025-01-21
+## [0.4.0] - 2026-01-26
 
 ### Added
 - **Framework Adapters**
@@ -675,7 +1072,7 @@ core dependencies.
 - **Observability**
   - OpenTelemetry export for tracing & debugging
 
-## [0.3.0] - 2025-01-20
+## [0.3.0] - 2026-01-25
 
 ### Added
 - **Test Generation**
@@ -687,7 +1084,7 @@ core dependencies.
 - Baselines library (configs + expected results)
 - NovaTech example dataset for quickstart
 
-## [0.2.0] - 2025-01-19
+## [0.2.0] - 2026-01-25
 
 ### Added
 - **Generation Metrics**
@@ -699,7 +1096,7 @@ core dependencies.
 - Qdrant vector store adapter
 - Intelligent CI gating (stable metrics fail, LLM judgments warn)
 
-## [0.1.0] - 2025-01-18
+## [0.1.0] - 2026-01-24
 
 ### Added
 - **Core Foundation**

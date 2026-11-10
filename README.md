@@ -41,7 +41,8 @@ A pipeline can have a good retriever but a bad generator, great faithfulness but
 **ragnarok-ai is designed from the ground up for local, private, reproducible RAG evaluation:**
 
 - Runs 100% locally (Ollama, local models) — your data never leaves your machine
-- Checkpoints long batch evaluations — after a crash, resume from the last completed batch
+- Pins the judge's sampling options (temperature 0, fixed seed, explicit 8192-token context window) and warns when Ollama probably truncated a prompt — the same inputs give the same judgment on the same machine and Ollama version
+- Checkpoints long batch evaluations — after a crash, resume: every query already evaluated is restored, only the rest is recomputed
 - Tells you *why* quality is low (root-cause diagnosis), not just *that* it is
 - Lets you calibrate the judge against your own labels — trust the scores, or know you can't
 - Gates your CI, monitors production, detects drift, A/B tests configurations
@@ -102,7 +103,7 @@ Generation quality (faithfulness, relevance, hallucination, completeness) is sco
 | **LLM-as-Judge** | Multi-criteria evaluation with Prometheus 2: faithfulness, relevance, hallucination, completeness — with calibration against your own labels (kappa, error rates, threshold tuning). |
 | **Cost Tracking** | Track token usage and costs. Local models = $0.00, see exactly what cloud APIs cost. |
 | **Jupyter Integration** | Rich HTML display in notebooks with metrics visualization. |
-| **Fast & Resilient** | Parallel evaluation, result caching, timeouts and retries. `BatchEvaluator` checkpoints each completed batch — after a crash, resume without recomputing them. |
+| **Fast & Resilient** | Parallel evaluation, result caching, timeouts and retries. `BatchEvaluator` checkpoints every evaluated query — after a crash, resume restores their results and recomputes only the rest. |
 | **Framework Agnostic** | Works with LangChain, LangGraph, LlamaIndex, or your custom RAG. |
 | **Comprehensive Metrics** | Retrieval quality, faithfulness, relevance, hallucination detection, latency tracking. |
 | **Test Generation** | Auto-generate diverse test sets from your knowledge base — or mine them from real production traffic. |
@@ -120,8 +121,8 @@ ragnarok-ai is built around a small set of guarantees:
 |-----------|---------------------------|
 | **Local-first, always** | Every feature works with local models (Ollama). No API key is ever required. Air-gapped deployment is a first-class target. |
 | **Your data stays yours** | Nothing leaves your machine. Production traces hash queries by default; capturing text is opt-in and PII-scrubbed client-side. |
-| **Resumable by design** | Long local evaluations crash. `BatchEvaluator` checkpoints each completed batch, so a resumed run does not recompute them. |
-| **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. |
+| **Resumable by design** | Long local evaluations crash. `BatchEvaluator` checkpoints every evaluated query, so a resumed run restores their results and recomputes only the rest, whatever the batch size. |
+| **Trust is measured, not assumed** | Judge calibration quantifies agreement with *your* labels (kappa, error rates, threshold tuning) instead of asking you to believe a score. The recommended threshold is reported both in-sample and out-of-sample (cross-validation with a bootstrap interval, fixed seeds), next to the prevalence of your labels and the agreement a constant majority-class judge would get. |
 | **Engineering tool, not a notebook** | CLI-first, JSON output, exit codes, `--fail-under` CI gates, regression detection, Prometheus export, Helm chart. |
 | **Lightweight core** | No torch/transformers in the core. Statistics are hand-rolled over the standard library. |
 
@@ -330,11 +331,19 @@ print(f"Hallucination: {result.hallucination.verdict}")
 - Prometheus 2 Q5_K_M: ~5GB RAM usage
 - `keep_alive` enabled by default (prevents model unloading between requests)
 
+**Reproducibility:** the Ollama client built by `LLMJudge` sends `temperature=0`, `seed=42` and `num_ctx=8192` (`LLMJudge.JUDGE_TEMPERATURE`, `JUDGE_SEED`, `JUDGE_NUM_CTX`). Ollama truncates silently a prompt longer than its context window; the judge detects the signature of that truncation in the token counters and logs a warning (`judge.truncation_warnings` counts them). A client passed with `llm=` is used as given: `OllamaLLM(temperature=..., seed=..., num_ctx=..., options={...})` sets the same options yourself; by default `OllamaLLM` sends none and keeps the server defaults. The judge reads token counters from any client whose `generate_detailed()` returns an `LLMResponse` (or any object with `text`, `prompt_tokens`, `completion_tokens`); `judge.model_digest` records the digest of the Ollama model in use.
+
 **Installation:**
 ```bash
 # Install Prometheus 2 (~5GB, runs on 16GB RAM)
 ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ```
+
+`LLMJudge` picks the prompt format from the model name: the prometheus-eval template and its `[RESULT] N` parser when the name contains "prometheus", `Score: N` prompts otherwise. Force it with `prompt_format="prometheus"` or `"score-n"` (CLI: `--prompt-format`) when the name does not tell, for example a Prometheus 2 model served under another name; `judge.effective_prompt_format` says which one is in use.
+
+To compare a prompted judge with sentence-level classifiers on the same units, wrap it: `SentenceLevel(LLMJudge())` segments the answer with the shared segmenter (`ragnarok_ai.text.segment_sentences`: pysbd sentences, citation markers merged, fragments and markers kept as skipped units), judges each sentence and aggregates (share of PASS sentences as the score and the worst sentence verdict by default; `min` and `mean` are available). An aggregated `JudgeResult` has `raw_score=None`. Every judge follows the same contract (`ragnarok_ai.core.JudgeProtocol`): `judge.criteria`, `judge.config(criterion)` describing the run (model, options, prompt template hash, verdict policy, input transforms) with a `config_hash` that tells whether two runs are comparable, and `await judge.judge(criterion, question=..., context=..., answer=...)`. The four named methods of `LLMJudge` are wrappers of `judge()`; each `JudgeResult` carries its `output`, `config` and `trace` (token counters, probable truncation, latency).
+
+If the requested model is not installed, `LLMJudge` raises `JudgeModelNotFoundError` with the `ollama pull` command: it never silently substitutes another model. An `ollama cp` alias whose name contains "prometheus" (e.g. `prometheus2`) is accepted for the default model.
 
 ### Medical Mode
 
@@ -756,6 +765,64 @@ mypy src/                 # Type check
 ---
 
 ## Advanced Usage
+
+### Comparing Judges
+
+Judges available out of the box. Every one is a `JudgeProtocol` judge with a comparable `JudgeConfig`, so `judge-bench`, `JudgeCalibrator` and `SentenceLevel` take any of them.
+
+| Judge | Class | Runs with | Output | Default unit | Licence | Install |
+|---|---|---|---|---|---|---|
+| Prometheus 2 (7B, Q5_K_M) | `LLMJudge` | Ollama, local server | 1-5 score, PASS at 4 | answer | Apache-2.0 (upstream weights) | `[ollama]`, then `ollama pull` |
+| HHEM-2.1-Open (Vectara) | `HHEMJudge` | `transformers` + `torch`, in process, cpu / mps / cuda | P(consistent), PASS at 0.5 (model card default, not calibrated) | sentence | Apache-2.0 (code and weights); foundation `google/flan-t5-base` Apache-2.0 | `[hhem]` |
+| MiniCheck-Flan-T5-Large (default), MiniCheck-RoBERTa-Large, MiniCheck-DeBERTa-v3-Large | `MiniCheckJudge` | `transformers` + `torch` + `nltk`, in process, cpu / mps / cuda | max over document chunks of P(supported), PASS at 0.5 (official default, not calibrated) | sentence | MIT (all three checkpoints); official code Apache-2.0. Bespoke-MiniCheck-7B not offered (CC BY-NC 4.0) | `[minicheck]` |
+
+Fidelity to the published code is measured on CPU in float32 for both classifiers. On `mps` or `cuda` small numeric differences are possible; the device is part of the configuration, so a CPU run and an MPS run are never comparable.
+
+`HHEMJudge` loads two artifacts pinned to a commit, the HHEM weights and the flan-t5-base tokenizer, both recorded in `model_digest`; the repository's remote code is never executed. The Hugging Face cache is consulted before any download, and `HHEMJudge.download(folder)` then `HHEMJudge(model_path=folder)` work with no network at all. The context is the premise and the answer (or each sentence) the hypothesis; the question is not part of the model's input. Nothing is truncated by default (the foundation has no hard window; 512 tokens is its training length), and `trace.prompt_tokens` says what was sent; `max_input_tokens=N` cuts the context to fit and sets `trace.context_truncated`.
+
+```python
+from ragnarok_ai.judges import HHEMJudge
+
+judge = HHEMJudge(device="cpu")  # unit="sentence": fraction of consistent sentences, worst verdict
+result = await judge.judge(
+    "faithfulness",
+    question="Who created Python?",
+    context="Python was created by Guido van Rossum and first released in 1991.",
+    answer="Python was created by Guido van Rossum. It was first released in 1989.",
+)
+result.score, result.verdict, [(u.text, u.verdict) for u in result.units if u.skipped is None]
+```
+
+`MiniCheckJudge` reproduces the official code (`github.com/Liyan06/MiniCheck`, commit `b58b9fa`, package 0.1.0) without depending on it: sentence split with nltk, chunks of 500 words (Flan-T5) or 400 tokens (RoBERTa, DeBERTa) that never cut a sentence, each chunk checked with the claim, maximum over chunks. The checkpoint revision is pinned and recorded in `model_digest`; the official code's truncation length (2048 tokens for Flan-T5 and DeBERTa, 512 for RoBERTa) is declared as `training_length` with `training_length_kind` saying it is a truncation length, not a training length, and the benchmark report shows it as such; `trace.context_truncated` says when a chunk hit it. `MiniCheckJudge.download(folder)` also stores nltk's `punkt_tab`, the one piece no revision pins; the configuration records nltk's version and the SHA-256 of the `punkt_tab` files actually loaded, so two runs that split sentences differently are never comparable, and `model_path=folder` needs no network at all. The pinned checkpoints ship a `pytorch_model.bin`: it is loaded with `weights_only=True` (the extra requires `torch>=2.6`), a `model.safetensors` is preferred when a folder holds one, and the Hub's automatic conversions on pull request refs are not used.
+
+```python
+from ragnarok_ai.judges import MiniCheckJudge
+
+judge = MiniCheckJudge(device="cpu")  # MiniCheck-Flan-T5-Large, unit="sentence"
+result = await judge.judge(
+    "faithfulness",
+    question="Who created Python?",
+    context="Python was created by Guido van Rossum and first released in 1991.",
+    answer="Python was created by Guido van Rossum. It was first released in 1989.",
+)
+result.score, result.verdict
+```
+
+`ragnarok judge-bench` runs any judge on a labeled JSONL set and writes a report. The set is either the sentence-level output of the judge-training conversion (`id`, `question`, `context`, `prev_sentence`, `sentence`, `label` in SUPPORTED / CONTRADICTED / UNSUPPORTED, plus metadata) or an answer-level file (`answer`, `label` PASS / FAIL). No data ships with the package.
+
+```bash
+ragnarok judge-bench --judge llm --data test.jsonl --dev dev.jsonl --out results/prometheus/ \
+  --sample 200 --stratify label --seed 7 --by task,generator
+```
+
+- On a sentence-level set the judge receives each sentence as the answer; `prev_sentence` is kept in the file, never sent, and the report says how many records carry one.
+- Every call goes through `judge_many`; `attempts.jsonl` is written as the run goes and an interrupted run resumes from it by `id`. Its first line records the judge configuration hash, criterion, level, sample, seed, stratify and the SHA-256 of the data file: a run whose parameters differ is refused (exit code 2), never mixed. Same for `dev_attempts.jsonl` and `--dev`. Through the Python API (`run_benchmark` without `data_sha256`), the SHA-256 of the records' content takes the file's place, so the check applies there too.
+- `--per-class N` evaluates at most N records of every label (class quotas, exclusive with `--sample`). The raw metrics then follow the sample's class mix and the report says so; a prevalence-adjusted section gives the per-class recall, the specificity and the precision and accuracy reweighted by the full set's prevalence of the not-supported class.
+- For a probabilistic judge the pass threshold is chosen on `--dev` (F1 of the not-supported class) and applied unchanged to `--data`; without `--dev`, the judge's own verdict policy applies. Nothing is tuned on the evaluated set.
+- The report (`report.json`, `report.md`) states the prediction rule in words (PASS if score >= threshold, PARTIAL and FAIL counted as not supported, with the threshold's value and source) and gives precision, recall and F1 of the not-supported class, balanced accuracy, kappa, the majority-class baseline, per-class F1 and a confusion matrix when the judge predicts the set's classes, Brier and ECE for probabilistic judges, failures by kind, probable truncations, the share of inputs beyond the judge's training length when it declares one (512 tokens for HHEM), p50 / p90 latency, 95% bootstrap intervals grouped on the source (fixed seed), and breakdowns per metadata field. Metrics are computed on the scored records only; the report shows the coverage (evaluated, scored, failed) next to them.
+- Memory: `peak_rss_mb_harness` is the harness process only. An Ollama model runs in the Ollama server, so for `--judge llm` the report also gives the model's resident and VRAM size read on `/api/ps` right after the run, when the server answers.
+- `--judge hhem` and `--judge minicheck[:<checkpoint>]` benchmark `HHEMJudge` and `MiniCheckJudge` at answer level on `--device` (the set defines the unit; add `--sentence-level` on an answer-level set). The model then runs in the harness process, so `peak_rss_mb_harness` includes it.
+- `--judge python:<module>:<Class>` benchmarks any `JudgeProtocol` class of your own.
 
 ### Importing Types
 

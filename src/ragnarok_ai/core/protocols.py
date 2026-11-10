@@ -6,10 +6,40 @@ must implement. Using protocols enables duck typing and loose coupling.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.types import Document, RAGResponse
+    from ragnarok_ai.evaluators.judge import JudgeResult
+    from ragnarok_ai.judges.contract import JudgeConfig
+
+
+@dataclass(frozen=True)
+class LLMResponse:
+    """A generation with what the backend reported about it.
+
+    The generic shape a detailed LLM call returns. ``LLMProtocol`` does not
+    require it: a client may expose ``generate_detailed()`` returning this
+    type, or any object with ``text``, ``prompt_tokens`` and
+    ``completion_tokens`` attributes, and the judge will use the counters;
+    otherwise the judge calls ``generate()`` and the counters are unknown.
+
+    Attributes:
+        text: The generated text.
+        prompt_tokens: Prompt tokens evaluated, as reported (``None`` if unknown).
+        completion_tokens: Generated tokens, as reported (``None`` if unknown).
+        model: Model name used for the call.
+        options: Sampling options sent with the call.
+        latency_ms: Wall-clock latency of the call, in milliseconds.
+    """
+
+    text: str
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    model: str | None = None
+    options: dict[str, Any] = field(default_factory=dict)
+    latency_ms: float | None = None
 
 
 @runtime_checkable
@@ -178,5 +208,39 @@ class RAGProtocol(Protocol):
 
         Returns:
             RAGResponse containing the answer and retrieved documents.
+        """
+        ...  # pragma: no cover
+
+
+@runtime_checkable
+class JudgeProtocol(Protocol):
+    """Protocol for judges: one call per (sample, criterion), a comparable configuration.
+
+    Any object with these members is a judge, whatever produces the
+    judgment (a prompted LLM, a classifier, a trained model).
+
+    Example:
+        >>> judge = LLMJudge()
+        >>> assert isinstance(judge, JudgeProtocol)
+        >>> "faithfulness" in judge.criteria
+        True
+        >>> result = await judge.judge("faithfulness", question=q, context=c, answer=a)
+    """
+
+    @property
+    def criteria(self) -> frozenset[str]:
+        """The criteria this judge can evaluate."""
+        ...  # pragma: no cover
+
+    def config(self, criterion: str) -> JudgeConfig:
+        """The run-level configuration for *criterion*; equal hashes mean comparable runs."""
+        ...  # pragma: no cover
+
+    async def judge(self, criterion: str, *, question: str, context: str, answer: str) -> JudgeResult:
+        """Judge one answer on one criterion.
+
+        Raises:
+            ValueError: If *criterion* is not in ``criteria``.
+            JudgeParseError: If the judge's output cannot be parsed (per-sample failure).
         """
         ...  # pragma: no cover

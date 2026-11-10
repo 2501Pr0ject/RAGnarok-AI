@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
+      - name: Check for conflict markers in tracked files
+        run: sh scripts/check_conflict_markers.sh
+
       - name: Run ruff check
         run: uv run ruff check .
 

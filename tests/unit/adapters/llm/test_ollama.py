@@ -12,6 +12,7 @@ from ragnarok_ai.adapters.llm.ollama import (
     DEFAULT_EMBED_MODEL,
     DEFAULT_MODEL,
     DEFAULT_TIMEOUT,
+    OllamaGeneration,
     OllamaLLM,
 )
 from ragnarok_ai.core.exceptions import LLMConnectionError
@@ -391,3 +392,106 @@ class TestOllamaLLMContextManager:
 
         async with llm as entered_llm:
             assert entered_llm is llm
+
+
+class TestOllamaOptions:
+    """Sampling options are sent only when asked, and counters come back."""
+
+    @staticmethod
+    def _request_json(route) -> dict:
+        import json
+
+        return json.loads(route.calls[0].request.content)
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_default_payload_has_no_options(self) -> None:
+        """Regression guard: the default adapter keeps the server defaults (testset generation relies on it)."""
+        route = respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok"})
+        )
+
+        await OllamaLLM().generate("p")
+
+        assert "options" not in self._request_json(route)
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_named_options_are_sent(self) -> None:
+        route = respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok"})
+        )
+
+        await OllamaLLM(temperature=0.0, seed=42, num_ctx=8192).generate("p")
+
+        assert self._request_json(route)["options"] == {"temperature": 0.0, "seed": 42, "num_ctx": 8192}
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_options_dict_is_merged_and_named_parameters_win(self) -> None:
+        route = respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok"})
+        )
+
+        llm = OllamaLLM(seed=7, options={"top_p": 0.9, "seed": 1, "num_predict": 64})
+        await llm.generate("p")
+
+        assert self._request_json(route)["options"] == {"top_p": 0.9, "seed": 7, "num_predict": 64}
+        assert llm.num_ctx is None
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_detailed_returns_counters(self) -> None:
+        respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok", "prompt_eval_count": 2051, "eval_count": 12})
+        )
+
+        generation = await OllamaLLM(model="m", num_ctx=4096).generate_detailed("p")
+
+        assert generation == OllamaGeneration(
+            text="ok", prompt_eval_count=2051, eval_count=12, model="m", options={"num_ctx": 4096}
+        )
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_detailed_without_counters(self) -> None:
+        respx.post("http://localhost:11434/api/generate").mock(return_value=Response(200, json={"response": "ok"}))
+
+        generation = await OllamaLLM().generate_detailed("p")
+
+        assert generation.prompt_eval_count is None
+        assert generation.eval_count is None
+        assert generation.options == {}
+
+
+class TestOllamaGenerationShape:
+    """OllamaGeneration keeps its fields and exposes the generic counter names and the latency."""
+
+    def test_positional_construction_from_1_12_3_still_works(self) -> None:
+        g = OllamaGeneration("ok", 12, 3, "m", {"seed": 1})
+        assert g.latency_ms is None
+        assert g.prompt_tokens == 12 and g.completion_tokens == 3
+
+    def test_latency_is_not_part_of_equality(self) -> None:
+        """Two generations that differ only by latency are equal, as in 1.12.3."""
+        a = OllamaGeneration("ok", 12, 3, "m", {"seed": 1}, latency_ms=3.5)
+        b = OllamaGeneration("ok", 12, 3, "m", {"seed": 1}, latency_ms=870.0)
+        c = OllamaGeneration("ok", 12, 3, "m", {"seed": 1})
+        assert a == b == c
+        assert a != OllamaGeneration("ok", 13, 3, "m", {"seed": 1}, latency_ms=3.5)
+
+    def test_generic_names_mirror_ollama_counters(self) -> None:
+        g = OllamaGeneration(text="ok", prompt_eval_count=None, eval_count=None, model="m")
+        assert g.prompt_tokens is None and g.completion_tokens is None
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_generate_detailed_reports_latency(self) -> None:
+        respx.post("http://localhost:11434/api/generate").mock(
+            return_value=Response(200, json={"response": "ok", "prompt_eval_count": 5, "eval_count": 1})
+        )
+
+        g = await OllamaLLM(model="m").generate_detailed("p")
+
+        assert g.latency_ms is not None and g.latency_ms >= 0.0
+        assert (g.prompt_tokens, g.completion_tokens) == (5, 1)

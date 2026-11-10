@@ -12,6 +12,7 @@ Thank you for your interest in contributing to ragnarok-ai! This document provid
 - [Testing](#testing)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
+- [Release Checklist](#release-checklist)
 - [Areas for Contribution](#areas-for-contribution)
 
 ---
@@ -105,7 +106,14 @@ git merge upstream/develop
 
 ## Code Style
 
-We follow strict code style guidelines. Please read [CLAUDE.md](CLAUDE.md) for detailed conventions.
+The conventions are the ones enforced by the tooling configured in `pyproject.toml`:
+
+- **ruff** (`[tool.ruff]`): line length 120, target Python 3.10, rule sets `E`, `W`, `F`, `I`, `B`, `C4`, `UP`, `ARG`, `SIM`, `TCH`, `PTH`, `ERA`, `RUF`; `E501` is left to the formatter. `ruff format` is the only formatter.
+- **mypy** (`[tool.mypy]`): `strict = true`, every function fully typed, no untyped decorators, unused `type: ignore` comments are errors.
+- **Docstrings**: Google style (`Args:`, `Returns:`, `Raises:`, `Example:` sections), required on public modules, classes and functions; private helpers get a one-line summary.
+- **Dataclasses** for value objects are frozen and validated in `__post_init__`; adapters are plain classes implementing the protocols in `ragnarok_ai.core.protocols`.
+
+CI runs `uv run ruff check .`, `uv run ruff format --check .` and `uv run mypy src/`; run the same commands before pushing.
 
 ### Key Points
 
@@ -293,6 +301,20 @@ test(retrieval): add edge cases for empty query handling
   ```
 
 ---
+
+## Release Checklist
+
+Releases are cut by the maintainer. Before tagging:
+
+1. `pyproject.toml` and `src/ragnarok_ai/__init__.py` carry the new version; CHANGELOG `[Unreleased]` becomes `[X.Y.Z] - date`.
+2. `uv lock --check`, `ruff check`, `ruff format --check`, `mypy src`, `scripts/check_conflict_markers.sh` and `pytest tests/unit` pass locally and CI is green on `main`.
+3. The integration tests that need a local model are run by hand, since CI never installs them:
+   - `[hhem]`: `uv run --extra hhem pytest tests/unit/judges/test_hhem.py -m integration -v` (about 1 GB in the Hugging Face cache on first run; checks the pinned revisions, the model card examples and the recorded official probabilities within 1e-5);
+   - `[minicheck]`: `uv run --extra minicheck pytest tests/unit/judges/test_minicheck.py -m integration -v` (about 3 GB for MiniCheck-Flan-T5-Large plus nltk's `punkt_tab`; checks the pinned revision, the chunking and the recorded official probabilities within 1e-5);
+   - Ollama judges: `uv run pytest -m integration tests/unit/evaluators/test_judge.py` with the default judge model pulled.
+4. The wheel is built and imported in a fresh virtual environment (`uv build`, then `pip install dist/*.whl` and `python -c "import ragnarok_ai"`).
+5. Tag `vX.Y.Z` on the release commit; the tag push publishes to PyPI. Write the GitHub release notes from the CHANGELOG entry.
+6. After the tag, `main` moves to the next development version: `X.(Y+1).0.dev0` in `pyproject.toml` and `src/ragnarok_ai/__init__.py` (then `uv lock`), through a pull request like any other change. Judge configurations record `ragnarok_ai_version`, so runs made from `main` between two releases are never mistaken for the released version; they also record `source_commit`, the commit of the checkout, when the code runs from a git clone.
 
 ## Areas for Contribution
 

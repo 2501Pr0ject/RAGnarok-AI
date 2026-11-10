@@ -1,6 +1,6 @@
 [project]
 name = "ragnarok-ai"
-version = "1.12.1.post1"
+version = "1.14.0.dev0"
 description = "Local-first evaluation framework for RAG pipelines and AI agents"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
@@ -40,6 +40,9 @@ dependencies = [
     # with click>=8.2; rich<12.3 lacks the progress columns of the live display
     "typer>=0.16",
     "rich>=12.3",
+    # Sentence segmentation shared by the judges and the training pipeline
+    # (pure Python, MIT); pinned so every install segments identically
+    "pysbd>=0.3.4,<0.4",
 ]
 
 [project.optional-dependencies]
@@ -64,6 +67,18 @@ docs = [
 ]
 ollama = [
     "httpx>=0.27",
+]
+hhem = [
+    "torch>=2.1",
+    "transformers>=4.40",
+    "huggingface_hub>=0.23",
+    "safetensors>=0.4",
+]
+minicheck = [
+    "torch>=2.6",
+    "transformers>=4.40",
+    "huggingface_hub>=0.23",
+    "nltk>=3.9",
 ]
 openai = [
     "httpx>=0.27",
@@ -257,6 +272,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["numpy", "numpy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["torch", "torch.*", "transformers", "transformers.*", "huggingface_hub", "huggingface_hub.*", "safetensors", "safetensors.*", "nltk", "nltk.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

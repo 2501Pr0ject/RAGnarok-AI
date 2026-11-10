@@ -889,6 +889,23 @@ class TestJudgeCommand:
 
         assert result.exit_code == 0
         assert "judge" in result.output.lower()
+        assert "--prompt-format" in result.output
+
+    def test_judge_rejects_unknown_prompt_format(self) -> None:
+        """An unknown --prompt-format is a usage error, reported before any dependency check."""
+        result = runner.invoke(app, ["judge", "-c", "c", "-q", "q", "-a", "a", "--prompt-format", "score"])
+
+        assert result.exit_code == 2
+        assert "Invalid --prompt-format 'score'" in result.output
+        assert "auto, prometheus, score-n" in result.output
+
+    def test_judge_rejects_unknown_prompt_format_json(self) -> None:
+        result = runner.invoke(app, ["--json", "judge", "-c", "c", "-q", "q", "-a", "a", "--prompt-format", "score"])
+
+        assert result.exit_code == 2
+        payload = json.loads(result.output)
+        assert payload["status"] == "error"
+        assert "Invalid --prompt-format" in payload["errors"][0]
 
     def test_judge_missing_testset(self) -> None:
         """Test judge command with missing testset file."""

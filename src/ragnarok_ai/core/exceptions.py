@@ -44,6 +44,34 @@ class EvaluationError(RagnarokError):
     """
 
 
+class JudgeParseError(EvaluationError):
+    """Raised when a judge's output cannot be turned into a score.
+
+    A per-sample failure, not a configuration error: the call succeeded but
+    the text follows neither ``Score: N`` nor ``[RESULT] N``. Subclass of
+    ``EvaluationError``, which earlier versions raised for the same case.
+
+    Attributes:
+        criterion: The criterion being judged.
+        raw_output: The model's text, for diagnosis.
+    """
+
+    def __init__(self, message: str, *, criterion: str | None = None, raw_output: str | None = None) -> None:
+        """Initialize JudgeParseError."""
+        super().__init__(message)
+        self.criterion = criterion
+        self.raw_output = raw_output
+
+
+class NoUnitsError(EvaluationError):
+    """Raised when an answer has no unit (sentence, claim) that can be judged.
+
+    A per-sample failure (kind ``no_units`` in ``JudgeFailure``): the answer
+    was segmented, every segment was skipped (empty, citation marker alone,
+    fragment too short), so there is nothing to score.
+    """
+
+
 class ConfigurationError(RagnarokError):
     """Raised when configuration is invalid or missing.
 
@@ -64,3 +92,83 @@ class VectorStoreConnectionError(RagnarokError):
     Example:
         >>> raise VectorStoreConnectionError("Failed to connect to Qdrant at localhost:6333")
     """
+
+
+class CheckpointFormatError(RagnarokError):
+    """Raised when a checkpoint cannot be resumed because of its format.
+
+    Batch-evaluation checkpoints are versioned (``CheckpointData.format_version``).
+    A checkpoint written by an earlier version of ragnarok-ai, which stored
+    results by batch number instead of by query, cannot be resumed.
+
+    Example:
+        >>> raise CheckpointFormatError("Checkpoint batch_evaluation_1a2b3c4d uses format 1; version 2 is required")
+    """
+
+
+class JudgeModelNotFoundError(ConfigurationError, RuntimeError):
+    """Raised when the judge model is not installed on the Ollama server.
+
+    Distinct from ``LLMConnectionError`` (the server could not be reached):
+    the server answered, but does not serve the requested model. The message
+    carries the command to install it. Also a ``RuntimeError`` so code
+    written for earlier versions, which raised one, keeps catching it.
+
+    Attributes:
+        model: The requested model name.
+        available: Model names the server reported.
+    """
+
+    def __init__(self, model: str, available: list[str], base_url: str) -> None:
+        """Initialize JudgeModelNotFoundError."""
+        self.model = model
+        self.available = list(available)
+        listed = ", ".join(self.available) if self.available else "none"
+        msg = (
+            f"Judge model '{model}' is not installed on the Ollama server at {base_url}. "
+            f"Install it with: ollama pull {model} (installed models: {listed})"
+        )
+        super().__init__(msg)
+
+
+class JudgeConnectionError(LLMConnectionError, RuntimeError):
+    """Raised by ``LLMJudge()`` when the Ollama server cannot be reached.
+
+    Distinct from ``JudgeModelNotFoundError``: the server did not answer (or
+    answered an error status), so nothing can be said about the model. Also
+    a ``RuntimeError`` so code written for earlier versions, which raised
+    one from the constructor, keeps catching it.
+    """
+
+
+class JudgeDependencyError(ConfigurationError, ImportError, RuntimeError):
+    """Raised by ``LLMJudge()`` when the Ollama client's dependency is missing.
+
+    ``httpx`` is only installed with an extra. The message carries the
+    install command. Also an ``ImportError`` (earlier versions raised a bare
+    ``ModuleNotFoundError``) and a ``RuntimeError`` (what the constructor
+    raised for every other setup failure).
+    """
+
+    def __init__(
+        self,
+        extra: str = "ollama",
+        module: str = "httpx",
+        *,
+        judge: str = "The default judge",
+        alternative: str | None = "pass your own LLM client with llm=",
+    ) -> None:
+        """Initialize JudgeDependencyError.
+
+        Args:
+            extra: The extra that installs the dependency.
+            module: The missing module.
+            judge: Who needs it, for the message.
+            alternative: What else the caller can do; ``None`` for no alternative.
+        """
+        self.extra = extra
+        self.module = module
+        msg = f"{judge} needs '{module}', which is not installed. Install it with: pip install 'ragnarok-ai[{extra}]'"
+        if alternative:
+            msg += f" (or {alternative})"
+        super().__init__(msg)
