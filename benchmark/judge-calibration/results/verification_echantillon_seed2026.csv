@@ -1,0 +1,11 @@
+ligne,id,juge,critère,config,catégorie pré-classée,catégorie reclassée,accord
+34,p093,mistral,faithfulness,B,ABST,ABST,oui
+51,p051,mistral,faithfulness,C,ABST,ABST,oui
+63,p080,mistral,relevance,D,AUTRE,AUTRE,oui
+83,p193,prometheus,faithfulness,E,ABST,ABST,oui
+72,p189,prometheus,relevance,D,DEF,DEF,oui
+33,p076,prometheus,faithfulness,B,CONTRA,CONTRA,oui
+41,p112,prometheus,relevance,B,DEF,DEF,oui
+69,p179,prometheus,relevance,D,DEF,DEF,oui
+70,p189,prometheus,faithfulness,D,ABST,ABST,oui
+66,p167,mistral,faithfulness,D,CONTRA,CONTRA,oui

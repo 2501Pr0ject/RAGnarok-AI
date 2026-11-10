@@ -89,7 +89,7 @@ Le script refuse de s'exécuter tant qu'un échantillon n'est pas annoté. Les j
 ## 6. Exécution des juges
 
 ```bash
-pip install "ragnarok-ai[ollama]"   # l'extra installe httpx, absent de l'installation de base
+pip install "ragnarok-ai[ollama]>=1.12.2"   # 1.12.2 : gabarit natif de Prometheus 2, échec de lecture = erreur explicite
 ollama pull hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M
 ollama pull mistral:7b
 ollama pull llama3.1:8b   # optionnel, juge exploratoire
@@ -109,6 +109,8 @@ python run_calibration.py ... --analyze-only --second-pass labels_pass2.jsonl
 ```
 
 Réglages par défaut des juges locaux : température 0, seed 42, `num_ctx` 8192. Ils sont passés à Ollama par le client de `run_calibration.py` : l'adaptateur Ollama utilisé par défaut par `LLMJudge` n'envoie ni température, ni seed, ni `num_ctx`, et ne doit pas être utilisé ici. Le script affiche une estimation du temps restant après les premiers appels. Pour mesurer l'effet de la température, utiliser un `--out` séparé.
+
+Run du 4 novembre 2026 : jugements produits avec le commit 4a7bae9 (tag `study/run-2026-11-04`), équivalent à 1.12.2 pour faithfulness et relevance. Toute analyse ultérieure (seconde passe, variantes) écrit dans un nouveau dossier `--out` ; `scelle/` et les dossiers de résultats existants ne sont jamais modifiés.
 
 ## 7. Analyse
 
