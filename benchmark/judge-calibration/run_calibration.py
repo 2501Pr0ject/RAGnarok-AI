@@ -5,8 +5,9 @@ Differences with ragnarok_ai.JudgeCalibrator, on purpose:
   * dev/test split: the pass threshold is tuned on 'dev' and measured on
     'test', so the reported agreement is not optimistic;
   * deterministic local calls (temperature 0, fixed seed, explicit num_ctx);
-  * parse failures, possible context truncation, latency and run-to-run
-    stability are recorded instead of being silently absorbed;
+  * parse failures (an EvaluationError from the judge, ragnarok-ai >= 1.12.2),
+    possible context truncation, latency and run-to-run stability are
+    recorded instead of being silently absorbed;
   * every judge call is checkpointed: interrupt and rerun to resume.
 
 Usage:
@@ -32,7 +33,6 @@ import argparse
 import asyncio
 import json
 import math
-import re
 import statistics
 import sys
 import time
@@ -43,7 +43,8 @@ from typing import Any
 import httpx
 from common import CRITERIA, append_jsonl, load_labels, load_samples, read_jsonl, split_of, write_jsonl
 
-SCORE_RE = re.compile(r"Score:\s*\d")
+from ragnarok_ai.core.exceptions import EvaluationError
+
 CANDIDATE_THRESHOLDS = (0.25, 0.5, 0.75, 1.0)  # judge scores are (raw-1)/4 with raw in 1..5
 RAW_KEEP_CHARS = 4000
 
@@ -142,7 +143,12 @@ async def run_judges(args: argparse.Namespace, samples: dict, labels: dict, raw_
     if not selected:
         raise SystemExit("Aucun échantillon annoté à évaluer.")
 
-    done = {(r["judge"], r["criterion"], r["id"], r["repeat"]) for r in read_jsonl(raw_path) if not r.get("error")}
+    # A parse failure is final (deterministic judge); only transport errors are retried
+    done = {
+        (r["judge"], r["criterion"], r["id"], r["repeat"])
+        for r in read_jsonl(raw_path)
+        if not r.get("error") or r.get("parse_error")
+    }
     judges = build_judges(args.judge, args)
     plan = [
         (name, rec, c, rep, sid)
@@ -171,6 +177,16 @@ async def run_judges(args: argparse.Namespace, samples: dict, labels: dict, raw_
             try:
                 result = await judge_once(judge_objs[name], criterion, s)
                 break
+            except EvaluationError as exc:
+                row.update(
+                    {
+                        "error": f"parse: {exc}",
+                        "parse_error": True,
+                        "latency_s": round(rec.last.get("latency_s", 0.0), 3),
+                        "raw": rec.last.get("raw", "")[:RAW_KEEP_CHARS],
+                    }
+                )
+                break
             except (httpx.HTTPError, OSError) as exc:
                 if attempt == 1:
                     row["error"] = f"{type(exc).__name__}: {exc}"
@@ -183,7 +199,7 @@ async def run_judges(args: argparse.Namespace, samples: dict, labels: dict, raw_
                 {
                     "raw_score": result.raw_score,
                     "score": result.score,
-                    "parse_ok": bool(SCORE_RE.search(raw)),
+                    "parse_ok": True,
                     "latency_s": round(rec.last.get("latency_s", 0.0), 3),
                     "prompt_tokens": rec.last.get("prompt_tokens"),
                     "possibly_truncated": rec.last.get("possibly_truncated", False),
@@ -297,6 +313,19 @@ def analyze(args: argparse.Namespace, samples: dict, labels: dict, raw_path: Pat
         test_ids, test_s, test_h = subset("test")
         tuned = best_threshold(dev_s, dev_h, args.threshold) if dev_ids else args.threshold
 
+        # Second view: an unreadable verdict counted as the judge saying FAIL (what a CI gate does)
+        unreadable = sorted(
+            r["id"]
+            for r in jrows
+            if r.get("parse_error")
+            and r["repeat"] == 0
+            and r["id"] not in first
+            and criterion in labels.get(r["id"], {})
+            and split_of(r["id"], args.dev_fraction) == "test"
+        )
+        fail_s = test_s + [0.0] * len(unreadable)  # 0.0 is below every threshold
+        fail_h = test_h + [labels[i][criterion] for i in unreadable]
+
         by_origin: dict[str, dict[str, Any]] = {}
         for origin in sorted({samples[i]["origin"] for i in test_ids}):
             idx = [k for k, i in enumerate(test_ids) if samples[i]["origin"] == origin]
@@ -321,12 +350,14 @@ def analyze(args: argparse.Namespace, samples: dict, labels: dict, raw_path: Pat
         multi = [v for v in groups.values() if len(v) >= 2]
 
         lat = [r["latency_s"] for r in ok if r.get("latency_s")]
+        n_parse = sum(1 for r in jrows if r.get("parse_error"))
         entry = {
             "model": jrows[0].get("model"),
             "is_local": jrows[0].get("is_local"),
             "calls": len(jrows),
-            "errors": sum(1 for r in jrows if r.get("error")),
-            "parse_failure_rate": (sum(1 for r in ok if not r.get("parse_ok")) / len(ok)) if ok else None,
+            "errors": sum(1 for r in jrows if r.get("error") and not r.get("parse_error")),
+            "parse_failures": n_parse,
+            "parse_failure_rate": (n_parse / (len(ok) + n_parse)) if (ok or n_parse) else None,
             "possibly_truncated": sum(1 for r in ok if r.get("possibly_truncated")),
             "latency_median_s": statistics.median(lat) if lat else None,
             "latency_total_min": sum(lat) / 60 if lat else None,
@@ -336,6 +367,8 @@ def analyze(args: argparse.Namespace, samples: dict, labels: dict, raw_path: Pat
             },
             "n_dev": len(dev_ids),
             "test_default": agreement(test_s, test_h, args.threshold) if test_ids else None,
+            "test_parse_failures": len(unreadable),
+            "test_parse_as_fail": agreement(fail_s, fail_h, args.threshold) if fail_h else None,
             "tuned_threshold": tuned,
             "test_tuned": agreement(test_s, test_h, tuned) if test_ids else None,
             "always_pass_accuracy": (sum(test_h) / len(test_h)) if test_h else None,
@@ -406,7 +439,7 @@ def render_markdown(report: dict[str, Any], args: argparse.Namespace) -> str:
         rows = [(j, c[criterion]) for j, c in report["judges"].items() if criterion in c]
         if not rows:
             continue
-        lines += ["", f"## {criterion}", ""]
+        lines += ["", f"## {criterion}", "", "Échecs de lecture exclus :", ""]
         lines.append(
             "| Juge | n test | Accord (IC 95 %) | Kappa | Faux acceptés | Faux rejetés | Seuil optimisé (dev) | Kappa test au seuil optimisé |"
         )
@@ -420,6 +453,22 @@ def render_markdown(report: dict[str, Any], args: argparse.Namespace) -> str:
                 f"| {judge} | {d['n']} | {pct(d['accuracy'])} ({pct(ci[0])}-{pct(ci[1])}) | "
                 f"{num(d['kappa'])} ({d['kappa_band']}) | {pct(d['false_accept_rate'])} | "
                 f"{pct(d['false_reject_rate'])} | {e['tuned_threshold']} | {num(t['kappa'])} |"
+            )
+        lines += [
+            "",
+            "Échecs de lecture comptés comme FAIL (seuil par défaut) :",
+            "",
+            "| Juge | n test | dont échecs de lecture | Accord (IC 95 %) | Kappa | Faux acceptés | Faux rejetés |",
+            "|---|---|---|---|---|---|---|",
+        ]
+        for judge, e in rows:
+            f = e["test_parse_as_fail"]
+            if not f:
+                continue
+            ci = f["accuracy_ci"]
+            lines.append(
+                f"| {judge} | {f['n']} | {e['test_parse_failures']} | {pct(f['accuracy'])} ({pct(ci[0])}-{pct(ci[1])}) | "
+                f"{num(f['kappa'])} ({f['kappa_band']}) | {pct(f['false_accept_rate'])} | {pct(f['false_reject_rate'])} |"
             )
         ref = rows[0][1]["always_pass_accuracy"]
         lines += [

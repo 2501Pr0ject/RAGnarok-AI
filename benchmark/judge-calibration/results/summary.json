@@ -1,0 +1,851 @@
+{
+  "judges": {
+    "mistral": {
+      "faithfulness": {
+        "model": "mistral:7b",
+        "is_local": true,
+        "calls": 160,
+        "errors": 0,
+        "parse_failures": 0,
+        "parse_failure_rate": 0.0,
+        "possibly_truncated": 0,
+        "latency_median_s": 17.0935,
+        "latency_total_min": 45.37191666666666,
+        "stability": {
+          "n_samples": 20,
+          "identical_rate": 1.0
+        },
+        "n_dev": 58,
+        "test_default": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.5483870967741935,
+          "accuracy_ci": [
+            0.42532294530598713,
+            0.6658048523173997
+          ],
+          "kappa": -0.17774762550881967,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 0.8823529411764706,
+          "false_reject_rate": 0.28888888888888886,
+          "n_human_fail": 17
+        },
+        "test_parse_failures": 0,
+        "test_parse_as_fail": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.5483870967741935,
+          "accuracy_ci": [
+            0.42532294530598713,
+            0.6658048523173997
+          ],
+          "kappa": -0.17774762550881967,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 0.8823529411764706,
+          "false_reject_rate": 0.28888888888888886,
+          "n_human_fail": 17
+        },
+        "tuned_threshold": 0.25,
+        "test_tuned": {
+          "n": 62,
+          "threshold": 0.25,
+          "accuracy": 0.6290322580645161,
+          "accuracy_ci": [
+            0.504577349121774,
+            0.7384301112072582
+          ],
+          "kappa": -0.1669394435351882,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 1.0,
+          "false_reject_rate": 0.13333333333333333,
+          "n_human_fail": 17
+        },
+        "always_pass_accuracy": 0.7258064516129032,
+        "test_by_origin": {
+          "A-baseline": {
+            "n": 8,
+            "threshold": 0.7,
+            "accuracy": 0.625,
+            "accuracy_ci": [
+              0.30573785458380187,
+              0.863158240538479
+            ],
+            "kappa": -0.2,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.16666666666666666,
+            "n_human_fail": 2
+          },
+          "B-bad_chunking": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.3333333333333333,
+            "accuracy_ci": [
+              0.12058159868274287,
+              0.6458026525009103
+            ],
+            "kappa": -0.4210526315789475,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.4,
+            "n_human_fail": 4
+          },
+          "C-weak_embedding": {
+            "n": 13,
+            "threshold": 0.7,
+            "accuracy": 0.46153846153846156,
+            "accuracy_ci": [
+              0.2320575430148814,
+              0.7085656756816796
+            ],
+            "kappa": -0.18181818181818177,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 0.75,
+            "false_reject_rate": 0.4444444444444444,
+            "n_human_fail": 4
+          },
+          "D-low_k": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.7777777777777778,
+            "accuracy_ci": [
+              0.45258334367280534,
+              0.9367762376877729
+            ],
+            "kappa": 0.0,
+            "kappa_band": "léger",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.0,
+            "n_human_fail": 2
+          },
+          "E-noisy_context": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.7777777777777778,
+            "accuracy_ci": [
+              0.45258334367280534,
+              0.9367762376877729
+            ],
+            "kappa": 0.4,
+            "kappa_band": "modéré",
+            "false_accept_rate": 0.0,
+            "false_reject_rate": 0.25,
+            "n_human_fail": 1
+          },
+          "F-broken_retrieval": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 0.42857142857142855,
+            "accuracy_ci": [
+              0.15821692226262685,
+              0.7495457695909742
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.5714285714285714,
+            "n_human_fail": 0
+          },
+          "G-hallucination_prone": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 0.42857142857142855,
+            "accuracy_ci": [
+              0.15821692226262685,
+              0.7495457695909742
+            ],
+            "kappa": 0.0,
+            "kappa_band": "léger",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.0,
+            "n_human_fail": 4
+          }
+        },
+        "pass_rates_by_origin": {
+          "A-baseline": {
+            "n": 17,
+            "human_pass_rate": 0.5882352941176471,
+            "judge_pass_rate": 0.8235294117647058,
+            "judge_mean_score": 0.9117647058823529
+          },
+          "B-bad_chunking": {
+            "n": 17,
+            "human_pass_rate": 0.5882352941176471,
+            "judge_pass_rate": 0.8235294117647058,
+            "judge_mean_score": 0.8823529411764706
+          },
+          "C-weak_embedding": {
+            "n": 18,
+            "human_pass_rate": 0.7777777777777778,
+            "judge_pass_rate": 0.6666666666666666,
+            "judge_mean_score": 0.7777777777777778
+          },
+          "D-low_k": {
+            "n": 17,
+            "human_pass_rate": 0.7647058823529411,
+            "judge_pass_rate": 0.9411764705882353,
+            "judge_mean_score": 0.9558823529411765
+          },
+          "E-noisy_context": {
+            "n": 17,
+            "human_pass_rate": 0.7647058823529411,
+            "judge_pass_rate": 0.8235294117647058,
+            "judge_mean_score": 0.8823529411764706
+          },
+          "F-broken_retrieval": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.23529411764705882,
+            "judge_mean_score": 0.3382352941176471
+          },
+          "G-hallucination_prone": {
+            "n": 17,
+            "human_pass_rate": 0.35294117647058826,
+            "judge_pass_rate": 1.0,
+            "judge_mean_score": 1.0
+          }
+        }
+      },
+      "relevance": {
+        "model": "mistral:7b",
+        "is_local": true,
+        "calls": 160,
+        "errors": 0,
+        "parse_failures": 0,
+        "parse_failure_rate": 0.0,
+        "possibly_truncated": 0,
+        "latency_median_s": 7.952,
+        "latency_total_min": 22.94538333333334,
+        "stability": {
+          "n_samples": 20,
+          "identical_rate": 1.0
+        },
+        "n_dev": 58,
+        "test_default": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.6129032258064516,
+          "accuracy_ci": [
+            0.4884761620578099,
+            0.7241553657300932
+          ],
+          "kappa": -0.036211699164345204,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 0.75,
+          "false_reject_rate": 0.3620689655172414,
+          "n_human_fail": 4
+        },
+        "test_parse_failures": 0,
+        "test_parse_as_fail": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.6129032258064516,
+          "accuracy_ci": [
+            0.4884761620578099,
+            0.7241553657300932
+          ],
+          "kappa": -0.036211699164345204,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 0.75,
+          "false_reject_rate": 0.3620689655172414,
+          "n_human_fail": 4
+        },
+        "tuned_threshold": 0.25,
+        "test_tuned": {
+          "n": 62,
+          "threshold": 0.25,
+          "accuracy": 0.7580645161290323,
+          "accuracy_ci": [
+            0.6384725574675495,
+            0.8475423631905147
+          ],
+          "kappa": -0.10451306413301721,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 1.0,
+          "false_reject_rate": 0.1896551724137931,
+          "n_human_fail": 4
+        },
+        "always_pass_accuracy": 0.9354838709677419,
+        "test_by_origin": {
+          "A-baseline": {
+            "n": 8,
+            "threshold": 0.7,
+            "accuracy": 0.75,
+            "accuracy_ci": [
+              0.40926987910258916,
+              0.9285223111419724
+            ],
+            "kappa": 0.3333333333333333,
+            "kappa_band": "faible",
+            "false_accept_rate": 0.5,
+            "false_reject_rate": 0.16666666666666666,
+            "n_human_fail": 2
+          },
+          "B-bad_chunking": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.5555555555555556,
+            "accuracy_ci": [
+              0.2666473457440297,
+              0.811224570528086
+            ],
+            "kappa": -0.2,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.375,
+            "n_human_fail": 1
+          },
+          "C-weak_embedding": {
+            "n": 13,
+            "threshold": 0.7,
+            "accuracy": 0.6153846153846154,
+            "accuracy_ci": [
+              0.3552248097226855,
+              0.8229055341876319
+            ],
+            "kappa": -0.14035087719298253,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.3333333333333333,
+            "n_human_fail": 1
+          },
+          "D-low_k": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.6666666666666666,
+            "accuracy_ci": [
+              0.3541973474990897,
+              0.8794184013172571
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.3333333333333333,
+            "n_human_fail": 0
+          },
+          "E-noisy_context": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.5555555555555556,
+            "accuracy_ci": [
+              0.2666473457440297,
+              0.811224570528086
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.4444444444444444,
+            "n_human_fail": 0
+          },
+          "F-broken_retrieval": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 0.14285714285714285,
+            "accuracy_ci": [
+              0.02567895594897482,
+              0.5131345033190299
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.8571428571428571,
+            "n_human_fail": 0
+          },
+          "G-hallucination_prone": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.6456611570247934,
+              1.0
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.0,
+            "n_human_fail": 0
+          }
+        },
+        "pass_rates_by_origin": {
+          "A-baseline": {
+            "n": 17,
+            "human_pass_rate": 0.8823529411764706,
+            "judge_pass_rate": 0.6470588235294118,
+            "judge_mean_score": 0.8088235294117647
+          },
+          "B-bad_chunking": {
+            "n": 17,
+            "human_pass_rate": 0.9411764705882353,
+            "judge_pass_rate": 0.47058823529411764,
+            "judge_mean_score": 0.6617647058823529
+          },
+          "C-weak_embedding": {
+            "n": 18,
+            "human_pass_rate": 0.8888888888888888,
+            "judge_pass_rate": 0.7222222222222222,
+            "judge_mean_score": 0.8194444444444444
+          },
+          "D-low_k": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.7058823529411765,
+            "judge_mean_score": 0.7794117647058824
+          },
+          "E-noisy_context": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.7647058823529411,
+            "judge_mean_score": 0.8382352941176471
+          },
+          "F-broken_retrieval": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.11764705882352941,
+            "judge_mean_score": 0.20588235294117646
+          },
+          "G-hallucination_prone": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 1.0,
+            "judge_mean_score": 1.0
+          }
+        }
+      }
+    },
+    "prometheus": {
+      "faithfulness": {
+        "model": "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M",
+        "is_local": true,
+        "calls": 160,
+        "errors": 0,
+        "parse_failures": 0,
+        "parse_failure_rate": 0.0,
+        "possibly_truncated": 0,
+        "latency_median_s": 35.283500000000004,
+        "latency_total_min": 101.4938666666667,
+        "stability": {
+          "n_samples": 20,
+          "identical_rate": 1.0
+        },
+        "n_dev": 58,
+        "test_default": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.5161290322580645,
+          "accuracy_ci": [
+            0.3944724746061819,
+            0.6359034579349472
+          ],
+          "kappa": -0.17276166456494346,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 0.8235294117647058,
+          "false_reject_rate": 0.35555555555555557,
+          "n_human_fail": 17
+        },
+        "test_parse_failures": 0,
+        "test_parse_as_fail": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.5161290322580645,
+          "accuracy_ci": [
+            0.3944724746061819,
+            0.6359034579349472
+          ],
+          "kappa": -0.17276166456494346,
+          "kappa_band": "pire que le hasard",
+          "false_accept_rate": 0.8235294117647058,
+          "false_reject_rate": 0.35555555555555557,
+          "n_human_fail": 17
+        },
+        "tuned_threshold": 1.0,
+        "test_tuned": {
+          "n": 62,
+          "threshold": 1.0,
+          "accuracy": 0.45161290322580644,
+          "accuracy_ci": [
+            0.3341951476826002,
+            0.5746770546940128
+          ],
+          "kappa": 0.01770736253494872,
+          "kappa_band": "léger",
+          "false_accept_rate": 0.35294117647058826,
+          "false_reject_rate": 0.6222222222222222,
+          "n_human_fail": 17
+        },
+        "always_pass_accuracy": 0.7258064516129032,
+        "test_by_origin": {
+          "A-baseline": {
+            "n": 8,
+            "threshold": 0.7,
+            "accuracy": 0.625,
+            "accuracy_ci": [
+              0.30573785458380187,
+              0.863158240538479
+            ],
+            "kappa": -0.2,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.16666666666666666,
+            "n_human_fail": 2
+          },
+          "B-bad_chunking": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.3333333333333333,
+            "accuracy_ci": [
+              0.12058159868274287,
+              0.6458026525009103
+            ],
+            "kappa": -0.3500000000000001,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 0.75,
+            "false_reject_rate": 0.6,
+            "n_human_fail": 4
+          },
+          "C-weak_embedding": {
+            "n": 13,
+            "threshold": 0.7,
+            "accuracy": 0.5384615384615384,
+            "accuracy_ci": [
+              0.2914343243183205,
+              0.7679424569851186
+            ],
+            "kappa": 0.048780487804878064,
+            "kappa_band": "léger",
+            "false_accept_rate": 0.5,
+            "false_reject_rate": 0.4444444444444444,
+            "n_human_fail": 4
+          },
+          "D-low_k": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.5555555555555556,
+            "accuracy_ci": [
+              0.2666473457440297,
+              0.811224570528086
+            ],
+            "kappa": -0.2857142857142857,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.2857142857142857,
+            "n_human_fail": 2
+          },
+          "E-noisy_context": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.6666666666666666,
+            "accuracy_ci": [
+              0.3541973474990897,
+              0.8794184013172571
+            ],
+            "kappa": -0.17391304347826084,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.25,
+            "n_human_fail": 1
+          },
+          "F-broken_retrieval": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 0.42857142857142855,
+            "accuracy_ci": [
+              0.15821692226262685,
+              0.7495457695909742
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.5714285714285714,
+            "n_human_fail": 0
+          },
+          "G-hallucination_prone": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 0.42857142857142855,
+            "accuracy_ci": [
+              0.15821692226262685,
+              0.7495457695909742
+            ],
+            "kappa": 0.0,
+            "kappa_band": "léger",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.0,
+            "n_human_fail": 4
+          }
+        },
+        "pass_rates_by_origin": {
+          "A-baseline": {
+            "n": 17,
+            "human_pass_rate": 0.5882352941176471,
+            "judge_pass_rate": 0.9411764705882353,
+            "judge_mean_score": 0.8382352941176471
+          },
+          "B-bad_chunking": {
+            "n": 17,
+            "human_pass_rate": 0.5882352941176471,
+            "judge_pass_rate": 0.6470588235294118,
+            "judge_mean_score": 0.6764705882352942
+          },
+          "C-weak_embedding": {
+            "n": 18,
+            "human_pass_rate": 0.7777777777777778,
+            "judge_pass_rate": 0.6666666666666666,
+            "judge_mean_score": 0.6527777777777778
+          },
+          "D-low_k": {
+            "n": 17,
+            "human_pass_rate": 0.7647058823529411,
+            "judge_pass_rate": 0.7647058823529411,
+            "judge_mean_score": 0.6911764705882353
+          },
+          "E-noisy_context": {
+            "n": 17,
+            "human_pass_rate": 0.7647058823529411,
+            "judge_pass_rate": 0.7647058823529411,
+            "judge_mean_score": 0.6764705882352942
+          },
+          "F-broken_retrieval": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.35294117647058826,
+            "judge_mean_score": 0.3382352941176471
+          },
+          "G-hallucination_prone": {
+            "n": 17,
+            "human_pass_rate": 0.35294117647058826,
+            "judge_pass_rate": 0.8823529411764706,
+            "judge_mean_score": 0.8382352941176471
+          }
+        }
+      },
+      "relevance": {
+        "model": "hf.co/RichardErkhov/prometheus-eval_-_prometheus-7b-v2.0-gguf:Q5_K_M",
+        "is_local": true,
+        "calls": 160,
+        "errors": 0,
+        "parse_failures": 0,
+        "parse_failure_rate": 0.0,
+        "possibly_truncated": 0,
+        "latency_median_s": 24.126,
+        "latency_total_min": 69.07414999999999,
+        "stability": {
+          "n_samples": 20,
+          "identical_rate": 1.0
+        },
+        "n_dev": 58,
+        "test_default": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.5806451612903226,
+          "accuracy_ci": [
+            0.45665361737846166,
+            0.6952260453271835
+          ],
+          "kappa": 0.024213075060532968,
+          "kappa_band": "léger",
+          "false_accept_rate": 0.5,
+          "false_reject_rate": 0.41379310344827586,
+          "n_human_fail": 4
+        },
+        "test_parse_failures": 0,
+        "test_parse_as_fail": {
+          "n": 62,
+          "threshold": 0.7,
+          "accuracy": 0.5806451612903226,
+          "accuracy_ci": [
+            0.45665361737846166,
+            0.6952260453271835
+          ],
+          "kappa": 0.024213075060532968,
+          "kappa_band": "léger",
+          "false_accept_rate": 0.5,
+          "false_reject_rate": 0.41379310344827586,
+          "n_human_fail": 4
+        },
+        "tuned_threshold": 1.0,
+        "test_tuned": {
+          "n": 62,
+          "threshold": 1.0,
+          "accuracy": 0.41935483870967744,
+          "accuracy_ci": [
+            0.30477395467281665,
+            0.5433463826215384
+          ],
+          "kappa": 0.029565217391304438,
+          "kappa_band": "léger",
+          "false_accept_rate": 0.25,
+          "false_reject_rate": 0.603448275862069,
+          "n_human_fail": 4
+        },
+        "always_pass_accuracy": 0.9354838709677419,
+        "test_by_origin": {
+          "A-baseline": {
+            "n": 8,
+            "threshold": 0.7,
+            "accuracy": 0.75,
+            "accuracy_ci": [
+              0.40926987910258916,
+              0.9285223111419724
+            ],
+            "kappa": 0.3333333333333333,
+            "kappa_band": "faible",
+            "false_accept_rate": 0.5,
+            "false_reject_rate": 0.16666666666666666,
+            "n_human_fail": 2
+          },
+          "B-bad_chunking": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.4444444444444444,
+            "accuracy_ci": [
+              0.188775429471914,
+              0.7333526542559703
+            ],
+            "kappa": -0.2162162162162162,
+            "kappa_band": "pire que le hasard",
+            "false_accept_rate": 1.0,
+            "false_reject_rate": 0.5,
+            "n_human_fail": 1
+          },
+          "C-weak_embedding": {
+            "n": 13,
+            "threshold": 0.7,
+            "accuracy": 0.6923076923076923,
+            "accuracy_ci": [
+              0.4236888781333764,
+              0.8731950283838191
+            ],
+            "kappa": 0.23529411764705888,
+            "kappa_band": "faible",
+            "false_accept_rate": 0.0,
+            "false_reject_rate": 0.3333333333333333,
+            "n_human_fail": 1
+          },
+          "D-low_k": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.4444444444444444,
+            "accuracy_ci": [
+              0.188775429471914,
+              0.7333526542559703
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.5555555555555556,
+            "n_human_fail": 0
+          },
+          "E-noisy_context": {
+            "n": 9,
+            "threshold": 0.7,
+            "accuracy": 0.5555555555555556,
+            "accuracy_ci": [
+              0.2666473457440297,
+              0.811224570528086
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.4444444444444444,
+            "n_human_fail": 0
+          },
+          "F-broken_retrieval": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 0.14285714285714285,
+            "accuracy_ci": [
+              0.02567895594897482,
+              0.5131345033190299
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.8571428571428571,
+            "n_human_fail": 0
+          },
+          "G-hallucination_prone": {
+            "n": 7,
+            "threshold": 0.7,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.6456611570247934,
+              1.0
+            ],
+            "kappa": NaN,
+            "kappa_band": "n/a",
+            "false_accept_rate": null,
+            "false_reject_rate": 0.0,
+            "n_human_fail": 0
+          }
+        },
+        "pass_rates_by_origin": {
+          "A-baseline": {
+            "n": 17,
+            "human_pass_rate": 0.8823529411764706,
+            "judge_pass_rate": 0.6470588235294118,
+            "judge_mean_score": 0.6764705882352942
+          },
+          "B-bad_chunking": {
+            "n": 17,
+            "human_pass_rate": 0.9411764705882353,
+            "judge_pass_rate": 0.4117647058823529,
+            "judge_mean_score": 0.4852941176470588
+          },
+          "C-weak_embedding": {
+            "n": 18,
+            "human_pass_rate": 0.8888888888888888,
+            "judge_pass_rate": 0.6111111111111112,
+            "judge_mean_score": 0.5833333333333334
+          },
+          "D-low_k": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.5882352941176471,
+            "judge_mean_score": 0.5735294117647058
+          },
+          "E-noisy_context": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.6470588235294118,
+            "judge_mean_score": 0.7058823529411765
+          },
+          "F-broken_retrieval": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 0.058823529411764705,
+            "judge_mean_score": 0.058823529411764705
+          },
+          "G-hallucination_prone": {
+            "n": 17,
+            "human_pass_rate": 1.0,
+            "judge_pass_rate": 1.0,
+            "judge_mean_score": 0.9411764705882353
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "samples": "samples_revealed.jsonl",
+    "labels": "labels.jsonl",
+    "out": "results",
+    "judge": [],
+    "criteria": [
+      "faithfulness",
+      "relevance"
+    ],
+    "repeats": 1,
+    "limit": null,
+    "only_split": null,
+    "dev_fraction": 0.5,
+    "threshold": 0.7,
+    "temperature": 0.0,
+    "seed": 42,
+    "num_ctx": 8192,
+    "timeout": 300.0,
+    "base_url": "http://localhost:11434",
+    "analyze_only": true,
+    "second_pass": []
+  },
+  "label_agreement": {}
+}

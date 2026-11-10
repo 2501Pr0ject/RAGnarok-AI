@@ -123,3 +123,4 @@ benchmark/pilot-run/embed-cache.sqlite
 benchmark/annotation/external/key_map.json
 benchmark/judge-calibration/pilot_key.json
 !benchmark/annotation/external/webapp/lib/
+benchmark/judge-calibration/samples_revealed.jsonl
