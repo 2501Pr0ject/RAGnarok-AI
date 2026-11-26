@@ -282,6 +282,18 @@ async with WeaviateVectorStore(
     results = await store.search(query_embedding, k=10)
 ```
 
+The URL of a self-hosted instance is a scheme, a host and a port, without a path:
+
+| URL | Host | Port | TLS |
+|---|---|---|---|
+| `http://weaviate.internal` | `weaviate.internal` | 8080 (Weaviate's default) | no |
+| `http://weaviate.internal:8081` | `weaviate.internal` | 8081 | no |
+| `https://weaviate.example.org` | `weaviate.example.org` | 443 | yes |
+| `https://weaviate.example.org:8443` | `weaviate.example.org` | 8443 | yes |
+| `https://weaviate.example.org:8443/v1` | refused with a `ValueError`: the client has no base path | | |
+
+A port written in the URL is always used. With an API key, the gRPC endpoint defaults to the same host, port 50051, and the scheme of the URL (`grpc_host`, `grpc_port`, `grpc_secure`). A Weaviate Cloud URL is passed to the client as it is.
+
 **Installation:**
 
 ```bash
