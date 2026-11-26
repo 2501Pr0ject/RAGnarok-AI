@@ -90,13 +90,20 @@ jobs:
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
 
-      - name: Install dependencies with the qdrant extra
-        run: uv sync --extra dev --extra qdrant
+      - name: Install dependencies with the qdrant and weaviate extras
+        run: uv sync --extra dev --extra qdrant --extra weaviate
 
       - name: Qdrant, locked version (in-memory local mode)
         run: |
           uv run python -c "import importlib.metadata as m; print('qdrant-client', m.version('qdrant-client'))"
           uv run pytest tests/unit/adapters/vectorstore/test_qdrant_real_client.py -p no:randomly -rs
+
+      # No Weaviate server: the real connect functions are bound to the adapter's arguments, and one real
+      # connection attempt is made to a closed port of the loopback interface
+      - name: Weaviate, locked version (signatures and a refused connection)
+        run: |
+          uv run python -c "import importlib.metadata as m; print('weaviate-client', m.version('weaviate-client'))"
+          uv run pytest tests/unit/adapters/vectorstore/test_weaviate_real_client.py -p no:randomly -rs
 
       # The bound is read from pyproject.toml, so the version tested is the one the extra declares.
       # --no-sync: `uv run` would otherwise put the locked version back.
