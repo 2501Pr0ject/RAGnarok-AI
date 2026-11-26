@@ -181,14 +181,17 @@ class QdrantVectorStore:
         try:
             client = await self._ensure_client()
 
-            results = await client.search(
+            # query_points, not search: qdrant-client removed AsyncQdrantClient.search in 1.16.0.
+            # query_points exists since 1.10.0, the lower bound of the [qdrant] extra
+            response = await client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 limit=k,
+                with_payload=True,
             )
 
             documents: list[tuple[Document, float]] = []
-            for point in results:
+            for point in response.points:
                 payload: dict[str, Any] = point.payload or {}
                 doc = Document(
                     id=str(point.id),

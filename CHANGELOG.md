@@ -5,6 +5,22 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **`QdrantVectorStore.search` works again with qdrant-client 1.16 and
+  later** (#190). The adapter called `AsyncQdrantClient.search`, which
+  qdrant-client removed in 1.16.0: every search failed with
+  "Failed to search in Qdrant: 'AsyncQdrantClient' object has no attribute
+  'search'", on any fresh installation of the `qdrant` extra, which had no
+  upper bound. The adapter now calls `query_points`. Results are unchanged
+  (same documents, same order, same scores). **The lower bound of the
+  `qdrant` extra moves from `qdrant-client>=1.7` to `qdrant-client>=1.10`**,
+  the first version with `query_points`. What to do: nothing with a recent
+  client; an environment pinned to qdrant-client 1.7 to 1.9 must upgrade it.
+  The adapter is now tested against the real client in its in-memory mode,
+  with the locked version and with the lower bound.
+
 ## [1.13.1] - 2026-11-26
 
 ### Fixed
