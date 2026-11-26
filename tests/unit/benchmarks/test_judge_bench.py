@@ -6,6 +6,7 @@ import json
 import math
 import random
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 from typer.testing import CliRunner
@@ -23,6 +24,7 @@ from ragnarok_ai.benchmarks.judges import (
     ollama_model_memory,
     parse_record,
     prevalence_adjusted,
+    prevalence_adjusted_intervals,
     quota_sample,
     read_attempts,
     recall_by_label,
@@ -411,11 +413,242 @@ class TestMetrics:
         a = grouped_bootstrap(judge_pass, human_pass, groups, seed=1, resamples=200)
         b = grouped_bootstrap(judge_pass, human_pass, groups, seed=1, resamples=200)
         assert a == b and a["groups"] == 10 and a["reliable"] is True
+        assert a["confidence"] == 0.95
         assert all(ci is not None for ci in a["intervals"].values())
         rare = grouped_bootstrap(
             [True] * 19 + [False], [True] * 19 + [False], [str(i) for i in range(20)], seed=0, resamples=300
         )
         assert rare["excluded_single_class_draws"] > 30 and rare["reliable"] is False
+
+
+class TestAdjustedIntervals:
+    FULL: ClassVar[dict[str, int]] = {"SUPPORTED": 9777, "CONTRADICTED": 139, "UNSUPPORTED": 469}
+    PI = 608 / 10385
+
+    @staticmethod
+    def _sample(counts: dict[str, tuple[int, int]]) -> tuple[list[bool], list[bool], list[str]]:
+        judge: list[bool] = []
+        labels: list[str] = []
+        for label, (agreeing, n) in counts.items():
+            supported = label == "SUPPORTED"
+            judge += [supported] * agreeing + [not supported] * (n - agreeing)
+            labels += [label] * n
+        return judge, [label == "SUPPORTED" for label in labels], labels
+
+    @pytest.mark.parametrize(
+        ("counts", "f1", "recall", "precision"),
+        [
+            # counts read in the attempts of two real quota runs on the RAGTruth test set (--per-class 300, seed 7):
+            # HHEM-2.1-Open at threshold 0.25, then MiniCheck at 0.2. Numbers only, no record of the set
+            ({"SUPPORTED": (288, 300), "CONTRADICTED": (22, 139), "UNSUPPORTED": (166, 300)}, 0.4397, 0.4630, 0.4185),
+            ({"SUPPORTED": (264, 300), "CONTRADICTED": (52, 139), "UNSUPPORTED": (203, 300)}, 0.3435, 0.6075, 0.2394),
+        ],
+    )
+    def test_reweighted_f1_of_two_real_quota_runs(self, counts, f1, recall, precision):
+        judge, human, labels = self._sample(counts)
+        block = prevalence_adjusted(judge, human, self.PI, labels=labels, full_label_counts=self.FULL)
+        assert block["recall_not_supported"] == pytest.approx(recall, abs=5e-5)
+        assert block["precision_not_supported_reweighted"] == pytest.approx(precision, abs=5e-5)
+        assert block["f1_not_supported_reweighted"] == pytest.approx(f1, abs=5e-5)  # 0.440 and 0.343 at three decimals
+        assert block["f1_not_supported_reweighted"] == pytest.approx(
+            2
+            * block["precision_not_supported_reweighted"]
+            * block["recall_not_supported"]
+            / (block["precision_not_supported_reweighted"] + block["recall_not_supported"])
+        )
+
+    def test_reweighted_f1_is_null_without_its_two_terms(self):
+        judge, human, labels = self._sample({"SUPPORTED": (9, 10), "UNSUPPORTED": (6, 10)})
+        missing = prevalence_adjusted(judge, human, self.PI, labels=labels, full_label_counts=self.FULL)
+        assert missing["recall_not_supported"] is None and missing["f1_not_supported_reweighted"] is None
+        # nothing detected and nothing rejected: precision undefined
+        judge, human, labels = self._sample({"SUPPORTED": (10, 10), "CONTRADICTED": (0, 5), "UNSUPPORTED": (0, 5)})
+        none = prevalence_adjusted(judge, human, self.PI, labels=labels, full_label_counts=self.FULL)
+        assert none["recall_not_supported"] == 0.0 and none["precision_not_supported_reweighted"] is None
+        assert none["f1_not_supported_reweighted"] is None
+        # recall and precision both 0: supported sentences rejected, no not-supported one detected
+        judge, human, labels = self._sample({"SUPPORTED": (8, 10), "CONTRADICTED": (0, 5), "UNSUPPORTED": (0, 5)})
+        zero = prevalence_adjusted(judge, human, self.PI, labels=labels, full_label_counts=self.FULL)
+        assert zero["precision_not_supported_reweighted"] == 0.0 and zero["f1_not_supported_reweighted"] is None
+        # two classes: same definition
+        two = prevalence_adjusted([True] * 8 + [False] * 2 + [False] * 7 + [True] * 3, [True] * 10 + [False] * 10, 0.06)
+        precision, recall = two["precision_not_supported_reweighted"], two["recall_not_supported"]
+        assert two["f1_not_supported_reweighted"] == pytest.approx(2 * precision * recall / (precision + recall))
+
+    @staticmethod
+    def _grouped_table() -> tuple[list[bool], list[bool], list[str], list[str], list[float], dict[str, int]]:
+        """Ten groups of one label; both negative labels subsampled at different rates (8 of 40, 8 of 160)."""
+        spec = [
+            ("c1", "CONTRADICTED", [False, False, True, True], 0.7),
+            ("c2", "CONTRADICTED", [True, True, True, True], 0.9),
+            ("u1", "UNSUPPORTED", [False, False, False, False], 0.1),
+            ("u2", "UNSUPPORTED", [False, False, True, True], 0.4),
+            ("u3", "UNSUPPORTED", [False, False, False, True], 0.3),
+            ("s1", "SUPPORTED", [True, True, True, False], 0.8),
+            ("s2", "SUPPORTED", [True, True, True, True], 0.95),
+            ("s3", "SUPPORTED", [True, True, False, True], 0.6),
+            ("s4", "SUPPORTED", [True, True, True, True], 0.9),
+            ("s5", "SUPPORTED", [True, True, True, True], 0.85),
+        ]
+        judge: list[bool] = []
+        labels: list[str] = []
+        groups: list[str] = []
+        probabilities: list[float] = []
+        for group, label, verdicts, probability in spec:
+            judge += verdicts
+            labels += [label] * len(verdicts)
+            groups += [group] * len(verdicts)
+            probabilities += [probability] * len(verdicts)
+        human = [label == "SUPPORTED" for label in labels]
+        return judge, human, labels, groups, probabilities, {"SUPPORTED": 1000, "CONTRADICTED": 40, "UNSUPPORTED": 160}
+
+    def test_intervals_are_those_of_the_main_draws_with_the_reweighting_redone_in_each(self):
+        judge, human, labels, groups, probabilities, full = self._grouped_table()
+        pi, seed, resamples = 200 / 1200, 4, 300
+        result = prevalence_adjusted_intervals(
+            judge,
+            human,
+            pi,
+            groups,
+            seed,
+            resamples,
+            labels=labels,
+            full_label_counts=full,
+            probabilities=probabilities,
+        )
+
+        # the draws regenerated here as grouped_bootstrap generates them, each one reweighted on its own
+        order = list(dict.fromkeys(groups))
+        members = {g: [i for i, name in enumerate(groups) if name == g] for g in order}
+        rng = random.Random(seed)
+        figures = [
+            "recall_not_supported",
+            "specificity",
+            "precision_not_supported_reweighted",
+            "accuracy_reweighted",
+            "f1_not_supported_reweighted",
+            "brier_reweighted",
+        ]
+        expected: dict[str, list[float]] = {name: [] for name in figures}
+        excluded = dict.fromkeys(figures, 0)
+        single_class = 0
+        for _ in range(resamples):
+            drawn = [i for _ in order for i in members[order[rng.randrange(len(order))]]]
+            draw_human = [human[i] for i in drawn]
+            single_class += all(draw_human) or not any(draw_human)
+            draw_labels = [labels[i] for i in drawn]
+            block = prevalence_adjusted(
+                [judge[i] for i in drawn], draw_human, pi, labels=draw_labels, full_label_counts=full
+            )
+            block["brier_reweighted"] = reweighted_brier(
+                [probabilities[i] for i in drawn], draw_human, pi, labels=draw_labels, full_label_counts=full
+            )
+            for name in figures:
+                if block[name] is None:
+                    excluded[name] += 1
+                else:
+                    expected[name].append(block[name])
+
+        def interval(values: list[float]) -> list[float]:
+            values = sorted(values)
+            return [
+                values[max(0, math.floor(0.025 * (len(values) - 1)))],
+                values[min(len(values) - 1, math.ceil(0.975 * (len(values) - 1)))],
+            ]
+
+        assert list(result["intervals"]) == figures
+        for name in figures:
+            assert result["intervals"][name] == interval(expected[name]), name
+        assert result["bootstrap"] == {
+            "resamples": resamples,
+            "seed": seed,
+            "confidence": 0.95,
+            "groups": 10,
+            "excluded_draws": excluded,
+            "reliable": all(count <= 0.10 * resamples for count in excluded.values()),
+        }
+        # a draw without the contradicted or the unsupported loses the recall and what derives from it,
+        # not the specificity, which only needs the supported
+        assert excluded["recall_not_supported"] > excluded["specificity"]
+        assert excluded["f1_not_supported_reweighted"] >= excluded["recall_not_supported"]
+        assert excluded["brier_reweighted"] >= excluded["recall_not_supported"]
+        # same sequence as the main bootstrap: it excluded exactly the single-class draws counted above
+        assert grouped_bootstrap(judge, human, groups, seed, resamples)["excluded_single_class_draws"] == single_class
+        # the point estimate lies inside its interval
+        point = prevalence_adjusted(judge, human, pi, labels=labels, full_label_counts=full)
+        for name in figures[:-1]:
+            low, high = result["intervals"][name]
+            assert low <= point[name] <= high, name
+        # without probabilities there is no Brier to bound
+        without = prevalence_adjusted_intervals(
+            judge, human, pi, groups, seed, resamples, labels=labels, full_label_counts=full
+        )
+        assert "brier_reweighted" not in without["intervals"]
+        assert without["intervals"]["recall_not_supported"] == result["intervals"]["recall_not_supported"]
+
+    def test_interval_collapses_on_the_full_set_value_when_per_label_rates_are_constant(self):
+        # every contradicted group is detected at 50%, every unsupported group at 100%, every supported one
+        # passed: whatever groups a draw holds, its per-label rates are the same, so the reweighted recall is
+        # the full set's in every draw. The pooled recall of the same draws moves with their mix of labels.
+        judge: list[bool] = []
+        labels: list[str] = []
+        groups: list[str] = []
+        probabilities: list[float] = []
+        for g in range(6):
+            judge += [False, True]
+            labels += ["CONTRADICTED"] * 2
+            groups += [f"c{g}"] * 2
+            probabilities += [0.6, 0.6]
+        for g in range(6):
+            judge += [False, False]
+            labels += ["UNSUPPORTED"] * 2
+            groups += [f"u{g}"] * 2
+            probabilities += [0.2, 0.2]
+        for g in range(6):
+            judge += [True, True]
+            labels += ["SUPPORTED"] * 2
+            groups += [f"s{g}"] * 2
+            probabilities += [0.9, 0.9]
+        human = [label == "SUPPORTED" for label in labels]
+        full = {"SUPPORTED": 1000, "CONTRADICTED": 40, "UNSUPPORTED": 160}
+        pi = 200 / 1200
+        on_full_set = (40 * 0.5 + 160 * 1.0) / 200
+        per_label = prevalence_adjusted_intervals(
+            judge, human, pi, groups, 9, 400, labels=labels, full_label_counts=full, probabilities=probabilities
+        )
+        assert per_label["intervals"]["recall_not_supported"] == pytest.approx([on_full_set, on_full_set])
+        assert per_label["intervals"]["specificity"] == [1.0, 1.0]
+        assert per_label["intervals"]["f1_not_supported_reweighted"] == pytest.approx(
+            [2 * on_full_set / (1 + on_full_set)] * 2
+        )
+        brier = (1000 * 0.01 + 40 * 0.36 + 160 * 0.04) / 1200
+        assert per_label["intervals"]["brier_reweighted"] == pytest.approx([brier, brier])
+        # on two classes, the same draws: the pooled recall follows each draw's mix of the two labels
+        pooled = prevalence_adjusted_intervals(judge, human, pi, groups, 9, 400)
+        low, high = pooled["intervals"]["recall_not_supported"]
+        assert high - low > 0.1 and low < on_full_set
+
+    def test_no_interval_without_a_point_estimate_or_without_draws(self):
+        judge, human, labels, groups, _, full = self._grouped_table()
+        none = prevalence_adjusted_intervals(judge, human, 1 / 6, groups, 0, 0, labels=labels, full_label_counts=full)
+        assert set(none["intervals"].values()) == {None} and none["bootstrap"]["reliable"] is True
+        assert none["bootstrap"]["excluded_draws"] == dict.fromkeys(none["intervals"], 0)
+        # the contradicted are absent from the sample: the recall has no point estimate, the specificity has one
+        keep = [i for i, label in enumerate(labels) if label != "CONTRADICTED"]
+        partial = prevalence_adjusted_intervals(
+            [judge[i] for i in keep],
+            [human[i] for i in keep],
+            1 / 6,
+            [groups[i] for i in keep],
+            2,
+            100,
+            labels=[labels[i] for i in keep],
+            full_label_counts=full,
+        )
+        assert partial["intervals"]["recall_not_supported"] is None
+        assert partial["intervals"]["f1_not_supported_reweighted"] is None
+        assert partial["intervals"]["specificity"] is not None
+        assert partial["bootstrap"]["excluded_draws"]["recall_not_supported"] == 0  # nothing to count
 
 
 class TestRecallByLabel:
@@ -444,18 +677,18 @@ class TestRecallByLabel:
         block = recall_by_label(judge, labels, groups, 0.25, seed=0, resamples=0)
         assert block["threshold"] == 0.25 and block["sample_dependent"] is False
         assert block["labels"] == {
-            "CONTRADICTED": {"n": 8, "detected": 2, "recall": 0.25, "ci95": None, "excluded_draws": 0},
-            "UNSUPPORTED": {"n": 8, "detected": 6, "recall": 0.75, "ci95": None, "excluded_draws": 0},
+            "CONTRADICTED": {"n": 8, "detected": 2, "recall": 0.25, "interval": None, "excluded_draws": 0},
+            "UNSUPPORTED": {"n": 8, "detected": 6, "recall": 0.75, "interval": None, "excluded_draws": 0},
         }
         assert block["specificity"] == {
             "label": "SUPPORTED",
             "n": 10,
             "recognized": 9,
             "value": 0.9,
-            "ci95": None,
+            "interval": None,
             "excluded_draws": 0,
         }
-        assert block["bootstrap"] == {"resamples": 0, "seed": 0, "groups": 6, "reliable": True}
+        assert block["bootstrap"] == {"resamples": 0, "seed": 0, "confidence": 0.95, "groups": 6, "reliable": True}
         # the pooled recall of `binary` is the mean of the two, weighted by their counts
         pooled = binary_metrics(judge, [label == "SUPPORTED" for label in labels])["recall_not_supported"]
         assert pooled == pytest.approx((8 * 0.25 + 8 * 0.75) / 16)
@@ -470,10 +703,12 @@ class TestRecallByLabel:
             "n": 0,
             "detected": 0,
             "recall": None,
-            "ci95": None,
+            "interval": None,
             "excluded_draws": 0,  # no interval to compute: nothing excluded from it
         }
-        assert block["labels"]["UNSUPPORTED"]["recall"] == 0.75 and block["labels"]["UNSUPPORTED"]["ci95"] is not None
+        assert (
+            block["labels"]["UNSUPPORTED"]["recall"] == 0.75 and block["labels"]["UNSUPPORTED"]["interval"] is not None
+        )
         assert list(block["labels"]) == ["CONTRADICTED", "UNSUPPORTED"]
 
     def test_intervals_come_from_the_draws_of_the_main_bootstrap_and_count_those_without_the_label(self):
@@ -509,9 +744,9 @@ class TestRecallByLabel:
 
         for label in ("CONTRADICTED", "UNSUPPORTED"):
             assert block["labels"][label]["excluded_draws"] == missing[label] > 0
-            assert block["labels"][label]["ci95"] == pytest.approx(interval(expected[label]))
+            assert block["labels"][label]["interval"] == pytest.approx(interval(expected[label]))
         assert block["specificity"]["excluded_draws"] == missing["SUPPORTED"] > 0
-        assert block["specificity"]["ci95"] == pytest.approx(interval(expected["SUPPORTED"]))
+        assert block["specificity"]["interval"] == pytest.approx(interval(expected["SUPPORTED"]))
         # with two groups per label out of six, a label is absent from about (4/6)**6 = 9% of the draws
         assert block["bootstrap"]["reliable"] is all(count <= 0.10 * resamples for count in missing.values())
         # the main bootstrap ran on the same sequence: it excluded exactly the single-class draws counted above
@@ -536,10 +771,10 @@ class TestRecallByLabel:
         labels += ["UNSUPPORTED"]
         groups += ["u0"]
         block = recall_by_label(judge, labels, groups, 0.5, seed=1, resamples=300)
-        assert block["labels"]["CONTRADICTED"]["ci95"] == [0.5, 0.5]
+        assert block["labels"]["CONTRADICTED"]["interval"] == [0.5, 0.5]
         # the single unsupported group is absent from about (9/10)**10 = 35% of the draws
         assert block["labels"]["UNSUPPORTED"]["excluded_draws"] > 30
-        assert block["labels"]["UNSUPPORTED"]["ci95"] == [1.0, 1.0]
+        assert block["labels"]["UNSUPPORTED"]["interval"] == [1.0, 1.0]
         assert block["bootstrap"]["reliable"] is False
 
 
@@ -1074,7 +1309,7 @@ class TestRun:
         assert (block["labels"]["UNSUPPORTED"]["detected"], block["labels"]["UNSUPPORTED"]["recall"]) == (6, 0.75)
         assert (block["specificity"]["recognized"], block["specificity"]["value"]) == (9, 0.9)
         assert block["sample_dependent"] is False
-        low, high = block["labels"]["CONTRADICTED"]["ci95"]
+        low, high = block["labels"]["CONTRADICTED"]["interval"]
         assert 0.0 <= low <= 0.5 <= high <= 1.0
         # same bootstrap as the main intervals
         assert {k: block["bootstrap"][k] for k in ("resamples", "seed", "groups")} == {
@@ -1095,7 +1330,7 @@ class TestRun:
         )
         block = without.report["recall_by_label"]
         assert block["threshold"] == 0.5 and block["labels"]["CONTRADICTED"]["recall"] == 0.0
-        assert block["labels"]["CONTRADICTED"]["ci95"] is None and block["specificity"]["ci95"] is None
+        assert block["labels"]["CONTRADICTED"]["interval"] is None and block["specificity"]["interval"] is None
         assert "| CONTRADICTED | 8 | 0 | 0.000 | n/a |" in without.report_md.read_text()
 
     @pytest.mark.asyncio
@@ -1137,7 +1372,7 @@ class TestRun:
             "n": 0,
             "detected": 0,
             "recall": None,
-            "ci95": None,
+            "interval": None,
             "excluded_draws": 0,
         }
         assert block["labels"]["UNSUPPORTED"]["recall"] == 1.0
@@ -1152,6 +1387,95 @@ class TestRun:
         run = await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", bootstrap_resamples=0)
         assert run.report["level"] == "answer" and run.report["recall_by_label"] is None
         assert "Recall by human label" not in run.report_md.read_text()
+
+    @pytest.mark.asyncio
+    async def test_per_class_report_carries_intervals_for_the_adjusted_figures(self, tmp_path: Path):
+        rows = (
+            [sentence_row(i, "SUPPORTED", "ok p=0.9" if i % 6 else "ok p=0.3") for i in range(60)]
+            + [sentence_row(100 + i, "CONTRADICTED", "bad p=0.6" if i % 3 else "bad p=0.2") for i in range(12)]
+            + [sentence_row(200 + i, "UNSUPPORTED", "bad p=0.2" if i % 4 else "bad p=0.7") for i in range(40)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedProbabilityJudge(), records, out_dir=tmp_path / "out", per_class=8, seed=2, bootstrap_resamples=80
+        )
+        adjusted = run.report["prevalence_adjusted"]
+        figures = [
+            "recall_not_supported",
+            "specificity",
+            "precision_not_supported_reweighted",
+            "accuracy_reweighted",
+            "f1_not_supported_reweighted",
+            "brier_reweighted",
+        ]
+        assert list(adjusted["intervals"]) == figures
+        for name in figures:
+            low, high = adjusted["intervals"][name]
+            assert low <= adjusted[name] <= high, name
+        # the bootstrap of the block is the report's: same draws
+        main = run.report["bootstrap"]
+        assert {k: adjusted["bootstrap"][k] for k in ("resamples", "seed", "confidence", "groups")} == {
+            k: main[k] for k in ("resamples", "seed", "confidence", "groups")
+        }
+        assert run.report["recall_by_label"]["bootstrap"]["confidence"] == 0.95
+        # the specificity is one rate on one sequence of draws: the same interval in both blocks
+        assert adjusted["intervals"]["specificity"] == run.report["recall_by_label"]["specificity"]["interval"]
+        assert json.loads(run.report_json.read_text())["prevalence_adjusted"]["intervals"] == adjusted["intervals"]
+        md = run.report_md.read_text()
+        assert "| Metric | Value | 95% CI |" in md
+        low, high = adjusted["intervals"]["f1_not_supported_reweighted"]
+        assert (
+            f"| F1 (not supported), reweighted by full-set prevalence | {adjusted['f1_not_supported_reweighted']:.3f} "
+            f"| {low:.3f} to {high:.3f} |"
+        ) in md
+        low, high = adjusted["intervals"]["brier_reweighted"]
+        assert (
+            f"| Brier, reweighted to the full set | {adjusted['brier_reweighted']:.4f} | {low:.4f} to {high:.4f} |"
+            in md
+        )
+        assert "Intervals: the 80 draws of the bootstrap above (seed 2), the reweighting redone in each draw" in md
+
+        # without draws: three columns all the same, n/a in the last
+        plain = await run_benchmark(
+            ScriptedProbabilityJudge(), records, out_dir=tmp_path / "out0", per_class=8, seed=2, bootstrap_resamples=0
+        )
+        block = plain.report["prevalence_adjusted"]
+        assert set(block["intervals"].values()) == {None}
+        for name in figures:
+            assert block[name] == adjusted[name]  # the point estimates do not depend on the bootstrap
+        md0 = plain.report_md.read_text()
+        assert "| Metric | Value | 95% CI |" in md0
+        assert f"| Recall (not supported) | {block['recall_not_supported']:.3f} | n/a |" in md0
+        assert "Intervals: the" not in md0
+
+        # a judge without probabilities: five figures, no Brier
+        ordinal = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "ord", per_class=8, seed=2, bootstrap_resamples=20
+        )
+        assert list(ordinal.report["prevalence_adjusted"]["intervals"]) == figures[:-1]
+
+    @pytest.mark.asyncio
+    async def test_answer_level_quota_run_gets_intervals_on_two_classes(self, tmp_path: Path):
+        rows = [
+            {
+                "id": f"p{i}",
+                "answer": f"Good {i}." + (" (raw 1)" if i % 4 == 0 else ""),
+                "context": "c",
+                "label": "PASS",
+            }
+            for i in range(12)
+        ] + [
+            {"id": f"f{i}", "answer": f"Bad {i}." + (" (raw 1)" if i % 3 else ""), "context": "c", "label": "FAIL"}
+            for i in range(9)
+        ]
+        records = load_records(write_jsonl(tmp_path / "answers.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", per_class=6, seed=1, bootstrap_resamples=60
+        )
+        adjusted = run.report["prevalence_adjusted"]
+        assert adjusted["strata"] == "class" and run.report["recall_by_label"] is None
+        low, high = adjusted["intervals"]["recall_not_supported"]
+        assert low <= adjusted["recall_not_supported"] <= high
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):
