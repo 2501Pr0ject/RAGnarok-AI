@@ -171,18 +171,20 @@ class TestQdrantVectorStoreSearch:
         """Successful search returns documents with scores."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.search.return_value = [
-            MagicMock(
-                id="doc1",
-                score=0.95,
-                payload={"content": "Paris is the capital", "source": "wiki"},
-            ),
-            MagicMock(
-                id="doc2",
-                score=0.82,
-                payload={"content": "France is a country"},
-            ),
-        ]
+        mock_client.query_points.return_value = MagicMock(
+            points=[
+                MagicMock(
+                    id="doc1",
+                    score=0.95,
+                    payload={"content": "Paris is the capital", "source": "wiki"},
+                ),
+                MagicMock(
+                    id="doc2",
+                    score=0.82,
+                    payload={"content": "France is a country"},
+                ),
+            ]
+        )
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -200,18 +202,21 @@ class TestQdrantVectorStoreSearch:
         assert doc2.content == "France is a country"
         assert score2 == 0.82
 
-        mock_client.search.assert_called_once_with(
+        mock_client.query_points.assert_called_once_with(
             collection_name="ragnarok_documents",
-            query_vector=[0.1, 0.2, 0.3, 0.4],
+            query=[0.1, 0.2, 0.3, 0.4],
             limit=5,
+            with_payload=True,
         )
+        # the method qdrant-client removed in 1.16.0 is not called
+        mock_client.search.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_search_empty_results(self) -> None:
         """Empty search results return empty list."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.search.return_value = []
+        mock_client.query_points.return_value = MagicMock(points=[])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -479,7 +484,7 @@ class TestQdrantVectorStoreErrors:
         """Test search raises VectorStoreConnectionError on generic error."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.search.side_effect = RuntimeError("Search failed")
+        mock_client.query_points.side_effect = RuntimeError("Search failed")
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -487,14 +492,14 @@ class TestQdrantVectorStoreErrors:
         with pytest.raises(VectorStoreConnectionError, match="Failed to search"):
             await store.search([0.1, 0.2, 0.3, 0.4], k=5)
 
-        mock_client.search.side_effect = None
+        mock_client.query_points.side_effect = None
 
     @pytest.mark.asyncio
     async def test_search_reraises_vectorstore_connection_error(self) -> None:
         """Test search re-raises VectorStoreConnectionError."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.search.side_effect = VectorStoreConnectionError("Original error")
+        mock_client.query_points.side_effect = VectorStoreConnectionError("Original error")
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -502,7 +507,7 @@ class TestQdrantVectorStoreErrors:
         with pytest.raises(VectorStoreConnectionError, match="Original error"):
             await store.search([0.1, 0.2, 0.3, 0.4], k=5)
 
-        mock_client.search.side_effect = None
+        mock_client.query_points.side_effect = None
 
     @pytest.mark.asyncio
     async def test_add_generic_error(self) -> None:
@@ -605,9 +610,7 @@ class TestQdrantVectorStoreSearchPayload:
         """Test search handles null payload correctly."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.search.return_value = [
-            MagicMock(id="doc1", score=0.95, payload=None),
-        ]
+        mock_client.query_points.return_value = MagicMock(points=[MagicMock(id="doc1", score=0.95, payload=None)])
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
