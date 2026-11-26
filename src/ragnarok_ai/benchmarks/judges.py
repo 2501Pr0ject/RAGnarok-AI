@@ -58,6 +58,19 @@ PASS_LABELS = ("SUPPORTED", "PASS")
 # The class of interest: a sentence the context does not support
 NEGATIVE_CLASS = "not supported"
 DEFAULT_BOOTSTRAP_RESAMPLES = 1000
+# The level of every bootstrap interval of a report, written as `confidence` in its bootstrap blocks so a
+# reader of the JSON does not have to assume it. A constant, not a parameter: no function and no CLI option
+# takes it. The percentile bounds (2.5% and 97.5%) are literals in `_percentile_interval`; deriving them
+# from this number would change them by a rounding error, and with them intervals already published
+BOOTSTRAP_CONFIDENCE = 0.95
+# The figures of `prevalence_adjusted` that get an interval, in the order of the report
+ADJUSTED_FIGURES = (
+    "recall_not_supported",
+    "specificity",
+    "precision_not_supported_reweighted",
+    "accuracy_reweighted",
+    "f1_not_supported_reweighted",
+)
 ECE_BINS = 10
 ATTEMPTS_FORMAT = 1
 # Fields of the attempts header; a run must match all of them to resume. Checked in this
@@ -301,6 +314,12 @@ def prevalence_adjusted(
     listed in ``missing_labels``; the rate of its class, and the figures
     derived from it, are then ``None`` rather than renormalized over the
     labels that are there.
+
+    ``f1_not_supported_reweighted`` is the harmonic mean of the reweighted
+    precision and the recall: the F1 of the not-supported class at the full
+    set's composition, the figure to compare judges on a quota run.
+    ``None`` when either is, or when both are 0. The intervals of these
+    figures are computed by ``prevalence_adjusted_intervals``.
     """
     pi = full_not_supported_prevalence
     by_label: dict[str, dict[str, Any]] | None = None
@@ -345,10 +364,13 @@ def prevalence_adjusted(
         specificity = (weighted[True] / full_class[True]) if full_class[True] and not incomplete[True] else None
     precision: float | None = None
     accuracy: float | None = None
+    f1: float | None = None
     if recall is not None and specificity is not None:
         denominator = pi * recall + (1 - pi) * (1 - specificity)
         precision = (pi * recall / denominator) if denominator > 0 else None
         accuracy = pi * recall + (1 - pi) * specificity
+        if precision is not None and precision + recall > 0:
+            f1 = 2 * precision * recall / (precision + recall)
     return {
         "full_set_not_supported_prevalence": pi,
         "strata": "class" if by_label is None else "label",
@@ -359,6 +381,7 @@ def prevalence_adjusted(
         "specificity": specificity,
         "precision_not_supported_reweighted": precision,
         "accuracy_reweighted": accuracy,
+        "f1_not_supported_reweighted": f1,
     }
 
 
@@ -679,7 +702,7 @@ def _group_draws(groups: Sequence[str], seed: int, resamples: int) -> Iterator[l
 
 
 def _percentile_interval(values: list[float]) -> list[float] | None:
-    """The 2.5th and 97.5th percentiles of *values*; ``None`` without any."""
+    """The 2.5th and 97.5th percentiles of *values* (``BOOTSTRAP_CONFIDENCE``, 95%); ``None`` without any."""
     if not values:
         return None
     values = sorted(values)
@@ -721,6 +744,7 @@ def grouped_bootstrap(
     return {
         "resamples": resamples,
         "seed": seed,
+        "confidence": BOOTSTRAP_CONFIDENCE,
         "groups": len(set(groups)),
         "excluded_single_class_draws": excluded,
         "reliable": excluded <= 0.10 * resamples,
@@ -742,7 +766,7 @@ def recall_by_label(
     recall; a judge can detect one and miss the other. For each of the two
     labels: the scored records (``n``), those the judge counts as not
     supported (``detected``: score below *threshold*, the threshold of the
-    report), their share (``recall``) and its 95% interval. The
+    report), their share (``recall``) and its 95% ``interval``. The
     specificity, the share of the SUPPORTED records the judge passes, is
     given next to them so the three rates are read together.
 
@@ -784,7 +808,7 @@ def recall_by_label(
             "n": n,
             "detected": detected,
             "recall": recall,
-            "ci95": interval,
+            "interval": interval,
             "excluded_draws": excluded[label],
         }
     n, recognized, specificity, interval = entry(positive)
@@ -798,13 +822,96 @@ def recall_by_label(
             "n": n,
             "recognized": recognized,
             "value": specificity,
-            "ci95": interval,
+            "interval": interval,
             "excluded_draws": excluded[positive],
         },
         "bootstrap": {
             "resamples": resamples,
             "seed": seed,
+            "confidence": BOOTSTRAP_CONFIDENCE,
             "groups": len(set(groups)),
+            "reliable": all(count <= 0.10 * resamples for count in excluded.values()),
+        },
+    }
+
+
+def prevalence_adjusted_intervals(
+    judge_pass: Sequence[bool],
+    human_pass: Sequence[bool],
+    full_not_supported_prevalence: float,
+    groups: Sequence[str],
+    seed: int,
+    resamples: int,
+    *,
+    labels: Sequence[str] | None = None,
+    full_label_counts: Mapping[str, int] | None = None,
+    probabilities: Sequence[float] | None = None,
+) -> dict[str, Any]:
+    """95% percentile intervals of the ``prevalence_adjusted`` figures, resampling by group.
+
+    The draws are those of ``grouped_bootstrap`` (``_group_draws``: same
+    groups, seed and resamples). **The reweighting is done inside each
+    draw**: ``prevalence_adjusted`` is called on the records of the draw,
+    so its per-label rates are recomputed and combined with the full set's
+    label counts, which are fixed (the full set is known, it is not
+    resampled). Reweighting the point estimate and attaching an interval
+    computed on pooled figures would bring the quota's mix back into the
+    interval. With *probabilities*, ``brier_reweighted`` gets its interval
+    the same way (``reweighted_brier`` on each draw).
+
+    A draw in which a figure cannot be estimated (a label of the full set
+    absent from the draw) is excluded for that figure and counted
+    (``excluded_draws``); the block is flagged unreliable when a figure
+    loses more than 10% of the draws. A figure whose point estimate is
+    ``None`` has no interval and nothing is counted for it.
+
+    Two limits, shared with the other intervals of the report. The quota is
+    drawn per label without regard to groups, while the bootstrap resamples
+    groups. And a label subsampled by the quota is drawn without
+    replacement from a finite set (300 of 469, say): the bootstrap ignores
+    the finite-population correction, so its interval is conservative for
+    that label.
+
+    Returns:
+        ``intervals`` (one ``[low, high]`` or ``None`` per figure) and
+        ``bootstrap`` (resamples, seed, confidence, groups, excluded draws
+        per figure, reliability), to be merged into the block.
+    """
+    pi = full_not_supported_prevalence
+    figures = [*ADJUSTED_FIGURES, *(["brier_reweighted"] if probabilities is not None else [])]
+
+    def estimate(indices: Sequence[int] | None) -> dict[str, float | None]:
+        def take(values: Sequence[Any] | None) -> Any:
+            return values if values is None or indices is None else [values[i] for i in indices]
+
+        jp, hp, lab, prob = take(judge_pass), take(human_pass), take(labels), take(probabilities)
+        block = prevalence_adjusted(jp, hp, pi, labels=lab, full_label_counts=full_label_counts)
+        out: dict[str, float | None] = {name: block[name] for name in ADJUSTED_FIGURES}
+        if prob is not None:
+            out["brier_reweighted"] = reweighted_brier(prob, hp, pi, labels=lab, full_label_counts=full_label_counts)
+        return out
+
+    point = estimate(None)
+    values: dict[str, list[float]] = {name: [] for name in figures}
+    excluded = dict.fromkeys(figures, 0)
+    for drawn in _group_draws(groups, seed, resamples):
+        draw = estimate(drawn)
+        for name in figures:
+            if point[name] is None:
+                continue  # no point estimate: no interval, and nothing to count
+            value = draw[name]
+            if value is None:
+                excluded[name] += 1
+            else:
+                values[name].append(value)
+    return {
+        "intervals": {name: _percentile_interval(values[name]) for name in figures},
+        "bootstrap": {
+            "resamples": resamples,
+            "seed": seed,
+            "confidence": BOOTSTRAP_CONFIDENCE,
+            "groups": len(set(groups)),
+            "excluded_draws": excluded,
             "reliable": all(count <= 0.10 * resamples for count in excluded.values()),
         },
     }
@@ -1195,6 +1302,25 @@ async def run_benchmark(
                 labels=[r.label for r in scored] if level == "sentence" else None,
                 full_label_counts=Counter(r.label for r in records) if level == "sentence" else None,
             )
+    if report["prevalence_adjusted"] is not None:
+        # Intervals on the draws of the main bootstrap, the reweighting redone in each draw
+        report["prevalence_adjusted"].update(
+            prevalence_adjusted_intervals(
+                judge_pass,
+                human_pass,
+                report["prevalence_adjusted"]["full_set_not_supported_prevalence"],
+                groups,
+                seed,
+                bootstrap_resamples,
+                labels=[r.label for r in scored] if level == "sentence" else None,
+                full_label_counts=Counter(r.label for r in records) if level == "sentence" else None,
+                probabilities=(
+                    [p for p in probabilities if p is not None]
+                    if "brier_reweighted" in report["prevalence_adjusted"]
+                    else None
+                ),
+            )
+        )
 
     for field_name in by:
         values: dict[str, dict[str, float | None]] = {}
@@ -1265,9 +1391,9 @@ def _recall_by_label_lines(block: dict[str, Any] | None) -> list[str]:
         "|---|---|---|---|---|",
     ]
     for label, v in block["labels"].items():
-        lines.append(row(label, v["n"], v["detected"], v["recall"], v["ci95"]))
+        lines.append(row(label, v["n"], v["detected"], v["recall"], v["interval"]))
     s = block["specificity"]
-    lines.append(row(f"{s['label']} (specificity, passed)", s["n"], s["recognized"], s["value"], s["ci95"]))
+    lines.append(row(f"{s['label']} (specificity, passed)", s["n"], s["recognized"], s["value"], s["interval"]))
     boot = block["bootstrap"]
     lost = {label: v["excluded_draws"] for label, v in block["labels"].items() if v["excluded_draws"]}
     if s["excluded_draws"]:
@@ -1358,8 +1484,12 @@ def render_report(report: dict[str, Any]) -> str:
     adjusted = report.get("prevalence_adjusted")
     if adjusted is not None:
 
-        def pct(value: float | None) -> str:
-            return "n/a" if value is None else f"{value:.3f}"
+        def row(name: str, key: str, digits: int = 3) -> str:
+            value = adjusted.get(key)
+            interval = (adjusted.get("intervals") or {}).get(key)
+            shown = "n/a" if value is None else f"{value:.{digits}f}"
+            ci = "n/a" if interval is None else f"{interval[0]:.{digits}f} to {interval[1]:.{digits}f}"
+            return f"| {name} | {shown} | {ci} |"
 
         lines += [
             "",
@@ -1368,17 +1498,33 @@ def render_report(report: dict[str, Any]) -> str:
             f"Not-supported prevalence in the full set: {adjusted['full_set_not_supported_prevalence']:.1%}.",
             *_adjusted_strata_lines(adjusted),
             "",
-            "| Metric | Value |",
-            "|---|---|",
-            f"| Recall (not supported) | {pct(adjusted['recall_not_supported'])} |",
-            f"| Specificity (supported recognized) | {pct(adjusted['specificity'])} |",
-            f"| Precision (not supported), reweighted by full-set prevalence | {pct(adjusted['precision_not_supported_reweighted'])} |",
-            f"| Accuracy, reweighted by full-set prevalence | {pct(adjusted['accuracy_reweighted'])} |",
+            "| Metric | Value | 95% CI |",
+            "|---|---|---|",
+            row("Recall (not supported)", "recall_not_supported"),
+            row("Specificity (supported recognized)", "specificity"),
+            row("Precision (not supported), reweighted by full-set prevalence", "precision_not_supported_reweighted"),
+            row("Accuracy, reweighted by full-set prevalence", "accuracy_reweighted"),
+            row("F1 (not supported), reweighted by full-set prevalence", "f1_not_supported_reweighted"),
         ]
         if adjusted.get("brier_reweighted") is not None:
-            lines.append(
-                f"| Brier, reweighted to the full set | {adjusted['brier_reweighted']:.4f} |",
-            )
+            lines.append(row("Brier, reweighted to the full set", "brier_reweighted", digits=4))
+        boot = adjusted.get("bootstrap")
+        if boot and boot["resamples"]:
+            lost = {name: count for name, count in boot["excluded_draws"].items() if count}
+            lines += [
+                "",
+                f"Intervals: the {boot['resamples']} draws of the bootstrap above (seed {boot['seed']}), "
+                "the reweighting redone in each draw"
+                + (
+                    "; draws where a label of the full set is absent, excluded: "
+                    + ", ".join(f"{name} {count}" for name, count in lost.items())
+                    if lost
+                    else ""
+                )
+                + ("" if boot["reliable"] else "; intervals NOT reliable")
+                + ".",
+            ]
+        if adjusted.get("brier_reweighted") is not None:
             lines += ["", "ECE is not reweighted: it stays a figure of the sample."]
     lines += ["", "## Failures and cost", ""]
     lines.append(f"- failures by kind: {report['failures'] or 'none'}")
@@ -1425,8 +1571,10 @@ def render_report(report: dict[str, Any]) -> str:
 
 
 __all__ = [
+    "ADJUSTED_FIGURES",
     "ANSWER_LABELS",
     "ATTEMPTS_HEADER_FIELDS",
+    "BOOTSTRAP_CONFIDENCE",
     "PASS_LABELS",
     "SENTENCE_LABELS",
     "AttemptsMismatchError",
@@ -1443,6 +1591,7 @@ __all__ = [
     "ollama_model_memory",
     "parse_record",
     "prevalence_adjusted",
+    "prevalence_adjusted_intervals",
     "quota_sample",
     "read_attempts",
     "recall_by_label",

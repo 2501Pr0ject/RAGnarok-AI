@@ -8,12 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`judge-bench --per-class`: bootstrap intervals for the
+  prevalence-adjusted figures, and the reweighted F1** (#184). These are
+  the figures to read on a quota run and they were the only ones without an
+  interval, although their sampling noise is of the order of the bias #182
+  removed. `prevalence_adjusted` gains `f1_not_supported_reweighted` (the
+  harmonic mean of the reweighted precision and the recall; `null` when
+  either is, or when both are 0), `intervals` (one `[low, high]` or `null`
+  for the recall, the specificity, the reweighted precision, accuracy and
+  F1, and `brier_reweighted` for a probabilistic judge) and `bootstrap`
+  (resamples, seed, confidence, groups, `excluded_draws` per figure,
+  `reliable`). The intervals use the draws of the report's bootstrap, and
+  the reweighting is redone in each draw: the per-label rates of the draw
+  are combined with the full set's label counts, which are fixed. A draw
+  where a label of the full set is absent is excluded for the figures that
+  need it and counted; the block is flagged unreliable above 10%.
+  `prevalence_adjusted_intervals()` is exported by
+  `ragnarok_ai.benchmarks.judges`. The existing figures of the block are
+  unchanged.
+- **`confidence` in the bootstrap blocks of the `judge-bench` report**:
+  `bootstrap`, `recall_by_label.bootstrap` and
+  `prevalence_adjusted.bootstrap` state `"confidence": 0.95`, the level of
+  every interval of the report.
 - **`judge-bench`: recall per human label on sentence-level sets** (#167).
   The report pooled `CONTRADICTED` and `UNSUPPORTED` into one "not
   supported" recall, and gave per-label figures only for a judge that
   predicts the three labels itself. `report.json` gains `recall_by_label`:
   for each of the two labels, `n` (scored records), `detected` (judged not
-  supported at the report's threshold), `recall`, `ci95` and
+  supported at the report's threshold), `recall`, `interval` and
   `excluded_draws`; next to them `specificity` (the `SUPPORTED` records the
   judge passes), the `threshold` used and the bootstrap parameters.
   `report.md` gains a "Recall by human label" table. The intervals come
@@ -42,6 +64,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `reweighted_brier()` is exported by `ragnarok_ai.benchmarks.judges`. ECE
   is not reweighted (bin membership would have to be reweighted record by
   record) and stays flagged as sample-dependent.
+
+### Changed
+- **`report.md` of `judge-bench --per-class`: the prevalence-adjusted table
+  has three columns**, "Metric", "Value" and "95% CI", whatever the
+  options; the last one reads "n/a" without an interval (for instance with
+  `--bootstrap-resamples 0`). It had two. A line for the reweighted F1 is
+  added, and a sentence under the table gives the draws used and those
+  excluded. What to do: a script that reads this Markdown table by column
+  position must expect the third column; `report.json` is the stable
+  interface.
 
 ### Fixed
 - **`judge-bench --per-class` on a sentence-level set: the
