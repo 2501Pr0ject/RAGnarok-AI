@@ -121,6 +121,7 @@ def test_self_hosted_with_an_api_key_passes_every_required_argument_of_connect_t
         "grpc_port": 50051,
         "grpc_secure": False,
         "auth_credentials": "_APIKey",
+        "additional_config": "NoneType",  # the environment is not read unless trust_env is asked
     }
     assert (https["http_secure"], https["grpc_host"], https["grpc_port"], https["grpc_secure"]) == (
         True,
@@ -183,7 +184,16 @@ def test_what_the_real_connect_functions_receive_for_each_form_of_url():
     # without a key: connect_to_local with the same host and port
     assert r["no key http://weaviate.internal"] == ["connect_to_local", {"host": "weaviate.internal", "port": 8080}]  # type: ignore[index]
     assert r["no key http://weaviate.internal:8081"][1]["port"] == 8081  # type: ignore[index]
-    assert r["no key https://weaviate.example.org:8443"][1] == {"host": "weaviate.example.org", "port": 8443}  # type: ignore[index]
+    # https without a key: connect_to_custom with TLS and no credentials, not connect_to_local, which
+    # has no TLS option and sent the URL in plain HTTP (#209). Same gRPC defaults as with a key
+    for url, port in (("https://weaviate.example.org", 443), ("https://weaviate.example.org:8443", 8443)):
+        name, kw = r["no key " + url]  # type: ignore[index]
+        assert name == "connect_to_custom"
+        assert (kw["http_host"], kw["http_port"], kw["http_secure"]) == ("weaviate.example.org", port, True)
+        assert (kw["grpc_host"], kw["grpc_port"], kw["grpc_secure"]) == ("weaviate.example.org", 50051, True)
+        assert kw.get("auth_credentials") in (None, "NoneType")
+        assert kw.get("additional_config") in (None, "NoneType")  # the environment is not read unless asked
+    assert r["key https://weaviate.example.org"][1]["auth_credentials"] != "NoneType"  # type: ignore[index]
 
 
 def test_the_two_other_ways_to_connect_still_bind_to_their_real_signatures():
@@ -336,3 +346,177 @@ def test_a_missing_package_is_an_import_error_with_the_install_message():
         "weaviate-client is not installed. Install it with: pip install weaviate-client",
     ]
     assert out == {"search": expected, "delete": expected, "is_available": expected}
+
+
+# A listener that keeps the first bytes the client sends: a TLS handshake starts with the record type
+# 0x16 (handshake) and the major version 0x03, plain HTTP with the request line
+FIRST_BYTES = """
+    import asyncio, json, os, socket, threading
+    from ragnarok_ai.adapters.vectorstore.weaviate import WeaviateVectorStore
+    from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+    os.environ.pop("WEAVIATE_API_KEY", None)
+
+
+    def listener():
+        server = socket.socket()
+        server.bind(("127.0.0.1", 0))
+        server.listen(5)
+        server.settimeout(20)
+        received = []
+
+        def accept():
+            try:
+                connection, _ = server.accept()
+                connection.settimeout(5)
+                received.append(connection.recv(16))
+                connection.close()
+            except OSError as exc:
+                received.append(repr(exc).encode())
+            server.close()
+
+        thread = threading.Thread(target=accept)
+        thread.start()
+        return server.getsockname()[1], received, thread
+
+
+    async def first_bytes(scheme, **kwargs):
+        port, received, thread = listener()
+        store = WeaviateVectorStore(url=f"{scheme}://127.0.0.1:{port}", grpc_port=1, **kwargs)
+        try:
+            await store.search([0.1, 0.2], k=1)
+            error = "no error"
+        except VectorStoreConnectionError:
+            error = "VectorStoreConnectionError"
+        except Exception as exc:
+            error = type(exc).__name__
+        thread.join()
+        data = received[0]
+        kind = "tls handshake" if data[:2] == bytes([0x16, 0x03]) else "plain http" if data[:4] == b"GET " else repr(data)
+        return [kind, error]
+
+
+    async def main():
+        print(json.dumps({
+            "https, no key": await first_bytes("https"),
+            "https, key": await first_bytes("https", api_key="not-a-real-key"),
+            "http, no key": await first_bytes("http"),
+            "http, key": await first_bytes("http", api_key="not-a-real-key"),
+        }))
+
+    asyncio.run(main())
+"""
+
+
+def test_the_scheme_of_the_url_decides_what_the_real_client_sends_with_or_without_a_key():
+    """What the client writes on the socket first: an https URL without a key was sent in plain HTTP (#209)."""
+    out = run(FIRST_BYTES)
+    assert out["https, no key"] == ["tls handshake", "VectorStoreConnectionError"]  # was "plain http"
+    assert out["https, key"] == ["tls handshake", "VectorStoreConnectionError"]
+    assert out["http, no key"] == ["plain http", "VectorStoreConnectionError"]
+    assert out["http, key"] == ["plain http", "VectorStoreConnectionError"]
+
+
+# An instance with a self-signed certificate: an HTTPS server that answers Weaviate's start-up requests and
+# a gRPC server, with TLS, that answers the health check. The certificate is made by the openssl command
+SELF_SIGNED = """
+    import asyncio, http.server, json, os, ssl, subprocess, sys, tempfile, threading
+    from concurrent import futures
+
+    import grpc
+
+    from ragnarok_ai.adapters.vectorstore.weaviate import WeaviateVectorStore
+    from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+    for name in ("WEAVIATE_API_KEY", "SSL_CERT_FILE", "SSL_CERT_DIR", "GRPC_DEFAULT_SSL_ROOTS_FILE_PATH"):
+        os.environ.pop(name, None)
+
+    folder = tempfile.mkdtemp()
+    cert, key = os.path.join(folder, "cert.pem"), os.path.join(folder, "key.pem")
+    made = subprocess.run(
+        ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", key, "-out", cert, "-days", "2",
+         "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1"],
+        capture_output=True, check=False,
+    )
+    if made.returncode != 0:
+        print(json.dumps({"skipped": "openssl could not make a certificate"}))
+        sys.exit(0)
+
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if "openid" in self.path:  # no OIDC: the instance has no authentication
+                self.send_response(404)
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"version": "1.30.0", "modules": {}, "grpcMaxMessageSize": 10000000}).encode())
+
+        def log_message(self, *args):
+            pass
+
+
+    web = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(cert, key)
+    web.socket = context.wrap_socket(web.socket, server_side=True)
+    threading.Thread(target=web.serve_forever, daemon=True).start()
+
+    # grpc.health.v1.Health/Check answering SERVING: field 1, varint 1
+    health = grpc.method_handlers_generic_handler(
+        "grpc.health.v1.Health",
+        {"Check": grpc.unary_unary_rpc_method_handler(lambda request, context: bytes([0x08, 0x01]))},
+    )
+    rpc = grpc.server(futures.ThreadPoolExecutor(2), handlers=[health])
+    with open(key, "rb") as k, open(cert, "rb") as c:
+        rpc_port = rpc.add_secure_port("127.0.0.1:0", grpc.ssl_server_credentials([(k.read(), c.read())]))
+    rpc.start()
+
+
+    async def connect(**kwargs):
+        store = WeaviateVectorStore(url=f"https://localhost:{web.server_address[1]}", grpc_port=rpc_port, **kwargs)
+
+        async def no_collection():
+            return None
+
+        store._ensure_collection = no_collection  # the stand-in server has no schema
+        try:
+            client = await store._ensure_client()
+            ready = bool(client.is_ready())
+            client.close()
+            return ["connected", ready]
+        except VectorStoreConnectionError as exc:
+            return ["VectorStoreConnectionError", "CERTIFICATE_VERIFY_FAILED" in str(exc)]
+        except Exception as exc:
+            return [type(exc).__name__, str(exc)[:200]]
+
+
+    async def main():
+        out = {"refused": await connect(), "trust_env alone": await connect(trust_env=True)}
+        os.environ["SSL_CERT_FILE"] = cert
+        os.environ["GRPC_DEFAULT_SSL_ROOTS_FILE_PATH"] = cert
+        out["variables without trust_env"] = (await connect())[0]
+        out["documented procedure"] = await connect(trust_env=True)
+        print(json.dumps(out))
+
+    asyncio.run(main())
+    rpc.stop(0)
+    web.shutdown()
+"""
+
+
+def test_a_self_signed_certificate_is_refused_and_the_documented_procedure_connects():
+    """https now verifies the certificate; trust_env with the two variables is the way to trust a private one."""
+    out = run(SELF_SIGNED)
+    if "skipped" in out:
+        pytest.skip(str(out["skipped"]))
+    # refused on the verification of the certificate, as a connection failure that says so
+    assert out["refused"] == ["VectorStoreConnectionError", True]
+    assert out["trust_env alone"] == ["VectorStoreConnectionError", True]
+    # the procedure of the documentation: trust_env=True, SSL_CERT_FILE and GRPC_DEFAULT_SSL_ROOTS_FILE_PATH
+    assert out["documented procedure"] == ["connected", True]
+    # without trust_env the variables are not enough for every supported version of the client (4.6.2 reads
+    # SSL_CERT_FILE by itself, later versions do not): either outcome, never a crash
+    assert out["variables without trust_env"] in ("connected", "VectorStoreConnectionError")
