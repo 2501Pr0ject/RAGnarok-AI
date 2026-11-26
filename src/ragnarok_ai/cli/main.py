@@ -2885,5 +2885,84 @@ def judge_bench(
         typer.echo(f"  Report: {run.report_md}")
 
 
+@app.command("judge-compare")
+def judge_compare(
+    run_a: Annotated[str, typer.Option("--a", help="Output folder of the first judge-bench run (A).")],
+    run_b: Annotated[str, typer.Option("--b", help="Output folder of the second run (B); differences are B minus A.")],
+    data: Annotated[str, typer.Option("--data", help="The JSONL set both runs were made on (labels and groups).")],
+    out: Annotated[str, typer.Option("--out", help="Output directory (report.json, report.md); not a run folder.")],
+    resamples: Annotated[int, typer.Option("--resamples", help="Paired grouped bootstrap draws.")] = 1000,
+    seed: Annotated[int, typer.Option("--seed", help="Seed of the bootstrap draws.")] = 0,
+) -> None:
+    """Compare two judge-bench runs on the same records, record by record.
+
+    Both runs must have evaluated the same records of --data, at the same
+    level and on the same criterion; otherwise the comparison is refused
+    and the field that differs is named. Each judge keeps its own pass
+    threshold, read in its report.json. Records that failed in either run
+    are left out and counted.
+
+    The report declares one headline figure, the F1 of the not-supported
+    class (reweighted to the full set under class quotas), with the paired
+    bootstrap interval of the difference B minus A. When that interval
+    contains 0, no difference is established. The other figures are
+    exploratory.
+    """
+    from ragnarok_ai.benchmarks.compare import ComparisonError, compare_runs
+    from ragnarok_ai.benchmarks.judges import file_sha256, load_records
+
+    def fail(message: str, code: int) -> None:
+        if state["json"]:
+            typer.echo(json_response("judge-compare", "error", errors=[message]))
+        else:
+            typer.echo(f"Error: {message}", err=True)
+        raise typer.Exit(code)
+
+    if resamples < 0:
+        fail("--resamples must be at least 0", EXIT_BAD_INPUT)
+    if not Path(data).exists():
+        fail(f"File not found: {data}", EXIT_BAD_INPUT)
+    for folder in (run_a, run_b):
+        if not Path(folder).is_dir():
+            fail(f"Not a folder: {folder}", EXIT_BAD_INPUT)
+    try:
+        records = load_records(data)
+        run = compare_runs(
+            run_a, run_b, records, out_dir=out, data_sha256=file_sha256(data), seed=seed, resamples=resamples
+        )
+    except (ComparisonError, ValueError, json.JSONDecodeError) as exc:
+        fail(str(exc), EXIT_BAD_INPUT)
+        return
+
+    report = run.report
+    if state["json"]:
+        typer.echo(
+            json_response(
+                "judge-compare",
+                "success",
+                data={"report": report, "report_json": str(run.report_json), "report_md": str(run.report_md)},
+            )
+        )
+        return
+    head = report["headline"]
+    typer.echo()
+    typer.echo("  RAGnarok-AI judge comparison")
+    typer.echo("  " + "=" * 40)
+    typer.echo(f"  A: {report['a']['judge'] or run_a}  |  B: {report['b']['judge'] or run_b}")
+    typer.echo(
+        f"  Records compared: {report['data']['compared']} of {report['data']['evaluated']}  |  "
+        f"draws: {report['bootstrap']['resamples']}"
+    )
+    typer.echo()
+    typer.echo(f"  Headline figure: {head['figure']}")
+    if head.get("difference") is not None:
+        interval = head.get("interval")
+        shown = "no interval" if interval is None else f"[{interval[0]:+.3f}, {interval[1]:+.3f}]"
+        typer.echo(f"    A {head['a']:.3f}   B {head['b']:.3f}   B - A {head['difference']:+.3f}   {shown}")
+    typer.echo(f"  {head['verdict']}")
+    typer.echo()
+    typer.echo(f"  Report: {run.report_md}")
+
+
 if __name__ == "__main__":
     app()

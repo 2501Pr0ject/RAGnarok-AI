@@ -824,6 +824,17 @@ ragnarok judge-bench --judge llm --data test.jsonl --dev dev.jsonl --out results
 - `--judge hhem` and `--judge minicheck[:<checkpoint>]` benchmark `HHEMJudge` and `MiniCheckJudge` at answer level on `--device` (the set defines the unit; add `--sentence-level` on an answer-level set). The model then runs in the harness process, so `peak_rss_mb_harness` includes it.
 - `--judge python:<module>:<Class>` benchmarks any `JudgeProtocol` class of your own.
 
+`ragnarok judge-compare` compares two `judge-bench` runs made on the same records, record by record. Two reports cannot say whether one judge is better than the other: their intervals are marginal, and both judges ran on the same records.
+
+```bash
+ragnarok judge-compare --a results/hhem/ --b results/minicheck/ --data test.jsonl --out results/compare/
+```
+
+- Both runs must have evaluated the same records of `--data`, at the same level and on the same criterion; otherwise the comparison is refused and the field that differs is named (different `--per-class`, `--sample` or seed of a sample give different records). Each judge keeps its own pass threshold, read in its `report.json`; every other figure is recomputed from the two `attempts.jsonl` and the data file.
+- The pair is the record: the comparison is made on the records scored by both judges, and those that failed in either run are left out and counted. For claim-level judges the pair is the answer.
+- Differences are B minus A. Each interval comes from paired draws: the grouped bootstrap of the harness, with both judges evaluated on the same resampled records and the difference taken inside the draw (`--resamples`, 1000 by default). Under class quotas the per-label reweighting is redone in each draw for each judge.
+- The report (`report.json`, `report.md`) declares one headline figure, the F1 of the not-supported class (reweighted to the full set under class quotas), and its verdict is about that figure only: when the interval of the difference contains 0, no difference is established and no judge is named. When both judges give probabilities, the difference of AUROC is reported next to it, as a comparison that does not depend on the thresholds. An exact McNemar test compares how often the two binary verdicts are right; it assumes independent records and takes no account of the groups, so its p-value is too optimistic when records are grouped (the sentences of one answer), and the paired bootstrap interval is the one to rely on. On a full run it stands next to the headline figure; under class quotas it follows the sample's class mix and is listed with the exploratory figures. The other differences (recall per human label, specificity, accuracy, kappa, Brier) are exploratory: their intervals are not corrected for multiple comparisons.
+
 The two claim-level evaluators are judges too. `FaithfulnessEvaluator(llm).as_judge()` and `HallucinationDetector(llm).as_judge()` return `JudgeProtocol` judges that run through `judge_many`, `judge-bench` (wrapped in a class of yours for `--judge python:...`) and `JudgeCalibrator`; `result.to_judge_result()` converts a result you already have.
 
 ```python
