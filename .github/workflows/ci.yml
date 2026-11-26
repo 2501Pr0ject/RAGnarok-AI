@@ -58,6 +58,34 @@ jobs:
       - name: Run mypy
         run: uv run mypy src/
 
+  # The base job above installs neither torch nor transformers: with `ignore_missing_imports`, everything
+  # imported from them is `Any` and the code of the local judges (HHEM, MiniCheck) is not type-checked.
+  # This job checks the same sources with the two extras installed from the lock file. Both must pass:
+  # the code has to type-check with and without the optional packages.
+  typecheck-judges:
+    name: Type Check (local judges)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.13.6"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Install dependencies with the hhem and minicheck extras
+        run: uv sync --extra dev --extra cli --extra ollama --extra tui --extra hhem --extra minicheck
+
+      - name: Check that the extras are installed
+        run: uv run python -c "import torch, transformers, safetensors, nltk; print('torch', torch.__version__, 'transformers', transformers.__version__)"
+
+      - name: Run mypy
+        run: uv run mypy src/
+
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
