@@ -7,13 +7,82 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ragnarok_ai.adapters.vectorstore.weaviate import WeaviateVectorStore
+from ragnarok_ai.adapters.vectorstore.weaviate import WeaviateVectorStore, is_cloud_url, parse_endpoint
 from ragnarok_ai.core.exceptions import VectorStoreConnectionError
 from ragnarok_ai.core.types import Document
 
 # ============================================================================
 # Initialization Tests
 # ============================================================================
+
+
+class TestEndpointFromUrl:
+    """Host, port and TLS read from the URL: every form of scheme, port and path (#201)."""
+
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            # http, without and with a port
+            ("http://weaviate.internal", ("weaviate.internal", 8080, False)),
+            ("http://weaviate.internal:8081", ("weaviate.internal", 8081, False)),
+            ("http://weaviate.internal:80", ("weaviate.internal", 80, False)),
+            # https, without and with a port: 443 by default, not Weaviate's 8080
+            ("https://weaviate.example.org", ("weaviate.example.org", 443, True)),
+            ("https://weaviate.example.org:8443", ("weaviate.example.org", 8443, True)),
+            ("https://weaviate.example.org:443", ("weaviate.example.org", 443, True)),
+            # a trailing slash is not a path
+            ("http://weaviate.internal/", ("weaviate.internal", 8080, False)),
+            ("https://weaviate.example.org:8443/", ("weaviate.example.org", 8443, True)),
+            # no scheme: read as http
+            ("localhost:8080", ("localhost", 8080, False)),
+            ("localhost", ("localhost", 8080, False)),
+            # addresses
+            ("http://127.0.0.1:9000", ("127.0.0.1", 9000, False)),
+            ("http://[::1]:8080", ("::1", 8080, False)),
+            ("HTTPS://Weaviate.Example.org", ("weaviate.example.org", 443, True)),
+        ],
+    )
+    def test_scheme_and_port(self, url: str, expected: tuple[str, int, bool]) -> None:
+        assert parse_endpoint(url) == expected
+
+    @pytest.mark.parametrize(
+        ("url", "shown"),
+        [
+            ("http://weaviate.internal/v1", "http://weaviate.internal"),
+            ("http://weaviate.internal:8081/v1", "http://weaviate.internal:8081"),
+            ("https://weaviate.example.org/weaviate", "https://weaviate.example.org"),
+            ("https://weaviate.example.org:8443/v1/graphql", "https://weaviate.example.org:8443"),
+            ("https://weaviate.example.org:8443/?tenant=a", "https://weaviate.example.org:8443"),
+            ("localhost:8080/v1", "http://localhost:8080"),
+        ],
+    )
+    def test_a_url_with_a_path_is_refused_and_the_usable_form_is_given(self, url: str, shown: str) -> None:
+        with pytest.raises(ValueError, match="has a path") as raised:
+            parse_endpoint(url)
+        assert f"give the URL as {shown}" in str(raised.value) and "has no base path" in str(raised.value)
+        with pytest.raises(ValueError, match="has a path"):
+            WeaviateVectorStore(url=url, api_key="k")  # at construction, not at the first call
+        with pytest.raises(ValueError, match="has a path"):
+            WeaviateVectorStore(url=url)
+
+    @pytest.mark.parametrize(
+        ("url", "message"),
+        [
+            ("ftp://weaviate.internal", "scheme must be http or https, got 'ftp'"),
+            ("http://", "has no host"),
+            ("http://weaviate.internal:port", "the port is not a number"),
+            ("http://weaviate.internal:99999", "the port is not a number"),
+        ],
+    )
+    def test_other_unusable_urls(self, url: str, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            parse_endpoint(url)
+
+    def test_a_cloud_url_is_passed_as_it_is(self) -> None:
+        assert is_cloud_url("https://my-cluster.weaviate.cloud") and is_cloud_url("https://x.wcs.api.weaviate.io")
+        assert not is_cloud_url("https://weaviate.example.org")
+        store = WeaviateVectorStore(url="https://my-cluster.abc.weaviate.cloud/some/path", api_key="k")
+        assert store.url == "https://my-cluster.abc.weaviate.cloud/some/path"  # not parsed, not refused
 
 
 class TestWeaviateVectorStoreInit:
