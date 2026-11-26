@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import json
+from typing import ClassVar
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from ragnarok_ai.calibration.calibrator import (
+    CV_SINGLE_GROUP,
+    CV_SINGLE_SAMPLE,
     DEFAULT_PASS_THRESHOLD,
     JudgeCalibrator,
     _best_threshold,
+    _cohens_kappa,
     analyze_criterion,
 )
 from ragnarok_ai.calibration.models import CalibrationSample
@@ -306,3 +311,112 @@ class TestMerge:
         assert not a.comparable_with(a)
         with pytest.raises(ValueError, match="carries no judge configuration"):
             a.merge(a)
+
+
+class TestFewGroups:
+    """A single resampling unit gives no out-of-sample estimate; two give one, flagged when it is fragile (#202)."""
+
+    SCORES: ClassVar[list[float]] = [0.9, 0.8, 0.2, 0.3, 1.0, 0.1, 0.75, 0.5]
+    HUMAN: ClassVar[list[bool]] = [True, True, False, False, True, False, False, True]
+
+    def test_a_single_group_gives_null_estimates_flagged_unreliable(self):
+        c = analyze_criterion(
+            "faithfulness", self.SCORES, self.HUMAN, threshold=0.75, group_ids=["natural"] * 8, bootstrap_resamples=200
+        )
+        # what needs no resampling is computed as usual
+        ungrouped = analyze_criterion("faithfulness", self.SCORES, self.HUMAN, threshold=0.75, bootstrap_resamples=200)
+        assert (c.n, c.accuracy, c.kappa, c.recommended_threshold, c.kappa_at_recommended) == (
+            8,
+            ungrouped.accuracy,
+            ungrouped.kappa,
+            ungrouped.recommended_threshold,
+            ungrouped.kappa_at_recommended,
+        )
+        assert c.accuracy == 0.75 and c.kappa == 0.5 and c.accuracy_ci == ungrouped.accuracy_ci
+        # no out-of-sample estimate, no interval, and the report says the estimate is not reliable
+        assert (c.kappa_at_recommended_cv, c.kappa_cv_ci, c.bootstrap_reliable) == (None, None, False)
+        assert (c.cv_method, c.cv_folds, c.bootstrap_excluded) == (CV_SINGLE_GROUP, 0, 0)
+        assert c.cv_method == "none (a single group: no out-of-sample estimate)"
+
+    def test_a_single_sample_is_the_same_case(self):
+        c = analyze_criterion("faithfulness", [0.9], [True], threshold=0.75, bootstrap_resamples=50)
+        assert (c.n, c.accuracy, c.kappa) == (1, 1.0, None)
+        assert (c.kappa_at_recommended_cv, c.kappa_cv_ci, c.bootstrap_reliable, c.cv_folds) == (None, None, False, 0)
+        assert c.cv_method == CV_SINGLE_SAMPLE
+
+    def test_one_group_left_after_failures_is_a_single_group(self):
+        # two groups in the set, but every sample of the second one failed: one group is scored
+        scores: list[float | None] = [0.9, 0.2, 0.8, None, None]
+        c = analyze_criterion(
+            "faithfulness",
+            scores,
+            [True, False, True, True, False],
+            threshold=0.75,
+            group_ids=["a", "a", "a", "b", "b"],
+        )
+        assert (c.n, c.failed_indices, c.cv_method, c.bootstrap_reliable) == (3, [3, 4], CV_SINGLE_GROUP, False)
+
+    def test_two_balanced_groups_are_cross_validated_and_resampled(self):
+        c = analyze_criterion(
+            "faithfulness",
+            self.SCORES,
+            self.HUMAN,
+            threshold=0.75,
+            group_ids=["a"] * 4 + ["b"] * 4,
+            bootstrap_resamples=200,
+        )
+        assert (c.cv_method, c.cv_folds) == ("leave-one-group-out", 2)
+        assert c.kappa_at_recommended_cv == 0.5 and c.kappa_cv_ci is not None
+        low, high = c.kappa_cv_ci
+        assert low <= c.kappa_at_recommended_cv <= high
+        assert c.bootstrap_reliable is True and c.bootstrap_excluded == 0
+
+    def test_two_very_unbalanced_groups_give_an_estimate_flagged_unreliable(self):
+        # seven samples and one: about half of the draws hold the lone sample twice, a single class
+        c = analyze_criterion(
+            "faithfulness",
+            self.SCORES,
+            self.HUMAN,
+            threshold=0.75,
+            group_ids=["a"] * 7 + ["b"],
+            bootstrap_resamples=200,
+        )
+        assert (c.cv_method, c.cv_folds) == ("leave-one-group-out", 2)
+        assert c.kappa_at_recommended_cv is not None and c.kappa_cv_ci is not None
+        assert c.bootstrap_excluded > 20 and c.bootstrap_reliable is False
+
+    def test_two_groups_of_one_class_each(self):
+        # the fold held out is a single class, and so is the training fold: the threshold is kept
+        c = analyze_criterion(
+            "faithfulness",
+            [0.9, 0.8, 1.0, 0.2, 0.3, 0.1],
+            [True, True, True, False, False, False],
+            threshold=0.75,
+            group_ids=["a"] * 3 + ["b"] * 3,
+            bootstrap_resamples=200,
+        )
+        assert (c.cv_folds, c.kappa_at_recommended_cv) == (2, 1.0)
+        assert c.bootstrap_excluded > 50 and c.bootstrap_reliable is False  # half of the draws repeat one group
+
+    @pytest.mark.asyncio
+    async def test_calibrate_returns_a_report_for_a_set_in_one_group(self):
+        samples = [sample(h, s, group="natural") for h, s in zip(self.HUMAN, self.SCORES, strict=True)]
+        report = await JudgeCalibrator(ProtocolJudge(), min_samples=1).calibrate(samples)
+        c = report.criteria["faithfulness"]
+        assert (c.n, c.kappa_at_recommended_cv, c.kappa_cv_ci, c.bootstrap_reliable) == (8, None, None, False)
+        summary = report.summary()
+        assert (
+            "out-of-sample kappa NOT estimated, no interval: a single group: no out-of-sample estimate. "
+            "Give the samples a group_id that differs between groups, or none to resample by sample"
+        ) in summary
+        payload = report.to_dict()["criteria"]["faithfulness"]
+        assert json.dumps(payload)
+        assert (payload["kappa_at_recommended_cv"], payload["kappa_cv_ci"], payload["bootstrap_reliable"]) == (
+            None,
+            None,
+            False,
+        )
+        assert payload["cv_method"] == CV_SINGLE_GROUP and payload["cv_folds"] == 0
+
+    def test_kappa_of_nothing_is_undefined_not_an_error(self):
+        assert _cohens_kappa([], []) is None
