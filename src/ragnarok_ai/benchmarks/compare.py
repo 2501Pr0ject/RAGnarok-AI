@@ -657,7 +657,8 @@ def _mcnemar_lines(m: dict[str, Any], heading: str, boot: dict[str, Any]) -> lis
         + (f" ({boot['groups']} here)" if boot.get("groups") else "")
         + ": when records are grouped, for instance the sentences of one answer, its p-value is too optimistic. "
         + (
-            ""
+            f"No bootstrap interval is available here ({boot['reason']}), so nothing accounts for the groups: "
+            "this p-value alone establishes no difference between the judges."
             if boot.get("reason")
             else "The paired bootstrap interval above, which resamples groups, is the one to rely on."
         ),
