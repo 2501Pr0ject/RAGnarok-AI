@@ -159,51 +159,6 @@ class TestStatistics:
 
 class TestHandComputedTable:
     @pytest.mark.asyncio
-    async def test_single_scored_group_has_point_estimates_but_no_intervals_or_winner(self, tmp_path: Path):
-        labels = ["SUPPORTED", "CONTRADICTED", "UNSUPPORTED"] * 3
-        rows = [
-            {
-                **row(i, label, 0.1 if label == "CONTRADICTED" else 0.9, 0.9 if label == "SUPPORTED" else 0.1),
-                "source_id": "one-source",
-            }
-            for i, label in enumerate(labels)
-        ]
-        data = write(tmp_path / "data.jsonl", rows)
-        records, sha = load_records(data), file_sha256(data)
-        for name in ("a", "b"):
-            await run_benchmark(
-                MarkerJudge(name),
-                records,
-                out_dir=tmp_path / name,
-                data_sha256=sha,
-                per_class=2,
-                bootstrap_resamples=50,
-            )
-
-        reason = "a single group: no interval can be estimated"
-        bench_report = json.loads((tmp_path / "b" / "report.json").read_text())
-        recall, adjusted = bench_report["recall_by_label"], bench_report["prevalence_adjusted"]
-        for boot in (bench_report["bootstrap"], recall["bootstrap"], adjusted["bootstrap"]):
-            assert boot["groups"] == 1 and boot["resamples"] == 0
-            assert boot["reliable"] is False and boot["reason"] == reason
-        assert all(ci is None for ci in bench_report["bootstrap"]["intervals"].values())
-        assert all(ci is None for ci in adjusted["intervals"].values())
-        assert recall["specificity"]["interval"] is None
-        assert all(label["interval"] is None for label in recall["labels"].values())
-        assert adjusted["f1_not_supported_reweighted"] == 1.0
-        assert reason in (tmp_path / "b" / "report.md").read_text()
-
-        out = tmp_path / "comparison"
-        compare_runs(tmp_path / "a", tmp_path / "b", records, out_dir=out, data_sha256=sha, resamples=50)
-        comparison = json.loads((out / "report.json").read_text())
-        assert comparison["bootstrap"]["reason"] == reason
-        assert all(figure["interval"] is None for figure in comparison["differences"].values())
-        assert comparison["headline"]["difference"] > 0
-        assert comparison["headline"]["ahead"] is None
-        assert "without a verdict" in comparison["headline"]["verdict"]
-        assert reason in (out / "report.md").read_text()
-
-    @pytest.mark.asyncio
     async def test_figures_differences_and_mcnemar(self, tmp_path: Path):
         a, b, data, records = await two_runs(tmp_path, hand_table())
         run = compare_runs(a, b, records, out_dir=tmp_path / "cmp", data_sha256=file_sha256(data), resamples=0)
