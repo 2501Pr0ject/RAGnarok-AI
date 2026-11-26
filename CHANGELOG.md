@@ -165,6 +165,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interface.
 
 ### Fixed
+- **`JudgeCalibrator` no longer crashes when every sample has the same
+  `group_id`** (#202). With a single group there is a single resampling
+  unit: the only cross-validation fold held every sample, its training part
+  was empty, and the run ended on a `ZeroDivisionError` with no mention of
+  groups. The same happened with a single sample. The report is now
+  returned with what can be computed: the in-sample agreement, kappa and
+  recommended threshold as usual, and no out-of-sample estimate:
+  `kappa_at_recommended_cv` and `kappa_cv_ci` are `null`,
+  `bootstrap_reliable` is `false`, `cv_folds` is 0 and `cv_method` reads
+  "none (a single group: no out-of-sample estimate)". The summary says so
+  and what to do (a `group_id` that differs between groups, or none). Two
+  groups were already handled and are unchanged: cross-validated by
+  leaving one group out, with the interval flagged unreliable when the
+  groups are very unbalanced. `_cohens_kappa` of empty inputs returns
+  `None` instead of dividing by zero.
 - **`judge-bench --per-class` on a sentence-level set: the
   prevalence-adjusted figures no longer follow the quota's mix between
   `CONTRADICTED` and `UNSUPPORTED`** (#182). The quota is drawn per human
