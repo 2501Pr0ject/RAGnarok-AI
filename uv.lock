@@ -6078,7 +6078,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.16" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0" },
-    { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.0" },
+    { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.6.2" },
 ]
 provides-extras = ["dev", "docs", "ollama", "hhem", "minicheck", "openai", "anthropic", "vllm", "groq", "mistral", "together", "qdrant", "chroma", "faiss", "pinecone", "weaviate", "milvus", "pgvector", "langchain", "langgraph", "llamaindex", "dspy", "haystack", "semantic-kernel", "cli", "telemetry", "tui", "all"]
 

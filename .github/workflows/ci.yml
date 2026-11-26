@@ -90,27 +90,44 @@ jobs:
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
 
-      - name: Install dependencies with the qdrant extra
-        run: uv sync --extra dev --extra qdrant
+      - name: Install dependencies with the qdrant and weaviate extras
+        run: uv sync --extra dev --extra qdrant --extra weaviate
 
       - name: Qdrant, locked version (in-memory local mode)
         run: |
           uv run python -c "import importlib.metadata as m; print('qdrant-client', m.version('qdrant-client'))"
           uv run pytest tests/unit/adapters/vectorstore/test_qdrant_real_client.py -p no:randomly -rs
 
-      # The bound is read from pyproject.toml, so the version tested is the one the extra declares.
-      # --no-sync: `uv run` would otherwise put the locked version back.
+      # No Weaviate server: the real connect functions are bound to the adapter's arguments, and one real
+      # connection attempt is made to a closed port of the loopback interface
+      - name: Weaviate, locked version (signatures and a refused connection)
+        run: |
+          uv run python -c "import importlib.metadata as m; print('weaviate-client', m.version('weaviate-client'))"
+          uv run pytest tests/unit/adapters/vectorstore/test_weaviate_real_client.py -p no:randomly -rs
+
+      # Lower bounds of the extras. Each bound is read from pyproject.toml, so the version tested is the one
+      # the extra declares. --reinstall-package: without it uv keeps the locked version, which already
+      # satisfies the bound. --no-sync: `uv run` would otherwise put the locked version back. A step stops
+      # if the version installed is not the bound: it would be testing something else.
       - name: Qdrant, lower bound of the extra
         run: |
           spec=$(grep -oE 'qdrant-client>=[0-9.]+' pyproject.toml | head -n 1)
           test -n "$spec"
-          # --reinstall-package: without it uv keeps the locked version, which already satisfies the bound
           uv pip install --resolution lowest-direct --reinstall-package qdrant-client "$spec"
           installed=$(uv run --no-sync python -c "import importlib.metadata as m; print(m.version('qdrant-client'))")
           echo "qdrant-client $installed (lower bound of: $spec)"
-          # Refuse to go on if the version installed is not the bound: the step would test something else
           case "$installed" in "${spec#qdrant-client>=}"*) ;; *) echo "::error::expected the lower bound of $spec, got $installed"; exit 1 ;; esac
           uv run --no-sync pytest tests/unit/adapters/vectorstore/test_qdrant_real_client.py -p no:randomly -rs
+
+      - name: Weaviate, lower bound of the extra
+        run: |
+          spec=$(grep -oE 'weaviate-client>=[0-9.]+' pyproject.toml | head -n 1)
+          test -n "$spec"
+          uv pip install --resolution lowest-direct --reinstall-package weaviate-client "$spec"
+          installed=$(uv run --no-sync python -c "import importlib.metadata as m; print(m.version('weaviate-client'))")
+          echo "weaviate-client $installed (lower bound of: $spec)"
+          case "$installed" in "${spec#weaviate-client>=}"*) ;; *) echo "::error::expected the lower bound of $spec, got $installed"; exit 1 ;; esac
+          uv run --no-sync pytest tests/unit/adapters/vectorstore/test_weaviate_real_client.py -p no:randomly -rs
 
   test:
     name: Test (Python ${{ matrix.python-version }})

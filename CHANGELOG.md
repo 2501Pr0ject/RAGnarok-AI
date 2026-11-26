@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`WeaviateVectorStore` can connect to a self-hosted instance with an API
+  key** (#191). For a URL that is not a Weaviate Cloud one and with an API
+  key, the adapter called `weaviate.connect_to_custom` without its three
+  required gRPC arguments: the first use of the store failed with "Failed
+  to connect to Weaviate at ...: connect_to_custom() missing 3 required
+  positional arguments: 'grpc_host', 'grpc_port', and 'grpc_secure'", and
+  `is_available()` returned `False`, whatever the state of the server. The
+  arguments are now passed. `WeaviateVectorStore` takes three optional
+  parameters for them: `grpc_host` (default: the host of `url`),
+  `grpc_port` (default: 50051) and `grpc_secure` (default: the scheme of
+  `url`). Weaviate Cloud with an API key and a local instance without a
+  key were not affected and are unchanged. **The lower bound of the
+  `weaviate` extra moves from `weaviate-client>=4.0` to
+  `weaviate-client>=4.6.2`**: it is the oldest version on which the three
+  ways to connect were verified. No stable release exists below 4.4.0, and
+  4.4.0 to 4.6.1 do not have `connect_to_weaviate_cloud`, which the adapter
+  calls for Weaviate Cloud, so that path could not work there. What to do:
+  nothing with a recent client; an environment pinned to weaviate-client
+  4.4.0 to 4.6.1 must upgrade it. The way the adapter connects is now
+  tested against the real client, with the locked version and with the
+  lower bound: its calls are bound to the real signatures, and a refused
+  connection is checked to be reported as one. The other calls of the
+  adapter (collections, queries) need a server and are not covered by
+  these tests.
 - **`QdrantVectorStore.search` works again with qdrant-client 1.16 and
   later** (#190). The adapter called `AsyncQdrantClient.search`, which
   qdrant-client removed in 1.16.0: every search failed with

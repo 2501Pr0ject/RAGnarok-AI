@@ -19,6 +19,12 @@ from ragnarok_ai.core.types import Document
 class TestWeaviateVectorStoreInit:
     """Tests for WeaviateVectorStore initialization."""
 
+    def test_grpc_settings_default_to_the_url_and_port_50051(self) -> None:
+        store = WeaviateVectorStore(url="https://weaviate.example.org:8443", api_key="k")
+        assert (store.grpc_host, store.grpc_port, store.grpc_secure) == (None, 50051, None)
+        explicit = WeaviateVectorStore(api_key="k", grpc_host="grpc.example.org", grpc_port=50443, grpc_secure=True)
+        assert (explicit.grpc_host, explicit.grpc_port, explicit.grpc_secure) == ("grpc.example.org", 50443, True)
+
     def test_init_default_values(self) -> None:
         """Test initialization with default values."""
         store = WeaviateVectorStore()
