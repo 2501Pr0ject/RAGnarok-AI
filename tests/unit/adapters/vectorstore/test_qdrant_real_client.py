@@ -98,3 +98,119 @@ def test_the_client_method_the_adapter_calls_exists():
         timeout=120,
     )
     assert done.stdout.strip() == "True", f"qdrant-client {QDRANT_CLIENT_VERSION} has no query_points"
+
+
+ERRORS = textwrap.dedent(
+    """
+    import asyncio, json
+
+    from qdrant_client import AsyncQdrantClient
+    from qdrant_client.http.exceptions import UnexpectedResponse
+
+    from ragnarok_ai.adapters.vectorstore.qdrant import QdrantVectorStore
+    from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+    out = {}
+
+
+    async def outcome(name, call):
+        try:
+            out[name] = ["returned", repr(await call())]
+        except Exception as exc:
+            cause = exc.__cause__
+            out[name] = [type(exc).__name__, type(cause).__name__ if cause else None,
+                         isinstance(exc, VectorStoreConnectionError)]
+
+
+    async def main():
+        # nothing listens on port 1 of the loopback interface: the server cannot be reached
+        closed = QdrantVectorStore(url="http://127.0.0.1:1", vector_size=3, timeout=5)
+        await outcome("closed port, search", lambda: closed.search([1.0, 0.0, 0.0], k=1))
+        await outcome("closed port, is_available", lambda: QdrantVectorStore(url="http://127.0.0.1:1", timeout=5).is_available())
+
+        # a response of the server: the real exception class of the client
+        store = QdrantVectorStore(vector_size=3, collection_name="t")
+        store._client = AsyncQdrantClient(location=":memory:")
+        await store._ensure_collection()
+
+        async def refused(*args, **kwargs):
+            raise UnexpectedResponse(status_code=401, reason_phrase="Unauthorized", content=b"", headers=None)
+
+        store._client.query_points = refused
+        await outcome("server response, search", lambda: store.search([1.0, 0.0, 0.0], k=1))
+        store._client.get_collections = refused
+        await outcome("server response, is_available", lambda: store.is_available())
+
+        # the client's own refusal in local mode: a collection that does not exist
+        absent = QdrantVectorStore(vector_size=3, collection_name="absent")
+        absent._client = AsyncQdrantClient(location=":memory:")
+        await outcome("missing collection, count", lambda: absent.count())
+
+        # a mistake in the adapter's call
+        broken = QdrantVectorStore(vector_size=3, collection_name="t2")
+        broken._client = AsyncQdrantClient(location=":memory:")
+        await broken._ensure_collection()
+
+        async def wrong(*args, **kwargs):
+            raise AttributeError("'AsyncQdrantClient' object has no attribute 'search'")
+
+        broken._client.query_points = wrong
+        await outcome("bug, search", lambda: broken.search([1.0, 0.0, 0.0], k=1))
+        print(json.dumps(out))
+
+
+    asyncio.run(main())
+    """
+)
+
+
+def test_only_a_server_that_cannot_be_reached_is_a_connection_failure():
+    done = subprocess.run([sys.executable, "-c", ERRORS], capture_output=True, text=True, check=False, timeout=180)
+    assert done.returncode == 0, done.stderr[-2000:]
+    out = json.loads(done.stdout.strip().splitlines()[-1])
+    # unreachable: the client's transport error, reported as a connection failure; is_available says False
+    assert out["closed port, search"] == ["VectorStoreConnectionError", "ResponseHandlingException", True]
+    assert out["closed port, is_available"] == ["returned", "False"]
+    # the server answered: its response propagates as it is, and is_available does not hide it
+    assert out["server response, search"] == ["UnexpectedResponse", None, False]
+    assert out["server response, is_available"] == ["UnexpectedResponse", None, False]
+    # neither is the client's own refusal, nor a bug of the adapter
+    assert out["missing collection, count"][2] is False and out["missing collection, count"][0] != "returned"
+    assert out["bug, search"] == ["AttributeError", None, False]
+
+
+def test_a_missing_package_is_an_import_error_with_the_install_message():
+    script = textwrap.dedent(
+        """
+        import asyncio, json, sys
+        sys.modules["qdrant_client"] = None   # as if the package were not installed
+
+        from ragnarok_ai.adapters.vectorstore.qdrant import QdrantVectorStore
+        from ragnarok_ai.core.exceptions import ConfigurationError, VectorStoreConnectionError, VectorStoreDependencyError
+
+        async def main():
+            results = {}
+            for name, call in (("search", lambda s: s.search([0.0] * 768, k=1)), ("is_available", lambda s: s.is_available())):
+                try:
+                    await call(QdrantVectorStore())
+                    results[name] = "returned"
+                except Exception as exc:
+                    results[name] = [type(exc).__name__, isinstance(exc, ImportError), isinstance(exc, ConfigurationError),
+                                     isinstance(exc, VectorStoreConnectionError), isinstance(exc, VectorStoreDependencyError), str(exc)]
+            print(json.dumps(results))
+
+        asyncio.run(main())
+        """
+    )
+    done = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=False, timeout=120)
+    assert done.returncode == 0, done.stderr[-2000:]
+    out = json.loads(done.stdout.strip().splitlines()[-1])
+    expected = [
+        "VectorStoreDependencyError",
+        True,  # an ImportError
+        True,
+        False,  # not a connection error
+        True,
+        "qdrant-client is not installed. Install it with: pip install qdrant-client",
+    ]
+    assert out == {"search": expected, "is_available": expected}

@@ -8,13 +8,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+from ragnarok_ai.adapters.vectorstore._errors import is_connection_failure
+from ragnarok_ai.core.exceptions import VectorStoreConnectionError, VectorStoreDependencyError
 from ragnarok_ai.core.types import Document
 
 if TYPE_CHECKING:
     from types import TracebackType
 
     from qdrant_client import AsyncQdrantClient
+
+# The errors of qdrant-client that mean the server could not be reached: a transport failure, wrapped by
+# the client. UnexpectedResponse, a response of the server, is not one
+_QDRANT_EXCEPTIONS = "qdrant_client.http.exceptions"
+_QDRANT_CONNECTION_ERRORS = ("ResponseHandlingException",)
+
+
+def _connection_failure(exc: BaseException) -> bool:
+    return is_connection_failure(exc, _QDRANT_EXCEPTIONS, _QDRANT_CONNECTION_ERRORS)
+
 
 # Default configuration
 DEFAULT_URL = "http://localhost:6333"
@@ -110,7 +121,6 @@ class QdrantVectorStore:
 
         try:
             from qdrant_client import AsyncQdrantClient
-            from qdrant_client.http.exceptions import UnexpectedResponse
 
             self._client = AsyncQdrantClient(
                 url=self.url,
@@ -118,21 +128,18 @@ class QdrantVectorStore:
                 timeout=self.timeout,
             )
 
-            # Ensure collection exists
-            try:
-                await self._ensure_collection()
-            except UnexpectedResponse as e:
-                msg = f"Failed to create collection in Qdrant: {e}"
-                raise VectorStoreConnectionError(msg) from e
+            # Ensure collection exists. A response of the server (UnexpectedResponse: authentication
+            # refused, invalid request) is not a connection failure and propagates as it is
+            await self._ensure_collection()
 
             return self._client
 
         except ImportError as e:
             msg = "qdrant-client is not installed. Install it with: pip install qdrant-client"
-            raise VectorStoreConnectionError(msg) from e
+            raise VectorStoreDependencyError(msg) from e
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to connect to Qdrant at {self.url}: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -205,8 +212,8 @@ class QdrantVectorStore:
         except ValueError:
             raise
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to search in Qdrant: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -265,8 +272,8 @@ class QdrantVectorStore:
         except ValueError:
             raise
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to add documents to Qdrant: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -293,8 +300,8 @@ class QdrantVectorStore:
             )
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to delete documents from Qdrant: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -314,8 +321,8 @@ class QdrantVectorStore:
             return int(collection_info.points_count)
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to get count from Qdrant: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -334,5 +341,8 @@ class QdrantVectorStore:
             # Try to get collections to verify connection
             await client.get_collections()
             return True
-        except Exception:
-            return False
+        except Exception as e:
+            # False for an unreachable store only: anything else is not about availability
+            if isinstance(e, VectorStoreConnectionError) or _connection_failure(e):
+                return False
+            raise

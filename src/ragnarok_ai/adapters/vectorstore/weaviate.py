@@ -9,11 +9,29 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any
 
-from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+from ragnarok_ai.adapters.vectorstore._errors import is_connection_failure
+from ragnarok_ai.core.exceptions import VectorStoreConnectionError, VectorStoreDependencyError
 from ragnarok_ai.core.types import Document
 
 if TYPE_CHECKING:
     from types import TracebackType
+
+# The errors of weaviate-client that mean the instance could not be reached. Names the installed version
+# does not have are skipped (WeaviateTimeoutError is not in 4.6.2). Not in the list: the responses of the
+# server (UnexpectedStatusCodeError, AuthenticationFailedError, WeaviateQueryError) and
+# WeaviateClosedClientError, a misuse of the client
+_WEAVIATE_EXCEPTIONS = "weaviate.exceptions"
+_WEAVIATE_CONNECTION_ERRORS = (
+    "WeaviateConnectionError",
+    "WeaviateStartUpError",
+    "WeaviateTimeoutError",
+    "WeaviateGRPCUnavailableError",
+)
+
+
+def _connection_failure(exc: BaseException) -> bool:
+    return is_connection_failure(exc, _WEAVIATE_EXCEPTIONS, _WEAVIATE_CONNECTION_ERRORS)
+
 
 # Default configuration
 DEFAULT_URL = "http://localhost:8080"
@@ -169,10 +187,10 @@ class WeaviateVectorStore:
 
         except ImportError as e:
             msg = "weaviate-client is not installed. Install it with: pip install weaviate-client"
-            raise VectorStoreConnectionError(msg) from e
+            raise VectorStoreDependencyError(msg) from e
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to connect to Weaviate at {self.url}: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -194,6 +212,8 @@ class WeaviateVectorStore:
                     ],
                 )
         except Exception as e:
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to create collection in Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -240,8 +260,8 @@ class WeaviateVectorStore:
             return documents
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to search in Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -289,8 +309,8 @@ class WeaviateVectorStore:
         except ValueError:
             raise
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to add documents to Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -307,9 +327,10 @@ class WeaviateVectorStore:
             return
 
         try:
-            from weaviate.classes.query import Filter
-
+            # The client first: without the package, its error carries the install message
             client = await self._ensure_client()
+
+            from weaviate.classes.query import Filter
 
             collection = client.collections.get(self.collection_name)
 
@@ -317,8 +338,8 @@ class WeaviateVectorStore:
                 collection.data.delete_many(where=Filter.by_property("doc_id").equal(doc_id))
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to delete documents from Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -339,8 +360,8 @@ class WeaviateVectorStore:
             return result.total_count or 0
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to get count from Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -357,5 +378,8 @@ class WeaviateVectorStore:
         try:
             client = await self._ensure_client()
             return bool(client.is_ready())
-        except Exception:
-            return False
+        except Exception as e:
+            # False for an unreachable store only: anything else is not about availability
+            if isinstance(e, VectorStoreConnectionError) or _connection_failure(e):
+                return False
+            raise
