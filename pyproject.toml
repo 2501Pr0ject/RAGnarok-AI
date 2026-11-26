@@ -99,7 +99,8 @@ together = [
     "httpx>=0.27",
 ]
 qdrant = [
-    "qdrant-client>=1.7",
+    # 1.10.0 is the first version with AsyncQdrantClient.query_points; `search` was removed in 1.16.0
+    "qdrant-client>=1.10",
 ]
 chroma = [
     "chromadb>=0.4",
