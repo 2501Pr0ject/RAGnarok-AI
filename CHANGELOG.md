@@ -222,6 +222,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interface.
 
 ### Fixed
+- `judge-bench` and `judge-compare` report unavailable bootstrap intervals
+  when fewer than two scored groups remain. Point estimates are preserved,
+  and the comparison gives no winner on the strength of a single group (#208).
 - **`WeaviateVectorStore` reads the host and the port of its URL
   correctly** (#201). The URL was cut up as a string, with three defects
   for a self-hosted instance: an `https` URL without a port got port 8080

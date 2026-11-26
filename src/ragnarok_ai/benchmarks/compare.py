@@ -65,6 +65,7 @@ from ragnarok_ai.benchmarks.judges import (
     NEGATIVE_CLASS,
     PASS_LABELS,
     _balanced_accuracy,
+    _bootstrap_metadata,
     _f1_not_supported,
     _group_draws,
     _is_header,
@@ -519,6 +520,7 @@ def compare_runs(
         "follows_sample_class_mix": quotas,
     }
 
+    bootstrap = _bootstrap_metadata(groups, seed, resamples)
     report: dict[str, Any] = {
         "a": _side(a),
         "b": _side(b),
@@ -537,17 +539,11 @@ def compare_runs(
         "failures": {**failed, "by_kind": kinds},
         "same_configuration": a.header.get("config_hash") == b.header.get("config_hash"),
         "notes": _notes(a, b),
-        "headline": _headline(headline_name, differences.get(headline_name), a, b, resamples),
+        "headline": _headline(headline_name, differences.get(headline_name), a, b, bootstrap["resamples"]),
         "threshold_free": None if threshold_free is None else {"figure": threshold_free, **differences[threshold_free]},
         "mcnemar": mcnemar,
         "differences": differences,
-        "bootstrap": {
-            "resamples": resamples,
-            "seed": seed,
-            "confidence": BOOTSTRAP_CONFIDENCE,
-            "groups": len(set(groups)),
-            "paired": True,
-        },
+        "bootstrap": {**bootstrap, "paired": True},
         # Records on which the two verdicts differ: ids, labels and scores only, no text of the data file
         "disagreements": [
             {
@@ -660,7 +656,11 @@ def _mcnemar_lines(m: dict[str, Any], heading: str, boot: dict[str, Any]) -> lis
         "The exact McNemar test assumes independent records and takes no account of the groups"
         + (f" ({boot['groups']} here)" if boot.get("groups") else "")
         + ": when records are grouped, for instance the sentences of one answer, its p-value is too optimistic. "
-        "The paired bootstrap interval above, which resamples groups, is the one to rely on.",
+        + (
+            ""
+            if boot.get("reason")
+            else "The paired bootstrap interval above, which resamples groups, is the one to rely on."
+        ),
     ]
     if m["follows_sample_class_mix"]:
         lines += [
@@ -694,7 +694,7 @@ def render_comparison(report: dict[str, Any]) -> str:
             f"{boot['confidence']:.0%}, {boot['resamples']} paired draws on {boot['groups']} groups (seed {boot['seed']}); "
             "in each draw both judges are evaluated on the same records and the difference is taken in the draw."
             if boot["resamples"]
-            else "none (0 draws)."
+            else boot.get("reason", "none (0 draws)") + "."
         ),
     ]
     failures = report["failures"]
