@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-27
+
 ### Behavior changes
 - **A device out-of-memory error of a local judge is a failure of kind
   `memory`, no longer `backend`** (#174). `FailureKind` and `FAILURE_KINDS`
@@ -65,6 +67,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     apart from reporting it.
 
 ### Added
+- **`WeaviateVectorStore(trust_env=True)`** (#209, default `False`): the
+  connection to a self-hosted instance reads the certificate authorities
+  and the proxy settings of the environment (`SSL_CERT_FILE`,
+  `HTTPS_PROXY`, `NO_PROXY`). It applies to the instances reached through
+  the client's `connect_to_custom`: with a key, or over `https`. It is the
+  way to connect to an instance whose certificate is self-signed or signed
+  by a private authority: see Security below.
 - **`ragnarok judge-compare`: paired comparison of two `judge-bench` runs**
   (#165). Two reports cannot say whether one judge is better than the
   other: their intervals are marginal, and both judges ran on the same
@@ -238,15 +247,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     private authority, is now refused**, with a
     `VectorStoreConnectionError` that carries `CERTIFICATE_VERIFY_FAILED`:
     the certificate was never verified before, since TLS was not used. To
-    connect, pass the new `trust_env=True` and set `SSL_CERT_FILE` (HTTP)
-    and `GRPC_DEFAULT_SSL_ROOTS_FILE_PATH` (gRPC) to the authority's
-    certificate in PEM format. Verification cannot be disabled;
+    connect, pass the new `trust_env=True` (see Added) and set
+    `SSL_CERT_FILE` (HTTP) and `GRPC_DEFAULT_SSL_ROOTS_FILE_PATH` (gRPC) to
+    the authority's certificate in PEM format. Verification cannot be
+    disabled;
   - the gRPC endpoint must be reachable with TLS on port 50051, or be
     given with `grpc_port` and `grpc_secure`.
-- **`WeaviateVectorStore(trust_env=True)`** (new, default `False`): the
-  connection to a self-hosted instance reads the certificate authorities
-  and the proxy settings of the environment. It applies to the instances
-  reached through `connect_to_custom`: with a key, or over `https`.
 
 ### Fixed
 - **`QdrantVectorStore.count()` no longer fails when the collection info
@@ -255,9 +261,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `int(None)`. It now asks the server for the exact count in that case.
   When the collection info has a count, 0 included, nothing changes and no
   second request is made.
-- `judge-bench` and `judge-compare` report unavailable bootstrap intervals
-  when fewer than two scored groups remain. Point estimates are preserved,
-  and the comparison gives no winner on the strength of a single group (#208).
+- **`judge-bench` and `judge-compare` give no bootstrap interval when
+  fewer than two scored groups remain** (#208, contributed by @zhang2y17 in
+  #210). With one group every draw holds the same records, so an interval
+  reduced to a point made a nonzero difference look certain, and
+  `judge-compare` could name a judge ahead on the strength of a single
+  group. The point estimates are kept; the intervals are `null`, the
+  bootstrap block carries `resamples: 0`, `reliable: false` and the reason,
+  and the comparison gives no verdict. With two groups or more nothing
+  changes.
 - **`WeaviateVectorStore` reads the host and the port of its URL
   correctly** (#201). The URL was cut up as a string, with three defects
   for a self-hosted instance: an `https` URL without a port got port 8080
@@ -1527,6 +1539,9 @@ core dependencies.
 - Basic CLI
 - CI/CD with GitHub Actions
 
+[1.14.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.13.2...v1.14.0
+[1.13.2]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.13.1...v1.13.2
+[1.13.1]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.13.0...v1.13.1
 [1.7.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/2501Pr0ject/RAGnarok-AI/compare/v1.4.1...v1.5.0
