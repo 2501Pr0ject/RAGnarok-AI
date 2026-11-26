@@ -236,3 +236,103 @@ def test_a_real_connection_attempt_to_a_closed_port_is_a_connection_failure_not_
     # the client tried to connect and failed to: its own error, where 1.13.1 had a TypeError on the call
     assert out["cause_module"] == "weaviate" and out["cause"] != "TypeError", out
     assert "missing" not in str(out["message"])
+
+
+def test_only_an_instance_that_cannot_be_reached_is_a_connection_failure():
+    out = run(
+        """
+    import asyncio, json
+    import weaviate
+    from weaviate.exceptions import UnexpectedStatusCodeError
+    from ragnarok_ai.adapters.vectorstore.weaviate import WeaviateVectorStore
+    from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+
+    out = {}
+
+
+    async def outcome(name, call):
+        try:
+            out[name] = ["returned", repr(await call())]
+        except Exception as exc:
+            cause = exc.__cause__
+            out[name] = [type(exc).__name__, type(cause).__module__.split(".")[0] if cause else None,
+                         isinstance(exc, VectorStoreConnectionError)]
+
+
+    def store():
+        return WeaviateVectorStore(url="http://127.0.0.1:1", api_key="not-a-real-key", grpc_port=2)
+
+
+    async def main():
+        # nothing listens on ports 1 and 2 of the loopback interface
+        await outcome("closed port, search", lambda: store().search([0.1, 0.2], k=1))
+        await outcome("closed port, is_available", lambda: store().is_available())
+
+        # a mistake in the adapter's call: what #191 was
+        real = weaviate.connect_to_custom
+
+        def wrong(*args, **kwargs):
+            raise TypeError("connect_to_custom() missing 3 required positional arguments")
+
+        weaviate.connect_to_custom = wrong
+        await outcome("bug, search", lambda: store().search([0.1, 0.2], k=1))
+        await outcome("bug, is_available", lambda: store().is_available())
+
+        # a response of the server: the client's own class for an unexpected status code
+        import httpx
+
+        def refused(*args, **kwargs):
+            raise UnexpectedStatusCodeError("Connect", httpx.Response(401, json={"error": "unauthorized"}))
+
+        weaviate.connect_to_custom = refused
+        await outcome("server response, search", lambda: store().search([0.1, 0.2], k=1))
+        await outcome("server response, is_available", lambda: store().is_available())
+        weaviate.connect_to_custom = real
+        print(json.dumps(out))
+
+    asyncio.run(main())
+    """
+    )
+    assert out["closed port, search"] == ["VectorStoreConnectionError", "weaviate", True]
+    assert out["closed port, is_available"] == ["returned", "False"]
+    assert out["bug, search"] == ["TypeError", None, False]
+    assert out["bug, is_available"] == ["TypeError", None, False]  # no longer "False": the server is not the cause
+    assert out["server response, search"] == ["UnexpectedStatusCodeError", None, False]
+    assert out["server response, is_available"] == ["UnexpectedStatusCodeError", None, False]
+
+
+def test_a_missing_package_is_an_import_error_with_the_install_message():
+    out = run(
+        """
+    import asyncio, json, sys
+    sys.modules["weaviate"] = None   # as if the package were not installed
+
+    from ragnarok_ai.adapters.vectorstore.weaviate import WeaviateVectorStore
+    from ragnarok_ai.core.exceptions import VectorStoreConnectionError, VectorStoreDependencyError
+
+    async def main():
+        results = {}
+        calls = {
+            "search": lambda s: s.search([0.1], k=1),
+            "delete": lambda s: s.delete(["a"]),
+            "is_available": lambda s: s.is_available(),
+        }
+        for name, call in calls.items():
+            try:
+                await call(WeaviateVectorStore())
+                results[name] = "returned"
+            except Exception as exc:
+                results[name] = [type(exc).__name__, isinstance(exc, ImportError),
+                                 isinstance(exc, VectorStoreConnectionError), str(exc)]
+        print(json.dumps(results))
+
+    asyncio.run(main())
+    """
+    )
+    expected = [
+        "VectorStoreDependencyError",
+        True,
+        False,
+        "weaviate-client is not installed. Install it with: pip install weaviate-client",
+    ]
+    assert out == {"search": expected, "delete": expected, "is_available": expected}

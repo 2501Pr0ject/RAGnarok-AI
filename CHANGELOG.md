@@ -31,6 +31,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     compared across versions must take this into account;
   - `JudgeCalibrator` counts every failure that is not a parse failure in
     `backend_failures`, `memory` included; that field is unchanged.
+- **`QdrantVectorStore` and `WeaviateVectorStore` raise
+  `VectorStoreConnectionError` for connection failures only** (#193). These
+  two adapters wrapped almost every exception in it, so a response of the
+  server, a missing package or a mistake in the adapter's own call was
+  reported as "Failed to connect" or "Failed to search", and
+  `is_available()` answered `False`: the user was sent to check a server
+  that was not the cause (it is what hid #190 and #191). Only these two
+  adapters change; `ChromaVectorStore`, `FAISSVectorStore`,
+  `MilvusVectorStore`, `PgvectorVectorStore` and `PineconeVectorStore`
+  still wrap every exception. What still becomes a
+  `VectorStoreConnectionError`: an `OSError` (connection refused or reset,
+  name not resolved), a timeout, and the client's own connection errors
+  (`ResponseHandlingException` for Qdrant; `WeaviateConnectionError`,
+  `WeaviateStartUpError`, `WeaviateTimeoutError` and
+  `WeaviateGRPCUnavailableError` for Weaviate). What to adapt:
+  - **a response of the server propagates as the client's own exception**:
+    `qdrant_client.http.exceptions.UnexpectedResponse` (authentication
+    refused, invalid request; it was "Failed to create collection in
+    Qdrant"), `weaviate.exceptions.UnexpectedStatusCodeError` and the other
+    Weaviate errors. Code that caught `VectorStoreConnectionError` to
+    handle them must catch the client's exception;
+  - **a missing client package raises `VectorStoreDependencyError`**, an
+    `ImportError` (and a `ConfigurationError`), with the same message and
+    install command as before. Code that caught
+    `VectorStoreConnectionError` for it must catch `ImportError`;
+  - **`is_available()` returns `False` only when the store cannot be
+    reached**, and raises for anything else. Code that used it as a general
+    "is everything fine" test must expect an exception for a refused
+    authentication, a missing package or a bug;
+  - a `TypeError`, an `AttributeError` or another error of the adapter's
+    own call is no longer hidden: it propagates as it is. Nothing to adapt,
+    apart from reporting it.
 
 ### Added
 - **`ragnarok judge-compare`: paired comparison of two `judge-bench` runs**

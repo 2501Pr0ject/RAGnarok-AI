@@ -33,7 +33,7 @@ from ragnarok_ai.adapters.vectorstore.qdrant import (  # noqa: E402
     DEFAULT_VECTOR_SIZE,
     QdrantVectorStore,
 )
-from ragnarok_ai.core.exceptions import VectorStoreConnectionError  # noqa: E402
+from ragnarok_ai.core.exceptions import VectorStoreConnectionError, VectorStoreDependencyError  # noqa: E402
 from ragnarok_ai.core.types import Document  # noqa: E402
 
 
@@ -146,7 +146,7 @@ class TestQdrantVectorStoreAdd:
     @pytest.mark.asyncio
     async def test_add_connection_error(self) -> None:
         """Connection error raises VectorStoreConnectionError."""
-        mock_qdrant_client.AsyncQdrantClient.side_effect = Exception("Connection refused")
+        mock_qdrant_client.AsyncQdrantClient.side_effect = ConnectionRefusedError("Connection refused")
 
         store = QdrantVectorStore(vector_size=4)
 
@@ -294,7 +294,7 @@ class TestQdrantVectorStoreIsAvailable:
     @pytest.mark.asyncio
     async def test_is_available_false_on_error(self) -> None:
         """Returns False when connection fails."""
-        mock_qdrant_client.AsyncQdrantClient.side_effect = Exception("Connection refused")
+        mock_qdrant_client.AsyncQdrantClient.side_effect = ConnectionRefusedError("Connection refused")
 
         store = QdrantVectorStore()
         result = await store.is_available()
@@ -449,7 +449,7 @@ class TestQdrantVectorStoreErrors:
 
     @pytest.mark.asyncio
     async def test_unexpected_response_error(self) -> None:
-        """Test UnexpectedResponse raises VectorStoreConnectionError."""
+        """A response of the server is not a connection failure: UnexpectedResponse propagates as it is."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response([])
         # Simulate UnexpectedResponse during collection creation
@@ -460,31 +460,99 @@ class TestQdrantVectorStoreErrors:
 
         store = QdrantVectorStore()
 
-        with pytest.raises(VectorStoreConnectionError, match="Failed to create collection"):
-            await store._ensure_client()
-
-        mock_client.create_collection.side_effect = None
+        try:
+            with pytest.raises(
+                mock_qdrant_client.http.exceptions.UnexpectedResponse, match="Collection error"
+            ) as raised:
+                await store._ensure_client()
+            assert not isinstance(raised.value, VectorStoreConnectionError)
+        finally:
+            mock_client.create_collection.side_effect = None
 
     @pytest.mark.asyncio
-    async def test_import_error_raises_connection_error(self) -> None:
-        """Test ImportError raises VectorStoreConnectionError."""
+    async def test_missing_package_is_an_import_error_with_the_install_message(self) -> None:
+        """The package is missing, the store was never contacted: an ImportError, not a connection error."""
         # Temporarily make AsyncQdrantClient raise ImportError-like behavior
         original_side_effect = mock_qdrant_client.AsyncQdrantClient.side_effect
         mock_qdrant_client.AsyncQdrantClient.side_effect = ImportError("No module named 'qdrant_client'")
 
         store = QdrantVectorStore()
 
-        with pytest.raises(VectorStoreConnectionError, match="qdrant-client is not installed"):
-            await store._ensure_client()
+        try:
+            with pytest.raises(VectorStoreDependencyError, match="qdrant-client is not installed") as raised:
+                await store._ensure_client()
+            assert isinstance(raised.value, ImportError) and not isinstance(raised.value, VectorStoreConnectionError)
+            assert "pip install qdrant-client" in str(raised.value)  # the install message is kept
+            # the same from the public methods, and is_available does not answer False for it
+            with pytest.raises(ImportError, match="qdrant-client is not installed"):
+                await store.search([0.1] * DEFAULT_VECTOR_SIZE, k=1)
+            with pytest.raises(ImportError, match="qdrant-client is not installed"):
+                await store.is_available()
+        finally:
+            mock_qdrant_client.AsyncQdrantClient.side_effect = original_side_effect
 
-        mock_qdrant_client.AsyncQdrantClient.side_effect = original_side_effect
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "error", [RuntimeError("bug"), AttributeError("no attribute 'search'"), TypeError("missing argument")]
+    )
+    async def test_programming_errors_are_not_reported_as_connection_failures(self, error: Exception) -> None:
+        """What hid #190: an AttributeError of the adapter's own call was "Failed to search in Qdrant"."""
+        mock_client = AsyncMock()
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
+        mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
+        store = QdrantVectorStore(vector_size=4)
+        doc = Document(id="doc1", content="x", metadata={"embedding": [0.1, 0.2, 0.3, 0.4]})
+        calls = {
+            "query_points": lambda: store.search([0.1, 0.2, 0.3, 0.4], k=5),
+            "upsert": lambda: store.add([doc]),
+            "delete": lambda: store.delete(["doc1"]),
+            "get_collection": lambda: store.count(),
+        }
+        for method, call in calls.items():
+            getattr(mock_client, method).side_effect = error
+            try:
+                with pytest.raises(type(error), match=str(error)) as raised:
+                    await call()
+                assert not isinstance(raised.value, VectorStoreConnectionError), method
+            finally:
+                getattr(mock_client, method).side_effect = None
+        # is_available: False is for an unreachable store, not for a bug
+        mock_client.get_collections.side_effect = error
+        try:
+            with pytest.raises(type(error)):
+                await QdrantVectorStore(vector_size=4).is_available()
+        finally:
+            mock_client.get_collections.side_effect = None
+            mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
+
+    @pytest.mark.asyncio
+    async def test_the_client_s_transport_error_is_a_connection_failure(self) -> None:
+        """ResponseHandlingException is what qdrant-client raises when the server cannot be reached."""
+
+        class ResponseHandlingException(Exception):
+            pass
+
+        mock_qdrant_client.http.exceptions.ResponseHandlingException = ResponseHandlingException
+        mock_client = AsyncMock()
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
+        mock_client.query_points.side_effect = ResponseHandlingException("All connection attempts failed")
+        mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
+        try:
+            with pytest.raises(VectorStoreConnectionError, match="Failed to search in Qdrant: All connection attempts"):
+                await QdrantVectorStore(vector_size=4).search([0.1, 0.2, 0.3, 0.4], k=5)
+            mock_client.get_collections.side_effect = ResponseHandlingException("All connection attempts failed")
+            assert await QdrantVectorStore(vector_size=4).is_available() is False
+        finally:
+            mock_client.query_points.side_effect = None
+            mock_client.get_collections.side_effect = None
+            del mock_qdrant_client.http.exceptions.ResponseHandlingException
 
     @pytest.mark.asyncio
     async def test_search_generic_error(self) -> None:
         """Test search raises VectorStoreConnectionError on generic error."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.query_points.side_effect = RuntimeError("Search failed")
+        mock_client.query_points.side_effect = TimeoutError("Search failed")  # a transport failure
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -514,7 +582,7 @@ class TestQdrantVectorStoreErrors:
         """Test add raises VectorStoreConnectionError on generic error."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.upsert.side_effect = RuntimeError("Add failed")
+        mock_client.upsert.side_effect = TimeoutError("Add failed")  # a transport failure
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore(vector_size=4)
@@ -546,7 +614,7 @@ class TestQdrantVectorStoreErrors:
         """Test delete raises VectorStoreConnectionError on generic error."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.delete.side_effect = RuntimeError("Delete failed")
+        mock_client.delete.side_effect = TimeoutError("Delete failed")  # a transport failure
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()
@@ -576,7 +644,7 @@ class TestQdrantVectorStoreErrors:
         """Test count raises VectorStoreConnectionError on generic error."""
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
-        mock_client.get_collection.side_effect = RuntimeError("Count failed")
+        mock_client.get_collection.side_effect = TimeoutError("Count failed")  # a transport failure
         mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
 
         store = QdrantVectorStore()

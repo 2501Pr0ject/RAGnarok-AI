@@ -341,10 +341,39 @@ class TestWeaviateVectorStoreIsAvailable:
         """Test availability when connection fails."""
         store = WeaviateVectorStore()
 
-        with patch.object(store, "_ensure_client", side_effect=Exception("Connection failed")):
-            result = await store.is_available()
+        with patch.object(store, "_ensure_client", side_effect=VectorStoreConnectionError("Connection failed")):
+            assert await store.is_available() is False
+        with patch.object(store, "_ensure_client", side_effect=ConnectionRefusedError("Connection refused")):
+            assert await store.is_available() is False
 
-        assert result is False
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("error", [TypeError("missing 3 required positional arguments"), RuntimeError("bug")])
+    async def test_is_available_does_not_hide_a_programming_error(self, error: Exception) -> None:
+        """What hid #191: a TypeError of the adapter's own call made is_available() answer False."""
+        store = WeaviateVectorStore()
+        with patch.object(store, "_ensure_client", side_effect=error), pytest.raises(type(error)):
+            await store.is_available()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("method", ["search", "add", "delete", "count"])
+    async def test_errors_of_a_call_are_sorted(self, method: str) -> None:
+        store = WeaviateVectorStore()
+        doc = Document(id="doc1", content="x", metadata={"embedding": [0.1, 0.2]})
+        calls = {
+            "search": lambda: store.search([0.1, 0.2], k=1),
+            "add": lambda: store.add([doc]),
+            "delete": lambda: store.delete(["doc1"]),
+            "count": lambda: store.count(),
+        }
+        # an unreachable instance: a connection failure
+        with (
+            patch.object(store, "_ensure_client", side_effect=ConnectionResetError("reset by peer")),
+            pytest.raises(VectorStoreConnectionError, match="reset by peer"),
+        ):
+            await calls[method]()
+        # a mistake in the call: not a connection failure
+        with patch.object(store, "_ensure_client", side_effect=TypeError("missing argument")), pytest.raises(TypeError):
+            await calls[method]()
 
 
 # ============================================================================

@@ -106,6 +106,16 @@ class VectorStoreConnectionError(RagnarokError):
     """
 
 
+class VectorStoreDependencyError(ConfigurationError, ImportError):
+    """Raised by a vector store adapter when its client package is not installed.
+
+    The message carries the install command. An ``ImportError``: the
+    package is missing, the store was never contacted. ``QdrantVectorStore``
+    and ``WeaviateVectorStore`` raised a ``VectorStoreConnectionError`` for
+    this case up to 1.13.x.
+    """
+
+
 class CheckpointFormatError(RagnarokError):
     """Raised when a checkpoint cannot be resumed because of its format.
 
