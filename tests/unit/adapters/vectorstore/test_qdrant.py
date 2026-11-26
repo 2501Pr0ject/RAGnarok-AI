@@ -274,6 +274,30 @@ class TestQdrantVectorStoreCount:
 
         assert count == 42
         mock_client.get_collection.assert_called_once_with("ragnarok_documents")
+        mock_client.count.assert_not_called()  # the count of the collection info is enough
+
+    @pytest.mark.asyncio
+    async def test_count_without_a_count_in_the_collection_info_asks_for_it(self) -> None:
+        """points_count is optional in the API of Qdrant: None was a TypeError on int(None)."""
+        mock_client = AsyncMock()
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
+        mock_client.get_collection.return_value = MagicMock(points_count=None)
+        mock_client.count.return_value = MagicMock(count=7)
+        mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
+
+        assert await QdrantVectorStore().count() == 7
+        mock_client.count.assert_called_once_with(collection_name="ragnarok_documents", exact=True)
+
+    @pytest.mark.asyncio
+    async def test_count_of_an_empty_collection_is_zero_without_a_second_call(self) -> None:
+        """0 is a count, not a missing one."""
+        mock_client = AsyncMock()
+        mock_client.get_collections.return_value = _make_collections_response(["ragnarok_documents"])
+        mock_client.get_collection.return_value = MagicMock(points_count=0)
+        mock_qdrant_client.AsyncQdrantClient.return_value = mock_client
+
+        assert await QdrantVectorStore().count() == 0
+        mock_client.count.assert_not_called()
 
 
 class TestQdrantVectorStoreIsAvailable:

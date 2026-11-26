@@ -318,7 +318,12 @@ class QdrantVectorStore:
             client = await self._ensure_client()
 
             collection_info = await client.get_collection(self.collection_name)
-            return int(collection_info.points_count)
+            if collection_info.points_count is not None:
+                return int(collection_info.points_count)
+            # The collection info carries no count: the field is optional in the API of Qdrant.
+            # Ask for the count itself instead of failing on int(None)
+            counted = await client.count(collection_name=self.collection_name, exact=True)
+            return int(counted.count)
 
         except Exception as e:
             if not _connection_failure(e):
