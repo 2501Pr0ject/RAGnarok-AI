@@ -24,6 +24,7 @@ from ragnarok_ai.benchmarks.judges import (
     quota_sample,
     read_attempts,
     records_sha256,
+    reweighted_brier,
     run_benchmark,
     stratified_sample,
     three_class_metrics,
@@ -157,6 +158,18 @@ class TestSampling:
         assert adjusted["precision_not_supported_reweighted"] < raw_precision
         single = prevalence_adjusted([True] * 5, [True] * 5, 0.06)
         assert single["recall_not_supported"] is None and single["precision_not_supported_reweighted"] is None
+
+    def test_reweighted_brier_on_a_hand_computed_table(self):
+        # supported: errors 0.01, 0.09 (mean 0.05); not supported: errors 0.04, 0.36, 0.64 (mean 1.04 / 3)
+        probabilities = [0.9, 0.7, 0.2, 0.6, 0.8]
+        human = [True, True, False, False, False]
+        raw = calibration_metrics(probabilities, human)["brier"]
+        assert raw == pytest.approx((0.01 + 0.09 + 0.04 + 0.36 + 0.64) / 5)
+        assert reweighted_brier(probabilities, human, 0.06) == pytest.approx(0.06 * 1.04 / 3 + 0.94 * 0.05)
+        # at the sample's own prevalence the reweighting gives the raw Brier back
+        assert reweighted_brier(probabilities, human, 3 / 5) == pytest.approx(raw)
+        assert reweighted_brier([0.9, 0.8], [True, True], 0.06) is None  # a class is absent
+        assert reweighted_brier([], [], 0.06) is None
 
     def test_sample_larger_than_set_returns_everything(self):
         records = load_records_from_rows(study_like_rows()[:5])
@@ -589,7 +602,7 @@ class TestRun:
         assert "failures by kind: {'backend': 1}" in run.report_md.read_text()
 
     @pytest.mark.asyncio
-    async def test_per_class_run_flags_calibration(self, tmp_path: Path):
+    async def test_per_class_run_flags_calibration_and_reweights_brier(self, tmp_path: Path):
         rows = (
             [sentence_row(i, "SUPPORTED", "ok p=0.9") for i in range(20)]
             + [sentence_row(100 + i, "UNSUPPORTED", "bad p=0.2") for i in range(2)]
@@ -602,22 +615,30 @@ class TestRun:
         calibration = quota.report["calibration"]
         assert calibration["sample_dependent"] is True
         assert calibration["brier"] == pytest.approx((2 * 0.01 + 2 * 0.04 + 2 * 0.36) / 6)  # the sample: 2 per label
+        pi = 4 / 24
+        assert quota.report["prevalence_adjusted"]["brier_reweighted"] == pytest.approx(pi * 0.20 + (1 - pi) * 0.01)
         assert json.loads(quota.report_json.read_text())["calibration"]["sample_dependent"] is True
         md = quota.report_md.read_text()
         assert "Calibration (sample-dependent, follows the class quotas): Brier 0.1367, ECE (10 bins)" in md
+        assert "| Brier, reweighted by full-set prevalence | 0.0417 |" in md
+        assert "ECE is not reweighted" in md
 
         plain = await run_benchmark(
             ScriptedProbabilityJudge(), records, out_dir=tmp_path / "plain", bootstrap_resamples=0
         )
         assert plain.report["calibration"]["sample_dependent"] is False
+        # on the full set the raw Brier is the reweighted one of the quota run: same scores, same class mix
+        assert plain.report["calibration"]["brier"] == pytest.approx(
+            quota.report["prevalence_adjusted"]["brier_reweighted"]
+        )
         plain_md = plain.report_md.read_text()
         assert "Calibration: Brier" in plain_md and "sample-dependent" not in plain_md
 
-        # a judge without probabilities has no calibration block to flag
+        # a judge without probabilities has no calibration block, and nothing to reweight
         ordinal = await run_benchmark(
             ScriptedOrdinalJudge(), records, out_dir=tmp_path / "ordinal", per_class=2, seed=1, bootstrap_resamples=0
         )
-        assert "calibration" not in ordinal.report
+        assert "calibration" not in ordinal.report and "brier_reweighted" not in ordinal.report["prevalence_adjusted"]
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):

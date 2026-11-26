@@ -278,6 +278,27 @@ def prevalence_adjusted(
     }
 
 
+def reweighted_brier(
+    probabilities: Sequence[float], human_pass: Sequence[bool], full_not_supported_prevalence: float
+) -> float | None:
+    """Brier score at the full set's class mix, from a sample whose mix was set by quotas.
+
+    Brier is a mean of per-record squared errors, so it splits exactly by
+    human class: ``pi * Brier_not_supported + (1 - pi) * Brier_supported``
+    with ``pi`` the prevalence of the not-supported class in the full set.
+    ``None`` when a class is absent from the sample. ECE has no such
+    split (bin membership would have to be reweighted record by record)
+    and is not reweighted.
+    """
+    errors: dict[bool, list[float]] = {True: [], False: []}
+    for p, h in zip(probabilities, human_pass, strict=True):
+        errors[h].append((p - (1.0 if h else 0.0)) ** 2)
+    if not errors[True] or not errors[False]:
+        return None
+    pi = full_not_supported_prevalence
+    return pi * statistics.fmean(errors[False]) + (1 - pi) * statistics.fmean(errors[True])
+
+
 # =============================================================================
 # Attempts on disk
 # =============================================================================
@@ -758,8 +779,8 @@ async def run_benchmark(
             quotas), drawn with *seed*; exclusive with *sample*. The raw
             metrics, Brier and ECE included, are then flagged as
             sample-dependent and the report adds per-class recall,
-            specificity and precision reweighted by the full set's
-            prevalence.
+            specificity, and precision, accuracy and Brier reweighted by
+            the full set's prevalence.
         stratify: ``label`` (default), a metadata field, or ``None`` for a plain draw.
         seed: Seed of the sample and of the bootstrap.
         by: Metadata fields for per-value breakdowns (e.g. ``task``, ``generator``).
@@ -954,6 +975,10 @@ async def run_benchmark(
             **calibration_metrics(calibrated, human_pass),
             "sample_dependent": per_class is not None,
         }
+        if report["prevalence_adjusted"] is not None:
+            report["prevalence_adjusted"]["brier_reweighted"] = reweighted_brier(
+                calibrated, human_pass, report["prevalence_adjusted"]["full_set_not_supported_prevalence"]
+            )
 
     for field_name in by:
         values: dict[str, dict[str, float | None]] = {}
@@ -1066,6 +1091,11 @@ def render_report(report: dict[str, Any]) -> str:
             f"| Precision (not supported), reweighted by full-set prevalence | {pct(adjusted['precision_not_supported_reweighted'])} |",
             f"| Accuracy, reweighted by full-set prevalence | {pct(adjusted['accuracy_reweighted'])} |",
         ]
+        if adjusted.get("brier_reweighted") is not None:
+            lines.append(
+                f"| Brier, reweighted by full-set prevalence | {adjusted['brier_reweighted']:.4f} |",
+            )
+            lines += ["", "ECE is not reweighted: it stays a figure of the sample."]
     lines += ["", "## Failures and cost", ""]
     lines.append(f"- failures by kind: {report['failures'] or 'none'}")
     lines.append(f"- probable truncations: {report['truncations']}")
@@ -1132,6 +1162,7 @@ __all__ = [
     "read_attempts",
     "records_sha256",
     "render_report",
+    "reweighted_brier",
     "run_benchmark",
     "stratified_sample",
     "three_class_metrics",

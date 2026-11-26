@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`judge-bench --per-class`: Brier reweighted by the full set's
+  prevalence**. `prevalence_adjusted` gains `brier_reweighted`, the Brier
+  score at the full set's class mix: Brier splits exactly by human class, so
+  it is `pi * Brier_not_supported + (1 - pi) * Brier_supported` with `pi`
+  the full-set prevalence of the not-supported class (`null` when a class
+  is absent from the sample, absent for a judge without probabilities).
+  `report.md` prints it in the prevalence-adjusted table.
+  `reweighted_brier()` is exported by `ragnarok_ai.benchmarks.judges`. ECE
+  is not reweighted (bin membership would have to be reweighted record by
+  record) and stays flagged as sample-dependent.
+
 ## [1.13.1] - 2026-11-26
 
 ### Fixed
