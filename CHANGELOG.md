@@ -5,6 +5,8 @@ All notable changes to RAGnarok-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ## [1.13.1] - 2026-11-26
 
 ### Fixed
@@ -18,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   records a failure of kind `backend`, the run goes on and the report counts
   it under "failures by kind". The message names the device and the input's
   length in tokens, never its text. Any other `RuntimeError` still
-  propagates. Scores are unchanged
+  propagates. Scores are unchanged.
 - **`judge-bench --per-class`: Brier and ECE are flagged as
   sample-dependent** (#168). They were computed on the quota sample and
   printed with no qualifier, as if they described the set. `report.json`
@@ -26,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   otherwise) and `report.md` reads "Calibration (sample-dependent, follows
   the class quotas): Brier ..., ECE ...". The Brier and ECE values
   themselves are unchanged; the `prevalence_adjusted` block still covers
-  recall, specificity, precision and accuracy only
+  recall, specificity, precision and accuracy only.
 
 ## [1.13.0] - 2026-11-07
 
