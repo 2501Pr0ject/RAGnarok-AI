@@ -222,6 +222,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interface.
 
 ### Fixed
+- **`WeaviateVectorStore` reads the host and the port of its URL
+  correctly** (#201). The URL was cut up as a string, with three defects
+  for a self-hosted instance: an `https` URL without a port got port 8080
+  (TLS on Weaviate's plain HTTP port) instead of 443; a port followed by a
+  path was dropped (`https://host:8443/v1` gave 8080); and without a port
+  the path stayed in the host (`host/v1`). The URL is now parsed with
+  `urllib.parse.urlsplit`. A port written in the URL is always used;
+  without one it is 443 for `https` and 8080 for `http`, as before for
+  `http`. **A URL with a path, a query or a fragment is refused with a
+  `ValueError` when the store is created**, naming the usable form: the
+  client connects to a host and a port and has no base path, so the path
+  was never honored. What to do: an `https` URL that relied on port 8080
+  without writing it must write it (`https://host:8080`); a URL with a
+  path must drop it. `http` URLs, URLs with an explicit port and no path,
+  and Weaviate Cloud URLs (passed to the client as they are) are
+  unchanged.
 - **`JudgeCalibrator` no longer crashes when every sample has the same
   `group_id`** (#202). With a single group there is a single resampling
   unit: the only cross-validation fold held every sample, its training part
