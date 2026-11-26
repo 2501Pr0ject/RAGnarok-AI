@@ -1,10 +1,12 @@
 name: Security
 
+# Release branches too, as in ci.yml: a patch release prepared on release/X.Y.Z gets the dependency audit,
+# the secrets scan and the other jobs of this workflow before it is tagged.
 on:
   push:
-    branches: [main]
+    branches: [main, "release/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "release/**"]
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
 
