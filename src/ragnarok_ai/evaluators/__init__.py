@@ -12,6 +12,7 @@ from ragnarok_ai.evaluators.faithfulness import (
     FaithfulnessResult,
 )
 from ragnarok_ai.evaluators.hallucination import (
+    ClaimCheck,
     Hallucination,
     HallucinationDetector,
     HallucinationResult,
@@ -35,8 +36,10 @@ from ragnarok_ai.evaluators.retrieval import (
 )
 
 __all__ = [
-    # Faithfulness
+    # Claims of the two claim-level evaluators (hallucination, then faithfulness)
+    "ClaimCheck",
     "ClaimVerification",
+    # Faithfulness
     "FaithfulnessEvaluator",
     "FaithfulnessResult",
     # Hallucination

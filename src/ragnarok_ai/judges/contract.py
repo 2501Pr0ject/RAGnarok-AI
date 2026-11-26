@@ -354,7 +354,9 @@ class UnitJudgment:
 
     Attributes:
         text: The unit's text.
-        span: ``(start, end)`` offsets of the unit in the answer.
+        span: ``(start, end)`` offsets of the unit in the answer, or ``None``
+            when the unit has none: a claim is a rewording produced by the
+            model, not a slice of the answer. Sentences always carry one.
         output: The judge's native output for this unit, if judged.
         score: The unit's score in ``[0, 1]``, if judged.
         verdict: The unit's verdict, if judged.
@@ -364,7 +366,7 @@ class UnitJudgment:
     """
 
     text: str
-    span: tuple[int, int]
+    span: tuple[int, int] | None
     output: JudgeOutput | None = None
     score: float | None = None
     verdict: Verdict | None = None
@@ -372,10 +374,11 @@ class UnitJudgment:
     skipped: str | None = None
 
     def __post_init__(self) -> None:
-        start, end = self.span
-        if start < 0 or end < start:
-            msg = f"UnitJudgment span must satisfy 0 <= start <= end, got {self.span}"
-            raise ValueError(msg)
+        if self.span is not None:
+            start, end = self.span
+            if start < 0 or end < start:
+                msg = f"UnitJudgment span must satisfy 0 <= start <= end, got {self.span}"
+                raise ValueError(msg)
         if self.skipped is None and self.score is None:
             msg = "UnitJudgment needs a score unless it is skipped (set `skipped` to the reason)"
             raise ValueError(msg)

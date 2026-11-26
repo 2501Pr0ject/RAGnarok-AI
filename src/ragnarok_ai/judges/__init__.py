@@ -8,6 +8,7 @@ See :mod:`ragnarok_ai.judges.contract`. The existing judge types
 from __future__ import annotations
 
 from ragnarok_ai.judges.aggregation import aggregate_units, verdict_from_score, worst_verdict
+from ragnarok_ai.judges.claim_level import CLAIM_AGGREGATION, CLAIM_VERDICT_POLICY, ClaimLevelJudge
 from ragnarok_ai.judges.contract import (
     FAILURE_KINDS,
     JUDGE_KINDS,
@@ -44,6 +45,8 @@ from ragnarok_ai.judges.runner import JudgeSample, judge_many, sample_identifier
 from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
 
 __all__ = [
+    "CLAIM_AGGREGATION",
+    "CLAIM_VERDICT_POLICY",
     "DEFAULT_AGGREGATION",
     "FAILURE_KINDS",
     "JUDGE_KINDS",
@@ -54,6 +57,7 @@ __all__ = [
     "AggregationPolicy",
     "BinaryProbability",
     "CallTrace",
+    "ClaimLevelJudge",
     "ClassProbabilities",
     "FailureKind",
     "HHEMJudge",

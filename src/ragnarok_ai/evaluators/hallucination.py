@@ -16,6 +16,9 @@ from ragnarok_ai.core.exceptions import EvaluationError
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
+    from ragnarok_ai.evaluators.judge import JudgeResult
+    from ragnarok_ai.judges.claim_level import ClaimLevelJudge
+    from ragnarok_ai.judges.contract import JudgeConfig
 
 
 class Hallucination(BaseModel):
@@ -32,6 +35,22 @@ class Hallucination(BaseModel):
     reason: str = Field(..., description="Why this is a hallucination")
 
 
+class ClaimCheck(BaseModel):
+    """One claim of the response and what the detector said of it.
+
+    Attributes:
+        claim: The claim extracted from the response.
+        hallucinated: Whether the detector considers it a hallucination.
+        reason: The detector's explanation.
+    """
+
+    model_config = {"frozen": True}
+
+    claim: str = Field(..., description="The extracted claim")
+    hallucinated: bool = Field(..., description="Whether the claim is a hallucination")
+    reason: str = Field(..., description="Explanation for the decision")
+
+
 class HallucinationResult(BaseModel):
     """Detailed result of hallucination detection.
 
@@ -40,6 +59,8 @@ class HallucinationResult(BaseModel):
         hallucinations: List of detected hallucinations with explanations.
         total_claims: Total number of claims extracted from the response.
         reasoning: Overall reasoning for the score.
+        claims: Every extracted claim with its status, hallucinated or not, in
+            the order of extraction. ``hallucinations`` is the subset flagged.
     """
 
     model_config = {"frozen": True}
@@ -48,6 +69,36 @@ class HallucinationResult(BaseModel):
     hallucinations: list[Hallucination] = Field(default_factory=list, description="Detected hallucinations")
     total_claims: int = Field(default=0, ge=0, description="Total claims in response")
     reasoning: str = Field(..., description="Overall reasoning")
+    claims: list[ClaimCheck] = Field(default_factory=list, description="Every claim with its status")
+
+    def to_judge_result(self, config: JudgeConfig | None = None) -> JudgeResult:
+        """This result under the judge contract: one unit per claim, criterion ``hallucination_free``.
+
+        **The score is inverted.** ``self.score`` is the share of
+        hallucinated claims (0 is good, 1 is bad); a judge result reads
+        "higher is better", so its score is the share of claims that are
+        *not* hallucinated, ``1 - self.score``, and the criterion is named
+        ``hallucination_free``. A claim that is not hallucinated is a unit
+        with verdict PASS, a hallucinated one FAIL; the verdict of the
+        answer is PASS only when no claim is hallucinated.
+
+        Args:
+            config: The detector's configuration (``HallucinationDetector.config()``).
+
+        Raises:
+            NoUnitsError: If the result holds no claim (empty response, nothing
+                extracted, or the empty-context shortcut of ``evaluate_detailed``;
+                ``as_judge()`` handles an empty context by extracting the claims
+                and failing them all).
+        """
+        from ragnarok_ai.judges.claim_level import claims_to_judge_result
+
+        return claims_to_judge_result(
+            HallucinationDetector.JUDGE_CRITERION,
+            [(claim.claim, not claim.hallucinated, claim.reason) for claim in self.claims],
+            config=config,
+            nothing_to_judge=f"No claim to judge: {self.reasoning}",
+        )
 
 
 # Prompt for extracting claims from the response
@@ -109,6 +160,10 @@ class HallucinationDetector:
         ...     )
         ...     print(f"Hallucination rate: {score:.2f}")
     """
+
+    # The criterion of this detector under the judge contract. Not "hallucination": a judge's score reads
+    # "higher is better", and this one is the share of claims that are not hallucinated
+    JUDGE_CRITERION = "hallucination_free"
 
     def __init__(self, llm: LLMProtocol) -> None:
         """Initialize HallucinationDetector.
@@ -187,11 +242,10 @@ class HallucinationDetector:
             )
 
         # Check each claim for hallucination
-        hallucinations: list[Hallucination] = []
+        checks: list[ClaimCheck] = []
         for claim in claims:
-            result = await self._check_hallucination(claim, context)
-            if result is not None:
-                hallucinations.append(result)
+            checks.append(await self._check_claim(claim, context))
+        hallucinations = [Hallucination(claim=c.claim, reason=c.reason) for c in checks if c.hallucinated]
 
         # Calculate score
         score = len(hallucinations) / len(claims)
@@ -209,7 +263,81 @@ class HallucinationDetector:
             hallucinations=hallucinations,
             total_claims=len(claims),
             reasoning=reasoning,
+            claims=checks,
         )
+
+    # ------------------------------------------------------------------
+    # Under the judge contract
+    # ------------------------------------------------------------------
+
+    def config(self, criterion: str | None = None, *, model: str | None = None) -> JudgeConfig:
+        """The run-level configuration of this detector used as a judge.
+
+        Args:
+            criterion: ``hallucination_free``, the only criterion; optional.
+            model: The model's name, required when the LLM does not expose one.
+
+        Raises:
+            ValueError: If *criterion* is not ``hallucination_free``.
+            ConfigurationError: If the model's name is neither given nor readable.
+        """
+        from ragnarok_ai.judges.claim_level import claim_judge_config, model_name
+
+        if criterion not in (None, self.JUDGE_CRITERION):
+            msg = f"Unknown criterion {criterion!r}; expected {self.JUDGE_CRITERION!r}"
+            raise ValueError(msg)
+        return claim_judge_config(
+            self,
+            self.llm,
+            self.JUDGE_CRITERION,
+            model=model_name(self.llm, model),
+            extraction_template=CLAIM_EXTRACTION_PROMPT,
+            check_template=HALLUCINATION_DETECTION_PROMPT,
+            judge_specific=(("score", "share of claims not hallucinated (1 - HallucinationResult.score)"),),
+        )
+
+    def as_judge(self, model: str | None = None) -> ClaimLevelJudge:
+        """This detector as a ``JudgeProtocol`` judge, with the criterion ``hallucination_free``.
+
+        Its score is the share of claims that are not hallucinated: the
+        complement of ``HallucinationResult.score``.
+
+        Args:
+            model: The model's name, required when the LLM does not expose
+                one (``llm.model``): it is part of the configuration.
+
+        Raises:
+            ConfigurationError: If the model's name is neither given nor readable.
+        """
+        from ragnarok_ai.judges.claim_level import ClaimLevelJudge
+
+        return ClaimLevelJudge(self, model=model)
+
+    async def _judge_result(self, *, context: str, answer: str, config: JudgeConfig | None = None) -> JudgeResult:
+        """One judgment under the contract: ``evaluate_detailed``, except for an empty context.
+
+        With an empty context ``evaluate_detailed`` returns 1.0 without
+        extracting anything. Here the claims are extracted and all marked
+        hallucinated, without a detection call: nothing supports them.
+
+        Raises:
+            NoUnitsError: If the answer holds no claim.
+            EvaluationError: If a call to the model fails or its output cannot be read.
+        """
+        if context.strip():
+            return (await self.evaluate_detailed(answer, context)).to_judge_result(config)
+        claims = await self._extract_claims(answer) if answer.strip() else []
+        reason = "No context provided: nothing supports the claim."
+        result = HallucinationResult(
+            score=1.0 if claims else 0.0,
+            hallucinations=[Hallucination(claim=claim, reason=reason) for claim in claims],
+            total_claims=len(claims),
+            reasoning="No context provided - all claims are potentially hallucinations."
+            if claims
+            else "No verifiable claims found in the response.",
+            claims=[ClaimCheck(claim=claim, hallucinated=True, reason=reason) for claim in claims],
+        )
+        return result.to_judge_result(config)
 
     async def _extract_claims(self, response: str) -> list[str]:
         """Extract factual claims from a response.
@@ -233,6 +361,25 @@ class HallucinationDetector:
             msg = f"Failed to extract claims: {e}"
             raise EvaluationError(msg) from e
 
+    async def _check_claim(self, claim: str, context: str) -> ClaimCheck:
+        """The detector's verdict on one claim, hallucinated or not, with its reason.
+
+        Raises:
+            EvaluationError: If verification fails.
+        """
+        prompt = HALLUCINATION_DETECTION_PROMPT.format(claim=claim, context=context)
+
+        try:
+            llm_response = await self.llm.generate(prompt)
+            result = self._parse_json_object(llm_response)
+
+            is_hallucination = bool(result.get("is_hallucination", False))
+            reason = str(result.get("reason", "No reason provided."))
+            return ClaimCheck(claim=claim, hallucinated=is_hallucination, reason=reason)
+        except Exception as e:
+            msg = f"Failed to check hallucination for claim '{claim}': {e}"
+            raise EvaluationError(msg) from e
+
     async def _check_hallucination(self, claim: str, context: str) -> Hallucination | None:
         """Check if a claim is a hallucination.
 
@@ -246,21 +393,8 @@ class HallucinationDetector:
         Raises:
             EvaluationError: If verification fails.
         """
-        prompt = HALLUCINATION_DETECTION_PROMPT.format(claim=claim, context=context)
-
-        try:
-            llm_response = await self.llm.generate(prompt)
-            result = self._parse_json_object(llm_response)
-
-            is_hallucination = bool(result.get("is_hallucination", False))
-            reason = str(result.get("reason", "No reason provided."))
-
-            if is_hallucination:
-                return Hallucination(claim=claim, reason=reason)
-            return None
-        except Exception as e:
-            msg = f"Failed to check hallucination for claim '{claim}': {e}"
-            raise EvaluationError(msg) from e
+        check = await self._check_claim(claim, context)
+        return Hallucination(claim=check.claim, reason=check.reason) if check.hallucinated else None
 
     def _parse_json_array(self, text: str) -> list[str]:
         """Parse a JSON array from LLM response.

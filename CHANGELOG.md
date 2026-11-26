@@ -8,6 +8,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`FaithfulnessEvaluator` and `HallucinationDetector` under the judge
+  contract** (#164). They returned claim-level results of their own and
+  could not run through `judge_many`, `judge-bench` or `JudgeCalibrator`.
+  - `FaithfulnessResult.to_judge_result()` and
+    `HallucinationResult.to_judge_result()` return a `JudgeResult`: one
+    `UnitJudgment` per claim (PASS when the claim holds, FAIL otherwise),
+    the score is the share of claims that hold, the verdict is PASS only
+    when all of them do (`fraction_pass` and `worst`, computed by
+    `aggregate_units`), `raw_score` and `output` are `None`.
+  - `evaluator.as_judge(model=None)` returns a `JudgeProtocol` judge
+    (`ClaimLevelJudge`) with one criterion, and `evaluator.config()` its
+    `JudgeConfig`: `unit="claim"`, the hash of the two prompt templates,
+    an identifier of the claim extraction as the segmenter, the medical
+    normalizer among the input transforms, the LLM's options (the
+    temperature among them when it is exposed).
+  - **The criterion of the detector is `hallucination_free`, and its score
+    is inverted**: `HallucinationResult.score` is the share of hallucinated
+    claims (0 is good), the judge's score is the share of claims that are
+    not hallucinated (1 is good), like every other judge.
+  - An answer without any claim (empty answer, nothing extracted) is a
+    `NoUnitsError`, the `no_units` failure of a run, not a score. An empty
+    context is not such a case in the judge path: the claims are extracted
+    and all fail, without a verification call.
+  - The model's name is required: `as_judge(model="...")` when the LLM does
+    not expose one, otherwise a `ConfigurationError`. Two runs with
+    different unnamed models would share one configuration.
+  - `HallucinationResult` gains `claims`, every extracted claim with its
+    status (`ClaimCheck`: `claim`, `hallucinated`, `reason`); it kept only
+    the hallucinated ones. `model_dump()` has one more key.
+  - `JudgeCalibrator.calibrate` accepts the criteria of a `JudgeProtocol`
+    judge (`judge.criteria`) instead of a fixed list of four, so
+    `hallucination_free` can be calibrated; a criterion the judge does not
+    have is refused before any call.
+  - `evaluate()` and `evaluate_detailed()` are unchanged, as are the
+    prompts and the claim extraction. Limits: the number of claims is
+    decided by the model at each run, so runs are compared on answers, not
+    on claims; the model's digest and token counts are not known through
+    `LLMProtocol`, and the trace carries the latency only.
 - **`judge-bench --per-class`: bootstrap intervals for the
   prevalence-adjusted figures, and the reweighted F1** (#184). These are
   the figures to read on a quota run and they were the only ones without an
@@ -66,6 +104,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   record) and stays flagged as sample-dependent.
 
 ### Changed
+- **`UnitJudgment.span` is typed `tuple[int, int] | None`** (#164). A
+  sentence still carries its offsets in the answer; a claim is a rewording
+  produced by the model and has none, so the units of the claim-level
+  judges carry `None`. `span` stays a required argument of `UnitJudgment`.
+  What to do: nothing for sentence-level results (`SentenceLevel`,
+  `HHEMJudge`, `MiniCheckJudge`); code that reads `unit.span` on results of
+  any judge must accept `None`. In `JudgeResult.to_dict(detailed=True)` the
+  `span` of such a unit is `null`.
 - **`report.md` of `judge-bench --per-class`: the prevalence-adjusted table
   has three columns**, "Metric", "Value" and "95% CI", whatever the
   options; the last one reads "n/a" without an interval (for instance with

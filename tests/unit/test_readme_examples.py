@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -63,6 +64,13 @@ class FakeOllamaLLM:
     async def generate(self, prompt: str) -> str:
         if prompt.startswith(PROMETHEUS_ABS_SYSTEM_PROMPT):
             return "The answer is grounded in the context. [RESULT] 5"
+        # The claim-level evaluators ask for JSON: two claims, the first one holding
+        if prompt.startswith("Extract all factual claims"):
+            return '["Python was created by Guido van Rossum.", "It was first released in 1989."]'
+        if prompt.startswith("Verify if the following claim is supported"):
+            return json.dumps({"supported": "Guido" in prompt.split("Context:")[0], "reasoning": "checked"})
+        if prompt.startswith("Analyze if the following claim is a hallucination"):
+            return json.dumps({"is_hallucination": "Guido" not in prompt.split("Context:")[0], "reason": "checked"})
         return "Score: 5\nVerdict: PASS\nExplanation: The answer is grounded in the context."
 
     async def embed(self, text: str) -> list[float]:  # noqa: ARG002

@@ -86,7 +86,8 @@ def aggregate_units(
         raise NoUnitsError(msg)
     for u in judged:
         if u.score is None or u.verdict is None:
-            msg = f"Judged unit {u.span} has no score or no verdict"
+            where = u.span if u.span is not None else repr(u.text[:40])  # a claim has no span
+            msg = f"Judged unit {where} has no score or no verdict"
             raise ValueError(msg)
     scores = [u.score for u in judged if u.score is not None]
     verdicts: list[Verdict] = [u.verdict for u in judged if u.verdict is not None]
