@@ -47,12 +47,14 @@ from ragnarok_ai.judges.contract import (
 from ragnarok_ai.judges.runner import judge_many
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Iterable, Sequence
+    from collections.abc import Awaitable, Callable, Iterable, Mapping, Sequence
 
     from ragnarok_ai.core.protocols import JudgeProtocol
 
 SENTENCE_LABELS = ("SUPPORTED", "CONTRADICTED", "UNSUPPORTED")
 ANSWER_LABELS = ("PASS", "FAIL")
+# The labels read as a human PASS; every other label is the not-supported class
+PASS_LABELS = ("SUPPORTED", "PASS")
 # The class of interest: a sentence the context does not support
 NEGATIVE_CLASS = "not supported"
 DEFAULT_BOOTSTRAP_RESAMPLES = 1000
@@ -164,7 +166,7 @@ def parse_record(raw: dict[str, Any], line_number: int) -> BenchRecord:
         context=str(raw.get("context") or ""),
         answer=answer,
         label=label,
-        human_pass=label in ("SUPPORTED", "PASS"),
+        human_pass=label in PASS_LABELS,
         level=level,
         has_prev_sentence=raw.get("prev_sentence") not in (None, ""),
         metadata={k: v for k, v in raw.items() if k not in _CORE_KEYS},
@@ -247,21 +249,85 @@ def quota_sample(records: Sequence[BenchRecord], per_class: int, seed: int) -> l
 
 
 def prevalence_adjusted(
-    judge_pass: Sequence[bool], human_pass: Sequence[bool], full_not_supported_prevalence: float
+    judge_pass: Sequence[bool],
+    human_pass: Sequence[bool],
+    full_not_supported_prevalence: float,
+    *,
+    labels: Sequence[str] | None = None,
+    full_label_counts: Mapping[str, int] | None = None,
 ) -> dict[str, Any]:
-    """Figures that do not depend on the sample's class mix, given the full set's prevalence.
+    """Figures that do not depend on the sample's class mix, given the full set's composition.
 
-    Recall of the not-supported class and specificity (supported sentences
-    recognized) are per-class rates, so a class quota leaves them
-    unchanged. Precision and accuracy are reweighted by the prevalence of
-    the not-supported class in the full set (``pi``): precision =
-    ``pi r / (pi r + (1 - pi)(1 - s))``, accuracy = ``pi r + (1 - pi) s``.
+    Precision and accuracy are reweighted by the prevalence of the
+    not-supported class in the full set (``pi``), from the recall ``r`` of
+    that class and the specificity ``s`` (supported records recognized):
+    precision = ``pi r / (pi r + (1 - pi)(1 - s))``, accuracy =
+    ``pi r + (1 - pi) s``.
+
+    ``r`` and ``s`` must themselves be free of the quota. A class quota is
+    drawn per human label, so a rate is quota-free only within one label.
+    With *labels* (the human label of each scored record) and
+    *full_label_counts* (records per label in the full set), each label's
+    rate is computed on its own and the rates are combined with the full
+    set's label shares (``strata`` is ``"label"``): ``r`` is the sum over
+    the not-supported labels of ``N_label / N_not_supported * r_label``.
+    On a sentence-level set the not-supported class holds two labels,
+    CONTRADICTED and UNSUPPORTED, whose shares the quota changes; pooling
+    them in the sample, as versions up to 1.13.1 did, gives a recall that
+    follows the quota's mix.
+
+    Without them the two classes are the strata (``strata`` is
+    ``"class"``): exact when the quota is drawn on those two classes, as on
+    an answer-level set (PASS / FAIL).
+
+    A label present in the full set with no scored record in the sample is
+    listed in ``missing_labels``; the rate of its class, and the figures
+    derived from it, are then ``None`` rather than renormalized over the
+    labels that are there.
     """
-    negatives = [j for j, h in zip(judge_pass, human_pass, strict=True) if not h]
-    positives = [j for j, h in zip(judge_pass, human_pass, strict=True) if h]
-    recall = (sum(1 for j in negatives if not j) / len(negatives)) if negatives else None
-    specificity = (sum(1 for j in positives if j) / len(positives)) if positives else None
     pi = full_not_supported_prevalence
+    by_label: dict[str, dict[str, Any]] | None = None
+    missing: list[str] = []
+    recall: float | None
+    specificity: float | None
+    if labels is None or full_label_counts is None:
+        negatives = [j for j, h in zip(judge_pass, human_pass, strict=True) if not h]
+        positives = [j for j, h in zip(judge_pass, human_pass, strict=True) if h]
+        recall = (sum(1 for j in negatives if not j) / len(negatives)) if negatives else None
+        specificity = (sum(1 for j in positives if j) / len(positives)) if positives else None
+    else:
+        scored: dict[str, list[bool]] = {}
+        for label, j in zip(labels, judge_pass, strict=True):
+            scored.setdefault(label, []).append(j)
+        total = sum(full_label_counts.values())
+        by_label = {}
+        # Per class (True: supported): the full-set count and the weighted sum of the rates of its labels
+        full_class = {True: 0, False: 0}
+        weighted = {True: 0.0, False: 0.0}
+        incomplete = {True: False, False: False}
+        for label in sorted(full_label_counts):
+            count = full_label_counts[label]
+            if count <= 0:
+                continue
+            supported = label in PASS_LABELS
+            verdicts = scored.get(label, [])
+            # The share of the label the judge reads as the humans do: passed if supported, rejected if not
+            rate = (sum(1 for j in verdicts if j == supported) / len(verdicts)) if verdicts else None
+            by_label[label] = {
+                "human_class": "supported" if supported else NEGATIVE_CLASS,
+                "full_set_count": count,
+                "full_set_share": count / total,
+                "n": len(verdicts),
+                "rate": rate,
+            }
+            full_class[supported] += count
+            if rate is None:
+                missing.append(label)
+                incomplete[supported] = True
+            else:
+                weighted[supported] += count * rate
+        recall = (weighted[False] / full_class[False]) if full_class[False] and not incomplete[False] else None
+        specificity = (weighted[True] / full_class[True]) if full_class[True] and not incomplete[True] else None
     precision: float | None = None
     accuracy: float | None = None
     if recall is not None and specificity is not None:
@@ -270,6 +336,9 @@ def prevalence_adjusted(
         accuracy = pi * recall + (1 - pi) * specificity
     return {
         "full_set_not_supported_prevalence": pi,
+        "strata": "class" if by_label is None else "label",
+        "labels": by_label,
+        "missing_labels": missing,
         "recall_not_supported": recall,
         "recall_supported": specificity,
         "specificity": specificity,
@@ -279,24 +348,45 @@ def prevalence_adjusted(
 
 
 def reweighted_brier(
-    probabilities: Sequence[float], human_pass: Sequence[bool], full_not_supported_prevalence: float
+    probabilities: Sequence[float],
+    human_pass: Sequence[bool],
+    full_not_supported_prevalence: float,
+    *,
+    labels: Sequence[str] | None = None,
+    full_label_counts: Mapping[str, int] | None = None,
 ) -> float | None:
-    """Brier score at the full set's class mix, from a sample whose mix was set by quotas.
+    """Brier score at the full set's composition, from a sample whose mix was set by quotas.
 
     Brier is a mean of per-record squared errors, so it splits exactly by
-    human class: ``pi * Brier_not_supported + (1 - pi) * Brier_supported``
-    with ``pi`` the prevalence of the not-supported class in the full set.
-    ``None`` when a class is absent from the sample. ECE has no such
-    split (bin membership would have to be reweighted record by record)
-    and is not reweighted.
+    stratum: the mean squared error of each stratum, weighted by the
+    stratum's share in the full set. The strata are those of
+    ``prevalence_adjusted``. With *labels* and *full_label_counts* they are
+    the human labels, the unit the quota is drawn on: on a sentence-level
+    set the not-supported class holds CONTRADICTED and UNSUPPORTED, and
+    pooling them in the sample would weigh their errors by the quota's mix.
+    Without them they are the two classes, weighted ``pi`` and ``1 - pi``
+    (*full_not_supported_prevalence*): exact when the quota is drawn on
+    those two classes, as on an answer-level set.
+
+    ``None`` when a stratum of the full set has no record in the sample.
+    ECE has no such split (bin membership would have to be reweighted
+    record by record) and is not reweighted.
     """
-    errors: dict[bool, list[float]] = {True: [], False: []}
-    for p, h in zip(probabilities, human_pass, strict=True):
-        errors[h].append((p - (1.0 if h else 0.0)) ** 2)
-    if not errors[True] or not errors[False]:
+    errors = [(p - (1.0 if h else 0.0)) ** 2 for p, h in zip(probabilities, human_pass, strict=True)]
+    strata: dict[Any, list[float]] = {}
+    weights: dict[Any, float]
+    if labels is None or full_label_counts is None:
+        for error, h in zip(errors, human_pass, strict=True):
+            strata.setdefault(h, []).append(error)
+        weights = {False: full_not_supported_prevalence, True: 1 - full_not_supported_prevalence}
+    else:
+        for error, label in zip(errors, labels, strict=True):
+            strata.setdefault(label, []).append(error)
+        total = sum(full_label_counts.values())
+        weights = {label: count / total for label, count in full_label_counts.items() if count > 0}
+    if not weights or any(not strata.get(stratum) for stratum in weights):
         return None
-    pi = full_not_supported_prevalence
-    return pi * statistics.fmean(errors[False]) + (1 - pi) * statistics.fmean(errors[True])
+    return sum(weight * statistics.fmean(strata[stratum]) for stratum, weight in weights.items())
 
 
 # =============================================================================
@@ -778,9 +868,10 @@ async def run_benchmark(
         per_class: Evaluate at most this many records of every label (class
             quotas), drawn with *seed*; exclusive with *sample*. The raw
             metrics, Brier and ECE included, are then flagged as
-            sample-dependent and the report adds per-class recall,
-            specificity, and precision, accuracy and Brier reweighted by
-            the full set's prevalence.
+            sample-dependent and the report adds the recall, the
+            specificity and the precision, accuracy and Brier reweighted to
+            the full set (rates per human label on a sentence-level set,
+            see ``prevalence_adjusted`` and ``reweighted_brier``).
         stratify: ``label`` (default), a metadata field, or ``None`` for a plain draw.
         seed: Seed of the sample and of the bootstrap.
         by: Metadata fields for per-value breakdowns (e.g. ``task``, ``generator``).
@@ -903,7 +994,13 @@ async def run_benchmark(
         "sample_dependent_metrics": per_class is not None,
         "prevalence_adjusted": (
             prevalence_adjusted(
-                judge_pass, human_pass, sum(1 for r in records if not r.human_pass) / len(records) if records else 0.0
+                judge_pass,
+                human_pass,
+                sum(1 for r in records if not r.human_pass) / len(records) if records else 0.0,
+                # Quotas are drawn per label: on a sentence-level set the not-supported class holds two of
+                # them, so the rates are taken per label. On an answer-level set the labels are the classes
+                labels=[r.label for r in scored] if level == "sentence" else None,
+                full_label_counts=Counter(r.label for r in records) if level == "sentence" else None,
             )
             if per_class is not None
             else None
@@ -976,8 +1073,13 @@ async def run_benchmark(
             "sample_dependent": per_class is not None,
         }
         if report["prevalence_adjusted"] is not None:
+            # Same strata as the block: the human labels on a sentence-level set, the two classes otherwise
             report["prevalence_adjusted"]["brier_reweighted"] = reweighted_brier(
-                calibrated, human_pass, report["prevalence_adjusted"]["full_set_not_supported_prevalence"]
+                calibrated,
+                human_pass,
+                report["prevalence_adjusted"]["full_set_not_supported_prevalence"],
+                labels=[r.label for r in scored] if level == "sentence" else None,
+                full_label_counts=Counter(r.label for r in records) if level == "sentence" else None,
             )
 
     for field_name in by:
@@ -1000,6 +1102,32 @@ async def run_benchmark(
 def _num(value: float | None, digits: int = 3) -> str:
     """A number for the Markdown report; ``undefined`` for a ``None`` kappa."""
     return "undefined" if value is None else f"{value:.{digits}f}"
+
+
+def _adjusted_strata_lines(adjusted: dict[str, Any]) -> list[str]:
+    """How the prevalence-adjusted rates were estimated: the per-label table, and the labels with no record."""
+    by_label = adjusted.get("labels")
+    if not by_label:
+        return []
+    lines = [
+        "Rates are estimated per human label and combined with the labels' shares in the full set "
+        "(the quota's mix between labels does not enter).",
+        "",
+        "| Human label | Class | Full set | Scored in the sample | Rate |",
+        "|---|---|---|---|---|",
+    ]
+    for label, v in by_label.items():
+        rate = "n/a" if v["rate"] is None else f"{v['rate']:.3f}"
+        lines.append(
+            f"| {label} | {v['human_class']} | {v['full_set_count']} ({v['full_set_share']:.1%}) | {v['n']} | {rate} |"
+        )
+    if adjusted.get("missing_labels"):
+        lines += [
+            "",
+            f"No scored record for {', '.join(adjusted['missing_labels'])}: the figures that need its rate "
+            "are not estimated (n/a).",
+        ]
+    return lines
 
 
 def render_report(report: dict[str, Any]) -> str:
@@ -1083,6 +1211,7 @@ def render_report(report: dict[str, Any]) -> str:
             "## Prevalence-adjusted (independent of the quota)",
             "",
             f"Not-supported prevalence in the full set: {adjusted['full_set_not_supported_prevalence']:.1%}.",
+            *_adjusted_strata_lines(adjusted),
             "",
             "| Metric | Value |",
             "|---|---|",
@@ -1093,7 +1222,7 @@ def render_report(report: dict[str, Any]) -> str:
         ]
         if adjusted.get("brier_reweighted") is not None:
             lines.append(
-                f"| Brier, reweighted by full-set prevalence | {adjusted['brier_reweighted']:.4f} |",
+                f"| Brier, reweighted to the full set | {adjusted['brier_reweighted']:.4f} |",
             )
             lines += ["", "ECE is not reweighted: it stays a figure of the sample."]
     lines += ["", "## Failures and cost", ""]
@@ -1143,6 +1272,7 @@ def render_report(report: dict[str, Any]) -> str:
 __all__ = [
     "ANSWER_LABELS",
     "ATTEMPTS_HEADER_FIELDS",
+    "PASS_LABELS",
     "SENTENCE_LABELS",
     "AttemptsMismatchError",
     "BenchRecord",
