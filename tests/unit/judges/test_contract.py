@@ -390,3 +390,18 @@ class TestJudgeAttempt:
     def test_criterion_must_match_config(self):
         with pytest.raises(ValueError, match="differs from its config"):
             JudgeAttempt("p001", "relevance", make_config(), result=self.RESULT, error=None)
+
+
+class TestFailureKinds:
+    def test_memory_is_a_failure_kind_of_its_own(self):
+        from ragnarok_ai.judges import FAILURE_KINDS, JudgeFailure
+
+        assert FAILURE_KINDS == ("parse", "backend", "timeout", "no_units", "memory")
+        assert JudgeFailure("memory", "out of memory on device 'mps'").kind == "memory"
+        # a row written by 1.13.x records the same event as a backend failure: still a valid failure
+        assert (
+            JudgeFailure("backend", "HHEMJudge: out of memory on device 'mps' for an input of 9000 tokens.").kind
+            == "backend"
+        )
+        with pytest.raises(ValueError, match="kind must be one of"):
+            JudgeFailure("oom", "x")  # type: ignore[arg-type]

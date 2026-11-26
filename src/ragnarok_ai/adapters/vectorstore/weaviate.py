@@ -8,12 +8,31 @@ from __future__ import annotations
 
 import os
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
-from ragnarok_ai.core.exceptions import VectorStoreConnectionError
+from ragnarok_ai.adapters.vectorstore._errors import is_connection_failure
+from ragnarok_ai.core.exceptions import VectorStoreConnectionError, VectorStoreDependencyError
 from ragnarok_ai.core.types import Document
 
 if TYPE_CHECKING:
     from types import TracebackType
+
+# The errors of weaviate-client that mean the instance could not be reached. Names the installed version
+# does not have are skipped (WeaviateTimeoutError is not in 4.6.2). Not in the list: the responses of the
+# server (UnexpectedStatusCodeError, AuthenticationFailedError, WeaviateQueryError) and
+# WeaviateClosedClientError, a misuse of the client
+_WEAVIATE_EXCEPTIONS = "weaviate.exceptions"
+_WEAVIATE_CONNECTION_ERRORS = (
+    "WeaviateConnectionError",
+    "WeaviateStartUpError",
+    "WeaviateTimeoutError",
+    "WeaviateGRPCUnavailableError",
+)
+
+
+def _connection_failure(exc: BaseException) -> bool:
+    return is_connection_failure(exc, _WEAVIATE_EXCEPTIONS, _WEAVIATE_CONNECTION_ERRORS)
+
 
 # Default configuration
 DEFAULT_URL = "http://localhost:8080"
@@ -21,6 +40,52 @@ DEFAULT_COLLECTION_NAME = "RagnarokDocuments"
 DEFAULT_TIMEOUT = 30.0
 # Weaviate's default gRPC port, next to 8080 for HTTP
 DEFAULT_GRPC_PORT = 50051
+# Port of a URL that does not write one: Weaviate's own HTTP port, and the standard port of HTTPS
+DEFAULT_HTTP_PORT = 8080
+DEFAULT_HTTPS_PORT = 443
+
+
+def parse_endpoint(url: str) -> tuple[str, int, bool]:
+    """Host, port and TLS of the HTTP endpoint of a Weaviate instance, from its URL.
+
+    A port written in the URL always wins. Without one the port is 443 for
+    ``https`` and 8080 for ``http`` (Weaviate's default, not the 80 of plain
+    HTTP). A URL without a scheme is read as ``http``.
+
+    Raises:
+        ValueError: If the URL has a path, a query or a fragment (the
+            client connects to a host and a port; a base path would be
+            dropped silently), another scheme than ``http`` or ``https``,
+            no host, or a port that is not a number.
+    """
+    parts = urlsplit(url if "://" in url else f"http://{url}")
+    if parts.scheme not in ("http", "https"):
+        msg = f"Weaviate URL {url!r}: scheme must be http or https, got {parts.scheme!r}"
+        raise ValueError(msg)
+    if not parts.hostname:
+        msg = f"Weaviate URL {url!r} has no host"
+        raise ValueError(msg)
+    if parts.path not in ("", "/") or parts.query or parts.fragment:
+        extra = (
+            parts.path + (f"?{parts.query}" if parts.query else "") + (f"#{parts.fragment}" if parts.fragment else "")
+        )
+        msg = (
+            f"Weaviate URL {url!r} has a path ({extra!r}). The client connects to a host and a port and has no "
+            f"base path: give the URL as {parts.scheme}://{parts.netloc}"
+        )
+        raise ValueError(msg)
+    try:
+        port = parts.port
+    except ValueError as exc:
+        msg = f"Weaviate URL {url!r}: the port is not a number between 0 and 65535"
+        raise ValueError(msg) from exc
+    secure = parts.scheme == "https"
+    return parts.hostname, port if port is not None else (DEFAULT_HTTPS_PORT if secure else DEFAULT_HTTP_PORT), secure
+
+
+def is_cloud_url(url: str) -> bool:
+    """Whether *url* is a Weaviate Cloud cluster URL, which the client takes as it is."""
+    return "weaviate.cloud" in url or "wcs.api.weaviate" in url
 
 
 class WeaviateVectorStore:
@@ -78,7 +143,9 @@ class WeaviateVectorStore:
         """Initialize WeaviateVectorStore client.
 
         Args:
-            url: URL for Weaviate server. Defaults to localhost:8080.
+            url: URL for Weaviate server: scheme, host and port, without a path.
+                Defaults to http://localhost:8080. A port written in the URL is
+                used; without one it is 443 for ``https`` and 8080 for ``http``.
             api_key: Optional API key for Weaviate Cloud. If not provided,
                 reads from WEAVIATE_API_KEY environment variable.
             collection_name: Name of the collection to use. Defaults to "RagnarokDocuments".
@@ -92,8 +159,14 @@ class WeaviateVectorStore:
         The three gRPC settings are used for a self-hosted instance with an API key
         only. Weaviate Cloud and a local instance without a key find their gRPC
         endpoint themselves.
+
+        Raises:
+            ValueError: If *url* is not a Weaviate Cloud URL and has a path, a query,
+                another scheme than http or https, no host or an invalid port.
         """
         self.url = url.rstrip("/")
+        # Checked here, not at the first call: a URL that cannot be used is a mistake of configuration
+        self._endpoint = None if is_cloud_url(self.url) else parse_endpoint(self.url)
         self.api_key = api_key or os.environ.get("WEAVIATE_API_KEY")
         self.collection_name = collection_name
         self.timeout = timeout
@@ -135,7 +208,7 @@ class WeaviateVectorStore:
             from weaviate.classes.init import Auth
 
             # Determine if this is a cloud URL or local
-            is_cloud = "weaviate.cloud" in self.url or "wcs.api.weaviate" in self.url
+            is_cloud = is_cloud_url(self.url)
 
             if is_cloud and self.api_key:
                 self._client = weaviate.connect_to_weaviate_cloud(
@@ -145,11 +218,10 @@ class WeaviateVectorStore:
             elif self.api_key:
                 # A self-hosted instance with an API key. connect_to_custom requires the gRPC
                 # endpoint next to the HTTP one: by default the same host and scheme, port 50051
-                http_host = self.url.replace("http://", "").replace("https://", "").split(":")[0]
-                http_secure = self.url.startswith("https")
+                http_host, http_port, http_secure = self._endpoint or parse_endpoint(self.url)
                 self._client = weaviate.connect_to_custom(
                     http_host=http_host,
-                    http_port=int(self.url.split(":")[-1]) if ":" in self.url.split("/")[-1] else 8080,
+                    http_port=http_port,
                     http_secure=http_secure,
                     grpc_host=self.grpc_host or http_host,
                     grpc_port=self.grpc_port,
@@ -157,10 +229,8 @@ class WeaviateVectorStore:
                     auth_credentials=Auth.api_key(self.api_key),
                 )
             else:
-                self._client = weaviate.connect_to_local(
-                    host=self.url.replace("http://", "").replace("https://", "").split(":")[0],
-                    port=int(self.url.split(":")[-1]) if ":" in self.url.split("/")[-1] else 8080,
-                )
+                host, port, _ = self._endpoint or parse_endpoint(self.url)
+                self._client = weaviate.connect_to_local(host=host, port=port)
 
             # Ensure collection exists
             await self._ensure_collection()
@@ -169,10 +239,10 @@ class WeaviateVectorStore:
 
         except ImportError as e:
             msg = "weaviate-client is not installed. Install it with: pip install weaviate-client"
-            raise VectorStoreConnectionError(msg) from e
+            raise VectorStoreDependencyError(msg) from e
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to connect to Weaviate at {self.url}: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -194,6 +264,8 @@ class WeaviateVectorStore:
                     ],
                 )
         except Exception as e:
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to create collection in Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -240,8 +312,8 @@ class WeaviateVectorStore:
             return documents
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to search in Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -289,8 +361,8 @@ class WeaviateVectorStore:
         except ValueError:
             raise
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to add documents to Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -307,9 +379,10 @@ class WeaviateVectorStore:
             return
 
         try:
-            from weaviate.classes.query import Filter
-
+            # The client first: without the package, its error carries the install message
             client = await self._ensure_client()
+
+            from weaviate.classes.query import Filter
 
             collection = client.collections.get(self.collection_name)
 
@@ -317,8 +390,8 @@ class WeaviateVectorStore:
                 collection.data.delete_many(where=Filter.by_property("doc_id").equal(doc_id))
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to delete documents from Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -339,8 +412,8 @@ class WeaviateVectorStore:
             return result.total_count or 0
 
         except Exception as e:
-            if isinstance(e, VectorStoreConnectionError):
-                raise
+            if not _connection_failure(e):
+                raise  # a response of the server, a missing package, a bug: not a connection failure
             msg = f"Failed to get count from Weaviate: {e}"
             raise VectorStoreConnectionError(msg) from e
 
@@ -357,5 +430,8 @@ class WeaviateVectorStore:
         try:
             client = await self._ensure_client()
             return bool(client.is_ready())
-        except Exception:
-            return False
+        except Exception as e:
+            # False for an unreachable store only: anything else is not about availability
+            if isinstance(e, VectorStoreConnectionError) or _connection_failure(e):
+                return False
+            raise

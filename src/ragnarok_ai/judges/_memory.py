@@ -1,9 +1,9 @@
 """Out-of-memory errors of a local judge's device, turned into per-sample failures.
 
 A forward pass that does not fit on the device concerns one input, not the
-run: the local judges raise an ``EvaluationError`` for it, which
-``judge_many`` records as a failure of kind ``backend``. Any other
-``RuntimeError`` keeps propagating.
+run: the local judges raise a ``JudgeMemoryError`` for it (an
+``EvaluationError``), which ``judge_many`` records as a failure of kind
+``memory``. Any other ``RuntimeError`` keeps propagating.
 
 The two devices report it differently. CUDA raises a dedicated class,
 ``torch.cuda.OutOfMemoryError``. MPS raises a plain ``RuntimeError`` whose
@@ -16,7 +16,7 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from ragnarok_ai.core.exceptions import EvaluationError
+from ragnarok_ai.core.exceptions import JudgeMemoryError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -58,7 +58,7 @@ def release_device_cache(torch: Any, device: str) -> None:
 def guard_device_memory(
     call: Callable[[], T], *, backend: object, judge: str, device: str, input_size: Callable[[], str]
 ) -> T:
-    """Run *call* (the forward pass); an out-of-memory error becomes an ``EvaluationError``.
+    """Run *call* (the forward pass); an out-of-memory error becomes a ``JudgeMemoryError``.
 
     The backend's cache is released through its ``_release_cache()`` method
     when it has one (an injected backend need not), so the next input
@@ -67,7 +67,7 @@ def guard_device_memory(
     called only after a failure), never the input's text.
 
     Raises:
-        EvaluationError: The device ran out of memory during *call*.
+        JudgeMemoryError: The device ran out of memory during *call*.
     """
     try:
         return call()
@@ -82,4 +82,4 @@ def guard_device_memory(
     if callable(release):
         release()
     msg = f"{judge}: out of memory on device {device!r} for {input_size()}. Device message: {device_message}"
-    raise EvaluationError(msg)
+    raise JudgeMemoryError(msg)

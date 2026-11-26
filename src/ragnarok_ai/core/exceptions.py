@@ -72,6 +72,18 @@ class NoUnitsError(EvaluationError):
     """
 
 
+class JudgeMemoryError(EvaluationError):
+    """Raised by a local judge when its device runs out of memory on one input.
+
+    A per-sample failure (kind ``memory`` in ``JudgeFailure``): the input
+    did not fit on the device, the device cache was released, and the next
+    input can be judged. Distinct from the other backend errors because it
+    calls for another action: shorten or truncate the input, or use another
+    device, rather than check a server. An ``EvaluationError``, which
+    versions up to 1.13.x raised for the same case.
+    """
+
+
 class ConfigurationError(RagnarokError):
     """Raised when configuration is invalid or missing.
 
@@ -91,6 +103,16 @@ class VectorStoreConnectionError(RagnarokError):
 
     Example:
         >>> raise VectorStoreConnectionError("Failed to connect to Qdrant at localhost:6333")
+    """
+
+
+class VectorStoreDependencyError(ConfigurationError, ImportError):
+    """Raised by a vector store adapter when its client package is not installed.
+
+    The message carries the install command. An ``ImportError``: the
+    package is missing, the store was never contacted. ``QdrantVectorStore``
+    and ``WeaviateVectorStore`` raised a ``VectorStoreConnectionError`` for
+    this case up to 1.13.x.
     """
 
 

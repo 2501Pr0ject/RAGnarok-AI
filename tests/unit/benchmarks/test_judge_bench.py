@@ -1092,11 +1092,11 @@ class TestRun:
         judge = HHEMJudge(backend=HHEMBackend(), device="mps", unit="answer")
         run = await run_benchmark(judge, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
         assert run.report["records"] == {"total": 3, "evaluated": 3, "scored": 2, "failed": 1}
-        assert run.report["failures"] == {"backend": 1}
+        assert run.report["failures"] == {"memory": 1}
         written = [json.loads(line) for line in run.attempts_path.read_text().splitlines()[1:]]
-        assert [row["error"]["kind"] if row.get("error") else None for row in written] == [None, "backend", None]
+        assert [row["error"]["kind"] if row.get("error") else None for row in written] == [None, "memory", None]
         assert "out of memory on device 'mps'" in written[1]["error"]["message"]
-        assert "failures by kind: {'backend': 1}" in run.report_md.read_text()
+        assert "failures by kind: {'memory': 1}" in run.report_md.read_text()
 
     @pytest.mark.asyncio
     async def test_per_class_run_flags_calibration_and_reweights_brier(self, tmp_path: Path):
@@ -1476,6 +1476,29 @@ class TestRun:
         assert adjusted["strata"] == "class" and run.report["recall_by_label"] is None
         low, high = adjusted["intervals"]["recall_not_supported"]
         assert low <= adjusted["recall_not_supported"] <= high
+
+    @pytest.mark.asyncio
+    async def test_attempts_of_1_13_keep_their_backend_kind_when_a_run_is_resumed(self, tmp_path: Path):
+        """Out-of-memory failures recorded as `backend` by 1.13.x are not migrated: resumed, they stay as written."""
+        from ragnarok_ai.judges import HHEMJudge
+        from tests.unit.judges.test_memory import HHEMBackend
+
+        rows = [sentence_row(0, "SUPPORTED", "Fits."), sentence_row(1, "SUPPORTED", "Does not fit (oom).")]
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        judge = HHEMJudge(backend=HHEMBackend(), device="mps", unit="answer")
+        first = await run_benchmark(judge, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+        assert first.report["failures"] == {"memory": 1}
+        # make the file what 1.13.x would have written for the same event
+        lines = first.attempts_path.read_text().splitlines()
+        old = [json.loads(line) for line in lines]
+        for row in old:
+            if row.get("error"):
+                assert row["error"]["kind"] == "memory"
+                row["error"]["kind"] = "backend"
+        first.attempts_path.write_text("".join(json.dumps(row) + "\n" for row in old), encoding="utf-8")
+        resumed = await run_benchmark(judge, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+        assert resumed.report["failures"] == {"backend": 1}  # read as written, not re-judged, not renamed
+        assert resumed.report["records"] == {"total": 2, "evaluated": 2, "scored": 1, "failed": 1}
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):

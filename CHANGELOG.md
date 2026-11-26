@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Behavior changes
+- **A device out-of-memory error of a local judge is a failure of kind
+  `memory`, no longer `backend`** (#174). `FailureKind` and `FAILURE_KINDS`
+  gain `memory`. `HHEMJudge` and `MiniCheckJudge` raise `JudgeMemoryError`
+  for it, a subclass of `EvaluationError`; `judge_many` records the kind,
+  `attempts.jsonl` carries it in `error.kind` and the `judge-bench` report
+  counts it apart under "failures by kind". The two cases call for
+  different actions: shorten or truncate the input (`max_input_tokens`) or
+  use another device for `memory`, check the model or the server for
+  `backend`. What to adapt:
+  - code that enumerates the failure kinds, or switches on `error.kind`,
+    must accept `memory` (a typed `match` on `FailureKind` is no longer
+    exhaustive without it);
+  - code that looked for out-of-memory failures by matching the message of
+    a `backend` failure should read the kind instead;
+  - code that catches `EvaluationError` needs no change:
+    `JudgeMemoryError` is one;
+  - **reports and attempts written by 1.13.x are not migrated**: their
+    out-of-memory failures stay recorded as `backend` (the message starts
+    with "<Judge>: out of memory on device"), and a run resumed from such
+    a file keeps those rows as they are. A count of `memory` failures
+    compared across versions must take this into account;
+  - `JudgeCalibrator` counts every failure that is not a parse failure in
+    `backend_failures`, `memory` included; that field is unchanged.
+- **`QdrantVectorStore` and `WeaviateVectorStore` raise
+  `VectorStoreConnectionError` for connection failures only** (#193). These
+  two adapters wrapped almost every exception in it, so a response of the
+  server, a missing package or a mistake in the adapter's own call was
+  reported as "Failed to connect" or "Failed to search", and
+  `is_available()` answered `False`: the user was sent to check a server
+  that was not the cause (it is what hid #190 and #191). Only these two
+  adapters change; `ChromaVectorStore`, `FAISSVectorStore`,
+  `MilvusVectorStore`, `PgvectorVectorStore` and `PineconeVectorStore`
+  still wrap every exception. What still becomes a
+  `VectorStoreConnectionError`: an `OSError` (connection refused or reset,
+  name not resolved), a timeout, and the client's own connection errors
+  (`ResponseHandlingException` for Qdrant; `WeaviateConnectionError`,
+  `WeaviateStartUpError`, `WeaviateTimeoutError` and
+  `WeaviateGRPCUnavailableError` for Weaviate). What to adapt:
+  - **a response of the server propagates as the client's own exception**:
+    `qdrant_client.http.exceptions.UnexpectedResponse` (authentication
+    refused, invalid request; it was "Failed to create collection in
+    Qdrant"), `weaviate.exceptions.UnexpectedStatusCodeError` and the other
+    Weaviate errors. Code that caught `VectorStoreConnectionError` to
+    handle them must catch the client's exception;
+  - **a missing client package raises `VectorStoreDependencyError`**, an
+    `ImportError` (and a `ConfigurationError`), with the same message and
+    install command as before. Code that caught
+    `VectorStoreConnectionError` for it must catch `ImportError`;
+  - **`is_available()` returns `False` only when the store cannot be
+    reached**, and raises for anything else. Code that used it as a general
+    "is everything fine" test must expect an exception for a refused
+    authentication, a missing package or a bug;
+  - a `TypeError`, an `AttributeError` or another error of the adapter's
+    own call is no longer hidden: it propagates as it is. Nothing to adapt,
+    apart from reporting it.
+
 ### Added
 - **`ragnarok judge-compare`: paired comparison of two `judge-bench` runs**
   (#165). Two reports cannot say whether one judge is better than the
@@ -168,6 +225,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `judge-bench` and `judge-compare` report unavailable bootstrap intervals
   when fewer than two scored groups remain. Point estimates are preserved,
   and the comparison gives no winner on the strength of a single group (#208).
+- **`WeaviateVectorStore` reads the host and the port of its URL
+  correctly** (#201). The URL was cut up as a string, with three defects
+  for a self-hosted instance: an `https` URL without a port got port 8080
+  (TLS on Weaviate's plain HTTP port) instead of 443; a port followed by a
+  path was dropped (`https://host:8443/v1` gave 8080); and without a port
+  the path stayed in the host (`host/v1`). The URL is now parsed with
+  `urllib.parse.urlsplit`. A port written in the URL is always used;
+  without one it is 443 for `https` and 8080 for `http`, as before for
+  `http`. **A URL with a path, a query or a fragment is refused with a
+  `ValueError` when the store is created**, naming the usable form: the
+  client connects to a host and a port and has no base path, so the path
+  was never honored. What to do: an `https` URL that relied on port 8080
+  without writing it must write it (`https://host:8080`); a URL with a
+  path must drop it. `http` URLs, URLs with an explicit port and no path,
+  and Weaviate Cloud URLs (passed to the client as they are) are
+  unchanged.
+- **`JudgeCalibrator` no longer crashes when every sample has the same
+  `group_id`** (#202). With a single group there is a single resampling
+  unit: the only cross-validation fold held every sample, its training part
+  was empty, and the run ended on a `ZeroDivisionError` with no mention of
+  groups. The same happened with a single sample. The report is now
+  returned with what can be computed: the in-sample agreement, kappa and
+  recommended threshold as usual, and no out-of-sample estimate:
+  `kappa_at_recommended_cv` and `kappa_cv_ci` are `null`,
+  `bootstrap_reliable` is `false`, `cv_folds` is 0 and `cv_method` reads
+  "none (a single group: no out-of-sample estimate)". The summary says so
+  and what to do (a `group_id` that differs between groups, or none). Two
+  groups were already handled and are unchanged: cross-validated by
+  leaving one group out, with the interval flagged unreliable when the
+  groups are very unbalanced. `_cohens_kappa` of empty inputs returns
+  `None` instead of dividing by zero.
 - **`judge-bench --per-class` on a sentence-level set: the
   prevalence-adjusted figures no longer follow the quota's mix between
   `CONTRADICTED` and `UNSUPPORTED`** (#182). The quota is drawn per human
