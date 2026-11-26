@@ -11,6 +11,7 @@ from ragnarok_ai.calibration import CalibrationSample
 from ragnarok_ai.core.exceptions import (
     EvaluationError,
     JudgeDependencyError,
+    JudgeMemoryError,
     JudgeModelNotFoundError,
     JudgeParseError,
     LLMConnectionError,
@@ -63,6 +64,8 @@ class ScriptedJudge:
             raise asyncio.TimeoutError
         if answer == "eval":
             raise EvaluationError("something else went wrong")
+        if answer == "memory":
+            raise JudgeMemoryError("J: out of memory on device 'mps' for an input of 9000 tokens.")
         if answer == "empty":
             raise NoUnitsError("No unit could be judged (2 unit(s); skipped: fragment)")
         if answer == "config":
@@ -134,6 +137,7 @@ class TestFailures:
             ("asyncio-timeout", "timeout", "timed out"),
             ("backend", "backend", "500"),
             ("eval", "backend", "something else"),
+            ("memory", "memory", "out of memory on device 'mps'"),  # its own kind since 1.14, not backend
             ("empty", "no_units", "No unit could be judged"),
         ],
     )

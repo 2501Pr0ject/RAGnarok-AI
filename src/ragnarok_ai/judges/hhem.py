@@ -526,8 +526,8 @@ class HHEMJudge:
         Raises:
             ValueError: If *criterion* is unknown.
             NoUnitsError: With ``unit="sentence"``, if no sentence could be judged.
-            EvaluationError: If the device ran out of memory on this input
-                (a per-sample failure; the device cache is released).
+            JudgeMemoryError: If the device ran out of memory on this input
+                (a per-sample failure of kind ``memory``; the device cache is released).
         """
         self._check_criterion(criterion)
         if self.unit == "answer":

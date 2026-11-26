@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from ragnarok_ai.core.exceptions import (
     ConfigurationError,
     EvaluationError,
+    JudgeMemoryError,
     JudgeParseError,
     LLMConnectionError,
     NoUnitsError,
@@ -59,6 +60,8 @@ def _failure_for(exc: Exception, keep_raw_output: bool) -> JudgeFailure:
         return JudgeFailure("parse", str(exc), raw_output=exc.raw_output if keep_raw_output else None)
     if isinstance(exc, NoUnitsError):
         return JudgeFailure("no_units", str(exc))
+    if isinstance(exc, JudgeMemoryError):
+        return JudgeFailure("memory", str(exc))
     if isinstance(exc, asyncio.TimeoutError):
         return JudgeFailure("timeout", str(exc) or "timed out")
     if isinstance(exc, LLMConnectionError) and "timed out" in str(exc).lower():
@@ -86,8 +89,9 @@ async def judge_many(
     (``JudgeParseError``, kind ``parse``), an answer with nothing to judge
     (``NoUnitsError``, kind ``no_units``), a timeout (kind ``timeout``) or a
     backend error during the call (``LLMConnectionError`` or another
-    ``EvaluationError``, kind ``backend``; the local judges raise one when
-    the device runs out of memory on an input). Configuration errors are never
+    ``EvaluationError``, kind ``backend``), or the device of a local judge
+    out of memory on this input (``JudgeMemoryError``, kind ``memory``).
+    Configuration errors are never
     caught: ``judge.config(criterion)`` runs first, so a misconfigured judge
     stops before the first call, and a ``ConfigurationError`` raised during
     a call propagates.

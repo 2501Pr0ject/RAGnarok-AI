@@ -573,8 +573,8 @@ class CallTrace:
 # Attempt: a valid result or a described failure
 # =============================================================================
 
-FailureKind = Literal["parse", "backend", "timeout", "no_units"]
-FAILURE_KINDS: tuple[FailureKind, ...] = ("parse", "backend", "timeout", "no_units")
+FailureKind = Literal["parse", "backend", "timeout", "no_units", "memory"]
+FAILURE_KINDS: tuple[FailureKind, ...] = ("parse", "backend", "timeout", "no_units", "memory")
 
 
 @dataclass(frozen=True)
@@ -583,8 +583,10 @@ class JudgeFailure:
 
     Attributes:
         kind: ``parse`` (unreadable output), ``backend`` (the model or server
-            failed), ``timeout``, or ``no_units`` (nothing to judge after
-            segmentation).
+            failed), ``timeout``, ``no_units`` (nothing to judge after
+            segmentation), or ``memory`` (the device of a local judge ran out
+            of memory on this input; ``backend`` in results written before
+            1.14).
         message: Human-readable detail.
         raw_output: The model's raw text when available and kept.
     """
