@@ -824,6 +824,29 @@ ragnarok judge-bench --judge llm --data test.jsonl --dev dev.jsonl --out results
 - `--judge hhem` and `--judge minicheck[:<checkpoint>]` benchmark `HHEMJudge` and `MiniCheckJudge` at answer level on `--device` (the set defines the unit; add `--sentence-level` on an answer-level set). The model then runs in the harness process, so `peak_rss_mb_harness` includes it.
 - `--judge python:<module>:<Class>` benchmarks any `JudgeProtocol` class of your own.
 
+The two claim-level evaluators are judges too. `FaithfulnessEvaluator(llm).as_judge()` and `HallucinationDetector(llm).as_judge()` return `JudgeProtocol` judges that run through `judge_many`, `judge-bench` (wrapped in a class of yours for `--judge python:...`) and `JudgeCalibrator`; `result.to_judge_result()` converts a result you already have.
+
+```python
+from ragnarok_ai.adapters.llm.ollama import OllamaLLM
+from ragnarok_ai.evaluators import FaithfulnessEvaluator, HallucinationDetector
+
+llm = OllamaLLM(model="mistral", temperature=0)
+context = "Python was created by Guido van Rossum and first released in 1991."
+answer = "Python was created by Guido van Rossum. It was first released in 1989."
+
+judge = FaithfulnessEvaluator(llm).as_judge()   # criterion "faithfulness"
+clean = HallucinationDetector(llm).as_judge()   # criterion "hallucination_free"
+result = await judge.judge("faithfulness", question="", context=context, answer=answer)
+result.score, result.verdict, [(u.text, u.verdict) for u in result.units]
+cleanliness = await clean.judge("hallucination_free", question="", context=context, answer=answer)
+```
+
+- One unit per claim: PASS when the claim holds, FAIL otherwise. The score is the share of claims that hold and the verdict is PASS only when all of them do. A claim is a rewording by the model, so its `span` is `None`.
+- **Scores read "higher is better".** `HallucinationResult.score` is the share of hallucinated claims (0 is good); the judge's score is its complement, and the criterion is named `hallucination_free` for that reason.
+- An answer without any claim (empty, or nothing extracted) is not scored: it is a `no_units` failure. An empty context is different: the claims are extracted and all fail, without a verification call.
+- The model's name is part of the configuration: when the LLM does not expose one (`llm.model`), `as_judge(model="...")` is required. The temperature is recorded when the LLM exposes it (`llm.options` or `llm.temperature`).
+- The number of claims is decided by the model at each run. Two runs of the same judge on the same answer need not have the same units: compare runs on answers, not on claims. Repeatability was measured in one setting only: the example above (one context, one two-sentence answer), `qwen3:8b` served by Ollama, temperature 0 and no seed, three runs of each of the two judges. In that setting the six runs gave the same two claims, word for word, the same verdict per claim and the same score (0.50, FAIL). No other answer, model or setting was measured.
+
 ### Importing Types
 
 For advanced use cases (custom RAG implementations, type hints), import types directly from submodules:

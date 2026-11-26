@@ -16,7 +16,10 @@ from ragnarok_ai.core.exceptions import EvaluationError
 
 if TYPE_CHECKING:
     from ragnarok_ai.core.protocols import LLMProtocol
+    from ragnarok_ai.evaluators.judge import JudgeResult
     from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
+    from ragnarok_ai.judges.claim_level import ClaimLevelJudge
+    from ragnarok_ai.judges.contract import JudgeConfig
 
 
 class ClaimVerification(BaseModel):
@@ -49,6 +52,34 @@ class FaithfulnessResult(BaseModel):
     score: float = Field(..., ge=0.0, le=1.0, description="Faithfulness score")
     claims: list[ClaimVerification] = Field(..., description="Claim verifications")
     reasoning: str = Field(..., description="Overall reasoning")
+
+    def to_judge_result(self, config: JudgeConfig | None = None) -> JudgeResult:
+        """This result under the judge contract: one unit per claim, criterion ``faithfulness``.
+
+        A supported claim is a unit with verdict PASS, an unsupported one
+        FAIL. The score is the share of supported claims, equal to
+        ``self.score``; the verdict is PASS only when every claim is
+        supported. ``raw_score`` and ``output`` are ``None`` (no single
+        native score), and the units carry no ``span``.
+
+        Args:
+            config: The evaluator's configuration (``FaithfulnessEvaluator.config()``),
+                attached to the result.
+
+        Raises:
+            NoUnitsError: If the result holds no claim (empty response, nothing
+                extracted, or the empty-context shortcut of ``evaluate_detailed``,
+                which extracts nothing; ``as_judge()`` handles an empty context
+                by extracting the claims and failing them all).
+        """
+        from ragnarok_ai.judges.claim_level import claims_to_judge_result
+
+        return claims_to_judge_result(
+            FaithfulnessEvaluator.JUDGE_CRITERION,
+            [(claim.claim, claim.supported, claim.reasoning) for claim in self.claims],
+            config=config,
+            nothing_to_judge=f"No claim to judge: {self.reasoning}",
+        )
 
 
 # Prompt for extracting claims from the response
@@ -103,6 +134,9 @@ class FaithfulnessEvaluator:
         ...     print(f"Faithfulness: {score:.2f}")
     """
 
+    # The criterion of this evaluator under the judge contract
+    JUDGE_CRITERION = "faithfulness"
+
     def __init__(
         self,
         llm: LLMProtocol,
@@ -123,6 +157,7 @@ class FaithfulnessEvaluator:
         self.llm = llm
         self.medical_mode = medical_mode
         self._normalizer: MedicalAbbreviationNormalizer | None = None
+        self._disambiguation_model: str | None = None
 
         if medical_mode:
             from ragnarok_ai.evaluators.medical.medical_normalizer import MedicalAbbreviationNormalizer
@@ -132,6 +167,7 @@ class FaithfulnessEvaluator:
                 from ragnarok_ai.evaluators.medical.disambiguation import SLMDisambiguator
 
                 disambiguator = SLMDisambiguator(disambiguation_llm)
+                self._disambiguation_model = str(getattr(disambiguation_llm, "model", "custom"))
             self._normalizer = MedicalAbbreviationNormalizer(disambiguator=disambiguator)
 
     async def evaluate(
@@ -227,6 +263,94 @@ class FaithfulnessEvaluator:
             claims=verifications,
             reasoning=reasoning,
         )
+
+    # ------------------------------------------------------------------
+    # Under the judge contract
+    # ------------------------------------------------------------------
+
+    def config(self, criterion: str | None = None, *, model: str | None = None) -> JudgeConfig:
+        """The run-level configuration of this evaluator used as a judge.
+
+        Two runs are comparable only when their configurations are equal:
+        same model, same options (the temperature among them when the LLM
+        exposes it), same two prompt templates, same input transforms
+        (medical mode).
+
+        Args:
+            criterion: ``faithfulness``, the only criterion; optional.
+            model: The model's name, required when the LLM does not expose one.
+
+        Raises:
+            ValueError: If *criterion* is not ``faithfulness``.
+            ConfigurationError: If the model's name is neither given nor readable.
+        """
+        from ragnarok_ai.judges.claim_level import claim_judge_config, model_name
+
+        if criterion not in (None, self.JUDGE_CRITERION):
+            msg = f"Unknown criterion {criterion!r}; expected {self.JUDGE_CRITERION!r}"
+            raise ValueError(msg)
+        transforms: tuple[str, ...] = ()
+        if self.medical_mode and self._normalizer:
+            from ragnarok_ai.evaluators.judge import _medical_table_version
+
+            transforms = (f"medical_normalizer:{_medical_table_version()}",)
+            if self._disambiguation_model is not None:
+                transforms += (f"disambiguation:{self._disambiguation_model}",)
+        return claim_judge_config(
+            self,
+            self.llm,
+            self.JUDGE_CRITERION,
+            model=model_name(self.llm, model),
+            extraction_template=CLAIM_EXTRACTION_PROMPT,
+            check_template=CLAIM_VERIFICATION_PROMPT,
+            input_transforms=transforms,
+        )
+
+    def as_judge(self, model: str | None = None) -> ClaimLevelJudge:
+        """This evaluator as a ``JudgeProtocol`` judge, with the criterion ``faithfulness``.
+
+        The judge runs through ``judge_many``, ``judge-bench`` and
+        ``JudgeCalibrator``. ``evaluate()`` and ``evaluate_detailed()`` are
+        unchanged.
+
+        Args:
+            model: The model's name, required when the LLM does not expose
+                one (``llm.model``): it is part of the configuration.
+
+        Raises:
+            ConfigurationError: If the model's name is neither given nor readable.
+        """
+        from ragnarok_ai.judges.claim_level import ClaimLevelJudge
+
+        return ClaimLevelJudge(self, model=model)
+
+    async def _judge_result(self, *, context: str, answer: str, config: JudgeConfig | None = None) -> JudgeResult:
+        """One judgment under the contract: ``evaluate_detailed``, except for an empty context.
+
+        With an empty context ``evaluate_detailed`` returns 0.0 without
+        extracting anything. Here the claims are extracted and all marked
+        unsupported, without a verification call: nothing can support them,
+        and the answer still has units to report.
+
+        Raises:
+            NoUnitsError: If the answer holds no claim.
+            EvaluationError: If a call to the model fails or its output cannot be read.
+        """
+        if context.strip():
+            return (await self.evaluate_detailed(answer, context)).to_judge_result(config)
+        response = answer
+        if self.medical_mode and self._normalizer:
+            response, _ = await self._normalizer.normalize_text_async(response)
+        claims = await self._extract_claims(response) if response.strip() else []
+        reason = "No context provided: nothing can support the claim."
+        result = FaithfulnessResult(
+            score=0.0 if claims else 1.0,
+            claims=[ClaimVerification(claim=claim, supported=False, reasoning=reason) for claim in claims],
+            reasoning="No context provided to verify claims against."
+            if claims
+            else "No verifiable claims found in the response.",
+        )
+        return result.to_judge_result(config)
 
     async def _extract_claims(self, response: str) -> list[str]:
         """Extract factual claims from a response.

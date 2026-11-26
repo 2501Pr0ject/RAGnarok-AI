@@ -447,9 +447,10 @@ class JudgeCalibrator:
         Args:
             samples: The human-labeled examples (a ``CalibrationSet`` or
                 a plain sequence of ``CalibrationSample``).
-            criteria: Judge criteria to calibrate — any of "faithfulness",
-                "relevance", "hallucination", "completeness". Each costs
-                one judge call per sample.
+            criteria: Judge criteria to calibrate: any of the judge's own
+                criteria (``judge.criteria``; "faithfulness", "relevance",
+                "hallucination" and "completeness" for ``LLMJudge``). Each
+                costs one judge call per sample.
 
         Returns:
             A ``CalibrationReport`` with per-criterion agreement.
@@ -461,9 +462,16 @@ class JudgeCalibrator:
         if not sample_list:
             msg = "Cannot calibrate on zero labeled samples"
             raise ValueError(msg)
+        # A JudgeProtocol judge says which criteria it has (`hallucination_free` for the claim-level
+        # detector, for instance); the fixed list is that of the historical LLMJudge path
+        # (the historical four first and in their order, so that the message for LLMJudge is unchanged)
+        allowed: tuple[str, ...] = CRITERIA
+        if self.uses_protocol:
+            own = self.judge.criteria
+            allowed = tuple(c for c in CRITERIA if c in own) + tuple(sorted(c for c in own if c not in CRITERIA))
         for criterion in criteria:
-            if criterion not in CRITERIA:
-                msg = f"Unknown criterion {criterion!r}; expected one of {CRITERIA}"
+            if criterion not in allowed:
+                msg = f"Unknown criterion {criterion!r}; expected one of {allowed}"
                 raise ValueError(msg)
 
         group_ids = [s.group_id for s in sample_list]

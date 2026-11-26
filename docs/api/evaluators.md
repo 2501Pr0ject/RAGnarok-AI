@@ -281,6 +281,38 @@ async with OllamaLLM() as llm:
 
 ---
 
+## Claim-level evaluators as judges
+
+`FaithfulnessEvaluator` and `HallucinationDetector` can be used under the judge contract, next to `LLMJudge`, `HHEMJudge` and `MiniCheckJudge`.
+
+```python
+from ragnarok_ai.evaluators import FaithfulnessEvaluator, HallucinationDetector
+from ragnarok_ai.judges import judge_many
+
+faithfulness = FaithfulnessEvaluator(llm).as_judge()        # criterion "faithfulness"
+clean = HallucinationDetector(llm).as_judge()               # criterion "hallucination_free"
+attempts = await judge_many(faithfulness, "faithfulness", samples)
+
+# or from a result you already have
+result = await FaithfulnessEvaluator(llm).evaluate_detailed(response, context)
+judged = result.to_judge_result()
+```
+
+| | `FaithfulnessEvaluator` | `HallucinationDetector` |
+|---|---|---|
+| Criterion | `faithfulness` | `hallucination_free` |
+| Unit | claim | claim |
+| A unit passes when | the claim is supported | the claim is not a hallucination |
+| Score of the judge result | share of supported claims (`FaithfulnessResult.score`) | share of claims not hallucinated (`1 - HallucinationResult.score`) |
+| Verdict | PASS only when every claim passes | PASS only when every claim passes |
+
+- `as_judge(model="...")` is required when the LLM has no `model` attribute; the name is part of the `JudgeConfig`.
+- An answer without any claim raises `NoUnitsError` (a `no_units` failure in `judge_many`). With an empty context the claims are extracted and all fail, without a verification call.
+- The units carry `span=None`: a claim is a rewording, not a slice of the answer.
+- The number of claims is decided by the model at each run and can vary. Compare runs on answers, not on claims. Repeatability was measured in one setting only: the README example (one context, one two-sentence answer), `qwen3:8b` served by Ollama, temperature 0 and no seed, three runs of each of the two judges. In that setting the six runs gave the same two claims, word for word, the same verdict per claim and the same score (0.50, FAIL). No other answer, model or setting was measured.
+
+---
+
 ## Medical Evaluation
 
 Medical-domain utilities for evaluating RAG over clinical text, where ambiguous abbreviations (is "MS" multiple sclerosis or mitral stenosis?) can silently distort scores.
