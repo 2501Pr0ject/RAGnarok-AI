@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import math
+import random
 from pathlib import Path
 
 import pytest
@@ -23,6 +25,7 @@ from ragnarok_ai.benchmarks.judges import (
     prevalence_adjusted,
     quota_sample,
     read_attempts,
+    recall_by_label,
     records_sha256,
     reweighted_brier,
     run_benchmark,
@@ -413,6 +416,131 @@ class TestMetrics:
             [True] * 19 + [False], [True] * 19 + [False], [str(i) for i in range(20)], seed=0, resamples=300
         )
         assert rare["excluded_single_class_draws"] > 30 and rare["reliable"] is False
+
+
+class TestRecallByLabel:
+    @staticmethod
+    def _table() -> tuple[list[bool], list[str], list[str]]:
+        """Six groups of one label each: 8 contradicted (2 detected), 8 unsupported (6 detected), 10 supported (9 passed)."""
+        spec = [
+            ("g-c1", "CONTRADICTED", [False, False, True, True]),  # False: rejected, that is detected
+            ("g-c2", "CONTRADICTED", [True, True, True, True]),
+            ("g-u1", "UNSUPPORTED", [False, False, False, False]),
+            ("g-u2", "UNSUPPORTED", [False, False, True, True]),
+            ("g-s1", "SUPPORTED", [True, True, True, True, False]),
+            ("g-s2", "SUPPORTED", [True, True, True, True, True]),
+        ]
+        judge: list[bool] = []
+        labels: list[str] = []
+        groups: list[str] = []
+        for group, label, verdicts in spec:
+            judge += verdicts
+            labels += [label] * len(verdicts)
+            groups += [group] * len(verdicts)
+        return judge, labels, groups
+
+    def test_hand_computed_table(self):
+        judge, labels, groups = self._table()
+        block = recall_by_label(judge, labels, groups, 0.25, seed=0, resamples=0)
+        assert block["threshold"] == 0.25 and block["sample_dependent"] is False
+        assert block["labels"] == {
+            "CONTRADICTED": {"n": 8, "detected": 2, "recall": 0.25, "ci95": None, "excluded_draws": 0},
+            "UNSUPPORTED": {"n": 8, "detected": 6, "recall": 0.75, "ci95": None, "excluded_draws": 0},
+        }
+        assert block["specificity"] == {
+            "label": "SUPPORTED",
+            "n": 10,
+            "recognized": 9,
+            "value": 0.9,
+            "ci95": None,
+            "excluded_draws": 0,
+        }
+        assert block["bootstrap"] == {"resamples": 0, "seed": 0, "groups": 6, "reliable": True}
+        # the pooled recall of `binary` is the mean of the two, weighted by their counts
+        pooled = binary_metrics(judge, [label == "SUPPORTED" for label in labels])["recall_not_supported"]
+        assert pooled == pytest.approx((8 * 0.25 + 8 * 0.75) / 16)
+
+    def test_a_label_absent_from_the_sample_keeps_its_key(self):
+        judge, labels, groups = self._table()
+        keep = [i for i, label in enumerate(labels) if label != "CONTRADICTED"]
+        block = recall_by_label(
+            [judge[i] for i in keep], [labels[i] for i in keep], [groups[i] for i in keep], 0.5, seed=3, resamples=50
+        )
+        assert block["labels"]["CONTRADICTED"] == {
+            "n": 0,
+            "detected": 0,
+            "recall": None,
+            "ci95": None,
+            "excluded_draws": 0,  # no interval to compute: nothing excluded from it
+        }
+        assert block["labels"]["UNSUPPORTED"]["recall"] == 0.75 and block["labels"]["UNSUPPORTED"]["ci95"] is not None
+        assert list(block["labels"]) == ["CONTRADICTED", "UNSUPPORTED"]
+
+    def test_intervals_come_from_the_draws_of_the_main_bootstrap_and_count_those_without_the_label(self):
+        judge, labels, groups = self._table()
+        seed, resamples = 11, 200
+        block = recall_by_label(judge, labels, groups, 0.25, seed=seed, resamples=resamples)
+
+        # the same draws, generated here as grouped_bootstrap does: six groups drawn with replacement
+        order = list(dict.fromkeys(groups))
+        members = {g: [i for i, name in enumerate(groups) if name == g] for g in order}
+        rng = random.Random(seed)
+        expected: dict[str, list[float]] = {"CONTRADICTED": [], "UNSUPPORTED": [], "SUPPORTED": []}
+        missing = dict.fromkeys(expected, 0)
+        single_class = 0
+        for _ in range(resamples):
+            drawn = [i for _ in order for i in members[order[rng.randrange(len(order))]]]
+            human = [labels[i] == "SUPPORTED" for i in drawn]
+            single_class += all(human) or not any(human)
+            for label in expected:
+                verdicts = [judge[i] for i in drawn if labels[i] == label]
+                if not verdicts:
+                    missing[label] += 1
+                    continue
+                agreeing = sum(1 for v in verdicts if v == (label == "SUPPORTED"))
+                expected[label].append(agreeing / len(verdicts))
+
+        def interval(values: list[float]) -> list[float]:
+            values = sorted(values)
+            return [
+                values[max(0, math.floor(0.025 * (len(values) - 1)))],
+                values[min(len(values) - 1, math.ceil(0.975 * (len(values) - 1)))],
+            ]
+
+        for label in ("CONTRADICTED", "UNSUPPORTED"):
+            assert block["labels"][label]["excluded_draws"] == missing[label] > 0
+            assert block["labels"][label]["ci95"] == pytest.approx(interval(expected[label]))
+        assert block["specificity"]["excluded_draws"] == missing["SUPPORTED"] > 0
+        assert block["specificity"]["ci95"] == pytest.approx(interval(expected["SUPPORTED"]))
+        # with two groups per label out of six, a label is absent from about (4/6)**6 = 9% of the draws
+        assert block["bootstrap"]["reliable"] is all(count <= 0.10 * resamples for count in missing.values())
+        # the main bootstrap ran on the same sequence: it excluded exactly the single-class draws counted above
+        main = grouped_bootstrap(judge, [label == "SUPPORTED" for label in labels], groups, seed, resamples)
+        assert main["excluded_single_class_draws"] == single_class
+        assert recall_by_label(judge, labels, groups, 0.25, seed=seed, resamples=resamples) == block  # seeded
+
+    def test_interval_collapses_when_every_group_has_the_same_recall_and_flags_many_lost_draws(self):
+        # every contradicted group is detected at 50%, whatever the draw; one unsupported group out of ten
+        judge: list[bool] = []
+        labels: list[str] = []
+        groups: list[str] = []
+        for g in range(5):
+            judge += [False, True]
+            labels += ["CONTRADICTED"] * 2
+            groups += [f"c{g}"] * 2
+        for g in range(4):
+            judge += [True, True]
+            labels += ["SUPPORTED"] * 2
+            groups += [f"s{g}"] * 2
+        judge += [False]
+        labels += ["UNSUPPORTED"]
+        groups += ["u0"]
+        block = recall_by_label(judge, labels, groups, 0.5, seed=1, resamples=300)
+        assert block["labels"]["CONTRADICTED"]["ci95"] == [0.5, 0.5]
+        # the single unsupported group is absent from about (9/10)**10 = 35% of the draws
+        assert block["labels"]["UNSUPPORTED"]["excluded_draws"] > 30
+        assert block["labels"]["UNSUPPORTED"]["ci95"] == [1.0, 1.0]
+        assert block["bootstrap"]["reliable"] is False
 
 
 class TestRun:
@@ -921,6 +1049,109 @@ class TestRun:
         assert adjusted["missing_labels"] == ["CONTRADICTED"] and adjusted["brier_reweighted"] is None
         assert run.report["calibration"]["brier"] is not None  # the sample's Brier is still there, flagged
         assert "Brier, reweighted" not in run.report_md.read_text()
+
+    @pytest.mark.asyncio
+    async def test_report_gives_the_recall_of_each_human_label_at_the_report_threshold(self, tmp_path: Path):
+        # dev puts the threshold at 0.65 (as in the dev-threshold test); the policy's own is 0.5
+        dev_rows = [sentence_row(i, "SUPPORTED", "ok p=0.7") for i in range(6)] + [
+            sentence_row(10 + i, "UNSUPPORTED", "bad p=0.6") for i in range(6)
+        ]
+        # contradicted at 0.6 (4) and 0.8 (4); unsupported at 0.3 (6) and 0.7 (2); supported at 0.9 (9) and 0.6 (1)
+        test_rows = (
+            [sentence_row(100 + i, "CONTRADICTED", "bad p=0.6" if i < 4 else "bad p=0.8") for i in range(8)]
+            + [sentence_row(200 + i, "UNSUPPORTED", "bad p=0.3" if i < 6 else "bad p=0.7") for i in range(8)]
+            + [sentence_row(300 + i, "SUPPORTED", "ok p=0.9" if i < 9 else "ok p=0.6") for i in range(10)]
+        )
+        dev = load_records(write_jsonl(tmp_path / "dev.jsonl", dev_rows))
+        test = load_records(write_jsonl(tmp_path / "test.jsonl", test_rows))
+        run = await run_benchmark(
+            ScriptedProbabilityJudge(), test, out_dir=tmp_path / "out", dev_records=dev, seed=5, bootstrap_resamples=100
+        )
+        block = run.report["recall_by_label"]
+        assert block["threshold"] == run.report["threshold"]["value"] == 0.65
+        # at 0.65 the contradicted at 0.6 are detected; at the policy's 0.5 none would be
+        assert (block["labels"]["CONTRADICTED"]["detected"], block["labels"]["CONTRADICTED"]["recall"]) == (4, 0.5)
+        assert (block["labels"]["UNSUPPORTED"]["detected"], block["labels"]["UNSUPPORTED"]["recall"]) == (6, 0.75)
+        assert (block["specificity"]["recognized"], block["specificity"]["value"]) == (9, 0.9)
+        assert block["sample_dependent"] is False
+        low, high = block["labels"]["CONTRADICTED"]["ci95"]
+        assert 0.0 <= low <= 0.5 <= high <= 1.0
+        # same bootstrap as the main intervals
+        assert {k: block["bootstrap"][k] for k in ("resamples", "seed", "groups")} == {
+            k: run.report["bootstrap"][k] for k in ("resamples", "seed", "groups")
+        }
+        assert run.report["binary"]["recall_not_supported"] == pytest.approx((4 + 6) / 16)
+        assert json.loads(run.report_json.read_text())["recall_by_label"] == block
+        md = run.report_md.read_text()
+        assert "## Recall by human label" in md
+        assert "counts as not supported (score < 0.65). Per-label rates: they do not depend on the class mix." in md
+        assert "| Human label | n | Detected | Rate | 95% CI |" in md
+        assert f"| CONTRADICTED | 8 | 4 | 0.500 | {low:.3f} to {high:.3f} |" in md
+        assert "| SUPPORTED (specificity, passed) | 10 | 9 | 0.900 |" in md
+        assert md.index("## Recall by human label") < md.index("## Failures and cost")
+
+        without = await run_benchmark(
+            ScriptedProbabilityJudge(), test, out_dir=tmp_path / "out2", bootstrap_resamples=0
+        )
+        block = without.report["recall_by_label"]
+        assert block["threshold"] == 0.5 and block["labels"]["CONTRADICTED"]["recall"] == 0.0
+        assert block["labels"]["CONTRADICTED"]["ci95"] is None and block["specificity"]["ci95"] is None
+        assert "| CONTRADICTED | 8 | 0 | 0.000 | n/a |" in without.report_md.read_text()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("seed", [0, 1, 2])
+    async def test_recall_by_label_and_prevalence_adjusted_give_the_same_rates(self, tmp_path: Path, seed: int):
+        # a quota run where both negative labels are subsampled and each label has a mixed outcome
+        rows = (
+            [sentence_row(i, "SUPPORTED", f"Supported {i}." + (" (raw 1)" if i % 5 == 0 else "")) for i in range(60)]
+            + [sentence_row(100 + i, "CONTRADICTED", f"C {i}." + (" (raw 1)" if i % 3 == 0 else "")) for i in range(12)]
+            + [sentence_row(200 + i, "UNSUPPORTED", f"U {i}." + (" (raw 1)" if i % 4 else "")) for i in range(40)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", per_class=8, seed=seed, bootstrap_resamples=50
+        )
+        block, adjusted = run.report["recall_by_label"], run.report["prevalence_adjusted"]
+        assert adjusted["strata"] == "label"
+        for label, entry in block["labels"].items():
+            assert (entry["n"], entry["recall"]) == (adjusted["labels"][label]["n"], adjusted["labels"][label]["rate"])
+            assert entry["detected"] == round(entry["recall"] * entry["n"])
+        supported = adjusted["labels"]["SUPPORTED"]
+        assert (block["specificity"]["n"], block["specificity"]["value"]) == (supported["n"], supported["rate"])
+        assert block["specificity"]["value"] == adjusted["specificity"]
+        # under quotas: same block, not flagged, where the raw metrics are
+        assert block["sample_dependent"] is False and run.report["sample_dependent_metrics"] is True
+        assert {label: entry["n"] for label, entry in block["labels"].items()} == {"CONTRADICTED": 8, "UNSUPPORTED": 8}
+
+    @pytest.mark.asyncio
+    async def test_recall_by_label_with_a_label_left_without_a_scored_record(self, tmp_path: Path):
+        rows = (
+            [sentence_row(i, "SUPPORTED", f"Supported {i}.") for i in range(6)]
+            + [sentence_row(100 + i, "CONTRADICTED", f"Unreadable {i} (fail-parse).") for i in range(3)]
+            + [sentence_row(200 + i, "UNSUPPORTED", f"Rejected {i} (raw 1).") for i in range(4)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", bootstrap_resamples=20)
+        block = run.report["recall_by_label"]
+        assert block["labels"]["CONTRADICTED"] == {
+            "n": 0,
+            "detected": 0,
+            "recall": None,
+            "ci95": None,
+            "excluded_draws": 0,
+        }
+        assert block["labels"]["UNSUPPORTED"]["recall"] == 1.0
+        assert "| CONTRADICTED | 0 | 0 | n/a | n/a |" in run.report_md.read_text()
+
+    @pytest.mark.asyncio
+    async def test_answer_level_set_has_no_recall_by_label(self, tmp_path: Path):
+        rows = [{"id": f"p{i}", "answer": f"Good {i}.", "context": "c", "label": "PASS"} for i in range(4)] + [
+            {"id": f"f{i}", "answer": f"Bad {i} (raw 1).", "context": "c", "label": "FAIL"} for i in range(4)
+        ]
+        records = load_records(write_jsonl(tmp_path / "answers.jsonl", rows))
+        run = await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+        assert run.report["level"] == "answer" and run.report["recall_by_label"] is None
+        assert "Recall by human label" not in run.report_md.read_text()
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):
