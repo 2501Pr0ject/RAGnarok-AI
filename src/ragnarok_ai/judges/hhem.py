@@ -286,7 +286,10 @@ class TransformersBackend:
                 f"unexpected {sorted(unexpected)}"
             )
             raise ConfigurationError(msg)
-        self.model = model.to(device).eval()
+        # Typed as its base class for the move: transformers decorates `PreTrainedModel.to`, and the type
+        # checker no longer sees a method there (it reads `device` as `self`). The call is the same one
+        module: torch.nn.Module = model
+        self.model = module.to(device).eval()
         self.device = device
         self.tokenizer = AutoTokenizer.from_pretrained(str(artifacts.foundation_dir))
         # 512 is the foundation's training length, not a limit: silence the tokenizer's warning
