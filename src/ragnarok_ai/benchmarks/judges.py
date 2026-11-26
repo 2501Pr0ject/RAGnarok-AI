@@ -47,7 +47,7 @@ from ragnarok_ai.judges.contract import (
 from ragnarok_ai.judges.runner import judge_many
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Iterable, Mapping, Sequence
+    from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping, Sequence
 
     from ragnarok_ai.core.protocols import JudgeProtocol
 
@@ -248,6 +248,23 @@ def quota_sample(records: Sequence[BenchRecord], per_class: int, seed: int) -> l
     return [r for i, r in enumerate(records) if i in picked]
 
 
+def _label_agreement(judge_pass: Sequence[bool], labels: Sequence[str]) -> dict[str, tuple[int, int]]:
+    """Per human label: (records the judge reads as the humans do, records).
+
+    A supported label (``PASS_LABELS``) is read as the humans do when the
+    judge passes it, a not-supported one when the judge rejects it. The
+    rate of a label is the first number over the second: the specificity
+    for a supported label, the recall for a not-supported one. This is the
+    single computation behind ``prevalence_adjusted`` and
+    ``recall_by_label``.
+    """
+    counts: dict[str, tuple[int, int]] = {}
+    for label, passed in zip(labels, judge_pass, strict=True):
+        agreeing, n = counts.get(label, (0, 0))
+        counts[label] = (agreeing + (1 if passed == (label in PASS_LABELS) else 0), n + 1)
+    return counts
+
+
 def prevalence_adjusted(
     judge_pass: Sequence[bool],
     human_pass: Sequence[bool],
@@ -296,9 +313,7 @@ def prevalence_adjusted(
         recall = (sum(1 for j in negatives if not j) / len(negatives)) if negatives else None
         specificity = (sum(1 for j in positives if j) / len(positives)) if positives else None
     else:
-        scored: dict[str, list[bool]] = {}
-        for label, j in zip(labels, judge_pass, strict=True):
-            scored.setdefault(label, []).append(j)
+        agreement = _label_agreement(judge_pass, labels)
         total = sum(full_label_counts.values())
         by_label = {}
         # Per class (True: supported): the full-set count and the weighted sum of the rates of its labels
@@ -310,14 +325,14 @@ def prevalence_adjusted(
             if count <= 0:
                 continue
             supported = label in PASS_LABELS
-            verdicts = scored.get(label, [])
             # The share of the label the judge reads as the humans do: passed if supported, rejected if not
-            rate = (sum(1 for j in verdicts if j == supported) / len(verdicts)) if verdicts else None
+            agreeing, n = agreement.get(label, (0, 0))
+            rate = (agreeing / n) if n else None
             by_label[label] = {
                 "human_class": "supported" if supported else NEGATIVE_CLASS,
                 "full_set_count": count,
                 "full_set_share": count / total,
-                "n": len(verdicts),
+                "n": n,
                 "rate": rate,
             }
             full_class[supported] += count
@@ -648,6 +663,32 @@ def calibration_metrics(probabilities: Sequence[float], human_pass: Sequence[boo
     return {"brier": brier, "ece": ece, "bins": bins}
 
 
+def _group_draws(groups: Sequence[str], seed: int, resamples: int) -> Iterator[list[int]]:
+    """The record indices of each bootstrap draw: as many groups as the sample holds, drawn with replacement.
+
+    Every interval of a report is computed on this one sequence of draws
+    (same groups, same seed), so the figures of a draw belong together.
+    """
+    units: dict[str, list[int]] = {}
+    for i, g in enumerate(groups):
+        units.setdefault(g, []).append(i)
+    unit_list = list(units.values())
+    rng = random.Random(seed)
+    for _ in range(resamples if unit_list else 0):
+        yield [i for _ in range(len(unit_list)) for i in unit_list[rng.randrange(len(unit_list))]]
+
+
+def _percentile_interval(values: list[float]) -> list[float] | None:
+    """The 2.5th and 97.5th percentiles of *values*; ``None`` without any."""
+    if not values:
+        return None
+    values = sorted(values)
+    return [
+        values[max(0, math.floor(0.025 * (len(values) - 1)))],
+        values[min(len(values) - 1, math.ceil(0.975 * (len(values) - 1)))],
+    ]
+
+
 def grouped_bootstrap(
     judge_pass: Sequence[bool],
     human_pass: Sequence[bool],
@@ -661,15 +702,9 @@ def grouped_bootstrap(
     are flagged unreliable above 10% exclusions. A draw whose kappa is
     undefined (cannot happen after that exclusion) would be counted too.
     """
-    units: dict[str, list[int]] = {}
-    for i, g in enumerate(groups):
-        units.setdefault(g, []).append(i)
-    unit_list = list(units.values())
-    rng = random.Random(seed)
     samples: dict[str, list[float]] = {"f1_not_supported": [], "balanced_accuracy": [], "kappa": []}
     excluded = 0
-    for _ in range(resamples):
-        drawn = [i for _ in range(len(unit_list)) for i in unit_list[rng.randrange(len(unit_list))]]
+    for drawn in _group_draws(groups, seed, resamples):
         h = [human_pass[i] for i in drawn]
         if all(h) or not any(h):
             excluded += 1
@@ -683,22 +718,95 @@ def grouped_bootstrap(
             continue
         samples["kappa"].append(kappa)
 
-    def interval(values: list[float]) -> list[float] | None:
-        if not values:
-            return None
-        values = sorted(values)
-        return [
-            values[max(0, math.floor(0.025 * (len(values) - 1)))],
-            values[min(len(values) - 1, math.ceil(0.975 * (len(values) - 1)))],
-        ]
-
     return {
         "resamples": resamples,
         "seed": seed,
-        "groups": len(unit_list),
+        "groups": len(set(groups)),
         "excluded_single_class_draws": excluded,
         "reliable": excluded <= 0.10 * resamples,
-        "intervals": {k: interval(v) for k, v in samples.items()},
+        "intervals": {k: _percentile_interval(v) for k, v in samples.items()},
+    }
+
+
+def recall_by_label(
+    judge_pass: Sequence[bool],
+    labels: Sequence[str],
+    groups: Sequence[str],
+    threshold: float,
+    seed: int,
+    resamples: int,
+) -> dict[str, Any]:
+    """Recall of each not-supported human label of a sentence-level set, with the specificity.
+
+    ``binary`` pools CONTRADICTED and UNSUPPORTED into one "not supported"
+    recall; a judge can detect one and miss the other. For each of the two
+    labels: the scored records (``n``), those the judge counts as not
+    supported (``detected``: score below *threshold*, the threshold of the
+    report), their share (``recall``) and its 95% interval. The
+    specificity, the share of the SUPPORTED records the judge passes, is
+    given next to them so the three rates are read together.
+
+    A rate within one label does not depend on the class mix, so the block
+    is not sample-dependent under class quotas; a quota only changes ``n``
+    and the width of the intervals. The rates are those of
+    ``prevalence_adjusted`` (``_label_agreement``).
+
+    A label without any scored record keeps its key, with ``n`` 0 and
+    ``None`` for the rate and the interval. The intervals come from the
+    draws of ``grouped_bootstrap`` (same groups, seed and resamples); a
+    draw without any record of a label is excluded for that label and
+    counted (``excluded_draws``), and the block is flagged unreliable when
+    a label loses more than 10% of the draws.
+    """
+    positive = next(label for label in SENTENCE_LABELS if label in PASS_LABELS)
+    negatives = [label for label in SENTENCE_LABELS if label not in PASS_LABELS]
+    agreement = _label_agreement(judge_pass, labels)
+    rates: dict[str, list[float]] = {label: [] for label in SENTENCE_LABELS}
+    excluded = dict.fromkeys(SENTENCE_LABELS, 0)
+    for drawn in _group_draws(groups, seed, resamples):
+        draw = _label_agreement([judge_pass[i] for i in drawn], [labels[i] for i in drawn])
+        for label in SENTENCE_LABELS:
+            if agreement.get(label) is None:
+                continue  # no record at all: no interval, and nothing to count
+            if label in draw:
+                rates[label].append(draw[label][0] / draw[label][1])
+            else:
+                excluded[label] += 1
+
+    def entry(label: str) -> tuple[int, int, float | None, list[float] | None]:
+        agreeing, n = agreement.get(label, (0, 0))
+        return n, agreeing, (agreeing / n) if n else None, _percentile_interval(rates[label])
+
+    by_label: dict[str, dict[str, Any]] = {}
+    for label in negatives:
+        n, detected, recall, interval = entry(label)
+        by_label[label] = {
+            "n": n,
+            "detected": detected,
+            "recall": recall,
+            "ci95": interval,
+            "excluded_draws": excluded[label],
+        }
+    n, recognized, specificity, interval = entry(positive)
+    return {
+        "threshold": threshold,
+        # Rates within one label: a class quota changes n and the intervals, not what is estimated
+        "sample_dependent": False,
+        "labels": by_label,
+        "specificity": {
+            "label": positive,
+            "n": n,
+            "recognized": recognized,
+            "value": specificity,
+            "ci95": interval,
+            "excluded_draws": excluded[positive],
+        },
+        "bootstrap": {
+            "resamples": resamples,
+            "seed": seed,
+            "groups": len(set(groups)),
+            "reliable": all(count <= 0.10 * resamples for count in excluded.values()),
+        },
     }
 
 
@@ -1016,6 +1124,12 @@ async def run_benchmark(
         },
         "binary": binary_metrics(judge_pass, human_pass),
         "bootstrap": grouped_bootstrap(judge_pass, human_pass, groups, seed, bootstrap_resamples) if scored else None,
+        # Sentence-level sets only: an answer-level set (PASS / FAIL) has one not-supported label, nothing to split
+        "recall_by_label": (
+            recall_by_label(judge_pass, [r.label for r in scored], groups, threshold, seed, bootstrap_resamples)
+            if level == "sentence"
+            else None
+        ),
         "failures": {},
         "truncations": sum(1 for r in evaluated if (rows[r.id].get("trace") or {}).get("context_truncated") is True),
         "latency_ms": None,
@@ -1130,6 +1244,46 @@ def _adjusted_strata_lines(adjusted: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _recall_by_label_lines(block: dict[str, Any] | None) -> list[str]:
+    """The "Recall by human label" section; nothing on an answer-level set."""
+    if not block:
+        return []
+
+    def row(name: str, n: int, count: int, rate: float | None, interval: list[float] | None) -> str:
+        shown = "n/a" if rate is None else f"{rate:.3f}"
+        ci = "n/a" if interval is None else f"{interval[0]:.3f} to {interval[1]:.3f}"
+        return f"| {name} | {n} | {count} | {shown} | {ci} |"
+
+    lines = [
+        "",
+        "## Recall by human label",
+        "",
+        f"Share of the sentences of each human label that the judge counts as {NEGATIVE_CLASS} "
+        f"(score < {block['threshold']:.2f}). Per-label rates: they do not depend on the class mix.",
+        "",
+        "| Human label | n | Detected | Rate | 95% CI |",
+        "|---|---|---|---|---|",
+    ]
+    for label, v in block["labels"].items():
+        lines.append(row(label, v["n"], v["detected"], v["recall"], v["ci95"]))
+    s = block["specificity"]
+    lines.append(row(f"{s['label']} (specificity, passed)", s["n"], s["recognized"], s["value"], s["ci95"]))
+    boot = block["bootstrap"]
+    lost = {label: v["excluded_draws"] for label, v in block["labels"].items() if v["excluded_draws"]}
+    if s["excluded_draws"]:
+        lost[s["label"]] = s["excluded_draws"]
+    if lost:
+        lines += [
+            "",
+            "Draws without any record of the label, excluded from its interval: "
+            + ", ".join(f"{label} {count}" for label, count in lost.items())
+            + f" of {boot['resamples']}"
+            + ("" if boot["reliable"] else "; intervals NOT reliable")
+            + ".",
+        ]
+    return lines
+
+
 def render_report(report: dict[str, Any]) -> str:
     """Markdown view of a report."""
     b = report["binary"]
@@ -1177,6 +1331,7 @@ def render_report(report: dict[str, Any]) -> str:
         for name, ci in boot["intervals"].items():
             if ci is not None:
                 lines.append(f"- {name}: 95% CI {ci[0]:.3f} to {ci[1]:.3f}")
+    lines += _recall_by_label_lines(report.get("recall_by_label"))
     if "three_class" in report:
         lines += ["", "## Three classes", "", "| Class | Precision | Recall | F1 | Support |", "|---|---|---|---|---|"]
         for c, v in report["three_class"]["per_class"].items():
@@ -1290,6 +1445,7 @@ __all__ = [
     "prevalence_adjusted",
     "quota_sample",
     "read_attempts",
+    "recall_by_label",
     "records_sha256",
     "render_report",
     "reweighted_brier",

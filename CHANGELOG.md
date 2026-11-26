@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`judge-bench`: recall per human label on sentence-level sets** (#167).
+  The report pooled `CONTRADICTED` and `UNSUPPORTED` into one "not
+  supported" recall, and gave per-label figures only for a judge that
+  predicts the three labels itself. `report.json` gains `recall_by_label`:
+  for each of the two labels, `n` (scored records), `detected` (judged not
+  supported at the report's threshold), `recall`, `ci95` and
+  `excluded_draws`; next to them `specificity` (the `SUPPORTED` records the
+  judge passes), the `threshold` used and the bootstrap parameters.
+  `report.md` gains a "Recall by human label" table. The intervals come
+  from the draws of the existing grouped bootstrap (same groups, seed and
+  resamples); a draw without any record of a label is excluded for that
+  label and counted, and the block is flagged unreliable above 10%. A label
+  without any scored record keeps its key, with `n` 0 and `null` for the
+  rate and the interval. The block is not sample-dependent: under
+  `--per-class` a rate within one label estimates the same quantity, only
+  `n` and the intervals change, and its rates are those of
+  `prevalence_adjusted.labels`. `null` on an answer-level set (`PASS` /
+  `FAIL`). `recall_by_label()` is exported by
+  `ragnarok_ai.benchmarks.judges`. `binary`, `three_class` and the
+  breakdowns are unchanged.
 - **`judge-bench --per-class`: Brier reweighted to the full set**.
   `prevalence_adjusted` gains `brier_reweighted`, the Brier score at the
   full set's composition. Brier is a mean of per-record squared errors, so
