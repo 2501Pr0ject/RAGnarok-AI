@@ -134,6 +134,58 @@ def test_self_hosted_with_an_api_key_passes_every_required_argument_of_connect_t
     assert {"grpc_host", "grpc_port", "grpc_secure"} <= set(out["required"])  # type: ignore[arg-type]
 
 
+def test_what_the_real_connect_functions_receive_for_each_form_of_url():
+    """http or https, with or without a port: the values bound to the real signatures (#201)."""
+    out = run(
+        BINDING
+        + """
+    async def main():
+        results = {}
+        for url in ("https://weaviate.example.org", "https://weaviate.example.org:8443",
+                    "http://weaviate.internal", "http://weaviate.internal:8081"):
+            calls.clear()
+            await attempt(url=url, api_key="k")
+            results["key " + url] = calls[0]
+            calls.clear()
+            await attempt(url=url)
+            results["no key " + url] = calls[0]
+        print(json.dumps({"results": results}))
+
+    import os
+    os.environ.pop("WEAVIATE_API_KEY", None)
+    asyncio.run(main())
+    """
+    )
+    r = out["results"]
+
+    def custom(url: str) -> tuple[object, ...]:
+        name, kw = r["key " + url]  # type: ignore[index]
+        return name, kw["http_host"], kw["http_port"], kw["http_secure"], kw["grpc_host"], kw["grpc_secure"]
+
+    assert custom("https://weaviate.example.org") == (
+        "connect_to_custom",
+        "weaviate.example.org",
+        443,  # was 8080: TLS on Weaviate's plain HTTP port
+        True,
+        "weaviate.example.org",
+        True,
+    )
+    assert custom("https://weaviate.example.org:8443")[2] == 8443
+    assert custom("http://weaviate.internal") == (
+        "connect_to_custom",
+        "weaviate.internal",
+        8080,
+        False,
+        "weaviate.internal",
+        False,
+    )
+    assert custom("http://weaviate.internal:8081")[2] == 8081
+    # without a key: connect_to_local with the same host and port
+    assert r["no key http://weaviate.internal"] == ["connect_to_local", {"host": "weaviate.internal", "port": 8080}]  # type: ignore[index]
+    assert r["no key http://weaviate.internal:8081"][1]["port"] == 8081  # type: ignore[index]
+    assert r["no key https://weaviate.example.org:8443"][1] == {"host": "weaviate.example.org", "port": 8443}  # type: ignore[index]
+
+
 def test_the_two_other_ways_to_connect_still_bind_to_their_real_signatures():
     out = run(
         BINDING
