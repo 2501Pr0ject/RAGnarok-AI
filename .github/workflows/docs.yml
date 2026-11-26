@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mkdocs>=1.6 mkdocs-material>=9.5 mkdocs-minify-plugin>=0.8
+          pip install "mkdocs>=1.6" "mkdocs-material>=9.5" "mkdocs-minify-plugin>=0.8"
 
       - name: Build documentation
         run: mkdocs build --strict
