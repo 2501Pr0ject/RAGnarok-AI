@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`judge-bench --per-class` on a sentence-level set: the
+  prevalence-adjusted figures no longer follow the quota's mix between
+  `CONTRADICTED` and `UNSUPPORTED`** (#182). The quota is drawn per human
+  label, but `prevalence_adjusted` pooled the two not-supported labels in
+  the sample before reweighting on two classes, so its recall mixed the two
+  per-label recalls in the quota's proportions instead of the set's. The
+  rates are now estimated per label and combined with the labels' shares in
+  the full set. **The figures change for sentence-level quota runs**:
+  `recall_not_supported`, `precision_not_supported_reweighted` and
+  `accuracy_reweighted` of `prevalence_adjusted`, in `report.json` and
+  `report.md`. Example (HHEM-2.1-Open, RAGTruth test set, `--per-class
+  300`): recall 0.428 becomes 0.463, for 0.488 on the full set; the
+  remaining gap is the draw of 300 unsupported sentences out of 469.
+  `specificity`, the raw metrics, answer-level sets (`PASS` / `FAIL`, where
+  the two classes are the quota's strata) and runs without `--per-class`
+  are unchanged. The block gains `strata` (`"label"` or `"class"`),
+  `labels` (per label: full-set count and share, scored records, rate) and
+  `missing_labels`: a label of the full set with no scored record in the
+  sample makes the figures that need its rate `null` instead of being
+  silently left out. `prevalence_adjusted()` takes two optional keyword
+  arguments, `labels` and `full_label_counts`; without them it computes as
+  before. Reports written by 1.13.0 and 1.13.1 keep the old values and can
+  be recomputed from `attempts.jsonl` and the data file.
+
 ## [1.13.1] - 2026-11-26
 
 ### Fixed
