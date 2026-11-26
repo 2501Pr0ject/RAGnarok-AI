@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`judge-bench --per-class`: Brier reweighted to the full set**.
+  `prevalence_adjusted` gains `brier_reweighted`, the Brier score at the
+  full set's composition. Brier is a mean of per-record squared errors, so
+  it splits exactly by stratum: the mean squared error of each stratum is
+  weighted by the stratum's share in the full set. The strata are those of
+  the block: the human labels on a sentence-level set (`SUPPORTED`,
+  `CONTRADICTED`, `UNSUPPORTED`, so that the quota's mix between the two
+  not-supported labels does not enter, see #182), the two classes on an
+  answer-level set. `null` when a stratum of the full set has no scored
+  record in the sample, absent for a judge without probabilities.
+  `report.md` prints it in the prevalence-adjusted table.
+  `reweighted_brier()` is exported by `ragnarok_ai.benchmarks.judges`. ECE
+  is not reweighted (bin membership would have to be reweighted record by
+  record) and stays flagged as sample-dependent.
+
 ### Fixed
 - **`judge-bench --per-class` on a sentence-level set: the
   prevalence-adjusted figures no longer follow the quota's mix between

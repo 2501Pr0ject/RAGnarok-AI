@@ -347,6 +347,48 @@ def prevalence_adjusted(
     }
 
 
+def reweighted_brier(
+    probabilities: Sequence[float],
+    human_pass: Sequence[bool],
+    full_not_supported_prevalence: float,
+    *,
+    labels: Sequence[str] | None = None,
+    full_label_counts: Mapping[str, int] | None = None,
+) -> float | None:
+    """Brier score at the full set's composition, from a sample whose mix was set by quotas.
+
+    Brier is a mean of per-record squared errors, so it splits exactly by
+    stratum: the mean squared error of each stratum, weighted by the
+    stratum's share in the full set. The strata are those of
+    ``prevalence_adjusted``. With *labels* and *full_label_counts* they are
+    the human labels, the unit the quota is drawn on: on a sentence-level
+    set the not-supported class holds CONTRADICTED and UNSUPPORTED, and
+    pooling them in the sample would weigh their errors by the quota's mix.
+    Without them they are the two classes, weighted ``pi`` and ``1 - pi``
+    (*full_not_supported_prevalence*): exact when the quota is drawn on
+    those two classes, as on an answer-level set.
+
+    ``None`` when a stratum of the full set has no record in the sample.
+    ECE has no such split (bin membership would have to be reweighted
+    record by record) and is not reweighted.
+    """
+    errors = [(p - (1.0 if h else 0.0)) ** 2 for p, h in zip(probabilities, human_pass, strict=True)]
+    strata: dict[Any, list[float]] = {}
+    weights: dict[Any, float]
+    if labels is None or full_label_counts is None:
+        for error, h in zip(errors, human_pass, strict=True):
+            strata.setdefault(h, []).append(error)
+        weights = {False: full_not_supported_prevalence, True: 1 - full_not_supported_prevalence}
+    else:
+        for error, label in zip(errors, labels, strict=True):
+            strata.setdefault(label, []).append(error)
+        total = sum(full_label_counts.values())
+        weights = {label: count / total for label, count in full_label_counts.items() if count > 0}
+    if not weights or any(not strata.get(stratum) for stratum in weights):
+        return None
+    return sum(weight * statistics.fmean(strata[stratum]) for stratum, weight in weights.items())
+
+
 # =============================================================================
 # Attempts on disk
 # =============================================================================
@@ -827,9 +869,9 @@ async def run_benchmark(
             quotas), drawn with *seed*; exclusive with *sample*. The raw
             metrics, Brier and ECE included, are then flagged as
             sample-dependent and the report adds the recall, the
-            specificity and the precision and accuracy reweighted to the
-            full set (rates per human label on a sentence-level set, see
-            ``prevalence_adjusted``).
+            specificity and the precision, accuracy and Brier reweighted to
+            the full set (rates per human label on a sentence-level set,
+            see ``prevalence_adjusted`` and ``reweighted_brier``).
         stratify: ``label`` (default), a metadata field, or ``None`` for a plain draw.
         seed: Seed of the sample and of the bootstrap.
         by: Metadata fields for per-value breakdowns (e.g. ``task``, ``generator``).
@@ -1030,6 +1072,15 @@ async def run_benchmark(
             **calibration_metrics(calibrated, human_pass),
             "sample_dependent": per_class is not None,
         }
+        if report["prevalence_adjusted"] is not None:
+            # Same strata as the block: the human labels on a sentence-level set, the two classes otherwise
+            report["prevalence_adjusted"]["brier_reweighted"] = reweighted_brier(
+                calibrated,
+                human_pass,
+                report["prevalence_adjusted"]["full_set_not_supported_prevalence"],
+                labels=[r.label for r in scored] if level == "sentence" else None,
+                full_label_counts=Counter(r.label for r in records) if level == "sentence" else None,
+            )
 
     for field_name in by:
         values: dict[str, dict[str, float | None]] = {}
@@ -1169,6 +1220,11 @@ def render_report(report: dict[str, Any]) -> str:
             f"| Precision (not supported), reweighted by full-set prevalence | {pct(adjusted['precision_not_supported_reweighted'])} |",
             f"| Accuracy, reweighted by full-set prevalence | {pct(adjusted['accuracy_reweighted'])} |",
         ]
+        if adjusted.get("brier_reweighted") is not None:
+            lines.append(
+                f"| Brier, reweighted to the full set | {adjusted['brier_reweighted']:.4f} |",
+            )
+            lines += ["", "ECE is not reweighted: it stays a figure of the sample."]
     lines += ["", "## Failures and cost", ""]
     lines.append(f"- failures by kind: {report['failures'] or 'none'}")
     lines.append(f"- probable truncations: {report['truncations']}")
@@ -1236,6 +1292,7 @@ __all__ = [
     "read_attempts",
     "records_sha256",
     "render_report",
+    "reweighted_brier",
     "run_benchmark",
     "stratified_sample",
     "three_class_metrics",

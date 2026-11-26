@@ -24,11 +24,13 @@ from ragnarok_ai.benchmarks.judges import (
     quota_sample,
     read_attempts,
     records_sha256,
+    reweighted_brier,
     run_benchmark,
     stratified_sample,
     three_class_metrics,
 )
 from ragnarok_ai.cli.main import app
+from ragnarok_ai.core.exceptions import JudgeParseError
 from tests.unit.benchmarks.fake_judge import ScriptedOrdinalJudge, ScriptedProbabilityJudge, ScriptedThreeClassJudge
 
 runner = CliRunner()
@@ -254,6 +256,54 @@ class TestSampling:
         )
         assert only_one["missing_labels"] == [] and only_one["recall_not_supported"] == pytest.approx(0.6)
         assert "CONTRADICTED" not in only_one["labels"]
+
+    def test_reweighted_brier_on_a_hand_computed_table(self):
+        # supported: errors 0.01, 0.09 (mean 0.05); not supported: errors 0.04, 0.36, 0.64 (mean 1.04 / 3)
+        probabilities = [0.9, 0.7, 0.2, 0.6, 0.8]
+        human = [True, True, False, False, False]
+        raw = calibration_metrics(probabilities, human)["brier"]
+        assert raw == pytest.approx((0.01 + 0.09 + 0.04 + 0.36 + 0.64) / 5)
+        assert reweighted_brier(probabilities, human, 0.06) == pytest.approx(0.06 * 1.04 / 3 + 0.94 * 0.05)
+        # at the sample's own prevalence the reweighting gives the raw Brier back
+        assert reweighted_brier(probabilities, human, 3 / 5) == pytest.approx(raw)
+        assert reweighted_brier([0.9, 0.8], [True, True], 0.06) is None  # a class is absent
+        assert reweighted_brier([], [], 0.06) is None
+
+    def test_reweighted_brier_per_label_when_both_negative_labels_are_subsampled(self):
+        # full set: 1000 supported, 40 contradicted, 160 unsupported; two records of each in the sample.
+        # squared errors: supported 0.01 and 0.09 (mean 0.05), contradicted 0.64 and 0.36 (mean 0.50),
+        # unsupported 0.04 and 0.00 (mean 0.02)
+        full = {"SUPPORTED": 1000, "CONTRADICTED": 40, "UNSUPPORTED": 160}
+        probabilities = [0.9, 0.7, 0.8, 0.6, 0.2, 0.0]
+        labels = ["SUPPORTED", "SUPPORTED", "CONTRADICTED", "CONTRADICTED", "UNSUPPORTED", "UNSUPPORTED"]
+        human = [label == "SUPPORTED" for label in labels]
+        pi = 200 / 1200
+        per_label = reweighted_brier(probabilities, human, pi, labels=labels, full_label_counts=full)
+        assert per_label == pytest.approx((1000 * 0.05 + 40 * 0.50 + 160 * 0.02) / 1200)
+        # pooling the two labels weighs the contradicted half of the not-supported class instead of a fifth
+        pooled = reweighted_brier(probabilities, human, pi)
+        assert pooled == pytest.approx(pi * 0.26 + (1 - pi) * 0.05)
+        assert pooled > per_label
+        # a label of the full set with no record: nothing to weigh it with
+        without = [i for i, label in enumerate(labels) if label != "CONTRADICTED"]
+        assert (
+            reweighted_brier(
+                [probabilities[i] for i in without],
+                [human[i] for i in without],
+                pi,
+                labels=[labels[i] for i in without],
+                full_label_counts=full,
+            )
+            is None
+        )
+        # a label the full set does not hold is not a stratum
+        assert reweighted_brier(
+            [probabilities[i] for i in without],
+            [human[i] for i in without],
+            160 / 1160,
+            labels=[labels[i] for i in without],
+            full_label_counts={**full, "CONTRADICTED": 0},
+        ) == pytest.approx((1000 * 0.05 + 160 * 0.02) / 1160)
 
     def test_sample_larger_than_set_returns_everything(self):
         records = load_records_from_rows(study_like_rows()[:5])
@@ -686,7 +736,7 @@ class TestRun:
         assert "failures by kind: {'backend': 1}" in run.report_md.read_text()
 
     @pytest.mark.asyncio
-    async def test_per_class_run_flags_calibration(self, tmp_path: Path):
+    async def test_per_class_run_flags_calibration_and_reweights_brier(self, tmp_path: Path):
         rows = (
             [sentence_row(i, "SUPPORTED", "ok p=0.9") for i in range(20)]
             + [sentence_row(100 + i, "UNSUPPORTED", "bad p=0.2") for i in range(2)]
@@ -699,22 +749,30 @@ class TestRun:
         calibration = quota.report["calibration"]
         assert calibration["sample_dependent"] is True
         assert calibration["brier"] == pytest.approx((2 * 0.01 + 2 * 0.04 + 2 * 0.36) / 6)  # the sample: 2 per label
+        pi = 4 / 24
+        assert quota.report["prevalence_adjusted"]["brier_reweighted"] == pytest.approx(pi * 0.20 + (1 - pi) * 0.01)
         assert json.loads(quota.report_json.read_text())["calibration"]["sample_dependent"] is True
         md = quota.report_md.read_text()
         assert "Calibration (sample-dependent, follows the class quotas): Brier 0.1367, ECE (10 bins)" in md
+        assert "| Brier, reweighted to the full set | 0.0417 |" in md
+        assert "ECE is not reweighted" in md
 
         plain = await run_benchmark(
             ScriptedProbabilityJudge(), records, out_dir=tmp_path / "plain", bootstrap_resamples=0
         )
         assert plain.report["calibration"]["sample_dependent"] is False
+        # on the full set the raw Brier is the reweighted one of the quota run: same scores, same class mix
+        assert plain.report["calibration"]["brier"] == pytest.approx(
+            quota.report["prevalence_adjusted"]["brier_reweighted"]
+        )
         plain_md = plain.report_md.read_text()
         assert "Calibration: Brier" in plain_md and "sample-dependent" not in plain_md
 
-        # a judge without probabilities has no calibration block to flag
+        # a judge without probabilities has no calibration block, and nothing to reweight
         ordinal = await run_benchmark(
             ScriptedOrdinalJudge(), records, out_dir=tmp_path / "ordinal", per_class=2, seed=1, bootstrap_resamples=0
         )
-        assert "calibration" not in ordinal.report
+        assert "calibration" not in ordinal.report and "brier_reweighted" not in ordinal.report["prevalence_adjusted"]
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("seed", [0, 1, 2, 3])
@@ -808,6 +866,61 @@ class TestRun:
         )
         assert adjusted["accuracy_reweighted"] == pytest.approx(pi * recall + (1 - pi) * specificity)
         assert "Rates are estimated per human label" not in run.report_md.read_text()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("seed", [0, 1, 2, 3])
+    async def test_reweighted_brier_of_a_quota_run_equals_the_brier_of_the_full_run(self, tmp_path: Path, seed: int):
+        # one probability per label, so each label's squared error is the same whatever the draw:
+        # supported 0.01, contradicted 0.36, unsupported 0.04
+        rows = (
+            [sentence_row(i, "SUPPORTED", "ok p=0.9") for i in range(60)]
+            + [sentence_row(100 + i, "CONTRADICTED", "bad p=0.6") for i in range(10)]
+            + [sentence_row(200 + i, "UNSUPPORTED", "bad p=0.2") for i in range(40)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        full = await run_benchmark(
+            ScriptedProbabilityJudge(), records, out_dir=tmp_path / "full", bootstrap_resamples=0
+        )
+        on_full_set = (60 * 0.01 + 10 * 0.36 + 40 * 0.04) / 110
+        assert full.report["calibration"]["brier"] == pytest.approx(on_full_set)
+
+        quota = await run_benchmark(
+            ScriptedProbabilityJudge(),
+            records,
+            out_dir=tmp_path / "quota",
+            per_class=5,
+            seed=seed,
+            bootstrap_resamples=0,
+        )
+        # both negative labels are subsampled, at different rates: 5 of 10 and 5 of 40
+        assert quota.report["sample"]["taken"] == {"CONTRADICTED": 5, "SUPPORTED": 5, "UNSUPPORTED": 5}
+        assert quota.report["calibration"]["brier"] == pytest.approx((0.01 + 0.36 + 0.04) / 3)  # the sample's
+        assert quota.report["prevalence_adjusted"]["brier_reweighted"] == pytest.approx(on_full_set)
+        # on two classes the contradicted would weigh half of the not-supported class instead of a fifth
+        pi = 50 / 110
+        assert pi * 0.20 + (1 - pi) * 0.01 != pytest.approx(on_full_set)
+
+    @pytest.mark.asyncio
+    async def test_reweighted_brier_is_null_when_a_label_has_no_scored_record(self, tmp_path: Path):
+        class FailingOnContradicted(ScriptedProbabilityJudge):
+            async def judge(self, criterion, *, question, context, answer):
+                if "(fail-parse)" in answer:
+                    raise JudgeParseError("Unparseable", criterion=criterion, raw_output=answer)
+                return await super().judge(criterion, question=question, context=context, answer=answer)
+
+        rows = (
+            [sentence_row(i, "SUPPORTED", "ok p=0.9") for i in range(12)]
+            + [sentence_row(100 + i, "CONTRADICTED", "bad (fail-parse)") for i in range(3)]
+            + [sentence_row(200 + i, "UNSUPPORTED", "bad p=0.2") for i in range(6)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            FailingOnContradicted(), records, out_dir=tmp_path / "out", per_class=4, seed=1, bootstrap_resamples=0
+        )
+        adjusted = run.report["prevalence_adjusted"]
+        assert adjusted["missing_labels"] == ["CONTRADICTED"] and adjusted["brier_reweighted"] is None
+        assert run.report["calibration"]["brier"] is not None  # the sample's Brier is still there, flagged
+        assert "Brier, reweighted" not in run.report_md.read_text()
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):
