@@ -249,6 +249,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reached through `connect_to_custom`: with a key, or over `https`.
 
 ### Fixed
+- **`QdrantVectorStore.count()` no longer fails when the collection info
+  carries no count** (#219). `points_count` is optional in the API of
+  Qdrant; when the server returned none, `count()` raised a `TypeError` on
+  `int(None)`. It now asks the server for the exact count in that case.
+  When the collection info has a count, 0 included, nothing changes and no
+  second request is made.
 - `judge-bench` and `judge-compare` report unavailable bootstrap intervals
   when fewer than two scored groups remain. Point estimates are preserved,
   and the comparison gives no winner on the strength of a single group (#208).

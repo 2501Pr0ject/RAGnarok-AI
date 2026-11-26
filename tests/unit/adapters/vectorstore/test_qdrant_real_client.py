@@ -60,6 +60,17 @@ SCENARIO = textwrap.dedent(
         out["all"] = len(await store.search([1.0, 0.0, 0.0], k=10))
         await store.delete([IDS[0]])
         out["count_after_delete"] = await store.count()
+
+        # A collection info without a count, as the API allows: the real response, its count removed
+        real_get_collection = store._client.get_collection
+
+        async def without_count(*args, **kwargs):
+            info = await real_get_collection(*args, **kwargs)
+            return info.model_copy(update={"points_count": None})
+
+        store._client.get_collection = without_count
+        out["count_without_points_count"] = await store.count()
+        store._client.get_collection = real_get_collection
         out["hits_after_delete"] = [doc.id for doc, _ in await store.search([1.0, 0.0, 0.0], k=2)]
         out["ids"] = IDS
         print(json.dumps(out))
@@ -85,6 +96,8 @@ def test_add_search_delete_and_count_with_the_real_client():
     assert out["hits"] == [[first, "about x", "a", 1.0], [third, "mostly x", "c", 0.9939]]
     assert out["all"] == 3  # k above the number of points returns them all
     assert out["count_after_delete"] == 2
+    # no count in the collection info: asked to the real count method, not int(None)
+    assert out["count_without_points_count"] == 2
     assert out["hits_after_delete"] == [third, second]
 
 
