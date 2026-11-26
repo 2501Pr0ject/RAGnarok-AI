@@ -67,6 +67,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from ragnarok_ai.core.exceptions import ConfigurationError, JudgeDependencyError
 from ragnarok_ai.core.provenance import library_commit
+from ragnarok_ai.judges._memory import guard_device_memory, release_device_cache
 from ragnarok_ai.judges.contract import BinaryProbability, CallTrace, JudgeConfig, ScoreThreshold
 from ragnarok_ai.judges.hhem import DEVICES, _validate_device
 from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
@@ -521,6 +522,10 @@ class TransformersBackend:
             probabilities.extend(float(p) for p in probs[:, 1].tolist())
         return probabilities, tokens, truncated
 
+    def _release_cache(self) -> None:
+        """Release the device allocator's cache (after an out-of-memory error)."""
+        release_device_cache(self._torch, self.device)
+
 
 # =============================================================================
 # Judge
@@ -689,6 +694,15 @@ class MiniCheckJudge:
         """The chunks the official code would check the claim against."""
         return document_chunks(document, self.checkpoint, self.backend.split_sentences, self.backend.count_tokens)
 
+    def _input_size(self, chunks: Sequence[str], claim: str) -> str:
+        """Token counts of one ``support`` call, for a failure message: sizes only, no text."""
+        claim_tokens = self.backend.count_tokens(claim)
+        longest = max(self.backend.count_tokens(chunk) for chunk in chunks) + claim_tokens
+        return (
+            f"{len(chunks)} chunk(s) in batches of {OFFICIAL_BATCH_SIZE}, the longest input about {longest} tokens "
+            f"(chunk plus claim, before special tokens and truncation at {self.checkpoint.max_model_len})"
+        )
+
     def _judge_answer(self, criterion: str, *, context: str, answer: str) -> JudgeResult:
         """One official ``score`` call: *context* is the document, *answer* the claim."""
         from ragnarok_ai.evaluators.judge import JudgeResult
@@ -696,7 +710,15 @@ class MiniCheckJudge:
         started = time.perf_counter()
         chunks = self.chunks(context)
         if chunks:
-            per_chunk, tokens, truncated = self.backend.support(chunks, answer)
+            # A forward pass that does not fit on the device is this sample's failure, not the run's.
+            # Sizes are measured only once it has failed, to say what did not fit
+            per_chunk, tokens, truncated = guard_device_memory(
+                lambda: self.backend.support(chunks, answer),
+                backend=self.backend,
+                judge="MiniCheckJudge",
+                device=self.device,
+                input_size=lambda: self._input_size(chunks, answer),
+            )
             probability = min(1.0, max(0.0, max(per_chunk)))
         else:
             # The official code fails on a document without any chunk; nothing supports the claim here
@@ -735,6 +757,8 @@ class MiniCheckJudge:
         Raises:
             ValueError: If *criterion* is unknown.
             NoUnitsError: With ``unit="sentence"``, if no sentence could be judged.
+            EvaluationError: If the device ran out of memory on this input
+                (a per-sample failure; the device cache is released).
         """
         self._check_criterion(criterion)
         if self.unit == "answer":

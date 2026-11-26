@@ -50,6 +50,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from ragnarok_ai.core.exceptions import ConfigurationError, JudgeDependencyError
 from ragnarok_ai.core.provenance import library_commit
+from ragnarok_ai.judges._memory import guard_device_memory, release_device_cache
 from ragnarok_ai.judges.contract import BinaryProbability, CallTrace, JudgeConfig, ScoreThreshold
 from ragnarok_ai.judges.sentence_level import DEFAULT_AGGREGATION, SentenceLevel
 from ragnarok_ai.text.segmentation import segmenter_id
@@ -308,6 +309,10 @@ class TransformersBackend:
             probabilities = self._torch.softmax(logits.float(), dim=-1)[:, CONSISTENT_CLASS]
         return [float(p) for p in probabilities.cpu().tolist()]
 
+    def _release_cache(self) -> None:
+        """Release the device allocator's cache (after an out-of-memory error)."""
+        release_device_cache(self._torch, self.device)
+
 
 # =============================================================================
 # Judge
@@ -479,7 +484,15 @@ class HHEMJudge:
             prompt = HHEM_PROMPT.format(text1=premise, text2=answer)
             tokens = self.backend.count_tokens(prompt)
             truncated = True
-        probability = min(1.0, max(0.0, float(self.backend.consistency([prompt])[0])))
+        # A forward pass that does not fit on the device is this sample's failure, not the run's
+        consistency = guard_device_memory(
+            lambda: self.backend.consistency([prompt]),
+            backend=self.backend,
+            judge="HHEMJudge",
+            device=self.device,
+            input_size=lambda: f"an input of {tokens} tokens",
+        )
+        probability = min(1.0, max(0.0, float(consistency[0])))
         output = BinaryProbability(probability)
         verdict = self.VERDICT_POLICY.verdict(output)
         explanation = (
@@ -510,6 +523,8 @@ class HHEMJudge:
         Raises:
             ValueError: If *criterion* is unknown.
             NoUnitsError: With ``unit="sentence"``, if no sentence could be judged.
+            EvaluationError: If the device ran out of memory on this input
+                (a per-sample failure; the device cache is released).
         """
         self._check_criterion(criterion)
         if self.unit == "answer":
