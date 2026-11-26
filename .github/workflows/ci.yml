@@ -31,71 +31,43 @@ jobs:
       - name: Check for conflict markers in tracked files
         run: sh scripts/check_conflict_markers.sh
 
+      # No tag here: pyproject.toml and __version__ must agree; a development version is accepted
+      - name: Check that pyproject.toml and __version__ agree
+        run: python3 scripts/check_release_version.py
+
       - name: Run ruff check
         run: uv run ruff check .
 
       - name: Run ruff format check
         run: uv run ruff format --check .
 
+  # The two type-check jobs share one definition with publish.yml: .github/actions/typecheck.
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Type check without the optional packages
+        uses: ./.github/actions/typecheck
         with:
-          version: "0.13.6"
-          enable-cache: true
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
 
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
-
-      - name: Install dependencies
-        run: uv sync --extra dev --extra cli --extra ollama --extra tui
-
-      - name: Run mypy
-        run: uv run mypy src/
-
-  # The base job above installs neither torch nor transformers: with `ignore_missing_imports`, everything
+  # The job above installs neither torch nor transformers: with `ignore_missing_imports`, everything
   # imported from them is `Any` and the code of the local judges (HHEM, MiniCheck) is not type-checked.
-  # This job checks the same sources with the two extras installed from the lock file. Both must pass:
-  # the code has to type-check with and without the optional packages.
-  # It also runs the unit tests of the judges: those that need torch or transformers are skipped in the
-  # "Test" jobs, which do not install them.
+  # This job checks the same sources with the two extras installed from the lock file, and runs the unit
+  # tests of the judges. Both jobs must pass.
   typecheck-judges:
     name: Local judges (type check, tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Type check and test with the hhem and minicheck extras
+        uses: ./.github/actions/typecheck
         with:
-          version: "0.13.6"
-          enable-cache: true
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
-
-      - name: Install dependencies with the hhem and minicheck extras
-        run: uv sync --extra dev --extra cli --extra ollama --extra tui --extra hhem --extra minicheck
-
-      - name: Check that the extras are installed
-        run: uv run python -c "import torch, transformers, safetensors, nltk; print('torch', torch.__version__, 'transformers', transformers.__version__)"
-
-      - name: Run mypy
-        run: uv run mypy src/
-
-      # No model is downloaded: the integration tests are deselected by default, and the Hugging Face
-      # libraries are put offline so that a test reaching for the Hub fails instead of downloading.
-      # One test stays skipped: it needs nltk's punkt_tab data, which this job does not download.
-      - name: Run the unit tests of the judges
-        env:
-          HF_HUB_OFFLINE: "1"
-          TRANSFORMERS_OFFLINE: "1"
-        run: uv run pytest tests/unit/judges -p no:randomly -rs
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+          local-judges: "true"
 
   test:
     name: Test (Python ${{ matrix.python-version }})
