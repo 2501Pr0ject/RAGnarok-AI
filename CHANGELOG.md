@@ -8,6 +8,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`ragnarok judge-compare`: paired comparison of two `judge-bench` runs**
+  (#165). Two reports cannot say whether one judge is better than the
+  other: their intervals are marginal, and both judges ran on the same
+  records, so their errors are correlated.
+  `ragnarok judge-compare --a RUN_A --b RUN_B --data FILE --out DIR`
+  compares them record by record and writes `report.json` and `report.md`
+  (`compare_runs()` in `ragnarok_ai.benchmarks.compare`).
+  - Inputs: the two run folders and the data file, which holds the human
+    labels and the groups. Only the pass threshold of each judge is read in
+    its `report.json`; everything else is recomputed from the attempts.
+  - Refused, with the field named: another data file than the runs'
+    (SHA-256 of the headers), different levels or criteria, runs that did
+    not evaluate the same records (different quotas, samples or seeds of a
+    sample), an incomplete run, an output folder that is one of the runs'.
+    Accepted and stated in the report: different thresholds, a threshold
+    tuned on a development set against a default one, different seeds on
+    full runs, two runs of the same configuration (repeatability).
+  - Pairing on the records scored by both judges; records failed in either
+    run are left out and counted by run and by kind.
+  - Differences are B minus A, each with a 95% interval from paired draws:
+    the harness's grouped bootstrap, both judges on the same resampled
+    records, the difference taken inside the draw (`--resamples`, 1000 by
+    default). Under class quotas the per-label reweighting is redone in
+    each draw for each judge.
+  - One declared headline figure: the F1 of the not-supported class,
+    reweighted to the full set under class quotas. The verdict is about it
+    only; when the interval of its difference contains 0 it says that no
+    difference is established and names no judge. Each difference carries
+    `contains_zero`.
+  - When both judges give probabilities: the difference of AUROC next to
+    the headline, independent of the thresholds (weighted per
+    not-supported label under class quotas).
+  - An exact McNemar test on the binary verdicts, with the 2x2 table. It
+    assumes independent records and takes no account of the groups: with
+    grouped records its p-value is too optimistic, and the paired bootstrap
+    interval is the one to rely on; the report says so. On a full run it
+    stands next to the headline figure; under class quotas it follows the
+    sample's class mix and is listed with the exploratory figures.
+  - Exploratory figures, not corrected for multiple comparisons: recall per
+    human label, specificity, accuracy, kappa, balanced accuracy, precision
+    and recall of the not-supported class, Brier.
+  - The list of the records on which the two verdicts differ (ids, labels
+    and scores; no text of the data file).
 - **`FaithfulnessEvaluator` and `HallucinationDetector` under the judge
   contract** (#164). They returned claim-level results of their own and
   could not run through `judge_many`, `judge-bench` or `JudgeCalibrator`.
