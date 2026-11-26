@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ragnarok_ai.core.exceptions import EvaluationError
+from ragnarok_ai.core.exceptions import EvaluationError, JudgeMemoryError
 from ragnarok_ai.judges import HHEMJudge, MiniCheckJudge
 from ragnarok_ai.judges._memory import guard_device_memory, is_out_of_memory, release_device_cache
 from ragnarok_ai.judges.runner import judge_many
@@ -128,8 +128,10 @@ class TestDetection:
         def call():
             raise RuntimeError(MPS_MESSAGE)
 
-        with pytest.raises(EvaluationError, match=r"J: out of memory on device 'mps' for 3 tokens\. Device message"):
+        with pytest.raises(JudgeMemoryError, match=r"J: out of memory on device 'mps' for 3 tokens\. Device message"):
             guard_device_memory(call, backend=object(), judge="J", device="mps", input_size=lambda: "3 tokens")
+        # still an EvaluationError: code written for 1.13.x, which catches that, keeps working
+        assert issubclass(JudgeMemoryError, EvaluationError)
         assert guard_device_memory(lambda: 7, backend=object(), judge="J", device="mps", input_size=lambda: "") == 7
 
 
@@ -142,7 +144,7 @@ class TestHHEM:
         attempts = await judge_many(judge, "faithfulness", samples())
         assert [a.result is not None for a in attempts] == [True, False, True]
         failure = attempts[1].error
-        assert failure is not None and failure.kind == "backend"
+        assert failure is not None and failure.kind == "memory"
         # the prompt of the failing call: the whole answer (29 whitespace tokens) or its one sentence, the same here
         assert "HHEMJudge: out of memory on device 'mps' for an input of 29 tokens." in failure.message
         assert "MPS allocated: 1.01 GiB" in failure.message and "Tried to allocate 1.31 GiB" in failure.message
@@ -166,7 +168,7 @@ class TestHHEM:
         assert not hasattr(Bare(), "_release_cache")
         attempts = await judge_many(HHEMJudge(backend=Bare(), device="mps", unit="answer"), "faithfulness", samples())
         assert [a.result is not None for a in attempts] == [True, False, True]
-        assert attempts[1].error is not None and attempts[1].error.kind == "backend"
+        assert attempts[1].error is not None and attempts[1].error.kind == "memory"
 
     @pytest.mark.asyncio
     async def test_another_runtime_error_still_ends_the_run(self):
@@ -186,7 +188,7 @@ class TestMiniCheck:
         attempts = await judge_many(judge, "faithfulness", samples())
         assert [a.result is not None for a in attempts] == [True, False, True]
         failure = attempts[1].error
-        assert failure is not None and failure.kind == "backend"
+        assert failure is not None and failure.kind == "memory"
         assert "MiniCheckJudge: out of memory on device 'cuda' for 1 chunk(s)" in failure.message
         assert "the longest input about 17 tokens" in failure.message  # 11 of the chunk, 6 of the claim
         assert "CUDA out of memory" in failure.message and SECRET not in failure.message
@@ -240,7 +242,7 @@ class TestRealMPS:
         finally:
             torch.mps.set_per_process_memory_fraction(0.0)  # no limit for the rest of the process
         assert run.report["records"] == {"total": 3, "evaluated": 3, "scored": 2, "failed": 1}
-        assert run.report["failures"] == {"backend": 1}
+        assert run.report["failures"] == {"memory": 1}
         written = {row["sample_id"]: row for row in map(json.loads, run.attempts_path.read_text().splitlines()[1:])}
         assert written["short-1"]["error"] is None and written["short-2"]["error"] is None  # the one after passes
         message = written["long"]["error"]["message"]

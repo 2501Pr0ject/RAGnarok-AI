@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Behavior changes
+- **A device out-of-memory error of a local judge is a failure of kind
+  `memory`, no longer `backend`** (#174). `FailureKind` and `FAILURE_KINDS`
+  gain `memory`. `HHEMJudge` and `MiniCheckJudge` raise `JudgeMemoryError`
+  for it, a subclass of `EvaluationError`; `judge_many` records the kind,
+  `attempts.jsonl` carries it in `error.kind` and the `judge-bench` report
+  counts it apart under "failures by kind". The two cases call for
+  different actions: shorten or truncate the input (`max_input_tokens`) or
+  use another device for `memory`, check the model or the server for
+  `backend`. What to adapt:
+  - code that enumerates the failure kinds, or switches on `error.kind`,
+    must accept `memory` (a typed `match` on `FailureKind` is no longer
+    exhaustive without it);
+  - code that looked for out-of-memory failures by matching the message of
+    a `backend` failure should read the kind instead;
+  - code that catches `EvaluationError` needs no change:
+    `JudgeMemoryError` is one;
+  - **reports and attempts written by 1.13.x are not migrated**: their
+    out-of-memory failures stay recorded as `backend` (the message starts
+    with "<Judge>: out of memory on device"), and a run resumed from such
+    a file keeps those rows as they are. A count of `memory` failures
+    compared across versions must take this into account;
+  - `JudgeCalibrator` counts every failure that is not a parse failure in
+    `backend_failures`, `memory` included; that field is unchanged.
+
 ### Added
 - **`ragnarok judge-compare`: paired comparison of two `judge-bench` runs**
   (#165). Two reports cannot say whether one judge is better than the
