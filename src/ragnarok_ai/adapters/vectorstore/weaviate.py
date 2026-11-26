@@ -103,9 +103,12 @@ class WeaviateVectorStore:
         api_key: Optional API key for Weaviate Cloud.
         collection_name: Name of the collection to use.
         timeout: Request timeout in seconds.
-        grpc_host: gRPC host of a self-hosted instance with an API key (default: the host of ``url``).
+        grpc_host: gRPC host of a self-hosted instance reached with an API key or over
+            ``https`` (default: the host of ``url``).
         grpc_port: gRPC port of that instance (default: 50051).
         grpc_secure: Whether its gRPC endpoint uses TLS (default: the scheme of ``url``).
+        trust_env: Whether the connection to that instance reads the certificate and proxy
+            settings of the environment (default: False).
 
     Example:
         Context manager (recommended for multiple calls):
@@ -126,6 +129,9 @@ class WeaviateVectorStore:
             ...     api_key="your-api-key",
             ...     grpc_port=50443,
             ... )
+
+        Self-hosted instance over https without a key: TLS, no authentication:
+            >>> store = WeaviateVectorStore(url="https://weaviate.example.org")
     """
 
     is_local: bool = False
@@ -139,6 +145,7 @@ class WeaviateVectorStore:
         grpc_host: str | None = None,
         grpc_port: int = DEFAULT_GRPC_PORT,
         grpc_secure: bool | None = None,
+        trust_env: bool = False,
     ) -> None:
         """Initialize WeaviateVectorStore client.
 
@@ -146,19 +153,33 @@ class WeaviateVectorStore:
             url: URL for Weaviate server: scheme, host and port, without a path.
                 Defaults to http://localhost:8080. A port written in the URL is
                 used; without one it is 443 for ``https`` and 8080 for ``http``.
+                The scheme decides whether TLS is used, with or without an API key.
             api_key: Optional API key for Weaviate Cloud. If not provided,
                 reads from WEAVIATE_API_KEY environment variable.
             collection_name: Name of the collection to use. Defaults to "RagnarokDocuments".
             timeout: Request timeout in seconds. Defaults to 30.0.
-            grpc_host: Host of the gRPC endpoint of a self-hosted instance reached
-                with an API key. Defaults to the host of *url*.
+            grpc_host: Host of the gRPC endpoint of a self-hosted instance. Defaults
+                to the host of *url*.
             grpc_port: Port of that gRPC endpoint. Defaults to 50051, Weaviate's default.
             grpc_secure: Whether that endpoint uses TLS. Defaults to the scheme of *url*
                 (``https`` gives ``True``).
+            trust_env: Whether the connection reads the environment: the certificate
+                authorities of ``SSL_CERT_FILE`` and the proxy variables. Defaults to
+                False. Needed for an instance whose certificate is not signed by a
+                public authority (see below).
 
-        The three gRPC settings are used for a self-hosted instance with an API key
-        only. Weaviate Cloud and a local instance without a key find their gRPC
-        endpoint themselves.
+        The three gRPC settings and ``trust_env`` apply to every self-hosted instance
+        reached through the client's ``connect_to_custom``: with an API key, whatever
+        the scheme, and without a key when the URL is ``https``. They are not used for
+        Weaviate Cloud with a key, nor for an ``http`` URL without a key
+        (``connect_to_local``), which find their gRPC endpoint themselves.
+
+        An ``https`` instance with a self-signed certificate, or one signed by a
+        private authority, is refused when the certificate is verified. To connect,
+        pass ``trust_env=True`` and give the authority's certificate (PEM) in two
+        environment variables: ``SSL_CERT_FILE`` for HTTP and
+        ``GRPC_DEFAULT_SSL_ROOTS_FILE_PATH`` for gRPC. Verification is never
+        disabled.
 
         Raises:
             ValueError: If *url* is not a Weaviate Cloud URL and has a path, a query,
@@ -173,6 +194,7 @@ class WeaviateVectorStore:
         self.grpc_host = grpc_host
         self.grpc_port = grpc_port
         self.grpc_secure = grpc_secure
+        self.trust_env = trust_env
         self._client: Any = None
 
     async def __aenter__(self) -> WeaviateVectorStore:
@@ -205,7 +227,7 @@ class WeaviateVectorStore:
 
         try:
             import weaviate
-            from weaviate.classes.init import Auth
+            from weaviate.classes.init import AdditionalConfig, Auth
 
             # Determine if this is a cloud URL or local
             is_cloud = is_cloud_url(self.url)
@@ -215,9 +237,11 @@ class WeaviateVectorStore:
                     cluster_url=self.url,
                     auth_credentials=Auth.api_key(self.api_key),
                 )
-            elif self.api_key:
-                # A self-hosted instance with an API key. connect_to_custom requires the gRPC
-                # endpoint next to the HTTP one: by default the same host and scheme, port 50051
+            elif self.api_key or (self._endpoint or parse_endpoint(self.url))[2]:
+                # A self-hosted instance with an API key, or over https without one: connect_to_local
+                # has no TLS option and would send an https URL in plain HTTP (#209). connect_to_custom
+                # requires the gRPC endpoint next to the HTTP one: by default the same host and scheme,
+                # port 50051
                 http_host, http_port, http_secure = self._endpoint or parse_endpoint(self.url)
                 self._client = weaviate.connect_to_custom(
                     http_host=http_host,
@@ -226,9 +250,11 @@ class WeaviateVectorStore:
                     grpc_host=self.grpc_host or http_host,
                     grpc_port=self.grpc_port,
                     grpc_secure=http_secure if self.grpc_secure is None else self.grpc_secure,
-                    auth_credentials=Auth.api_key(self.api_key),
+                    auth_credentials=Auth.api_key(self.api_key) if self.api_key else None,
+                    additional_config=AdditionalConfig(trust_env=True) if self.trust_env else None,
                 )
             else:
+                # http without a key
                 host, port, _ = self._endpoint or parse_endpoint(self.url)
                 self._client = weaviate.connect_to_local(host=host, port=port)
 

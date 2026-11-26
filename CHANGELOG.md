@@ -221,6 +221,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   position must expect the third column; `report.json` is the stable
   interface.
 
+### Security
+- **`WeaviateVectorStore`: an `https` URL without an API key is connected
+  with TLS** (#209). For a self-hosted instance without a key the adapter
+  called the client's `connect_to_local`, which has no TLS option: the
+  `https` scheme was read and ignored, and documents, embeddings and
+  queries travelled in clear text, with no error and no warning. Every
+  `https` URL now goes through `connect_to_custom` with TLS, without
+  credentials when there is no key. With a key, and for Weaviate Cloud with
+  a key, nothing changes. The gRPC endpoint of the new case follows the
+  same defaults as with a key (same host, port 50051, TLS as the URL), and
+  `grpc_host`, `grpc_port` and `grpc_secure` apply to it. What to adapt:
+  - **an `https` URL that in fact reached a plain HTTP service no longer
+    connects**: write the URL with `http`;
+  - **an instance with a self-signed certificate, or one signed by a
+    private authority, is now refused**, with a
+    `VectorStoreConnectionError` that carries `CERTIFICATE_VERIFY_FAILED`:
+    the certificate was never verified before, since TLS was not used. To
+    connect, pass the new `trust_env=True` and set `SSL_CERT_FILE` (HTTP)
+    and `GRPC_DEFAULT_SSL_ROOTS_FILE_PATH` (gRPC) to the authority's
+    certificate in PEM format. Verification cannot be disabled;
+  - the gRPC endpoint must be reachable with TLS on port 50051, or be
+    given with `grpc_port` and `grpc_secure`.
+- **`WeaviateVectorStore(trust_env=True)`** (new, default `False`): the
+  connection to a self-hosted instance reads the certificate authorities
+  and the proxy settings of the environment. It applies to the instances
+  reached through `connect_to_custom`: with a key, or over `https`.
+
 ### Fixed
 - `judge-bench` and `judge-compare` report unavailable bootstrap intervals
   when fewer than two scored groups remain. Point estimates are preserved,
