@@ -112,7 +112,9 @@ pinecone = [
     "pinecone-client>=3.0",
 ]
 weaviate = [
-    "weaviate-client>=4.0",
+    # 4.6.2 is the first version with connect_to_weaviate_cloud (4.4.0 to 4.6.1 only have connect_to_wcs);
+    # no stable release exists below 4.4.0
+    "weaviate-client>=4.6.2",
 ]
 milvus = [
     "pymilvus>=2.3",

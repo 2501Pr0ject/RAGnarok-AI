@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 DEFAULT_URL = "http://localhost:8080"
 DEFAULT_COLLECTION_NAME = "RagnarokDocuments"
 DEFAULT_TIMEOUT = 30.0
+# Weaviate's default gRPC port, next to 8080 for HTTP
+DEFAULT_GRPC_PORT = 50051
 
 
 class WeaviateVectorStore:
@@ -36,6 +38,9 @@ class WeaviateVectorStore:
         api_key: Optional API key for Weaviate Cloud.
         collection_name: Name of the collection to use.
         timeout: Request timeout in seconds.
+        grpc_host: gRPC host of a self-hosted instance with an API key (default: the host of ``url``).
+        grpc_port: gRPC port of that instance (default: 50051).
+        grpc_secure: Whether its gRPC endpoint uses TLS (default: the scheme of ``url``).
 
     Example:
         Context manager (recommended for multiple calls):
@@ -49,6 +54,13 @@ class WeaviateVectorStore:
         Local instance:
             >>> store = WeaviateVectorStore(url="http://localhost:8080")
             >>> await store.add([doc1])
+
+        Self-hosted instance with an API key (gRPC on the same host, port 50051, unless said otherwise):
+            >>> store = WeaviateVectorStore(
+            ...     url="https://weaviate.example.org:8443",
+            ...     api_key="your-api-key",
+            ...     grpc_port=50443,
+            ... )
     """
 
     is_local: bool = False
@@ -59,6 +71,9 @@ class WeaviateVectorStore:
         api_key: str | None = None,
         collection_name: str = DEFAULT_COLLECTION_NAME,
         timeout: float = DEFAULT_TIMEOUT,
+        grpc_host: str | None = None,
+        grpc_port: int = DEFAULT_GRPC_PORT,
+        grpc_secure: bool | None = None,
     ) -> None:
         """Initialize WeaviateVectorStore client.
 
@@ -68,11 +83,23 @@ class WeaviateVectorStore:
                 reads from WEAVIATE_API_KEY environment variable.
             collection_name: Name of the collection to use. Defaults to "RagnarokDocuments".
             timeout: Request timeout in seconds. Defaults to 30.0.
+            grpc_host: Host of the gRPC endpoint of a self-hosted instance reached
+                with an API key. Defaults to the host of *url*.
+            grpc_port: Port of that gRPC endpoint. Defaults to 50051, Weaviate's default.
+            grpc_secure: Whether that endpoint uses TLS. Defaults to the scheme of *url*
+                (``https`` gives ``True``).
+
+        The three gRPC settings are used for a self-hosted instance with an API key
+        only. Weaviate Cloud and a local instance without a key find their gRPC
+        endpoint themselves.
         """
         self.url = url.rstrip("/")
         self.api_key = api_key or os.environ.get("WEAVIATE_API_KEY")
         self.collection_name = collection_name
         self.timeout = timeout
+        self.grpc_host = grpc_host
+        self.grpc_port = grpc_port
+        self.grpc_secure = grpc_secure
         self._client: Any = None
 
     async def __aenter__(self) -> WeaviateVectorStore:
@@ -116,10 +143,17 @@ class WeaviateVectorStore:
                     auth_credentials=Auth.api_key(self.api_key),
                 )
             elif self.api_key:
+                # A self-hosted instance with an API key. connect_to_custom requires the gRPC
+                # endpoint next to the HTTP one: by default the same host and scheme, port 50051
+                http_host = self.url.replace("http://", "").replace("https://", "").split(":")[0]
+                http_secure = self.url.startswith("https")
                 self._client = weaviate.connect_to_custom(
-                    http_host=self.url.replace("http://", "").replace("https://", "").split(":")[0],
+                    http_host=http_host,
                     http_port=int(self.url.split(":")[-1]) if ":" in self.url.split("/")[-1] else 8080,
-                    http_secure=self.url.startswith("https"),
+                    http_secure=http_secure,
+                    grpc_host=self.grpc_host or http_host,
+                    grpc_port=self.grpc_port,
+                    grpc_secure=http_secure if self.grpc_secure is None else self.grpc_secure,
                     auth_credentials=Auth.api_key(self.api_key),
                 )
             else:
