@@ -157,6 +157,103 @@ class TestSampling:
         assert adjusted["precision_not_supported_reweighted"] < raw_precision
         single = prevalence_adjusted([True] * 5, [True] * 5, 0.06)
         assert single["recall_not_supported"] is None and single["precision_not_supported_reweighted"] is None
+        # without labels the two classes are the strata
+        assert (adjusted["strata"], adjusted["labels"], adjusted["missing_labels"]) == ("class", None, [])
+
+    @staticmethod
+    def _sample(counts: dict[str, tuple[int, int]]) -> tuple[list[bool], list[bool], list[str]]:
+        """Verdicts, human classes and labels of a sample given, per label, (records read as the humans do, n)."""
+        judge: list[bool] = []
+        labels: list[str] = []
+        for label, (agreeing, n) in counts.items():
+            supported = label == "SUPPORTED"
+            judge += [supported] * agreeing + [not supported] * (n - agreeing)
+            labels += [label] * n
+        return judge, [label == "SUPPORTED" for label in labels], labels
+
+    def test_prevalence_adjusted_reweights_per_label_when_both_negative_labels_are_subsampled(self):
+        # full set: 1000 supported, 40 contradicted, 160 unsupported; the quota takes 20 of each,
+        # that is half of the contradicted and an eighth of the unsupported
+        full = {"SUPPORTED": 1000, "CONTRADICTED": 40, "UNSUPPORTED": 160}
+        judge, human, labels = self._sample({"SUPPORTED": (18, 20), "CONTRADICTED": (5, 20), "UNSUPPORTED": (15, 20)})
+        pi = 200 / 1200
+        adjusted = prevalence_adjusted(judge, human, pi, labels=labels, full_label_counts=full)
+        assert adjusted["strata"] == "label" and adjusted["missing_labels"] == []
+        # per-label recalls 0.25 and 0.75, weighted 40 to 160 as in the full set
+        assert pytest.approx(0.65) == (40 * 0.25 + 160 * 0.75) / 200
+        assert adjusted["recall_not_supported"] == pytest.approx(0.65)
+        assert adjusted["specificity"] == adjusted["recall_supported"] == pytest.approx(0.9)
+        assert adjusted["precision_not_supported_reweighted"] == pytest.approx(pi * 0.65 / (pi * 0.65 + (1 - pi) * 0.1))
+        assert adjusted["accuracy_reweighted"] == pytest.approx(pi * 0.65 + (1 - pi) * 0.9)
+        assert adjusted["labels"] == {
+            "CONTRADICTED": {
+                "human_class": "not supported",
+                "full_set_count": 40,
+                "full_set_share": pytest.approx(40 / 1200),
+                "n": 20,
+                "rate": pytest.approx(0.25),
+            },
+            "SUPPORTED": {
+                "human_class": "supported",
+                "full_set_count": 1000,
+                "full_set_share": pytest.approx(1000 / 1200),
+                "n": 20,
+                "rate": pytest.approx(0.9),
+            },
+            "UNSUPPORTED": {
+                "human_class": "not supported",
+                "full_set_count": 160,
+                "full_set_share": pytest.approx(160 / 1200),
+                "n": 20,
+                "rate": pytest.approx(0.75),
+            },
+        }
+        # pooling the two labels in the sample, as up to 1.13.1, follows the quota's 20-to-20 mix
+        pooled = prevalence_adjusted(judge, human, pi)
+        assert pooled["recall_not_supported"] == pytest.approx(0.5)
+
+    def test_prevalence_adjusted_on_the_counts_of_a_real_quota_run(self):
+        # HHEM-2.1-Open on the RAGTruth test set at threshold 0.25, counts read in the attempts of the
+        # two runs: --per-class 300 (seed 7) and the full set. Same scores, the 139 contradicted are common.
+        full = {"SUPPORTED": 9777, "CONTRADICTED": 139, "UNSUPPORTED": 469}
+        full_detected = {"CONTRADICTED": 22, "UNSUPPORTED": 275}
+        judge, human, labels = self._sample(
+            {"SUPPORTED": (288, 300), "CONTRADICTED": (22, 139), "UNSUPPORTED": (166, 300)}
+        )
+        pi = 608 / 10385
+        adjusted = prevalence_adjusted(judge, human, pi, labels=labels, full_label_counts=full)
+        assert adjusted["recall_not_supported"] == pytest.approx((22 + 469 * 166 / 300) / 608)
+        assert adjusted["recall_not_supported"] == pytest.approx(0.4630, abs=5e-5)
+        assert adjusted["specificity"] == pytest.approx(0.96)
+        assert adjusted["precision_not_supported_reweighted"] == pytest.approx(0.4185, abs=5e-5)
+        assert adjusted["accuracy_reweighted"] == pytest.approx(0.9309, abs=5e-5)
+        # what 1.13.0 and 1.13.1 reported for this run, and the value on the full set
+        pooled = prevalence_adjusted(judge, human, pi)["recall_not_supported"]
+        on_full_set = sum(full_detected.values()) / 608
+        assert pooled == pytest.approx(188 / 439)
+        assert pooled == pytest.approx(0.428246, abs=5e-7)
+        assert on_full_set == pytest.approx(0.4885, abs=5e-5)
+        # the mixing bias is removed; what remains is the draw of 300 unsupported out of 469 (166/300 against 275/469)
+        assert pooled < adjusted["recall_not_supported"] < on_full_set
+        with_full_rates = (22 + 469 * (275 / 469)) / 608
+        assert with_full_rates == pytest.approx(on_full_set)
+
+    def test_prevalence_adjusted_with_a_label_absent_from_the_sample(self):
+        full = {"SUPPORTED": 100, "CONTRADICTED": 10, "UNSUPPORTED": 40}
+        judge, human, labels = self._sample({"SUPPORTED": (9, 10), "UNSUPPORTED": (6, 10)})
+        adjusted = prevalence_adjusted(judge, human, 50 / 150, labels=labels, full_label_counts=full)
+        assert adjusted["missing_labels"] == ["CONTRADICTED"]
+        assert adjusted["labels"]["CONTRADICTED"]["n"] == 0 and adjusted["labels"]["CONTRADICTED"]["rate"] is None
+        # not renormalized over the unsupported alone
+        assert adjusted["recall_not_supported"] is None
+        assert adjusted["precision_not_supported_reweighted"] is None and adjusted["accuracy_reweighted"] is None
+        assert adjusted["specificity"] == pytest.approx(0.9)  # its own label is there
+        # a label the full set does not hold is not a stratum
+        only_one = prevalence_adjusted(
+            judge, human, 40 / 140, labels=labels, full_label_counts={**full, "CONTRADICTED": 0}
+        )
+        assert only_one["missing_labels"] == [] and only_one["recall_not_supported"] == pytest.approx(0.6)
+        assert "CONTRADICTED" not in only_one["labels"]
 
     def test_sample_larger_than_set_returns_everything(self):
         records = load_records_from_rows(study_like_rows()[:5])
@@ -618,6 +715,99 @@ class TestRun:
             ScriptedOrdinalJudge(), records, out_dir=tmp_path / "ordinal", per_class=2, seed=1, bootstrap_resamples=0
         )
         assert "calibration" not in ordinal.report
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("seed", [0, 1, 2, 3])
+    async def test_per_class_run_is_free_of_the_mix_between_the_two_negative_labels(self, tmp_path: Path, seed: int):
+        # the judge accepts every contradicted sentence and rejects every unsupported one: the per-label
+        # recalls are 0 and 1 whatever the draw, so the adjusted figures must equal the full run's exactly
+        rows = (
+            [sentence_row(i, "SUPPORTED", f"Supported {i}.") for i in range(60)]
+            + [sentence_row(100 + i, "CONTRADICTED", f"Contradicted but accepted {i}.") for i in range(10)]
+            + [sentence_row(200 + i, "UNSUPPORTED", f"Unsupported and rejected {i} (raw 1).") for i in range(40)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        full = await run_benchmark(ScriptedOrdinalJudge(), records, out_dir=tmp_path / "full", bootstrap_resamples=0)
+        assert full.report["binary"]["recall_not_supported"] == pytest.approx(0.8)  # 40 of the 50 not supported
+
+        quota = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "quota", per_class=5, seed=seed, bootstrap_resamples=0
+        )
+        # both negative labels are subsampled, at different rates: 5 of 10 and 5 of 40
+        assert quota.report["sample"]["taken"] == {"CONTRADICTED": 5, "SUPPORTED": 5, "UNSUPPORTED": 5}
+        assert quota.report["binary"]["recall_not_supported"] == pytest.approx(0.5)  # the raw figure follows the quota
+        adjusted = quota.report["prevalence_adjusted"]
+        assert adjusted["strata"] == "label" and adjusted["missing_labels"] == []
+        assert adjusted["recall_not_supported"] == pytest.approx(0.8)
+        assert adjusted["precision_not_supported_reweighted"] == pytest.approx(
+            full.report["binary"]["precision_not_supported"]
+        )
+        assert adjusted["accuracy_reweighted"] == pytest.approx(full.report["binary"]["accuracy"])
+        md = quota.report_md.read_text()
+        assert "Rates are estimated per human label and combined with the labels' shares in the full set" in md
+        assert "| CONTRADICTED | not supported | 10 (9.1%) | 5 | 0.000 |" in md
+        assert "| UNSUPPORTED | not supported | 40 (36.4%) | 5 | 1.000 |" in md
+        assert "| SUPPORTED | supported | 60 (54.5%) | 5 | 1.000 |" in md
+        assert "| Recall (not supported) | 0.800 |" in md
+
+    @pytest.mark.asyncio
+    async def test_per_class_run_with_a_label_left_without_a_scored_record(self, tmp_path: Path):
+        rows = (
+            [sentence_row(i, "SUPPORTED", f"Supported {i}.") for i in range(12)]
+            + [sentence_row(100 + i, "CONTRADICTED", f"Unreadable {i} (fail-parse).") for i in range(3)]
+            + [sentence_row(200 + i, "UNSUPPORTED", f"Rejected {i} (raw 1).") for i in range(6)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", per_class=4, seed=1, bootstrap_resamples=0
+        )
+        assert run.report["failures"] == {"parse": 3}
+        adjusted = run.report["prevalence_adjusted"]
+        assert adjusted["missing_labels"] == ["CONTRADICTED"] and adjusted["labels"]["CONTRADICTED"]["n"] == 0
+        assert adjusted["recall_not_supported"] is None and adjusted["accuracy_reweighted"] is None
+        assert adjusted["specificity"] == pytest.approx(1.0)
+        md = run.report_md.read_text()
+        assert "No scored record for CONTRADICTED: the figures that need its rate are not estimated (n/a)." in md
+        assert "| CONTRADICTED | not supported | 3 (14.3%) | 0 | n/a |" in md
+        assert "| Recall (not supported) | n/a |" in md
+
+    @pytest.mark.asyncio
+    async def test_per_class_run_on_an_answer_level_set_keeps_the_two_classes_as_strata(self, tmp_path: Path):
+        rows = [
+            {
+                "id": f"p{i}",
+                "answer": f"Good answer {i}." + (" (raw 1)" if i < 2 else ""),
+                "context": "c",
+                "label": "PASS",
+            }
+            for i in range(12)
+        ] + [
+            {
+                "id": f"f{i}",
+                "answer": f"Bad answer {i}." + (" (raw 1)" if i < 4 else ""),
+                "context": "c",
+                "label": "FAIL",
+            }
+            for i in range(6)
+        ]
+        records = load_records(write_jsonl(tmp_path / "answers.jsonl", rows))
+        run = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "out", per_class=6, seed=3, bootstrap_resamples=0
+        )
+        assert run.report["level"] == "answer" and run.report["sample"]["taken"] == {"FAIL": 6, "PASS": 6}
+        adjusted = run.report["prevalence_adjusted"]
+        # the quota strata are the two classes: the figures are those of the two-class formulas, as before
+        assert (adjusted["strata"], adjusted["labels"], adjusted["missing_labels"]) == ("class", None, [])
+        passed = [json.loads(line) for line in run.attempts_path.read_text().splitlines()[1:]]
+        kept = sum(1 for row in passed if row["sample_id"].startswith("p") and row["result"]["raw_score"] == 5)
+        recall, specificity, pi = 4 / 6, kept / 6, 6 / 18
+        assert adjusted["recall_not_supported"] == pytest.approx(recall)
+        assert adjusted["specificity"] == pytest.approx(specificity)
+        assert adjusted["precision_not_supported_reweighted"] == pytest.approx(
+            pi * recall / (pi * recall + (1 - pi) * (1 - specificity))
+        )
+        assert adjusted["accuracy_reweighted"] == pytest.approx(pi * recall + (1 - pi) * specificity)
+        assert "Rates are estimated per human label" not in run.report_md.read_text()
 
     @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):
