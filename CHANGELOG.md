@@ -165,6 +165,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interface.
 
 ### Fixed
+- `judge-bench` and `judge-compare` report unavailable bootstrap intervals
+  when fewer than two scored groups remain. Point estimates are preserved,
+  and the comparison gives no winner on the strength of a single group (#208).
 - **`judge-bench --per-class` on a sentence-level set: the
   prevalence-adjusted figures no longer follow the quota's mix between
   `CONTRADICTED` and `UNSUPPORTED`** (#182). The quota is drawn per human

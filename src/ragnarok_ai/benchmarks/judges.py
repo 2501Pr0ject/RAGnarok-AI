@@ -686,6 +686,16 @@ def calibration_metrics(probabilities: Sequence[float], human_pass: Sequence[boo
     return {"brier": brier, "ece": ece, "bins": bins}
 
 
+def _bootstrap_metadata(groups: Sequence[str], seed: int, resamples: int) -> dict[str, Any]:
+    """Report actual draws and explain when the scored groups cannot be resampled."""
+    count = len(set(groups))
+    block = {"groups": count, "seed": seed, "confidence": BOOTSTRAP_CONFIDENCE, "resamples": resamples}
+    if count < 2:
+        reason = "a single group" if count else "no scored groups"
+        return {**block, "resamples": 0, "reliable": False, "reason": f"{reason}: no interval can be estimated"}
+    return block
+
+
 def _group_draws(groups: Sequence[str], seed: int, resamples: int) -> Iterator[list[int]]:
     """The record indices of each bootstrap draw: as many groups as the sample holds, drawn with replacement.
 
@@ -696,8 +706,10 @@ def _group_draws(groups: Sequence[str], seed: int, resamples: int) -> Iterator[l
     for i, g in enumerate(groups):
         units.setdefault(g, []).append(i)
     unit_list = list(units.values())
+    if len(unit_list) < 2:
+        return
     rng = random.Random(seed)
-    for _ in range(resamples if unit_list else 0):
+    for _ in range(resamples):
         yield [i for _ in range(len(unit_list)) for i in unit_list[rng.randrange(len(unit_list))]]
 
 
@@ -742,12 +754,9 @@ def grouped_bootstrap(
         samples["kappa"].append(kappa)
 
     return {
-        "resamples": resamples,
-        "seed": seed,
-        "confidence": BOOTSTRAP_CONFIDENCE,
-        "groups": len(set(groups)),
         "excluded_single_class_draws": excluded,
         "reliable": excluded <= 0.10 * resamples,
+        **_bootstrap_metadata(groups, seed, resamples),
         "intervals": {k: _percentile_interval(v) for k, v in samples.items()},
     }
 
@@ -826,11 +835,8 @@ def recall_by_label(
             "excluded_draws": excluded[positive],
         },
         "bootstrap": {
-            "resamples": resamples,
-            "seed": seed,
-            "confidence": BOOTSTRAP_CONFIDENCE,
-            "groups": len(set(groups)),
             "reliable": all(count <= 0.10 * resamples for count in excluded.values()),
+            **_bootstrap_metadata(groups, seed, resamples),
         },
     }
 
@@ -907,12 +913,9 @@ def prevalence_adjusted_intervals(
     return {
         "intervals": {name: _percentile_interval(values[name]) for name in figures},
         "bootstrap": {
-            "resamples": resamples,
-            "seed": seed,
-            "confidence": BOOTSTRAP_CONFIDENCE,
-            "groups": len(set(groups)),
             "excluded_draws": excluded,
             "reliable": all(count <= 0.10 * resamples for count in excluded.values()),
+            **_bootstrap_metadata(groups, seed, resamples),
         },
     }
 
@@ -1454,6 +1457,8 @@ def render_report(report: dict[str, Any]) -> str:
             + ("" if boot["reliable"] else ", intervals NOT reliable")
             + "."
         )
+        if boot.get("reason"):
+            lines.append(boot["reason"] + ".")
         for name, ci in boot["intervals"].items():
             if ci is not None:
                 lines.append(f"- {name}: 95% CI {ci[0]:.3f} to {ci[1]:.3f}")
