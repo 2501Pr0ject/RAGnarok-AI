@@ -152,6 +152,10 @@ class CriterionCalibration:
             with the reason when a class is smaller than the number of folds;
             suffixed ``(by group)`` or named ``leave-one-group-out`` when the
             samples carry a ``group_id`` (a group never straddles two folds).
+            ``none (a single group: no out-of-sample estimate)`` when every
+            scored sample has the same ``group_id`` (or there is a single
+            sample): ``kappa_at_recommended_cv`` and ``kappa_cv_ci`` are then
+            ``None`` and ``bootstrap_reliable`` is ``False``.
         cv_folds: Number of folds actually used.
         kappa_cv_ci: 95% bootstrap interval of ``kappa_at_recommended_cv``,
             ``None`` when no draw could be used. The draws resample the
@@ -335,6 +339,11 @@ class CalibrationReport:
                     f"  out-of-sample kappa of the recommended threshold {c.kappa_at_recommended_cv:.2f} "
                     f"({c.cv_method}, {ci}; {c.bootstrap_excluded}/{c.bootstrap_resamples} single-class draws "
                     f"excluded{reliability}; seeds cv={c.cv_seed} bootstrap={c.bootstrap_seed})"
+                )
+            elif c.cv_folds == 0 and c.cv_method is not None and c.n > 0:
+                lines.append(
+                    f"  out-of-sample kappa NOT estimated, no interval: {c.cv_method.removeprefix('none (').rstrip(')')}. "
+                    "Give the samples a group_id that differs between groups, or none to resample by sample"
                 )
         return "\n".join(lines)
 

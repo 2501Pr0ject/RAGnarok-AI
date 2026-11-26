@@ -82,6 +82,9 @@ CV_MIN_SAMPLES_FOR_KFOLD = 40
 # Bootstrap of the out-of-sample kappa
 DEFAULT_BOOTSTRAP_RESAMPLES = 1000
 BOOTSTRAP_MAX_EXCLUDED_SHARE = 0.10
+# `cv_method` when there is nothing to hold out: no out-of-sample kappa, no interval, `bootstrap_reliable` False
+CV_SINGLE_GROUP = "none (a single group: no out-of-sample estimate)"
+CV_SINGLE_SAMPLE = "none (a single sample: no out-of-sample estimate)"
 
 # Below this many samples in the minority class, kappa is not interpretable
 MIN_MINORITY_FOR_KAPPA = 10
@@ -98,6 +101,8 @@ def _cohens_kappa(judge: Sequence[bool], human: Sequence[bool]) -> float | None:
     defined kappa of 0.
     """
     n = len(judge)
+    if n == 0:
+        return None  # nothing was rated: undefined, not an error
     po = sum(1 for j, h in zip(judge, human, strict=True) if j == h) / n
     p_yes = (sum(judge) / n) * (sum(human) / n)
     p_no = (1 - sum(judge) / n) * (1 - sum(human) / n)
@@ -331,11 +336,21 @@ def analyze_criterion(
 
     scored_groups = [groups[i] for i in indices]
     has_groups = any(g is not None for g in scored_groups)
-    oof_pass, cv_method, cv_folds = _cross_validated_predictions(
-        scores, human, threshold, cv_seed, scored_groups if has_groups else None
-    )
-    kappa_cv = _cohens_kappa(oof_pass, human)
-    ci, excluded, reliable = _bootstrap_kappa(oof_pass, human, scored_groups, bootstrap_seed, bootstrap_resamples)
+    kappa_cv: float | None
+    ci: tuple[float, float] | None
+    reliable: bool | None
+    if len(_units(n, scored_groups if has_groups else None)) < 2:
+        # A single resampling unit (every sample in one group, or one sample): holding it out leaves
+        # nothing to choose a threshold on, and resampling it always gives the same set. No out-of-sample
+        # estimate and no interval; the in-sample figures above stand
+        kappa_cv, ci, excluded, reliable = None, None, 0, False
+        cv_method, cv_folds = (CV_SINGLE_GROUP if has_groups else CV_SINGLE_SAMPLE), 0
+    else:
+        oof_pass, cv_method, cv_folds = _cross_validated_predictions(
+            scores, human, threshold, cv_seed, scored_groups if has_groups else None
+        )
+        kappa_cv = _cohens_kappa(oof_pass, human)
+        ci, excluded, reliable = _bootstrap_kappa(oof_pass, human, scored_groups, bootstrap_seed, bootstrap_resamples)
 
     return CriterionCalibration(
         criterion=criterion,
