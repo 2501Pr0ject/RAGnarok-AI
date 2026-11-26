@@ -62,8 +62,10 @@ jobs:
   # imported from them is `Any` and the code of the local judges (HHEM, MiniCheck) is not type-checked.
   # This job checks the same sources with the two extras installed from the lock file. Both must pass:
   # the code has to type-check with and without the optional packages.
+  # It also runs the unit tests of the judges: those that need torch or transformers are skipped in the
+  # "Test" jobs, which do not install them.
   typecheck-judges:
-    name: Type Check (local judges)
+    name: Local judges (type check, tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -85,6 +87,15 @@ jobs:
 
       - name: Run mypy
         run: uv run mypy src/
+
+      # No model is downloaded: the integration tests are deselected by default, and the Hugging Face
+      # libraries are put offline so that a test reaching for the Hub fails instead of downloading.
+      # One test stays skipped: it needs nltk's punkt_tab data, which this job does not download.
+      - name: Run the unit tests of the judges
+        env:
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+        run: uv run pytest tests/unit/judges -p no:randomly -rs
 
   test:
     name: Test (Python ${{ matrix.python-version }})
