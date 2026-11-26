@@ -569,6 +569,37 @@ class TestRun:
         assert plain.report["model_memory"] is None and "model memory" not in plain.report_md.read_text()
 
     @pytest.mark.asyncio
+    async def test_per_class_run_flags_calibration(self, tmp_path: Path):
+        rows = (
+            [sentence_row(i, "SUPPORTED", "ok p=0.9") for i in range(20)]
+            + [sentence_row(100 + i, "UNSUPPORTED", "bad p=0.2") for i in range(2)]
+            + [sentence_row(200 + i, "CONTRADICTED", "bad p=0.6") for i in range(2)]
+        )
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        quota = await run_benchmark(
+            ScriptedProbabilityJudge(), records, out_dir=tmp_path / "quota", per_class=2, seed=1, bootstrap_resamples=0
+        )
+        calibration = quota.report["calibration"]
+        assert calibration["sample_dependent"] is True
+        assert calibration["brier"] == pytest.approx((2 * 0.01 + 2 * 0.04 + 2 * 0.36) / 6)  # the sample: 2 per label
+        assert json.loads(quota.report_json.read_text())["calibration"]["sample_dependent"] is True
+        md = quota.report_md.read_text()
+        assert "Calibration (sample-dependent, follows the class quotas): Brier 0.1367, ECE (10 bins)" in md
+
+        plain = await run_benchmark(
+            ScriptedProbabilityJudge(), records, out_dir=tmp_path / "plain", bootstrap_resamples=0
+        )
+        assert plain.report["calibration"]["sample_dependent"] is False
+        plain_md = plain.report_md.read_text()
+        assert "Calibration: Brier" in plain_md and "sample-dependent" not in plain_md
+
+        # a judge without probabilities has no calibration block to flag
+        ordinal = await run_benchmark(
+            ScriptedOrdinalJudge(), records, out_dir=tmp_path / "ordinal", per_class=2, seed=1, bootstrap_resamples=0
+        )
+        assert "calibration" not in ordinal.report
+
+    @pytest.mark.asyncio
     async def test_failures_are_counted_and_excluded(self, tmp_path: Path):
         rows = study_like_rows()[:6]
         rows[2]["sentence"] = "Broken (fail-parse)."
