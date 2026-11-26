@@ -229,8 +229,9 @@ def quota_sample(records: Sequence[BenchRecord], per_class: int, seed: int) -> l
     """At most *per_class* records of every label, drawn with *seed*; a smaller class is taken whole.
 
     The result keeps the input order. Metrics on such a sample depend on the
-    quota, not on the set's class mix: the report flags them and adds
-    prevalence-adjusted figures (``prevalence_adjusted``).
+    quota, not on the set's class mix, calibration (Brier, ECE) included:
+    the report flags them and adds prevalence-adjusted figures
+    (``prevalence_adjusted``).
     """
     if per_class < 1:
         msg = f"per_class must be at least 1, got {per_class}"
@@ -755,9 +756,10 @@ async def run_benchmark(
         sample: Evaluate only this many records, drawn with *seed*.
         per_class: Evaluate at most this many records of every label (class
             quotas), drawn with *seed*; exclusive with *sample*. The raw
-            metrics are then flagged as sample-dependent and the report adds
-            per-class recall, specificity and precision reweighted by the
-            full set's prevalence.
+            metrics, Brier and ECE included, are then flagged as
+            sample-dependent and the report adds per-class recall,
+            specificity and precision reweighted by the full set's
+            prevalence.
         stratify: ``label`` (default), a metadata field, or ``None`` for a plain draw.
         seed: Seed of the sample and of the bootstrap.
         by: Metadata fields for per-value breakdowns (e.g. ``task``, ``generator``).
@@ -876,7 +878,7 @@ async def run_benchmark(
             if sample is None
             else {"size": sample, "stratify": stratify, "seed": seed}
         ),
-        # Raw metrics (binary, three_class, by) follow the sample's class mix when it is set by quotas
+        # Raw metrics (binary, three_class, calibration, by) follow the sample's class mix when it is set by quotas
         "sample_dependent_metrics": per_class is not None,
         "prevalence_adjusted": (
             prevalence_adjusted(
@@ -946,7 +948,12 @@ async def run_benchmark(
         report["three_class"] = three_class_metrics([p for p in predicted if p is not None], [r.label for r in scored])
     probabilities = [_probability_of(rows[r.id]) for r in scored]
     if probabilities and all(p is not None for p in probabilities):
-        report["calibration"] = calibration_metrics([p for p in probabilities if p is not None], human_pass)
+        calibrated = [p for p in probabilities if p is not None]
+        # Brier and ECE are computed on the evaluated sample: under class quotas they follow its mix
+        report["calibration"] = {
+            **calibration_metrics(calibrated, human_pass),
+            "sample_dependent": per_class is not None,
+        }
 
     for field_name in by:
         values: dict[str, dict[str, float | None]] = {}
@@ -1032,9 +1039,13 @@ def render_report(report: dict[str, Any]) -> str:
                 f"| {t} | " + " | ".join(str(report["three_class"]["confusion"][t][p]) for p in classes) + " |"
             )
     if "calibration" in report and report["calibration"]["brier"] is not None:
+        qualifier = (
+            " (sample-dependent, follows the class quotas)" if report["calibration"].get("sample_dependent") else ""
+        )
         lines += [
             "",
-            f"Calibration: Brier {report['calibration']['brier']:.4f}, ECE ({ECE_BINS} bins) {report['calibration']['ece']:.4f}.",
+            f"Calibration{qualifier}: Brier {report['calibration']['brier']:.4f}, "
+            f"ECE ({ECE_BINS} bins) {report['calibration']['ece']:.4f}.",
         ]
     adjusted = report.get("prevalence_adjusted")
     if adjusted is not None:
