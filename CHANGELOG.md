@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`judge-bench`: an out-of-memory error in a local judge is a per-sample
+  failure** (#169). `HHEMJudge` and `MiniCheckJudge` let the device's
+  error propagate (`torch.cuda.OutOfMemoryError` on CUDA, a `RuntimeError`
+  "MPS backend out of memory" on MPS), which ended the run with no report,
+  and a resumed run stopped on the same record. Both judges now raise an
+  `EvaluationError` for it, after releasing the device cache
+  (`torch.mps.empty_cache()` or `torch.cuda.empty_cache()`): `judge_many`
+  records a failure of kind `backend`, the run goes on and the report counts
+  it under "failures by kind". The message names the device and the input's
+  length in tokens, never its text. Any other `RuntimeError` still
+  propagates. Scores are unchanged
 - **`judge-bench --per-class`: Brier and ECE are flagged as
   sample-dependent** (#168). They were computed on the quota sample and
   printed with no qualifier, as if they described the set. `report.json`

@@ -86,7 +86,8 @@ async def judge_many(
     (``JudgeParseError``, kind ``parse``), an answer with nothing to judge
     (``NoUnitsError``, kind ``no_units``), a timeout (kind ``timeout``) or a
     backend error during the call (``LLMConnectionError`` or another
-    ``EvaluationError``, kind ``backend``). Configuration errors are never
+    ``EvaluationError``, kind ``backend``; the local judges raise one when
+    the device runs out of memory on an input). Configuration errors are never
     caught: ``judge.config(criterion)`` runs first, so a misconfigured judge
     stops before the first call, and a ``ConfigurationError`` raised during
     a call propagates.

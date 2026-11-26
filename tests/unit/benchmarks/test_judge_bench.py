@@ -569,6 +569,26 @@ class TestRun:
         assert plain.report["model_memory"] is None and "model memory" not in plain.report_md.read_text()
 
     @pytest.mark.asyncio
+    async def test_out_of_memory_in_a_local_judge_is_a_recorded_failure(self, tmp_path: Path):
+        from ragnarok_ai.judges import HHEMJudge
+        from tests.unit.judges.test_memory import HHEMBackend
+
+        rows = [
+            sentence_row(0, "SUPPORTED", "Fits."),
+            sentence_row(1, "SUPPORTED", "Does not fit (oom)."),
+            sentence_row(2, "UNSUPPORTED", "Fits too."),
+        ]
+        records = load_records(write_jsonl(tmp_path / "test.jsonl", rows))
+        judge = HHEMJudge(backend=HHEMBackend(), device="mps", unit="answer")
+        run = await run_benchmark(judge, records, out_dir=tmp_path / "out", bootstrap_resamples=0)
+        assert run.report["records"] == {"total": 3, "evaluated": 3, "scored": 2, "failed": 1}
+        assert run.report["failures"] == {"backend": 1}
+        written = [json.loads(line) for line in run.attempts_path.read_text().splitlines()[1:]]
+        assert [row["error"]["kind"] if row.get("error") else None for row in written] == [None, "backend", None]
+        assert "out of memory on device 'mps'" in written[1]["error"]["message"]
+        assert "failures by kind: {'backend': 1}" in run.report_md.read_text()
+
+    @pytest.mark.asyncio
     async def test_per_class_run_flags_calibration(self, tmp_path: Path):
         rows = (
             [sentence_row(i, "SUPPORTED", "ok p=0.9") for i in range(20)]
