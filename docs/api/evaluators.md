@@ -309,7 +309,7 @@ judged = result.to_judge_result()
 - `as_judge(model="...")` is required when the LLM has no `model` attribute; the name is part of the `JudgeConfig`.
 - An answer without any claim raises `NoUnitsError` (a `no_units` failure in `judge_many`). With an empty context the claims are extracted and all fail, without a verification call.
 - The units carry `span=None`: a claim is a rewording, not a slice of the answer.
-- The number of claims is decided by the model at each run and can vary. Compare runs on answers, not on claims. On one short example with `qwen3:8b` at temperature 0, three runs of each judge gave identical claims and scores; this is not a guarantee for longer answers or other models.
+- The number of claims is decided by the model at each run and can vary. Compare runs on answers, not on claims. Repeatability was measured in one setting only: the README example (one context, one two-sentence answer), `qwen3:8b` served by Ollama, temperature 0 and no seed, three runs of each of the two judges. In that setting the six runs gave the same two claims, word for word, the same verdict per claim and the same score (0.50, FAIL). No other answer, model or setting was measured.
 
 ---
 
