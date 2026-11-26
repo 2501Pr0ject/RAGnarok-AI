@@ -1,14 +1,43 @@
 name: Publish to PyPI
 
+# A pushed tag vX.Y.Z publishes to PyPI. A manual run (workflow_dispatch) is a dry run: every check and the
+# build run on the chosen ref, nothing is published, and the version check runs without a tag. The chosen
+# ref must be main or a release/* branch, as for a tag.
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.10"
 
 jobs:
+  # First, and before anything is installed: what would be published is the version of pyproject.toml at
+  # this commit, whatever the tag is called, and a release on PyPI cannot be replaced.
+  verify:
+    name: Verify the version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # --on-branch reads origin/main and origin/release/*. fetch-depth: 0 brings the whole history; the
+      # branches are fetched explicitly as well, since the checkout of a tag does not promise them
+      - name: Fetch the branches of the repository
+        run: git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+
+      - name: Check the tag against pyproject.toml, and that the commit is on main or a release branch
+        if: github.event_name == 'push'
+        run: python3 scripts/check_release_version.py --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA" --on-branch main 'release/*'
+
+      # Dry run: no tag, so a development version is accepted; the commit the run was started on must
+      # still be one a release could be tagged on
+      - name: Check the version files, and that the commit is on main or a release branch (dry run, no tag)
+        if: github.event_name != 'push'
+        run: python3 scripts/check_release_version.py --commit "$GITHUB_SHA" --on-branch main 'release/*'
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -30,16 +59,37 @@ jobs:
       - name: Run linting
         run: uv run ruff check .
 
-      - name: Run type check
-        run: uv run mypy src/
-
       - name: Run tests
         run: uv run pytest --cov=ragnarok_ai --cov-fail-under=80
+
+  # The same two type checks as ci.yml, from the same definition: .github/actions/typecheck.
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Type check without the optional packages
+        uses: ./.github/actions/typecheck
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+  typecheck-judges:
+    name: Local judges (type check, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Type check and test with the hhem and minicheck extras
+        uses: ./.github/actions/typecheck
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          local-judges: "true"
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: test
+    needs: [verify, test, typecheck, typecheck-judges]
     steps:
       - uses: actions/checkout@v7
 
@@ -57,6 +107,10 @@ jobs:
       - name: Check package with twine
         run: uvx twine check dist/*
 
+      # What is uploaded is what was checked: one wheel and one source archive, named after the version
+      - name: Check that the built files carry the version
+        run: python3 scripts/check_release_version.py --dist dist
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -67,6 +121,8 @@ jobs:
     name: Publish to PyPI
     runs-on: ubuntu-latest
     needs: build
+    # Never on a manual run: only a pushed tag publishes
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     environment: pypi
     permissions:
       id-token: write
