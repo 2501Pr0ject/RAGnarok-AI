@@ -3,6 +3,18 @@ name: Publish to PyPI
 # A pushed tag vX.Y.Z publishes to PyPI. A manual run (workflow_dispatch) is a dry run: every check and the
 # build run on the chosen ref, nothing is published, and the version check runs without a tag. The chosen
 # ref must be main or a release/* branch, as for a tag.
+#
+# A release must pass what a pull request passes. Checked here, on the tagged commit itself, and from
+# the same definitions as ci.yml where one exists:
+#   - the version (tag, pyproject.toml, __version__, branch, built files);
+#   - ruff check, ruff format --check, conflict markers, the unit tests with coverage (Python 3.10);
+#   - the two type checks and the judges' tests with their extras (.github/actions/typecheck);
+#   - the vector store adapters against the real clients (.github/actions/vector-stores).
+# NOT checked here, and therefore to be read on the CI and Security runs of the same commit before
+# tagging (release checklist, CONTRIBUTING.md):
+#   - the unit tests on Python 3.11, 3.12 and 3.13, in random order, and the README examples in isolation;
+#   - the import of the package with each extra ("Extras" jobs) and the two install smoke tests;
+#   - the dependency audit, the secrets scan and the container scan (security.yml).
 on:
   push:
     tags:
@@ -56,8 +68,14 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev --extra cli --extra ollama --extra tui
 
+      - name: Check for conflict markers in tracked files
+        run: sh scripts/check_conflict_markers.sh
+
       - name: Run linting
         run: uv run ruff check .
+
+      - name: Run ruff format check
+        run: uv run ruff format --check .
 
       - name: Run tests
         run: uv run pytest --cov=ragnarok_ai --cov-fail-under=80
@@ -86,10 +104,22 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           local-judges: "true"
 
+  # The same job as in ci.yml, from the same definition: .github/actions/vector-stores.
+  vector-stores:
+    name: Vector stores (real clients)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Qdrant and Weaviate adapters against the real clients
+        uses: ./.github/actions/vector-stores
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [verify, test, typecheck, typecheck-judges]
+    needs: [verify, test, typecheck, typecheck-judges, vector-stores]
     steps:
       - uses: actions/checkout@v7
 
